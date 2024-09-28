@@ -149,82 +149,92 @@ namespace oaiUI
 
             try
             {
-                var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync();
-                string vectorStoreId;
-
-                if (existingStores.Values.Contains(vectorStoreName))
-                {
-                    // If it exists, delete all files
-                    vectorStoreId = existingStores.First(s => s.Value == vectorStoreName).Key;
-                    await DeleteAllVSFiles(vectorStoreId);
-                }
-                else
-                {
-                    // Create the vector store
-                    vectorStoreId = await _vectorStoreManager.CreateVectorStoreAsync(vectorStoreName, new List<string>());
-                }
-
-                var totalFiles = selectedFolders.Sum(folder =>
-                    Directory.GetFiles(folder, "*", SearchOption.AllDirectories)
-                        .Count(file => !Path.GetFileName(file).StartsWith(".")));
-
-                processedFiles = 0;
-                progressBar1.Minimum = 0;
-                progressBar1.Maximum = totalFiles;
-                progressBar1.Value = 0;
+                string vectorStoreId = await RecreateVectorStore(vectorStoreName);
 
                 // Upload files from all selected folders
-                foreach (var folder in selectedFolders)
-                {
-                    if (folder.StartsWith('.'))
-                    {
-                        continue;
-                    }
-
-                    var files = Directory.GetFiles(folder, "*", SearchOption.AllDirectories).ToList();
-                    foreach (var file in files)
-                    {
-                        // Check MIME type and upload
-                        string extension = Path.GetExtension(file);
-                        if (MimeTypeProvider.GetMimeType(extension) != "application/octet-stream") // Skip unknown types
-                        {
-                            if (extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
-                            {
-                                // Create a copy of the file with .txt extension
-                                string txtFilePath = Path.ChangeExtension(file, ".cs.txt");
-                                File.Copy(file, txtFilePath, true);
-
-                                try
-                                {
-                                    // Upload the .txt copy
-                                    await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, txtFilePath);
-                                }
-                                finally
-                                {
-                                    // Delete the temporary .txt file
-                                    File.Delete(txtFilePath);
-                                }
-                            }
-                            else
-                            {
-                                // For non-.cs files, upload as usual
-                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
-                            }
-                        }
-
-                        // Update progress
-                        processedFiles++;
-                        UpdateProgress();
-
-                    }
-                }
-
-                MessageBox.Show("Files uploaded successfully.");
+                await UploadFiles(vectorStoreId);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error uploading files: {ex.Message}");
             }
+        }
+
+        private async Task UploadFiles(string vectorStoreId)
+        {
+            var totalFiles = selectedFolders.Sum(folder =>
+                Directory.GetFiles(folder, "*", SearchOption.AllDirectories).Count());
+
+            processedFiles = 0;
+            progressBar1.Minimum = 0;
+            progressBar1.Maximum = totalFiles;
+            progressBar1.Value = 0;
+
+            foreach (var folder in selectedFolders)
+            {
+
+                var files = Directory.GetFiles(folder, "*", SearchOption.AllDirectories).ToList();
+                foreach (var file in files)
+                {
+                    processedFiles++;
+                    UpdateProgress();
+
+                    if (folder.StartsWith('.'))
+                    {
+                        continue;
+                    }
+
+                    // Check MIME type and upload
+                    string extension = Path.GetExtension(file);
+                    if (MimeTypeProvider.GetMimeType(extension) != "application/octet-stream") // Skip unknown types
+                    {
+                        if (extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Create a copy of the file with .txt extension
+                            string txtFilePath = Path.ChangeExtension(file, ".cs.txt");
+                            File.Copy(file, txtFilePath, true);
+
+                            try
+                            {
+                                // Upload the .txt copy
+                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, txtFilePath);
+                            }
+                            finally
+                            {
+                                // Delete the temporary .txt file
+                                File.Delete(txtFilePath);
+                            }
+                        }
+                        else
+                        {
+                            // For non-.cs files, upload as usual
+                            await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
+                        }
+                    }
+                }
+            }
+
+            MessageBox.Show("Files uploaded successfully.");
+        }
+
+        private async Task<string> RecreateVectorStore(string vectorStoreName)
+        {
+            var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync();
+            string vectorStoreId;
+
+            if (existingStores.Values.Contains(vectorStoreName))
+            {
+                // If it exists, delete all files
+                vectorStoreId = existingStores.First(s => s.Value == vectorStoreName).Key;
+                await DeleteAllVSFiles(vectorStoreId);
+            }
+            else
+            {
+                // Create the vector store
+                vectorStoreId = await _vectorStoreManager.CreateVectorStoreAsync(vectorStoreName, new List<string>());
+            }
+
+            return vectorStoreId;
         }
 
         private async Task DeleteAllVSFiles(string vectorStoreId)
