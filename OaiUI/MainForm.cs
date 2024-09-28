@@ -104,9 +104,10 @@ namespace oaiUI
             {
                 var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync();
 
-                comboBoxVectorStores.DataSource = new BindingSource(vectorStores, null);
-                comboBoxVectorStores.DisplayMember = "Value";
-                comboBoxVectorStores.ValueMember = "Key";
+                comboBoxVectorStores.DataSource = vectorStores.Values.ToArray();
+                //comboBoxVectorStores.DataSource = new BindingSource(vectorStores, null);
+                //comboBoxVectorStores.DisplayMember = "Value";
+                //comboBoxVectorStores.ValueMember = "Key";
             }
             catch (Exception ex)
             {
@@ -167,14 +168,35 @@ namespace oaiUI
                 // Upload files from all selected folders
                 foreach (var folder in selectedFolders)
                 {
-                    var files = Directory.GetFiles(folder).ToList();
+                    var files = Directory.GetFiles(folder, "*", SearchOption.AllDirectories).ToList();
                     foreach (var file in files)
                     {
                         // Check MIME type and upload
                         string extension = Path.GetExtension(file);
                         if (MimeTypeProvider.GetMimeType(extension) != "application/octet-stream") // Skip unknown types
                         {
-                            await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
+                            if (extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // Create a copy of the file with .txt extension
+                                string txtFilePath = Path.ChangeExtension(file, ".cs.txt");
+                                File.Copy(file, txtFilePath, true);
+
+                                try
+                                {
+                                    // Upload the .txt copy
+                                    await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, txtFilePath);
+                                }
+                                finally
+                                {
+                                    // Delete the temporary .txt file
+                                    File.Delete(txtFilePath);
+                                }
+                            }
+                            else
+                            {
+                                // For non-.cs files, upload as usual
+                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
+                            }
                         }
                     }
                 }

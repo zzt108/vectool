@@ -48,7 +48,7 @@ namespace oaiVectorStore
         public async Task<string> UploadFileAsync(string filePath)
         {
             using var api = new OpenAIClient();
-            var file = await api.FilesEndpoint.UploadFileAsync("path/to/your/file.jsonl", FilePurpose.Assistants);
+            var file = await api.FilesEndpoint.UploadFileAsync(filePath, FilePurpose.Assistants);
             return file.Id;
         }
 
