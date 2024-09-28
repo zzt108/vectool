@@ -103,7 +103,10 @@ namespace oaiUI
             try
             {
                 var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync();
-                comboBoxVectorStores.DataSource = vectorStores;
+
+                comboBoxVectorStores.DataSource = new BindingSource(vectorStores, null);
+                comboBoxVectorStores.DisplayMember = "Value";
+                comboBoxVectorStores.ValueMember = "Key";
             }
             catch (Exception ex)
             {
@@ -142,18 +145,17 @@ namespace oaiUI
 
             try
             {
-                //var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync();
-                var existingStores = new List<string>();
+                var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync();
                 string vectorStoreId;
 
-                if (existingStores.Contains(vectorStoreName))
+                if (existingStores.Values.Contains(vectorStoreName))
                 {
                     // If it exists, delete all files
-                    vectorStoreId = existingStores.First(s => s == vectorStoreName);
-                    var fileIds = await _vectorStoreManager.GetAllVectorStoresAsync(); // List file IDs to delete
+                    vectorStoreId = existingStores.First(s => s.Value == vectorStoreName).Key;
+                    var fileIds = await _vectorStoreManager.ListAllFiles(vectorStoreId); // List file IDs to delete
                     foreach (var fileId in fileIds)
                     {
-                        await _vectorStoreManager.DeleteFileFromVectorStoreAsync(vectorStoreId, fileId);
+                        await _vectorStoreManager.DeleteFileFromAllStoreAsync(vectorStoreId, fileId);
                     }
                 }
                 else
