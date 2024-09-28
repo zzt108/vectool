@@ -22,7 +22,6 @@ namespace oaiUI
         private Button btnSelectFolders;
         private ListBox listBoxSelectedFolders;
         private Button btnUploadFiles;
-        private int totalFiles;
         private int processedFiles;
 
         public MainForm()
@@ -147,14 +146,6 @@ namespace oaiUI
             string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
             string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
-            totalFiles = selectedFolders.Sum(folder =>
-                Directory.GetFiles(folder, "*", SearchOption.AllDirectories)
-                    .Count(file => !Path.GetFileName(file).StartsWith(".")));
-
-            processedFiles = 0;
-            progressBar1.Minimum = 0;
-            progressBar1.Maximum = totalFiles;
-            progressBar1.Value = 0;
 
             try
             {
@@ -165,17 +156,22 @@ namespace oaiUI
                 {
                     // If it exists, delete all files
                     vectorStoreId = existingStores.First(s => s.Value == vectorStoreName).Key;
-                    var fileIds = await _vectorStoreManager.ListAllFiles(vectorStoreId); // List file IDs to delete
-                    foreach (var fileId in fileIds)
-                    {
-                        await _vectorStoreManager.DeleteFileFromAllStoreAsync(vectorStoreId, fileId);
-                    }
+                    await DeleteAllVSFiles(vectorStoreId);
                 }
                 else
                 {
                     // Create the vector store
                     vectorStoreId = await _vectorStoreManager.CreateVectorStoreAsync(vectorStoreName, new List<string>());
                 }
+
+                var totalFiles = selectedFolders.Sum(folder =>
+                    Directory.GetFiles(folder, "*", SearchOption.AllDirectories)
+                        .Count(file => !Path.GetFileName(file).StartsWith(".")));
+
+                processedFiles = 0;
+                progressBar1.Minimum = 0;
+                progressBar1.Maximum = totalFiles;
+                progressBar1.Value = 0;
 
                 // Upload files from all selected folders
                 foreach (var folder in selectedFolders)
@@ -231,6 +227,23 @@ namespace oaiUI
             }
         }
 
+        private async Task DeleteAllVSFiles(string vectorStoreId)
+        {
+            var fileIds = await _vectorStoreManager.ListAllFiles(vectorStoreId); // List file IDs to delete
+            var totalFiles = fileIds.Count;
+
+            processedFiles = 0;
+            progressBar1.Minimum = 0;
+            progressBar1.Maximum = totalFiles;
+            progressBar1.Value = 0;
+            foreach (var fileId in fileIds)
+            {
+                await _vectorStoreManager.DeleteFileFromAllStoreAsync(vectorStoreId, fileId);
+                processedFiles++;
+                UpdateProgress();
+            }
+        }
+
         private void UpdateProgress()
         {
             if (progressBar1.InvokeRequired)
@@ -243,6 +256,74 @@ namespace oaiUI
                 progressBar1.Update();
                 Application.DoEvents();
             }
+        }
+
+        private async void btnDeleteAllVSFiles_ClickAsync(object sender, EventArgs e)
+        {
+            try
+            {
+                string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+
+                var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync();
+
+
+                var vectorStoreId = existingStores.First(s => s.Value == selectedVectorStore).Key;
+                await DeleteAllVSFiles(vectorStoreId);
+
+
+                // Upload files from all selected folders
+                foreach (var folder in selectedFolders)
+                {
+                    if (folder.StartsWith('.'))
+                    {
+                        continue;
+                    }
+
+                    var files = Directory.GetFiles(folder, "*", SearchOption.AllDirectories).ToList();
+                    foreach (var file in files)
+                    {
+                        // Check MIME type and upload
+                        string extension = Path.GetExtension(file);
+                        if (MimeTypeProvider.GetMimeType(extension) != "application/octet-stream") // Skip unknown types
+                        {
+                            if (extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // Create a copy of the file with .txt extension
+                                string txtFilePath = Path.ChangeExtension(file, ".cs.txt");
+                                File.Copy(file, txtFilePath, true);
+
+                                try
+                                {
+                                    // Upload the .txt copy
+                                    await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, txtFilePath);
+                                }
+                                finally
+                                {
+                                    // Delete the temporary .txt file
+                                    File.Delete(txtFilePath);
+                                }
+                            }
+                            else
+                            {
+                                // For non-.cs files, upload as usual
+                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
+                            }
+                        }
+
+                        // Update progress
+                        processedFiles++;
+                        UpdateProgress();
+
+                    }
+                }
+
+                MessageBox.Show("Files deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting files: {ex.Message}");
+            }
+
         }
     }
 }
