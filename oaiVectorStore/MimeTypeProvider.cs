@@ -36,11 +36,6 @@ namespace oaiVectorStore
 
         public static string GetMimeType(string fileExtension)
         {
-            if (string.IsNullOrEmpty(fileExtension))
-            {
-                throw new ArgumentException("File extension cannot be null or empty", nameof(fileExtension));
-            }
-
             // Ensure the file extension starts with a dot
             if (!fileExtension.StartsWith("."))
             {
@@ -54,3 +49,22 @@ namespace oaiVectorStore
     // Example usage:
     // string mimeType = MimeTypeProvider.GetMimeType(".pdf"); // mimeType will be "application/pdf"
 }
+
+/*
+ ---------------------------
+
+---------------------------
+Error uploading files: UploadFileAsync Failed! HTTP status code: BadRequest | Response body: {
+  "error": {
+    "message": "Invalid extension cs. Supported formats: \"c\", \"cpp\", \"css\", \"csv\", \"docx\", \"gif\", \"go\", \"html\", \"java\", \"jpeg\", \"jpg\", \"js\", \"json\", \"md\", \"pdf\", \"php\", \"pkl\", \"png\", \"pptx\", \"py\", \"rb\", \"tar\", \"tex\", \"ts\", \"txt\", \"webp\", \"xlsx\", \"xml\", \"zip\"",
+    "type": "invalid_request_error",
+    "param": null,
+    "code": null
+  }
+}
+
+---------------------------
+OK   
+---------------------------
+
+ */
