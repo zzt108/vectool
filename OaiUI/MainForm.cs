@@ -15,7 +15,6 @@ namespace oaiUI
 {
     public partial class MainForm : Form
     {
-        private OpenAIClient _openAIClient;
         private VectorStoreManager _vectorStoreManager;
         private List<string> selectedFolders = new List<string>();
         private ComboBox comboBoxVectorStores;
@@ -25,12 +24,9 @@ namespace oaiUI
         private Button btnUploadFiles;
         public MainForm()
         {
-            var apiKey = ConfigurationManager.AppSettings["OaiApiKey"];
-            var baseUrl = "https://api.openai.com/v1";
-            _openAIClient = new OpenAIClient(apiKey, baseUrl);
             InitializeComponent();
             // Initialize your OpenAIClient with appropriate API key and base URL
-            _vectorStoreManager = new VectorStoreManager(_openAIClient );
+            _vectorStoreManager = new VectorStoreManager();
             LoadVectorStores(); // Load existing vector stores into ComboBox
         }
 

@@ -26,6 +26,8 @@
 
 namespace oaiVectorStore
 {
+    using OpenAI;
+    using OpenAI.Files;
     using System;
     using System.Collections.Generic;
     using System.Net.Http;
@@ -34,54 +36,20 @@ namespace oaiVectorStore
 
     public class FileStoreManager
     {
-        private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
-        private readonly string _baseUrl;
-
-        public FileStoreManager(OpenAIClient openAiClient)
-        {
-            _httpClient = openAiClient.HttpClient;
-            _baseUrl = openAiClient.BaseUrl;
-        }
-
-        public FileStoreManager(string apiKey, string baseUrl)
-        {
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-            _apiKey = apiKey;
-            _baseUrl = baseUrl.TrimEnd('/');
-        }
 
         // Delete File from File Store
-        public async Task DeleteFileFromFileStoreAsync(string fileId)
+        public async Task<bool> DeleteFileFromFileStoreAsync(string fileId)
         {
-            var response = await _httpClient.DeleteAsync($"{_baseUrl}/files/{fileId}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Error deleting file from file store: {response.ReasonPhrase}");
-            }
+            using var api = new OpenAIClient();
+            var isDeleted = await api.FilesEndpoint.DeleteFileAsync(fileId);
+            return isDeleted;
         }
 
         public async Task<string> UploadFileAsync(string filePath)
         {
-            using var multipartContent = new MultipartFormDataContent();
-            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            using var streamContent = new StreamContent(fileStream);
-            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream"); // or another appropriate MIME type
-
-            multipartContent.Add(streamContent, "file", Path.GetFileName(filePath));
-
-            var response = await _httpClient.PostAsync($"{_baseUrl}/files", multipartContent);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Error uploading file: {response.ReasonPhrase}");
-            }
-
-            var responseBody = await response.Content.ReadAsStringAsync();
-            var responseData = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
-            return responseData?["id"]?.ToString();
+            using var api = new OpenAIClient();
+            var file = await api.FilesEndpoint.UploadFileAsync("path/to/your/file.jsonl", FilePurpose.Assistants);
+            return file.Id;
         }
 
     }
