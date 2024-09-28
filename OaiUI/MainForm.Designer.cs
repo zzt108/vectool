@@ -28,76 +28,103 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Main Form";
-            // ComboBox for existing vector stores
-            comboBoxVectorStores = new ComboBox
-            {
-                Name = "comboBoxVectorStores",
-                Location = new System.Drawing.Point(20, 20),
-                Size = new System.Drawing.Size(200, 20)
-            };
-            Controls.Add(comboBoxVectorStores);
-
-            // TextBox for new vector store name
-            txtNewVectorStoreName = new TextBox
-            {
-                Name = "txtNewVectorStoreName",
-                Location = new System.Drawing.Point(240, 20),
-                Size = new System.Drawing.Size(150, 20)
-            };
-            Controls.Add(txtNewVectorStoreName);
-
-            // Button to select folders
-            btnSelectFolders = new Button
-            {
-                Name = "btnSelectFolders",
-                Text = "Select Folders",
-                Location = new System.Drawing.Point(20, 60),
-                Size = new System.Drawing.Size(100, 30)
-            };
+            comboBoxVectorStores = new ComboBox();
+            txtNewVectorStoreName = new TextBox();
+            btnSelectFolders = new Button();
+            listBoxSelectedFolders = new ListBox();
+            btnUploadFiles = new Button();
+            labelSelectVectorStore = new Label();
+            labelNewVectorStore = new Label();
+            progressBar1 = new ProgressBar();
+            SuspendLayout();
+            // 
+            // comboBoxVectorStores
+            // 
+            comboBoxVectorStores.Location = new Point(20, 20);
+            comboBoxVectorStores.Name = "comboBoxVectorStores";
+            comboBoxVectorStores.Size = new Size(200, 20);
+            comboBoxVectorStores.TabIndex = 0;
+            // 
+            // txtNewVectorStoreName
+            // 
+            txtNewVectorStoreName.Location = new Point(240, 20);
+            txtNewVectorStoreName.Name = "txtNewVectorStoreName";
+            txtNewVectorStoreName.Size = new Size(150, 20);
+            txtNewVectorStoreName.TabIndex = 1;
+            // 
+            // btnSelectFolders
+            // 
+            btnSelectFolders.Location = new Point(20, 60);
+            btnSelectFolders.Name = "btnSelectFolders";
+            btnSelectFolders.Text = "Select Folders";
+            btnSelectFolders.Size = new Size(100, 30);
+            btnSelectFolders.TabIndex = 2;
             btnSelectFolders.Click += btnSelectFolders_Click;
-            Controls.Add(btnSelectFolders);
-
-            // ListBox for displaying selected folders
-            listBoxSelectedFolders = new ListBox
-            {
-                Name = "listBoxSelectedFolders",
-                Location = new System.Drawing.Point(20, 100),
-                Size = new System.Drawing.Size(370, 100)
-            };
-            Controls.Add(listBoxSelectedFolders);
-
-            // Button to upload files
-            btnUploadFiles = new Button
-            {
-                Name = "btnUploadFiles",
-                Text = "Upload Files",
-                Location = new System.Drawing.Point(20, 220),
-                Size = new System.Drawing.Size(100, 30)
-            };
+            // 
+            // listBoxSelectedFolders
+            // 
+            listBoxSelectedFolders.ItemHeight = 15;
+            listBoxSelectedFolders.Location = new Point(20, 100);
+            listBoxSelectedFolders.Name = "listBoxSelectedFolders";
+            listBoxSelectedFolders.Size = new Size(379, 100);
+            listBoxSelectedFolders.TabIndex = 3;
+            // 
+            // btnUploadFiles
+            // 
+            btnUploadFiles.Location = new Point(20, 220);
+            btnUploadFiles.Name = "btnUploadFiles";
+            btnUploadFiles.Text = "Upload Files";
+            btnUploadFiles.Size = new Size(100, 30);
+            btnUploadFiles.TabIndex = 4;
             btnUploadFiles.Click += btnUploadFiles_Click;
+            // 
+            // labelSelectVectorStore
+            // 
+            labelSelectVectorStore.Location = new Point(20, 0);
+            labelSelectVectorStore.Name = "labelSelectVectorStore";
+            labelSelectVectorStore.Text = "Select Existing Vector Store:";
+            labelSelectVectorStore.Size = new Size(100, 23);
+            labelSelectVectorStore.TabIndex = 5;
+            // 
+            // labelNewVectorStore
+            // 
+            labelNewVectorStore.Location = new Point(240, 0);
+            labelNewVectorStore.Name = "labelNewVectorStore";
+            labelNewVectorStore.Text = "Or Enter New Name:";
+            labelNewVectorStore.Size = new Size(100, 23);
+            labelNewVectorStore.TabIndex = 6;
+            // 
+            // progressBar1
+            // 
+            progressBar1.Dock = DockStyle.Bottom;
+            progressBar1.Location = new Point(0, 427);
+            progressBar1.Name = "progressBar1";
+            progressBar1.Size = new Size(800, 23);
+            progressBar1.TabIndex = 7;
+            // 
+            // MainForm
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(800, 450);
+            Controls.Add(progressBar1);
+            Controls.Add(comboBoxVectorStores);
+            Controls.Add(txtNewVectorStoreName);
+            Controls.Add(btnSelectFolders);
+            Controls.Add(listBoxSelectedFolders);
             Controls.Add(btnUploadFiles);
-
-            // Label for the ComboBox
-            Label labelSelectVectorStore = new Label
-            {
-                Text = "Select Existing Vector Store:",
-                Location = new System.Drawing.Point(20, 0)
-            };
             Controls.Add(labelSelectVectorStore);
-
-            // Label for the TextBox
-            Label labelNewVectorStore = new Label
-            {
-                Text = "Or Enter New Name:",
-                Location = new System.Drawing.Point(240, 0)
-            };
             Controls.Add(labelNewVectorStore);
+            Name = "MainForm";
+            Text = "Main Form";
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
+
+        private Label labelSelectVectorStore;
+        private Label labelNewVectorStore;
+        private ProgressBar progressBar1;
     }
 }
