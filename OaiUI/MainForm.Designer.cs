@@ -36,29 +36,30 @@
             labelSelectVectorStore = new Label();
             labelNewVectorStore = new Label();
             progressBar1 = new ProgressBar();
+            btnDeleteAllVSFiles = new Button();
             SuspendLayout();
             // 
             // comboBoxVectorStores
             // 
             comboBoxVectorStores.Location = new Point(20, 20);
             comboBoxVectorStores.Name = "comboBoxVectorStores";
-            comboBoxVectorStores.Size = new Size(200, 20);
+            comboBoxVectorStores.Size = new Size(200, 23);
             comboBoxVectorStores.TabIndex = 0;
             // 
             // txtNewVectorStoreName
             // 
             txtNewVectorStoreName.Location = new Point(240, 20);
             txtNewVectorStoreName.Name = "txtNewVectorStoreName";
-            txtNewVectorStoreName.Size = new Size(150, 20);
+            txtNewVectorStoreName.Size = new Size(150, 23);
             txtNewVectorStoreName.TabIndex = 1;
             // 
             // btnSelectFolders
             // 
             btnSelectFolders.Location = new Point(20, 60);
             btnSelectFolders.Name = "btnSelectFolders";
-            btnSelectFolders.Text = "Select Folders";
             btnSelectFolders.Size = new Size(100, 30);
             btnSelectFolders.TabIndex = 2;
+            btnSelectFolders.Text = "Select Folders";
             btnSelectFolders.Click += btnSelectFolders_Click;
             // 
             // listBoxSelectedFolders
@@ -66,33 +67,33 @@
             listBoxSelectedFolders.ItemHeight = 15;
             listBoxSelectedFolders.Location = new Point(20, 100);
             listBoxSelectedFolders.Name = "listBoxSelectedFolders";
-            listBoxSelectedFolders.Size = new Size(379, 100);
+            listBoxSelectedFolders.Size = new Size(379, 94);
             listBoxSelectedFolders.TabIndex = 3;
             // 
             // btnUploadFiles
             // 
             btnUploadFiles.Location = new Point(20, 220);
             btnUploadFiles.Name = "btnUploadFiles";
-            btnUploadFiles.Text = "Upload Files";
             btnUploadFiles.Size = new Size(100, 30);
             btnUploadFiles.TabIndex = 4;
+            btnUploadFiles.Text = "Upload Files";
             btnUploadFiles.Click += btnUploadFiles_Click;
             // 
             // labelSelectVectorStore
             // 
             labelSelectVectorStore.Location = new Point(20, 0);
             labelSelectVectorStore.Name = "labelSelectVectorStore";
-            labelSelectVectorStore.Text = "Select Existing Vector Store:";
             labelSelectVectorStore.Size = new Size(100, 23);
             labelSelectVectorStore.TabIndex = 5;
+            labelSelectVectorStore.Text = "Select Existing Vector Store:";
             // 
             // labelNewVectorStore
             // 
             labelNewVectorStore.Location = new Point(240, 0);
             labelNewVectorStore.Name = "labelNewVectorStore";
-            labelNewVectorStore.Text = "Or Enter New Name:";
             labelNewVectorStore.Size = new Size(100, 23);
             labelNewVectorStore.TabIndex = 6;
+            labelNewVectorStore.Text = "Or Enter New Name:";
             // 
             // progressBar1
             // 
@@ -102,11 +103,23 @@
             progressBar1.Size = new Size(800, 23);
             progressBar1.TabIndex = 7;
             // 
+            // btnDeleteAllVSFiles
+            // 
+            btnDeleteAllVSFiles.BackColor = Color.Firebrick;
+            btnDeleteAllVSFiles.Location = new Point(240, 60);
+            btnDeleteAllVSFiles.Name = "btnDeleteAllVSFiles";
+            btnDeleteAllVSFiles.Size = new Size(150, 30);
+            btnDeleteAllVSFiles.TabIndex = 8;
+            btnDeleteAllVSFiles.Text = "Delete All VS files";
+            btnDeleteAllVSFiles.UseVisualStyleBackColor = false;
+            btnDeleteAllVSFiles.Click += btnDeleteAllVSFiles_ClickAsync;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnDeleteAllVSFiles);
             Controls.Add(progressBar1);
             Controls.Add(comboBoxVectorStores);
             Controls.Add(txtNewVectorStoreName);
@@ -126,5 +139,6 @@
         private Label labelSelectVectorStore;
         private Label labelNewVectorStore;
         private ProgressBar progressBar1;
+        private Button btnDeleteAllVSFiles;
     }
 }
