@@ -22,6 +22,9 @@ namespace oaiUI
         private Button btnSelectFolders;
         private ListBox listBoxSelectedFolders;
         private Button btnUploadFiles;
+        private int totalFiles;
+        private int processedFiles;
+
         public MainForm()
         {
             InitializeComponent();
@@ -144,6 +147,15 @@ namespace oaiUI
             string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
             string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
+            totalFiles = selectedFolders.Sum(folder =>
+                Directory.GetFiles(folder, "*", SearchOption.AllDirectories)
+                    .Count(file => !Path.GetFileName(file).StartsWith(".")));
+
+            processedFiles = 0;
+            progressBar1.Minimum = 0;
+            progressBar1.Maximum = totalFiles;
+            progressBar1.Value = 0;
+
             try
             {
                 var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync();
@@ -168,6 +180,11 @@ namespace oaiUI
                 // Upload files from all selected folders
                 foreach (var folder in selectedFolders)
                 {
+                    if (folder.StartsWith('.'))
+                    {
+                        continue;
+                    }
+
                     var files = Directory.GetFiles(folder, "*", SearchOption.AllDirectories).ToList();
                     foreach (var file in files)
                     {
@@ -198,6 +215,11 @@ namespace oaiUI
                                 await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
                             }
                         }
+
+                        // Update progress
+                        processedFiles++;
+                        UpdateProgress();
+
                     }
                 }
 
@@ -206,6 +228,20 @@ namespace oaiUI
             catch (Exception ex)
             {
                 MessageBox.Show($"Error uploading files: {ex.Message}");
+            }
+        }
+
+        private void UpdateProgress()
+        {
+            if (progressBar1.InvokeRequired)
+            {
+                progressBar1.Invoke(new Action(UpdateProgress));
+            }
+            else
+            {
+                progressBar1.Value = processedFiles;
+                progressBar1.Update();
+                Application.DoEvents();
             }
         }
     }
