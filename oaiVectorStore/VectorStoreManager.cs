@@ -55,11 +55,11 @@ namespace oaiVectorStore
             return isDeleted;
         }
 
-        public async Task<List<string>> GetAllVectorStoresAsync()
+        public async Task<Dictionary<string, string>> GetAllVectorStoresAsync()
         {
             using var api = new OpenAIClient();
             var vectorStores = await api.VectorStoresEndpoint.ListVectorStoresAsync();
-            return vectorStores.Items.Select(vs => vs.Id).ToList();
+            return vectorStores.Items.ToDictionary(vs => vs.Id, vs => vs.Name);
         }
 
         public async Task AddFileToVectorStoreAsync(string vectorStoreId, string fileId)
@@ -88,5 +88,22 @@ namespace oaiVectorStore
             return isDeleted;
         }
 
+        public async Task<bool> DeleteFileFromAllStoreAsync(string vectorStoreId, string fileId)
+        {
+            using var api = new OpenAIClient();
+            var isDeleted = await api.VectorStoresEndpoint.DeleteVectorStoreFileAsync(vectorStoreId, fileId);
+            if (isDeleted) {
+                isDeleted = await new FileStoreManager().DeleteFileFromFileStoreAsync(fileId);
+            }
+            return isDeleted;
+        }
+
+        public async Task<List<string>> ListAllFiles(string vectorStoreId)
+        {
+            using var api = new OpenAIClient();
+            var files = await api.VectorStoresEndpoint.ListVectorStoreFilesAsync(vectorStoreId);
+            return files.Items.Select(vs => vs.Id).ToList();
+
+        }
     }
 }
