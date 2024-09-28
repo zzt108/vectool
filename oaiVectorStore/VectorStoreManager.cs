@@ -28,6 +28,8 @@ using System.Text;
 
 namespace oaiVectorStore
 {
+    using OpenAI.VectorStores;
+    using OpenAI;
     using System;
     using System.Collections.Generic;
     using System.Net.Http;
@@ -38,102 +40,52 @@ namespace oaiVectorStore
 
     public class VectorStoreManager
     {
-        private readonly OpenAIClient _openAIClient;
-        private readonly HttpClient _httpClient;
-        private readonly string _baseUrl;
-
-        public VectorStoreManager(OpenAIClient openAIClient)
-        {
-            _httpClient = openAIClient.HttpClient;
-            _baseUrl = openAIClient.BaseUrl;
-        }
-
-
-        public VectorStoreManager(string apiKey, string baseUrl)
-        {
-            _openAIClient = new OpenAIClient(apiKey, baseUrl);
-            _httpClient = _openAIClient.HttpClient;
-            _baseUrl = _openAIClient.BaseUrl;
-        }
 
         public async Task<string> CreateVectorStoreAsync(string name, List<string> fileIds)
         {
-            var payload = new { name, file_ids = fileIds };
-            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/vector_stores", payload);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Error creating vector store: {response.ReasonPhrase}");
-            }
-
-            var responseBody = await response.Content.ReadAsStringAsync();
-            var responseData = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
-            return responseData?["id"]?.ToString();
+            var api = new OpenAIClient();
+            var createVectorStoreRequest = new CreateVectorStoreRequest(name);
+            return await api.VectorStoresEndpoint.CreateVectorStoreAsync(createVectorStoreRequest);
         }
 
-        public async Task DeleteVectorStoreAsync(string vectorStoreId)
+        public async Task<bool> DeleteVectorStoreAsync(string vectorStoreId)
         {
-            var response = await _httpClient.DeleteAsync($"{_baseUrl}/vector_stores/{vectorStoreId}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Error deleting vector store: {response.ReasonPhrase}");
-            }
+            using var api = new OpenAIClient();
+            var isDeleted = await api.VectorStoresEndpoint.DeleteVectorStoreAsync(vectorStoreId);
+            return isDeleted;
         }
 
         public async Task<List<string>> GetAllVectorStoresAsync()
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/vector_stores");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Error retrieving vector stores: {response.ReasonPhrase}");
-            }
-
-            var responseBody = await response.Content.ReadAsStringAsync();
-            var responseData = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
-            var vectorStores = JsonSerializer.Deserialize<List<string>>(responseData?["vector_stores"]?.ToString());
-
-            return vectorStores;
+            using var api = new OpenAIClient();
+            var vectorStores = await api.VectorStoresEndpoint.ListVectorStoresAsync();
+            return vectorStores.Items.Select(vs => vs.Id).ToList();
         }
 
         public async Task AddFileToVectorStoreAsync(string vectorStoreId, string fileId)
         {
-            var payload = new { file_id = fileId };
-            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/vector_stores/{vectorStoreId}/files", payload);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Error adding file to vector store: {response.ReasonPhrase}");
-            }
+            using var api = new OpenAIClient();
+            var file = await api.VectorStoresEndpoint.CreateVectorStoreFileAsync(vectorStoreId, fileId, new ChunkingStrategy(ChunkingStrategyType.Static));
         }
 
         public async Task AddFileToVectorStoreFromPathAsync(string vectorStoreId, string filePath)
         {
-            var fileId = await new FileStoreManager(_openAIClient).UploadFileAsync(filePath);
+            var fileId = await new FileStoreManager().UploadFileAsync(filePath);
             await AddFileToVectorStoreAsync(vectorStoreId, fileId);
         }
 
         public async Task<string> RetrieveFileFromFileStoreAsync(string vectorStoreId, string fileId)
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/vector_stores/{vectorStoreId}/files/{fileId}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Error retrieving file from vector store: {response.ReasonPhrase}");
-            }
-
-            return await response.Content.ReadAsStringAsync();
+            using var api = new OpenAIClient();
+            var file = await api.VectorStoresEndpoint.GetVectorStoreFileAsync(vectorStoreId, fileId);
+            return file;
         }
 
-        public async Task DeleteFileFromVectorStoreAsync(string vectorStoreId, string fileId)
+        public async Task<bool> DeleteFileFromVectorStoreAsync(string vectorStoreId, string fileId)
         {
-            var response = await _httpClient.DeleteAsync($"{_baseUrl}/vector_stores/{vectorStoreId}/files/{fileId}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Error deleting file from vector store: {response.ReasonPhrase}");
-            }
+            using var api = new OpenAIClient();
+            var isDeleted = await api.VectorStoresEndpoint.DeleteVectorStoreFileAsync(vectorStoreId, fileId);
+            return isDeleted;
         }
 
     }

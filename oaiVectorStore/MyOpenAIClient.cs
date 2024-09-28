@@ -23,27 +23,28 @@
 .ts	application/typescript
 .txt	text/plain 
  */
-
+using OpenAI;
 namespace oaiVectorStore
 {
-    using System.Net.Http;
 
-    public class OpenAIClient
+    public class MyOpenAIClient:IDisposable
     {
-        private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
-        private readonly string _baseUrl;
 
-        public OpenAIClient(string apiKey, string baseUrl)
+        public MyOpenAIClient()
         {
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-            _apiKey = apiKey;
-            _baseUrl = baseUrl.TrimEnd('/');
+            Client = new OpenAIClient();
         }
 
-        public HttpClient HttpClient => _httpClient;
+        public MyOpenAIClient(string apiKey)
+        {
+            Client = new OpenAIClient(apiKey);
+        }
 
-        public string BaseUrl => _baseUrl;
+        public OpenAIClient Client { get; set; }
+
+        public void Dispose()
+        {
+            Client.Dispose();
+        }
     }
 }
