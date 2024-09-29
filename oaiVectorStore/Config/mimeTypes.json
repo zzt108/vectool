@@ -21,5 +21,7 @@
   ".tex": "text/x-tex",
   ".ts": "application/typescript",
   ".txt": "text/plain",
-  ".feature": "text/x-gherkin"
+  ".feature": "text/x-gherkin",
+  ".xaml": "text/x-xaml",
+  ".xml": "text/x-xml"
 }

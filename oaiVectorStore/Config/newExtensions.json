@@ -1,5 +1,7 @@
 {
   ".cs": ".cs.md",
   ".csproj": ".csproj.md",
-  ".feature": ".feature.md"
+  ".feature": ".feature.md",
+  ".xaml": ".xaml.md",
+  ".xml": ".xml.md"
 }
