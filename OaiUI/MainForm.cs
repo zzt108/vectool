@@ -188,26 +188,34 @@ namespace oaiUI
                     string extension = Path.GetExtension(file);
                     if (MimeTypeProvider.GetMimeType(extension) != "application/octet-stream") // Skip unknown types
                     {
-                        if (extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
+                        string? newExtension = MimeTypeProvider.GetNewExtension(extension);
+                        if (newExtension is not null)
                         {
-                            // Create a copy of the file with .txt extension
-                            string txtFilePath = Path.ChangeExtension(file, ".cs.txt");
-                            File.Copy(file, txtFilePath, true);
+                            // Create a copy of the file with the new extension
+                            string newFilePath = Path.ChangeExtension(file, newExtension);
+                            File.Copy(file, newFilePath, true);
 
                             try
                             {
-                                // Upload the .txt copy
-                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, txtFilePath);
+                                var mdTag = MimeTypeProvider.GetMdTag(extension);
+                                if (mdTag != null)
+                                {
+                                    // Add start and end language tags to the file content
+                                    string content = File.ReadAllText(newFilePath);
+                                    content = $"```{mdTag}\n{content}\n```";
+                                    File.WriteAllText(newFilePath, content);                                // Upload the new copy
+                                }
+                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, newFilePath);
                             }
                             finally
                             {
-                                // Delete the temporary .txt file
-                                File.Delete(txtFilePath);
+                                // Delete the temporary new extension file
+                                File.Delete(newFilePath);
                             }
                         }
                         else
                         {
-                            // For non-.cs files, upload as usual
+                            // For files that do not have a new extension, upload as usual
                             await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
                         }
                     }
