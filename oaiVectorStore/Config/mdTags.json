@@ -1,0 +1,5 @@
+{
+  ".cs": "csharp",
+  ".csproj": "msbuild",
+  ".feature": "gherkin"
+}

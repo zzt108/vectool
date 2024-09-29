@@ -1,0 +1,5 @@
+{
+  ".cs": ".cs.md",
+  ".csproj": ".csproj.md",
+  ".feature": ".feature.md"
+}
