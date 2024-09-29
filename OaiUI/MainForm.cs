@@ -179,7 +179,7 @@ namespace oaiUI
                     processedFiles++;
                     UpdateProgress();
 
-                    if (folder.StartsWith('.'))
+                    if (file.Contains("\\.") || file.Contains("\\obj") || file.Contains("\\bin"))
                     {
                         continue;
                     }
