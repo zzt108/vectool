@@ -1,5 +1,7 @@
 {
   ".cs": "csharp",
   ".csproj": "msbuild",
-  ".feature": "gherkin"
+  ".feature": "gherkin",
+  ".xaml": "xaml",
+  ".xml": "xml"
 }
