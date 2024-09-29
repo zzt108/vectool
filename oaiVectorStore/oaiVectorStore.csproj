@@ -10,4 +10,16 @@
     <PackageReference Include="OpenAI-DotNet" Version="8.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Config\mdTags.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\mimeTypes.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\newExtensions.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
