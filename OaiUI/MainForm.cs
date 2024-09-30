@@ -1,4 +1,5 @@
 ﻿using oaiVectorStore;
+using OpenAI;
 using OpenAI_API;
 using System;
 using System.Collections.Generic;
@@ -102,9 +103,11 @@ namespace oaiUI
 
         private async void LoadVectorStores()
         {
+            using var api = new OpenAIClient();
+
             try
             {
-                var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync();
+                var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
 
                 comboBoxVectorStores.DataSource = vectorStores.Values.ToArray();
                 //comboBoxVectorStores.DataSource = new BindingSource(vectorStores, null);
@@ -158,6 +161,7 @@ namespace oaiUI
 
         private async void btnUploadFiles_Click(object sender, EventArgs e)
         {
+
             try
             {
                 WorkStart("Upload/Replace files");
@@ -192,6 +196,8 @@ namespace oaiUI
             progressBar1.Minimum = 0;
             progressBar1.Maximum = totalFiles;
             progressBar1.Value = 0;
+
+            using var api = new OpenAIClient();
 
             foreach (var folder in selectedFolders)
             {
@@ -241,7 +247,7 @@ namespace oaiUI
                             }
                             try
                             {
-                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, newFilePath);
+                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, newFilePath);
                             }
                             catch (Exception ex)
                             {
@@ -263,7 +269,7 @@ namespace oaiUI
                         // For files that do not have a new extension, upload as usual
                         try
                         {
-                            await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
+                            await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, file);
                         }
                         catch (Exception ex)
                         {
@@ -283,27 +289,29 @@ namespace oaiUI
 
         private async Task<string> RecreateVectorStore(string vectorStoreName)
         {
-            var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync();
+            using var api = new OpenAIClient();
+
+            var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
             string vectorStoreId;
 
             if (existingStores.Values.Contains(vectorStoreName))
             {
                 // If it exists, delete all files
                 vectorStoreId = existingStores.First(s => s.Value == vectorStoreName).Key;
-                await DeleteAllVSFiles(vectorStoreId);
+                await DeleteAllVSFiles(api, vectorStoreId);
             }
             else
             {
                 // Create the vector store
-                vectorStoreId = await _vectorStoreManager.CreateVectorStoreAsync(vectorStoreName, new List<string>());
+                vectorStoreId = await _vectorStoreManager.CreateVectorStoreAsync(api, vectorStoreName, new List<string>());
             }
 
             return vectorStoreId;
         }
 
-        private async Task DeleteAllVSFiles(string vectorStoreId)
+        private async Task DeleteAllVSFiles(OpenAIClient api, string vectorStoreId)
         {
-            var fileIds = await _vectorStoreManager.ListAllFiles(vectorStoreId); // List file IDs to delete
+            var fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId); // List file IDs to delete
             while (fileIds.Count > 0) 
             {
                 var totalFiles = fileIds.Count;
@@ -314,11 +322,11 @@ namespace oaiUI
                 progressBar1.Value = 0;
                 foreach (var fileId in fileIds)
                 {
-                    await _vectorStoreManager.DeleteFileFromAllStoreAsync(vectorStoreId, fileId);
+                    await _vectorStoreManager.DeleteFileFromAllStoreAsync(api, vectorStoreId, fileId);
                     processedFiles++;
                     UpdateProgress();
                 }
-                fileIds = await _vectorStoreManager.ListAllFiles(vectorStoreId); // List file IDs to delete
+                fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId); // List file IDs to delete
             }
         }
 
@@ -340,19 +348,20 @@ namespace oaiUI
 
         private async void btnDeleteAllVSFiles_ClickAsync(object sender, EventArgs e)
         {
+            using var api = new OpenAIClient();
+
             try
             {
                 WorkStart("Delete VectorStore files");
 
                 string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
 
-                var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync();
-
+                var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
 
                 var vectorStoreId = existingStores.First(s => s.Value == selectedVectorStore).Key;
-                await DeleteAllVSFiles(vectorStoreId);
+                await DeleteAllVSFiles(api, vectorStoreId);
 
-                var fileIds = await _vectorStoreManager.ListAllFiles(vectorStoreId); // List file IDs to delete
+                var fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId); // List file IDs to delete
                 toolStripStatusLabelInfo.Text = $"Files deleted successfully. Remaining:{fileIds.Count}";
 
                 MessageBox.Show($"Files deleted successfully. Remaining:{fileIds.Count}");
