@@ -202,70 +202,79 @@ namespace oaiUI
                     processedFiles++;
                     UpdateProgress();
 
-                    if (file.Contains("\\.") || file.Contains("\\obj") || file.Contains("\\bin"))
+                    if (file.Contains("\\.") || file.Contains("\\obj\\") || file.Contains("\\bin\\") || file.Contains("\\packages\\"))
                     {
                         continue;
                     }
 
                     // Check MIME type and upload
                     string extension = Path.GetExtension(file);
-                    if (MimeTypeProvider.GetMimeType(extension) != "application/octet-stream") // Skip unknown types
+                    if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
                     {
-                        toolStripStatusLabelInfo.Text = file;
+                        continue;
+                    }
 
-                        string? newExtension = MimeTypeProvider.GetNewExtension(extension);
-                        if (newExtension is not null)
+                    // Check if the file content is not empty
+                    if (new FileInfo(file).Length == 0)
+                    {
+                        continue; // Skip empty files
+                    }
+
+                    toolStripStatusLabelInfo.Text = file;
+
+                    string? newExtension = MimeTypeProvider.GetNewExtension(extension);
+                    if (newExtension is not null)
+                    {
+                        // Create a copy of the file with the new extension
+                        string newFilePath = Path.ChangeExtension(file, newExtension);
+                        File.Copy(file, newFilePath, true);
+
+                        try
                         {
-                            // Create a copy of the file with the new extension
-                            string newFilePath = Path.ChangeExtension(file, newExtension);
-                            File.Copy(file, newFilePath, true);
-
+                            var mdTag = MimeTypeProvider.GetMdTag(extension);
+                            if (mdTag != null)
+                            {
+                                // Add start and end language tags to the file content
+                                string content = File.ReadAllText(newFilePath);
+                                content = $"```{mdTag}\n{content}\n```";
+                                File.WriteAllText(newFilePath, content);                                // Upload the new copy
+                            }
                             try
                             {
-                                var mdTag = MimeTypeProvider.GetMdTag(extension);
-                                if (mdTag != null)
-                                {
-                                    // Add start and end language tags to the file content
-                                    string content = File.ReadAllText(newFilePath);
-                                    content = $"```{mdTag}\n{content}\n```";
-                                    File.WriteAllText(newFilePath, content);                                // Upload the new copy
-                                }
-                                try
-                                {
-                                    await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, newFilePath);
-                                }
-                                catch (Exception ex)
-                                {
-                                    var response = MessageBox.Show(ex.Message, newFilePath, MessageBoxButtons.CancelTryContinue,MessageBoxIcon.Error);
-                                    if (response == DialogResult.Cancel)
-                                    {
-                                        throw;
-                                    }
-                                }
-                            }
-                            finally
-                            {
-                                // Delete the temporary new extension file
-                                File.Delete(newFilePath);
-                            }
-                        }
-                        else
-                        {
-                            // For files that do not have a new extension, upload as usual
-                            try
-                            {
-                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
+                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, newFilePath);
                             }
                             catch (Exception ex)
                             {
-                                var response = MessageBox.Show(ex.Message, file, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
+                                var response = MessageBox.Show(ex.Message, newFilePath, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
                                 if (response == DialogResult.Cancel)
                                 {
                                     throw;
                                 }
                             }
                         }
+                        finally
+                        {
+                            // Delete the temporary new extension file
+                            File.Delete(newFilePath);
+                        }
                     }
+                    else
+                    {
+                        // For files that do not have a new extension, upload as usual
+                        try
+                        {
+                            await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
+                        }
+                        catch (Exception ex)
+                        {
+                            var response = MessageBox.Show(ex.Message, file, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
+                            if (response == DialogResult.Cancel)
+                            {
+                                throw;
+                            }
+                        }
+                    }
+
                 }
             }
 
@@ -295,17 +304,21 @@ namespace oaiUI
         private async Task DeleteAllVSFiles(string vectorStoreId)
         {
             var fileIds = await _vectorStoreManager.ListAllFiles(vectorStoreId); // List file IDs to delete
-            var totalFiles = fileIds.Count;
-
-            processedFiles = 0;
-            progressBar1.Minimum = 0;
-            progressBar1.Maximum = totalFiles;
-            progressBar1.Value = 0;
-            foreach (var fileId in fileIds)
+            while (fileIds.Count > 0) 
             {
-                await _vectorStoreManager.DeleteFileFromAllStoreAsync(vectorStoreId, fileId);
-                processedFiles++;
-                UpdateProgress();
+                var totalFiles = fileIds.Count;
+
+                processedFiles = 0;
+                progressBar1.Minimum = 0;
+                progressBar1.Maximum = totalFiles;
+                progressBar1.Value = 0;
+                foreach (var fileId in fileIds)
+                {
+                    await _vectorStoreManager.DeleteFileFromAllStoreAsync(vectorStoreId, fileId);
+                    processedFiles++;
+                    UpdateProgress();
+                }
+                fileIds = await _vectorStoreManager.ListAllFiles(vectorStoreId); // List file IDs to delete
             }
         }
 
@@ -339,7 +352,10 @@ namespace oaiUI
                 var vectorStoreId = existingStores.First(s => s.Value == selectedVectorStore).Key;
                 await DeleteAllVSFiles(vectorStoreId);
 
-                MessageBox.Show("Files deleted successfully.");
+                var fileIds = await _vectorStoreManager.ListAllFiles(vectorStoreId); // List file IDs to delete
+                toolStripStatusLabelInfo.Text = $"Files deleted successfully. Remaining:{fileIds.Count}";
+
+                MessageBox.Show($"Files deleted successfully. Remaining:{fileIds.Count}");
             }
             catch (Exception ex)
             {
