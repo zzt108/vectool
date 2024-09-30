@@ -37,25 +37,32 @@
             labelNewVectorStore = new Label();
             progressBar1 = new ProgressBar();
             btnDeleteAllVSFiles = new Button();
+            statusStrip1 = new StatusStrip();
+            toolStripStatusLabelState = new ToolStripStatusLabel();
+            toolStripStatusLabelCurrent = new ToolStripStatusLabel();
+            toolStripStatusLabelMax = new ToolStripStatusLabel();
+            btnUploadNew = new Button();
+            toolStripStatusLabelInfo = new ToolStripStatusLabel();
+            statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // comboBoxVectorStores
             // 
-            comboBoxVectorStores.Location = new Point(20, 20);
+            comboBoxVectorStores.Location = new Point(12, 61);
             comboBoxVectorStores.Name = "comboBoxVectorStores";
             comboBoxVectorStores.Size = new Size(200, 23);
             comboBoxVectorStores.TabIndex = 0;
             // 
             // txtNewVectorStoreName
             // 
-            txtNewVectorStoreName.Location = new Point(240, 20);
+            txtNewVectorStoreName.Location = new Point(232, 61);
             txtNewVectorStoreName.Name = "txtNewVectorStoreName";
             txtNewVectorStoreName.Size = new Size(150, 23);
             txtNewVectorStoreName.TabIndex = 1;
             // 
             // btnSelectFolders
             // 
-            btnSelectFolders.Location = new Point(20, 60);
+            btnSelectFolders.Location = new Point(12, 101);
             btnSelectFolders.Name = "btnSelectFolders";
             btnSelectFolders.Size = new Size(100, 30);
             btnSelectFolders.TabIndex = 2;
@@ -65,23 +72,23 @@
             // listBoxSelectedFolders
             // 
             listBoxSelectedFolders.ItemHeight = 15;
-            listBoxSelectedFolders.Location = new Point(20, 100);
+            listBoxSelectedFolders.Location = new Point(12, 141);
             listBoxSelectedFolders.Name = "listBoxSelectedFolders";
             listBoxSelectedFolders.Size = new Size(379, 94);
             listBoxSelectedFolders.TabIndex = 3;
             // 
             // btnUploadFiles
             // 
-            btnUploadFiles.Location = new Point(20, 220);
+            btnUploadFiles.Location = new Point(12, 261);
             btnUploadFiles.Name = "btnUploadFiles";
             btnUploadFiles.Size = new Size(100, 30);
             btnUploadFiles.TabIndex = 4;
-            btnUploadFiles.Text = "Upload Files";
+            btnUploadFiles.Text = "Upload Replace";
             btnUploadFiles.Click += btnUploadFiles_Click;
             // 
             // labelSelectVectorStore
             // 
-            labelSelectVectorStore.Location = new Point(20, 0);
+            labelSelectVectorStore.Location = new Point(12, 41);
             labelSelectVectorStore.Name = "labelSelectVectorStore";
             labelSelectVectorStore.Size = new Size(100, 23);
             labelSelectVectorStore.TabIndex = 5;
@@ -89,7 +96,7 @@
             // 
             // labelNewVectorStore
             // 
-            labelNewVectorStore.Location = new Point(240, 0);
+            labelNewVectorStore.Location = new Point(232, 41);
             labelNewVectorStore.Name = "labelNewVectorStore";
             labelNewVectorStore.Size = new Size(100, 23);
             labelNewVectorStore.TabIndex = 6;
@@ -97,8 +104,8 @@
             // 
             // progressBar1
             // 
-            progressBar1.Dock = DockStyle.Bottom;
-            progressBar1.Location = new Point(0, 427);
+            progressBar1.Dock = DockStyle.Top;
+            progressBar1.Location = new Point(0, 0);
             progressBar1.Name = "progressBar1";
             progressBar1.Size = new Size(800, 23);
             progressBar1.TabIndex = 7;
@@ -106,7 +113,7 @@
             // btnDeleteAllVSFiles
             // 
             btnDeleteAllVSFiles.BackColor = Color.Firebrick;
-            btnDeleteAllVSFiles.Location = new Point(240, 60);
+            btnDeleteAllVSFiles.Location = new Point(232, 101);
             btnDeleteAllVSFiles.Name = "btnDeleteAllVSFiles";
             btnDeleteAllVSFiles.Size = new Size(150, 30);
             btnDeleteAllVSFiles.TabIndex = 8;
@@ -114,11 +121,54 @@
             btnDeleteAllVSFiles.UseVisualStyleBackColor = false;
             btnDeleteAllVSFiles.Click += btnDeleteAllVSFiles_ClickAsync;
             // 
+            // statusStrip1
+            // 
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabelState, toolStripStatusLabelCurrent, toolStripStatusLabelMax, toolStripStatusLabelInfo });
+            statusStrip1.Location = new Point(0, 428);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.Size = new Size(800, 22);
+            statusStrip1.TabIndex = 9;
+            statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabelState
+            // 
+            toolStripStatusLabelState.Name = "toolStripStatusLabelState";
+            toolStripStatusLabelState.Size = new Size(39, 17);
+            toolStripStatusLabelState.Text = "Status";
+            // 
+            // toolStripStatusLabelCurrent
+            // 
+            toolStripStatusLabelCurrent.Name = "toolStripStatusLabelCurrent";
+            toolStripStatusLabelCurrent.Size = new Size(47, 17);
+            toolStripStatusLabelCurrent.Text = "Current";
+            // 
+            // toolStripStatusLabelMax
+            // 
+            toolStripStatusLabelMax.Name = "toolStripStatusLabelMax";
+            toolStripStatusLabelMax.Size = new Size(30, 17);
+            toolStripStatusLabelMax.Text = "Max";
+            // 
+            // btnUploadNew
+            // 
+            btnUploadNew.Location = new Point(232, 261);
+            btnUploadNew.Name = "btnUploadNew";
+            btnUploadNew.Size = new Size(100, 30);
+            btnUploadNew.TabIndex = 10;
+            btnUploadNew.Text = "Upload New";
+            // 
+            // toolStripStatusLabelInfo
+            // 
+            toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
+            toolStripStatusLabelInfo.Size = new Size(28, 17);
+            toolStripStatusLabelInfo.Text = "Info";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnUploadNew);
+            Controls.Add(statusStrip1);
             Controls.Add(btnDeleteAllVSFiles);
             Controls.Add(progressBar1);
             Controls.Add(comboBoxVectorStores);
@@ -130,6 +180,8 @@
             Controls.Add(labelNewVectorStore);
             Name = "MainForm";
             Text = "Main Form";
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -140,5 +192,11 @@
         private Label labelNewVectorStore;
         private ProgressBar progressBar1;
         private Button btnDeleteAllVSFiles;
+        private StatusStrip statusStrip1;
+        private ToolStripStatusLabel toolStripStatusLabelState;
+        private ToolStripStatusLabel toolStripStatusLabelCurrent;
+        private ToolStripStatusLabel toolStripStatusLabelMax;
+        private Button btnUploadNew;
+        private ToolStripStatusLabel toolStripStatusLabelInfo;
     }
 }
