@@ -103,7 +103,18 @@ namespace oaiVectorStore
             }
             catch (Exception ex)
             {
-                if (ex.Message.ToLower().Contains("no file found"))
+                /*
+Error deleting files: DeleteFileAsync Failed! HTTP status code: NotFound | Response body: {
+  "error": {
+    "message": "No such File object: file-QpBv6FnCOpRblkhDfmwG4XN8",
+    "type": "invalid_request_error",
+    "param": "id",
+    "code": null
+  }
+}
+
+                 */
+                if (ex.Message.ToLower().Contains("notfound"))
                 {
                     return false;
                 }
