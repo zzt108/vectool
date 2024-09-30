@@ -140,23 +140,46 @@ namespace oaiUI
             }
         }
 
+        void WorkStart(string str)
+        {
+            toolStripStatusLabelState.Text = str;
+            btnDeleteAllVSFiles.Enabled = false;
+            btnUploadFiles.Enabled = false;
+            btnUploadNew.Enabled = false;
+        }
+
+        void WorkFinish()
+        {
+            toolStripStatusLabelState.Text = "Finished " + toolStripStatusLabelState.Text;
+            btnDeleteAllVSFiles.Enabled = true;
+            btnUploadFiles.Enabled = true;
+            btnUploadNew.Enabled = true;
+        }
+
         private async void btnUploadFiles_Click(object sender, EventArgs e)
         {
-            string newVectorStoreName = txtNewVectorStoreName.Text.Trim();
-            string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
-            string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
-
-
             try
             {
-                string vectorStoreId = await RecreateVectorStore(vectorStoreName);
+                WorkStart("Upload/Replace files");
+                string newVectorStoreName = txtNewVectorStoreName.Text.Trim();
+                string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+                string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
-                // Upload files from all selected folders
-                await UploadFiles(vectorStoreId);
+                try
+                {
+                    string vectorStoreId = await RecreateVectorStore(vectorStoreName);
+
+                    // Upload files from all selected folders
+                    await UploadFiles(vectorStoreId);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error uploading files: {ex.Message}");
+                }
             }
-            catch (Exception ex)
+            finally
             {
-                MessageBox.Show($"Error uploading files: {ex.Message}");
+                WorkFinish();
             }
         }
 
@@ -188,6 +211,8 @@ namespace oaiUI
                     string extension = Path.GetExtension(file);
                     if (MimeTypeProvider.GetMimeType(extension) != "application/octet-stream") // Skip unknown types
                     {
+                        toolStripStatusLabelInfo.Text = file;
+
                         string? newExtension = MimeTypeProvider.GetNewExtension(extension);
                         if (newExtension is not null)
                         {
@@ -205,7 +230,18 @@ namespace oaiUI
                                     content = $"```{mdTag}\n{content}\n```";
                                     File.WriteAllText(newFilePath, content);                                // Upload the new copy
                                 }
-                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, newFilePath);
+                                try
+                                {
+                                    await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, newFilePath);
+                                }
+                                catch (Exception ex)
+                                {
+                                    var response = MessageBox.Show(ex.Message, newFilePath, MessageBoxButtons.CancelTryContinue,MessageBoxIcon.Error);
+                                    if (response == DialogResult.Cancel)
+                                    {
+                                        throw;
+                                    }
+                                }
                             }
                             finally
                             {
@@ -216,7 +252,18 @@ namespace oaiUI
                         else
                         {
                             // For files that do not have a new extension, upload as usual
-                            await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
+                            try
+                            {
+                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
+                            }
+                            catch (Exception ex)
+                            {
+                                var response = MessageBox.Show(ex.Message, file, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
+                                if (response == DialogResult.Cancel)
+                                {
+                                    throw;
+                                }
+                            }
                         }
                     }
                 }
@@ -274,12 +321,16 @@ namespace oaiUI
                 progressBar1.Update();
                 Application.DoEvents();
             }
+            toolStripStatusLabelMax.Text = progressBar1.Maximum.ToString();
+            toolStripStatusLabelCurrent.Text = progressBar1.Value.ToString();
         }
 
         private async void btnDeleteAllVSFiles_ClickAsync(object sender, EventArgs e)
         {
             try
             {
+                WorkStart("Delete VectorStore files");
+
                 string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
 
                 var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync();
@@ -288,58 +339,15 @@ namespace oaiUI
                 var vectorStoreId = existingStores.First(s => s.Value == selectedVectorStore).Key;
                 await DeleteAllVSFiles(vectorStoreId);
 
-
-                // Upload files from all selected folders
-                foreach (var folder in selectedFolders)
-                {
-                    if (folder.StartsWith('.'))
-                    {
-                        continue;
-                    }
-
-                    var files = Directory.GetFiles(folder, "*", SearchOption.AllDirectories).ToList();
-                    foreach (var file in files)
-                    {
-                        // Check MIME type and upload
-                        string extension = Path.GetExtension(file);
-                        if (MimeTypeProvider.GetMimeType(extension) != "application/octet-stream") // Skip unknown types
-                        {
-                            if (extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
-                            {
-                                // Create a copy of the file with .txt extension
-                                string txtFilePath = Path.ChangeExtension(file, ".cs.txt");
-                                File.Copy(file, txtFilePath, true);
-
-                                try
-                                {
-                                    // Upload the .txt copy
-                                    await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, txtFilePath);
-                                }
-                                finally
-                                {
-                                    // Delete the temporary .txt file
-                                    File.Delete(txtFilePath);
-                                }
-                            }
-                            else
-                            {
-                                // For non-.cs files, upload as usual
-                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
-                            }
-                        }
-
-                        // Update progress
-                        processedFiles++;
-                        UpdateProgress();
-
-                    }
-                }
-
                 MessageBox.Show("Files deleted successfully.");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error deleting files: {ex.Message}");
+            }
+            finally
+            {
+                WorkFinish();
             }
 
         }
