@@ -38,9 +38,8 @@ namespace oaiVectorStore
     {
 
         // Delete File from File Store
-        public async Task<bool> DeleteFileFromFileStoreAsync(string fileId)
+        public async Task<bool> DeleteFileFromFileStoreAsync(OpenAIClient api, string fileId)
         {
-            using var api = new OpenAIClient();
             var isDeleted = await api.FilesEndpoint.DeleteFileAsync(fileId);
             return isDeleted;
         }
@@ -48,6 +47,12 @@ namespace oaiVectorStore
         public async Task<string> UploadFileAsync(string filePath)
         {
             using var api = new OpenAIClient();
+            var file = await api.FilesEndpoint.UploadFileAsync(filePath, FilePurpose.Assistants);
+            return file.Id;
+        }
+
+        public async Task<string> UploadFileAsync(OpenAIClient api, string filePath)
+        {
             var file = await api.FilesEndpoint.UploadFileAsync(filePath, FilePurpose.Assistants);
             return file.Id;
         }

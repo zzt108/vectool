@@ -41,9 +41,8 @@ namespace oaiVectorStore
     public class VectorStoreManager
     {
 
-        public async Task<string> CreateVectorStoreAsync(string name, List<string> fileIds)
+        public async Task<string> CreateVectorStoreAsync(OpenAIClient api, string name, List<string> fileIds)
         {
-            var api = new OpenAIClient();
             var createVectorStoreRequest = new CreateVectorStoreRequest(name);
             return await api.VectorStoresEndpoint.CreateVectorStoreAsync(createVectorStoreRequest);
         }
@@ -55,23 +54,26 @@ namespace oaiVectorStore
             return isDeleted;
         }
 
-        public async Task<Dictionary<string, string>> GetAllVectorStoresAsync()
+        public async Task<Dictionary<string, string>> GetAllVectorStoresAsync(OpenAIClient api)
         {
-            using var api = new OpenAIClient();
             var vectorStores = await api.VectorStoresEndpoint.ListVectorStoresAsync();
             return vectorStores.Items.ToDictionary(vs => vs.Id, vs => vs.Name);
         }
 
-        public async Task AddFileToVectorStoreAsync(string vectorStoreId, string fileId)
+        //public async Task AddFileToVectorStoreAsync(OpenAIClient api, string vectorStoreId, string fileId)
+        //{
+        //    var file = await api.VectorStoresEndpoint.CreateVectorStoreFileAsync(vectorStoreId, fileId, new ChunkingStrategy(ChunkingStrategyType.Static));
+        //}
+
+        public async Task AddFileToVectorStoreAsync(OpenAIClient api, string vectorStoreId, string fileId)
         {
-            using var api = new OpenAIClient();
             var file = await api.VectorStoresEndpoint.CreateVectorStoreFileAsync(vectorStoreId, fileId, new ChunkingStrategy(ChunkingStrategyType.Static));
         }
 
-        public async Task AddFileToVectorStoreFromPathAsync(string vectorStoreId, string filePath)
+        public async Task AddFileToVectorStoreFromPathAsync(OpenAIClient api, string vectorStoreId, string filePath)
         {
-            var fileId = await new FileStoreManager().UploadFileAsync(filePath);
-            await AddFileToVectorStoreAsync(vectorStoreId, fileId);
+            var fileId = await new FileStoreManager().UploadFileAsync(api, filePath);
+            await AddFileToVectorStoreAsync(api, vectorStoreId, fileId);
         }
 
         public async Task<string> RetrieveFileFromFileStoreAsync(string vectorStoreId, string fileId)
@@ -88,19 +90,38 @@ namespace oaiVectorStore
             return isDeleted;
         }
 
-        public async Task<bool> DeleteFileFromAllStoreAsync(string vectorStoreId, string fileId)
+        public async Task<bool> DeleteFileFromAllStoreAsync(OpenAIClient api, string vectorStoreId, string fileId)
         {
-            using var api = new OpenAIClient();
-            var isDeleted = await api.VectorStoresEndpoint.DeleteVectorStoreFileAsync(vectorStoreId, fileId);
-            if (isDeleted) {
-                isDeleted = await new FileStoreManager().DeleteFileFromFileStoreAsync(fileId);
+            try
+            {
+                var isDeleted = await api.VectorStoresEndpoint.DeleteVectorStoreFileAsync(vectorStoreId, fileId);
+                if (isDeleted)
+                {
+                    isDeleted = await new FileStoreManager().DeleteFileFromFileStoreAsync(api, fileId);
+                }
+                return isDeleted;
             }
-            return isDeleted;
+            catch (Exception ex)
+            {
+                if (ex.Message.ToLower().Contains("no file found"))
+                {
+                    return false;
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
-        public async Task<List<string>> ListAllFiles(string vectorStoreId)
+        private async Task<List<string>> ListAllFiles(string vectorStoreId)
         {
             using var api = new OpenAIClient();
+            return await ListAllFiles(api, vectorStoreId);
+        }
+
+        public async Task<List<string>> ListAllFiles(OpenAIClient api, string vectorStoreId)
+        {
             var files = await api.VectorStoresEndpoint.ListVectorStoreFilesAsync(vectorStoreId);
             return files.Items.Select(vs => vs.Id).ToList();
 
