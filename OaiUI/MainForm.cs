@@ -228,7 +228,22 @@ namespace oaiUI
                     try
                     {
                         DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath);
-                        await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, outputDocxPath);
+                        string[] files = Directory.GetFiles(folder);
+
+                        foreach (string file in files)
+                        {
+                            // Check MIME type and upload
+                            string extension = Path.GetExtension(file);
+                            if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
+                            {
+                                continue;
+                            }
+
+                            if (MimeTypeProvider.GetMimeType(extension).StartsWith("application")) // non text types should be uploaded separately
+                            {
+                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, outputDocxPath);
+                            }
+                        }
                     }
                     finally
                     {

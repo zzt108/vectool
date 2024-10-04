@@ -33,7 +33,7 @@ public class DocXHandler
                     continue;
                 }
 
-                if (extension == ".docx") // non text types should be uploadedseparately
+                if (MimeTypeProvider.GetMimeType(extension).StartsWith("application")) // non text types should be uploaded separately
                 {
                     continue;
                 }
