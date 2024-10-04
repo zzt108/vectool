@@ -41,8 +41,9 @@
             toolStripStatusLabelState = new ToolStripStatusLabel();
             toolStripStatusLabelCurrent = new ToolStripStatusLabel();
             toolStripStatusLabelMax = new ToolStripStatusLabel();
-            btnUploadNew = new Button();
             toolStripStatusLabelInfo = new ToolStripStatusLabel();
+            btnUploadNew = new Button();
+            btnClearFolders = new Button();
             statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -62,7 +63,7 @@
             // 
             // btnSelectFolders
             // 
-            btnSelectFolders.Location = new Point(12, 101);
+            btnSelectFolders.Location = new Point(12, 133);
             btnSelectFolders.Name = "btnSelectFolders";
             btnSelectFolders.Size = new Size(100, 30);
             btnSelectFolders.TabIndex = 2;
@@ -72,14 +73,14 @@
             // listBoxSelectedFolders
             // 
             listBoxSelectedFolders.ItemHeight = 15;
-            listBoxSelectedFolders.Location = new Point(12, 141);
+            listBoxSelectedFolders.Location = new Point(12, 173);
             listBoxSelectedFolders.Name = "listBoxSelectedFolders";
             listBoxSelectedFolders.Size = new Size(379, 94);
             listBoxSelectedFolders.TabIndex = 3;
             // 
             // btnUploadFiles
             // 
-            btnUploadFiles.Location = new Point(12, 261);
+            btnUploadFiles.Location = new Point(12, 293);
             btnUploadFiles.Name = "btnUploadFiles";
             btnUploadFiles.Size = new Size(100, 30);
             btnUploadFiles.TabIndex = 4;
@@ -113,9 +114,9 @@
             // btnDeleteAllVSFiles
             // 
             btnDeleteAllVSFiles.BackColor = Color.Firebrick;
-            btnDeleteAllVSFiles.Location = new Point(232, 101);
+            btnDeleteAllVSFiles.Location = new Point(12, 90);
             btnDeleteAllVSFiles.Name = "btnDeleteAllVSFiles";
-            btnDeleteAllVSFiles.Size = new Size(150, 30);
+            btnDeleteAllVSFiles.Size = new Size(200, 30);
             btnDeleteAllVSFiles.TabIndex = 8;
             btnDeleteAllVSFiles.Text = "Delete All VS files";
             btnDeleteAllVSFiles.UseVisualStyleBackColor = false;
@@ -148,37 +149,35 @@
             toolStripStatusLabelMax.Size = new Size(30, 17);
             toolStripStatusLabelMax.Text = "Max";
             // 
-            // btnUploadNew
-            // 
-            btnUploadNew.Location = new Point(232, 261);
-            btnUploadNew.Name = "btnUploadNew";
-            btnUploadNew.Size = new Size(100, 30);
-            btnUploadNew.TabIndex = 10;
-            btnUploadNew.Text = "Upload New";
-            // 
             // toolStripStatusLabelInfo
             // 
             toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
             toolStripStatusLabelInfo.Size = new Size(28, 17);
             toolStripStatusLabelInfo.Text = "Info";
-
-            // Button to clear the selected folders listbox
-            Button btnClearFolders = new Button
-            {
-                Name = "btnClearFolders",
-                Text = "Clear Folders",
-                Location = new System.Drawing.Point(130, 220), // Adjust the location as needed
-                Size = new System.Drawing.Size(100, 30)
-            };
+            // 
+            // btnUploadNew
+            // 
+            btnUploadNew.Location = new Point(232, 293);
+            btnUploadNew.Name = "btnUploadNew";
+            btnUploadNew.Size = new Size(100, 30);
+            btnUploadNew.TabIndex = 10;
+            btnUploadNew.Text = "Upload New";
+            // 
+            // btnClearFolders
+            // 
+            btnClearFolders.Location = new Point(118, 133);
+            btnClearFolders.Name = "btnClearFolders";
+            btnClearFolders.Size = new Size(108, 30);
+            btnClearFolders.TabIndex = 0;
+            btnClearFolders.Text = "Empty Selected";
             btnClearFolders.Click += btnClearFolders_Click;
-            Controls.Add(btnClearFolders);
-
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnClearFolders);
             Controls.Add(btnUploadNew);
             Controls.Add(statusStrip1);
             Controls.Add(btnDeleteAllVSFiles);
@@ -210,5 +209,6 @@
         private ToolStripStatusLabel toolStripStatusLabelMax;
         private Button btnUploadNew;
         private ToolStripStatusLabel toolStripStatusLabelInfo;
+        private Button btnClearFolders;
     }
 }
