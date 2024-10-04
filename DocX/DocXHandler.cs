@@ -67,7 +67,7 @@ public class DocXHandler
 
             }
             // Create a new paragraph for folder's name
-            body.Append(new Paragraph(new Run(new Text($"</Folder"))));
+            body.Append(new Paragraph(new Run(new Text($"</Folder>"))));
         }
     }
 
