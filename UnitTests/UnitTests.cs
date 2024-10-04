@@ -22,7 +22,7 @@ namespace oaiVectorStoreTests
         [TestCase(".cs", ".cs.md")]
         [TestCase(".csproj", ".csproj.md")]
         [TestCase(".feature", ".feature.md")]
-        [TestCase(".unknown", null)] // Unknown extension should return null
+        [TestCase(".unknown", ".unknown")] // Unknown extension should return unchanged
         public void GetNewExtension_ValidAndInvalidExtensions_ReturnsCorrectNewExtension(string extension, string? expectedNewExtension)
         {
             var result = MimeTypeProvider.GetNewExtension(extension);
@@ -38,6 +38,31 @@ namespace oaiVectorStoreTests
         {
             var result = MimeTypeProvider.GetMdTag(extension);
 
+            result.Should().Be(expectedMdTag);
+        }
+        [TestCase("", "application/octet-stream")] // Empty string
+        [TestCase(null, "application/octet-stream")] // Null input
+        [TestCase(".verylongextensionthatshouldbehandledproperly", "application/octet-stream")] // Long extension
+        public void GetMimeType_InvalidOrEdgeCases_ReturnsDefaultMimeType(string? extension, string expectedMimeType)
+        {
+            var result = MimeTypeProvider.GetMimeType(extension);
+            result.Should().Be(expectedMimeType);
+        }
+
+        [TestCase(".cs", ".cs.md")] // changed extension
+        [TestCase(".txt", ".txt")] // Valid extension
+        [TestCase(".unknown", ".unknown")] // Unknown extension
+        public void GetNewExtension_EdgeCases_ReturnsExpected(string extension, string? expectedNewExtension)
+        {
+            var result = MimeTypeProvider.GetNewExtension(extension);
+            result.Should().Be(expectedNewExtension);
+        }
+
+        [TestCase(".md", null)] // Valid extension
+        [TestCase(".unknown", null)] // Unknown extension
+        public void GetMdTag_EdgeCases_ReturnsExpected(string extension, string? expectedMdTag)
+        {
+            var result = MimeTypeProvider.GetMdTag(extension);
             result.Should().Be(expectedMdTag);
         }
     }
