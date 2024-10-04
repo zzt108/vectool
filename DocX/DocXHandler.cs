@@ -25,7 +25,13 @@ public class DocXHandler
                 continue; // Skip empty files
             }
 
+            var mdTag = MimeTypeProvider.GetMdTag(extension);
             string content = File.ReadAllText(filePath);
+            if (mdTag != null)
+            {
+                // Add start and end language tags to the file content
+                content = $"```{mdTag}\n{content}\n```";
+            }
             doc.InsertParagraph(content).SpacingAfter(20);
         }
 
