@@ -208,7 +208,7 @@ namespace oaiUI
                     processedFolders++;
                     UpdateProgress();
 
-                    if (folder.Contains("\\.") || folder.Contains("\\obj\\") || folder.Contains("\\bin\\") || folder.Contains("\\packages\\"))
+                    if (folder.Contains("\\.") || folder.Contains("\\obj") || folder.Contains("\\bin") || folder.Contains("\\packages"))
                     {
                         continue;
                     }
@@ -225,8 +225,15 @@ namespace oaiUI
                     string outputDocxPath = Path.Combine(folder, relativePath + ".docx");
 
                     // string outputDocxPath = Path.Combine(folder, "xxx.docx");
-                    DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath);
-                    await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, outputDocxPath);
+                    try
+                    {
+                        DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath);
+                        await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, outputDocxPath);
+                    }
+                    finally
+                    {
+                        new FileInfo(outputDocxPath).Delete();
+                    }
 
                 }
 
