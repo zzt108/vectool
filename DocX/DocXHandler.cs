@@ -18,6 +18,9 @@ public class DocXHandler
             Body body = new Body();
             mainPart.Document.Append(body);
 
+            // Create a new paragraph for folder's name
+            body.Append(new Paragraph(new Run(new Text($"<Folder name = {folderPath}>"))));
+
             // Get all text files in the folder
             string[] files = Directory.GetFiles(folderPath);
 
@@ -30,27 +33,41 @@ public class DocXHandler
                     continue;
                 }
 
+                if (extension == ".docx") // non text types should be uploadedseparately
+                {
+                    continue;
+                }
+
                 // Check if the file content is not empty
                 if (new FileInfo(file).Length == 0)
                 {
                     continue; // Skip empty files
                 }
 
-                var mdTag = MimeTypeProvider.GetMdTag(extension);
                 string content = File.ReadAllText(file);
+                var mdTag = MimeTypeProvider.GetMdTag(extension);
                 if (mdTag != null)
                 {
                     // Add start and end language tags to the file content
                     content = $"```{mdTag}\n{content}\n```";
                 }
 
-                // Read the content of each file
-                string fileContent = File.ReadAllText(file);
+                // Calculate the relative path from rootFolder to folder
+                string relativePath = Path.GetRelativePath(folderPath, file).Replace('\\', '_');
+
+                // Create a new paragraph for each file's name
+                body.Append(new Paragraph(new Run(new Text($"<File name = {relativePath}>"))));
 
                 // Create a new paragraph for each file's content
-                Paragraph para = new Paragraph(new Run(new Text(fileContent)));
+                Paragraph para = new Paragraph(new Run(new Text(content)));
                 body.Append(para);
+
+                // Create a new paragraph for each file's end
+                body.Append(new Paragraph(new Run(new Text($"</File>"))));
+
             }
+            // Create a new paragraph for folder's name
+            body.Append(new Paragraph(new Run(new Text($"</Folder"))));
         }
     }
 
