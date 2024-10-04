@@ -26,8 +26,13 @@ namespace oaiVectorStore
                    ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public static string GetMimeType(string fileExtension)
+        public static string GetMimeType(string? fileExtension)
         {
+            if (string.IsNullOrEmpty(fileExtension))
+            {
+                return "application/octet-stream";
+            }
+
             if (!fileExtension.StartsWith("."))
             {
                 fileExtension = $".{fileExtension}";
@@ -39,7 +44,14 @@ namespace oaiVectorStore
         public static string? GetNewExtension(string fileExtension)
         {
             _newExtensions.TryGetValue(fileExtension, out string? newExtension);
-            return newExtension;
+            if (newExtension != null)
+            {
+                return newExtension;
+            }
+            else
+            {
+                return fileExtension;
+            }
         }
 
         public static string? GetMdTag(string fileExtension)
