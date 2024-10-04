@@ -1,4 +1,5 @@
 ﻿using oaiVectorStore;
+using DocXHandler;
 using OpenAI;
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ namespace oaiUI
         private Button btnSelectFolders;
         private ListBox listBoxSelectedFolders;
         private Button btnUploadFiles;
-        private int processedFiles;
+        private int processedFolders;
 
         public MainForm()
         {
@@ -186,104 +187,119 @@ namespace oaiUI
             }
         }
 
-        private async Task UploadFiles(string vectorStoreId)
-        {
-            var totalFiles = selectedFolders.Sum(folder =>
-                Directory.GetFiles(folder, "*", SearchOption.AllDirectories).Count());
 
-            processedFiles = 0;
+    private async Task UploadFiles(string vectorStoreId)
+        {
+            var totalFolders = selectedFolders.Sum(folder =>
+                Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());
+
+            processedFolders = 0;
             progressBar1.Minimum = 0;
-            progressBar1.Maximum = totalFiles;
+            progressBar1.Maximum = totalFolders;
             progressBar1.Value = 0;
 
             using var api = new OpenAIClient();
 
-            foreach (var folder in selectedFolders)
+            foreach (var rootFolder in selectedFolders)
             {
-
-                var files = Directory.GetFiles(folder, "*", SearchOption.AllDirectories).ToList();
-                foreach (var file in files)
+                var folders = Directory.GetDirectories(rootFolder, "*", SearchOption.AllDirectories);
+                foreach (var folder in folders)
                 {
-                    processedFiles++;
+                    processedFolders++;
                     UpdateProgress();
 
-                    if (file.Contains("\\.") || file.Contains("\\obj\\") || file.Contains("\\bin\\") || file.Contains("\\packages\\"))
+                    if (folder.Contains("\\.") || folder.Contains("\\obj\\") || folder.Contains("\\bin\\") || folder.Contains("\\packages\\"))
                     {
                         continue;
                     }
 
-                    // Check MIME type and upload
-                    string extension = Path.GetExtension(file);
-                    if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
+                    toolStripStatusLabelInfo.Text = folder;
+
+                    DocXHandler.DocXHandler.ConvertFilesToDocx(folder, Path.Combine(folder, "xxx.docx"));
+
+                }
+
+            }
+
+            MessageBox.Show("Files uploaded successfully.");
+        }
+
+        private async Task StoreIndividualFiles(string vectorStoreId, OpenAIClient api, string folder)
+        {
+            var files = Directory.GetFiles(folder).ToList();
+            foreach (var file in files)
+            {
+
+
+                // Check MIME type and upload
+                string extension = Path.GetExtension(file);
+                if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
+                {
+                    continue;
+                }
+
+                // Check if the file content is not empty
+                if (new FileInfo(file).Length == 0)
+                {
+                    continue; // Skip empty files
+                }
+
+                toolStripStatusLabelInfo.Text = file;
+
+                string? newExtension = MimeTypeProvider.GetNewExtension(extension);
+                if (newExtension is not null)
+                {
+                    // Create a copy of the file with the new extension
+                    string newFilePath = Path.ChangeExtension(file, newExtension);
+                    File.Copy(file, newFilePath, true);
+
+                    try
                     {
-                        continue;
-                    }
-
-                    // Check if the file content is not empty
-                    if (new FileInfo(file).Length == 0)
-                    {
-                        continue; // Skip empty files
-                    }
-
-                    toolStripStatusLabelInfo.Text = file;
-
-                    string? newExtension = MimeTypeProvider.GetNewExtension(extension);
-                    if (newExtension is not null)
-                    {
-                        // Create a copy of the file with the new extension
-                        string newFilePath = Path.ChangeExtension(file, newExtension);
-                        File.Copy(file, newFilePath, true);
-
+                        var mdTag = MimeTypeProvider.GetMdTag(extension);
+                        if (mdTag != null)
+                        {
+                            // Add start and end language tags to the file content
+                            string content = File.ReadAllText(newFilePath);
+                            content = $"```{mdTag}\n{content}\n```";
+                            File.WriteAllText(newFilePath, content);                                // Upload the new copy
+                        }
                         try
                         {
-                            var mdTag = MimeTypeProvider.GetMdTag(extension);
-                            if (mdTag != null)
-                            {
-                                // Add start and end language tags to the file content
-                                string content = File.ReadAllText(newFilePath);
-                                content = $"```{mdTag}\n{content}\n```";
-                                File.WriteAllText(newFilePath, content);                                // Upload the new copy
-                            }
-                            try
-                            {
-                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, newFilePath);
-                            }
-                            catch (Exception ex)
-                            {
-                                var response = MessageBox.Show(ex.Message, newFilePath, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
-                                if (response == DialogResult.Cancel)
-                                {
-                                    throw;
-                                }
-                            }
-                        }
-                        finally
-                        {
-                            // Delete the temporary new extension file
-                            File.Delete(newFilePath);
-                        }
-                    }
-                    else
-                    {
-                        // For files that do not have a new extension, upload as usual
-                        try
-                        {
-                            await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, file);
+                            await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, newFilePath);
                         }
                         catch (Exception ex)
                         {
-                            var response = MessageBox.Show(ex.Message, file, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
+                            var response = MessageBox.Show(ex.Message, newFilePath, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
                             if (response == DialogResult.Cancel)
                             {
                                 throw;
                             }
                         }
                     }
-
+                    finally
+                    {
+                        // Delete the temporary new extension file
+                        File.Delete(newFilePath);
+                    }
                 }
-            }
+                else
+                {
+                    // For files that do not have a new extension, upload as usual
+                    try
+                    {
+                        await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, file);
+                    }
+                    catch (Exception ex)
+                    {
+                        var response = MessageBox.Show(ex.Message, file, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
+                        if (response == DialogResult.Cancel)
+                        {
+                            throw;
+                        }
+                    }
+                }
 
-            MessageBox.Show("Files uploaded successfully.");
+            }
         }
 
         private async Task<string> RecreateVectorStore(string vectorStoreName)
@@ -311,18 +327,18 @@ namespace oaiUI
         private async Task DeleteAllVSFiles(OpenAIClient api, string vectorStoreId)
         {
             var fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId); // List file IDs to delete
-            while (fileIds.Count > 0) 
+            while (fileIds.Count > 0)
             {
                 var totalFiles = fileIds.Count;
 
-                processedFiles = 0;
+                processedFolders = 0;
                 progressBar1.Minimum = 0;
                 progressBar1.Maximum = totalFiles;
                 progressBar1.Value = 0;
                 foreach (var fileId in fileIds)
                 {
                     await _vectorStoreManager.DeleteFileFromAllStoreAsync(api, vectorStoreId, fileId);
-                    processedFiles++;
+                    processedFolders++;
                     UpdateProgress();
                 }
                 fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId); // List file IDs to delete
@@ -337,7 +353,7 @@ namespace oaiUI
             }
             else
             {
-                progressBar1.Value = processedFiles;
+                progressBar1.Value = processedFolders;
                 progressBar1.Update();
                 Application.DoEvents();
             }
