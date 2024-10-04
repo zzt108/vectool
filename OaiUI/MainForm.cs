@@ -188,7 +188,7 @@ namespace oaiUI
         }
 
 
-    private async Task UploadFiles(string vectorStoreId)
+        private async Task UploadFiles(string vectorStoreId)
         {
             var totalFolders = selectedFolders.Sum(folder =>
                 Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());
@@ -215,7 +215,16 @@ namespace oaiUI
 
                     toolStripStatusLabelInfo.Text = folder;
 
-                    string outputDocxPath = Path.Combine(folder, "xxx.docx");
+                    // TODO create here the outputDocxPath by concatenating the difference between rootFolder and folder
+                    // TODO replace \ with _ and append .docx
+
+                    // Calculate the relative path from rootFolder to folder
+                    string relativePath = Path.GetRelativePath(rootFolder, folder).Replace('\\', '_');
+
+                    // Create the outputDocxPath by appending ".docx" to the relative path
+                    string outputDocxPath = Path.Combine(folder, relativePath + ".docx");
+
+                    // string outputDocxPath = Path.Combine(folder, "xxx.docx");
                     DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath);
                     await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, outputDocxPath);
 
