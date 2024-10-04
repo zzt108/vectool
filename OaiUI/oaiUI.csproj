@@ -11,10 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenAI" Version="1.11.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
   </ItemGroup>
 
