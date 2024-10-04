@@ -215,7 +215,9 @@ namespace oaiUI
 
                     toolStripStatusLabelInfo.Text = folder;
 
-                    DocXHandler.DocXHandler.ConvertFilesToDocx(folder, Path.Combine(folder, "xxx.docx"));
+                    string outputDocxPath = Path.Combine(folder, "xxx.docx");
+                    DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath);
+                    await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, outputDocxPath);
 
                 }
 
