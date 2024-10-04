@@ -1,6 +1,5 @@
 ﻿using oaiVectorStore;
 using OpenAI;
-using OpenAI_API;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
