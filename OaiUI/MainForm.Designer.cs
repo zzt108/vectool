@@ -161,6 +161,18 @@
             toolStripStatusLabelInfo.Name = "toolStripStatusLabelInfo";
             toolStripStatusLabelInfo.Size = new Size(28, 17);
             toolStripStatusLabelInfo.Text = "Info";
+
+            // Button to clear the selected folders listbox
+            Button btnClearFolders = new Button
+            {
+                Name = "btnClearFolders",
+                Text = "Clear Folders",
+                Location = new System.Drawing.Point(130, 220), // Adjust the location as needed
+                Size = new System.Drawing.Size(100, 30)
+            };
+            btnClearFolders.Click += btnClearFolders_Click;
+            Controls.Add(btnClearFolders);
+
             // 
             // MainForm
             // 
