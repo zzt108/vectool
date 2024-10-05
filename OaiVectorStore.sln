@@ -9,9 +9,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "oaiVectorStore", "oaiVector
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{E0724151-FEA3-4332-87A9-BC75974A5AD8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocXHandler", "DocX\DocXHandler.csproj", "{18AB0575-29AB-4D4D-B946-315A3C26DB18}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocXHandler", "DocX\DocXHandler.csproj", "{18AB0575-29AB-4D4D-B946-315A3C26DB18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MimeTypes", "MimeTypes\MimeTypes.csproj", "{6C0E9A4F-8A3C-40DC-A03C-D2A58ABB9536}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MimeTypes", "MimeTypes\MimeTypes.csproj", "{6C0E9A4F-8A3C-40DC-A03C-D2A58ABB9536}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SeriLogShared", "LogCtx\SeriLogShared\SeriLogShared.shproj", "{20D441B5-5A67-4BD2-85AB-5B8A98D1F907}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{53AFF8FD-EBC6-4A3D-8E96-27201177A44C}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "LogCtxShared", "LogCtx\LogCtxShared\LogCtxShared.shproj", "{7EC4223B-6D17-4608-816E-CD1E6A5411D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,7 +49,17 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{20D441B5-5A67-4BD2-85AB-5B8A98D1F907} = {53AFF8FD-EBC6-4A3D-8E96-27201177A44C}
+		{7EC4223B-6D17-4608-816E-CD1E6A5411D9} = {53AFF8FD-EBC6-4A3D-8E96-27201177A44C}
+	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C0C89143-7E2F-41DD-BD67-F5BC7DB6BB4B}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		LogCtx\SeriLogShared\SeriLogShared.projitems*{20d441b5-5a67-4bd2-85ab-5b8a98d1f907}*SharedItemsImports = 13
+		LogCtx\LogCtxShared\LogCtxShared.projitems*{7ec4223b-6d17-4608-816e-cd1e6a5411d9}*SharedItemsImports = 13
+		LogCtx\LogCtxShared\LogCtxShared.projitems*{ab47a1cc-420b-431a-b6ab-a156d39da7ca}*SharedItemsImports = 5
+		LogCtx\SeriLogShared\SeriLogShared.projitems*{ab47a1cc-420b-431a-b6ab-a156d39da7ca}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal
