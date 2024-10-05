@@ -52,6 +52,13 @@ namespace oaiVectorStore
             _mdTags.TryGetValue(fileExtension, out string? mdTag);
             return mdTag;
         }
+
+        public static bool IsBinary(string fileExtension)
+        {
+            _mdTags.TryGetValue(fileExtension, out string? mdTag);
+            // all known binary files are in mdTags, so if it is not in mdTags, it is text 
+            return mdTag is null ? false : mdTag.Equals("application/binary");
+        }
     }
 }/*
  ---------------------------

@@ -3,5 +3,9 @@
   ".csproj": "msbuild",
   ".feature": "gherkin",
   ".xaml": "xaml",
-  ".xml": "xml"
+  ".xml": "xml",
+  ".doc": "application/binary",
+  ".docx": "application/binary",
+  ".pdf": "application/binary",
+  ".pptx": "application/binary"
 }
