@@ -44,14 +44,7 @@ namespace oaiVectorStore
         public static string? GetNewExtension(string fileExtension)
         {
             _newExtensions.TryGetValue(fileExtension, out string? newExtension);
-            if (newExtension != null)
-            {
-                return newExtension;
-            }
-            else
-            {
-                return fileExtension;
-            }
+            return newExtension;
         }
 
         public static string? GetMdTag(string fileExtension)
