@@ -1,6 +1,7 @@
 ﻿using oaiVectorStore;
 using DocXHandler;
 using OpenAI;
+using SeriLogShared;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -128,6 +129,7 @@ namespace oaiUI
 
         private async Task UploadFiles(string vectorStoreId)
         {
+            using var log = new SeriLogCtx();
             var totalFolders = selectedFolders.Sum(folder =>
                 Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());
 

@@ -15,4 +15,8 @@
     <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
   </ItemGroup>
 
+  <Import Project="..\LogCtx\SeriLogShared\SeriLogShared.projitems" Label="Shared" />
+
+  <Import Project="..\LogCtx\LogCtxShared\LogCtxShared.projitems" Label="Shared" />
+
 </Project>
