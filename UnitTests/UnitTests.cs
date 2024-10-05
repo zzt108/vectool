@@ -66,5 +66,19 @@ namespace oaiVectorStoreTests
             var result = MimeTypeProvider.GetMdTag(extension);
             result.Should().Be(expectedMdTag);
         }
+
+        [TestCase(".md", false)] // Valid extension
+        [TestCase(".cs", false)] // Valid extension
+        [TestCase(".json", false)] // Valid extension
+        [TestCase(".unknown", false)] // unknown extension regarded as text
+        [TestCase(".doc", true)] // Unknown extension
+        [TestCase(".docx", true)] // Unknown extension
+        [TestCase(".pdf", true)] // Unknown extension
+        [TestCase(".pptx", true)] // Unknown extension
+        public void IsBinary(string extension, bool expected)
+        {
+            var result = MimeTypeProvider.IsBinary(extension);
+            result.Should().Be(expected);
+        }
     }
 }
