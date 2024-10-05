@@ -1,17 +1,9 @@
-﻿using oaiVectorStore;
-using DocXHandler;
+﻿using LogCtxShared;
+using oaiVectorStore;
 using OpenAI;
 using SeriLogShared;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace oaiUI
 {
@@ -32,6 +24,8 @@ namespace oaiUI
             // Initialize your OpenAIClient with appropriate API key and base URL
             _vectorStoreManager = new VectorStoreManager();
             LoadVectorStores(); // Load existing vector stores into ComboBox
+            using var log = new SeriLogCtx();
+            log.ConfigureXml("Config/LogConfig.xml");
         }
 
         private void btnClearFolders_Click(object sender, EventArgs e)
@@ -129,7 +123,7 @@ namespace oaiUI
 
         private async Task UploadFiles(string vectorStoreId)
         {
-            using var log = new SeriLogCtx();
+
             var totalFolders = selectedFolders.Sum(folder =>
                 Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());
 
@@ -139,6 +133,13 @@ namespace oaiUI
             progressBar1.Value = 0;
 
             using var api = new OpenAIClient();
+            using var log = new SeriLogCtx();
+            log.ConfigureXml("Config/LogConfig.xml");
+            var p = log.Ctx.Set(new Props()
+                .Add("vectorStoreId", vectorStoreId)
+                .Add("totalFolders", totalFolders)
+                .Add("selectedFolders", selectedFolders.AsJson())
+                );
 
             foreach (var rootFolder in selectedFolders)
             {
@@ -147,6 +148,7 @@ namespace oaiUI
                 {
                     processedFolders++;
                     UpdateProgress();
+                    log.Debug(folder);
 
                     if (folder.Contains("\\.") || folder.Contains("\\obj") || folder.Contains("\\bin") || folder.Contains("\\packages"))
                     {
@@ -164,7 +166,8 @@ namespace oaiUI
                     // Create the outputDocxPath by appending ".docx" to the relative path
                     string outputDocxPath = Path.Combine(folder, relativePath + ".docx");
 
-                    // string outputDocxPath = Path.Combine(folder, "xxx.docx");
+                    log.Debug(outputDocxPath);
+
                     try
                     {
                         DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath);
@@ -179,9 +182,10 @@ namespace oaiUI
                                 continue;
                             }
 
-                            if (MimeTypeProvider.GetMimeType(extension).StartsWith("application")) // non text types should be uploaded separately
+                            if (MimeTypeProvider.IsBinary(extension)) // non text types should be uploaded separately
                             {
-                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, outputDocxPath);
+                                log.Info($"Uploading {file}");
+                                await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, file);
                             }
                         }
                     }
@@ -202,7 +206,6 @@ namespace oaiUI
             var files = Directory.GetFiles(folder).ToList();
             foreach (var file in files)
             {
-
 
                 // Check MIME type and upload
                 string extension = Path.GetExtension(file);
@@ -308,8 +311,18 @@ namespace oaiUI
                 progressBar1.Minimum = 0;
                 progressBar1.Maximum = totalFiles;
                 progressBar1.Value = 0;
+
+                using var log = new SeriLogCtx();
+                log.ConfigureXml("Config/LogConfig.xml");
+                var p = log.Ctx.Set(new Props()
+                    .Add("vectorStoreId", vectorStoreId)
+                    .Add("totalFiles", totalFiles)
+                    );
+
+                log.Info($"Deleting from VS {vectorStoreId}");
                 foreach (var fileId in fileIds)
                 {
+                    log.Info($"Deleting file {fileId}");
                     await _vectorStoreManager.DeleteFileFromAllStoreAsync(api, vectorStoreId, fileId);
                     processedFolders++;
                     UpdateProgress();
