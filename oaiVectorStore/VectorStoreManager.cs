@@ -133,9 +133,29 @@ Error deleting files: DeleteFileAsync Failed! HTTP status code: NotFound | Respo
 
         public async Task<List<string>> ListAllFiles(OpenAIClient api, string vectorStoreId)
         {
-            var files = await api.VectorStoresEndpoint.ListVectorStoreFilesAsync(vectorStoreId);
+            ListResponse<VectorStoreFileResponse> files = await api.VectorStoresEndpoint.ListVectorStoreFilesAsync(vectorStoreId);
             return files.Items.Select(vs => vs.Id).ToList();
 
         }
+
+
+        //public async Task<List<string>> RetrieveAllFilesInVectorStoreAsync(OpenAIClient api, string vectorStoreId)
+        //{
+        //    List<string> allFileIds = new List<string>();
+        //    int offset = 0;
+        //    int limit = 20; // Adjust this limit based on your requirements
+        //    ListResponse<VectorStoreFileResponse> response;
+
+        //    do
+        //    {
+        //        response = await api.VectorStoresEndpoint.ListVectorStoreFilesAsync(vectorStoreId, limit: limit, offset: offset);
+        //        allFileIds.AddRange(response.Items.Select(vs => vs.Id));
+        //        offset += limit; // Move to the next set of files
+        //    }
+        //    while (response.Items.Count > 0); // Continue until there are no more files
+
+        //    return allFileIds;
+        //}
+
     }
 }

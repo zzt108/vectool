@@ -22,7 +22,7 @@ namespace oaiVectorStoreTests
         [TestCase(".cs", ".cs.md")]
         [TestCase(".csproj", ".csproj.md")]
         [TestCase(".feature", ".feature.md")]
-        [TestCase(".unknown", ".unknown")] // Unknown extension should return unchanged
+        [TestCase(".unknown", null)] // Unknown extension should return unchanged
         public void GetNewExtension_ValidAndInvalidExtensions_ReturnsCorrectNewExtension(string extension, string? expectedNewExtension)
         {
             var result = MimeTypeProvider.GetNewExtension(extension);
@@ -34,6 +34,7 @@ namespace oaiVectorStoreTests
         [TestCase(".csproj", "msbuild")]
         [TestCase(".feature", "gherkin")]
         [TestCase(".unknown", null)] // Unknown extension should return null
+        [TestCase(".txt", null)] // Unspecified extension should return null
         public void GetMdTag_ValidAndInvalidExtensions_ReturnsCorrectMdTag(string extension, string? expectedMdTag)
         {
             var result = MimeTypeProvider.GetMdTag(extension);
@@ -50,8 +51,8 @@ namespace oaiVectorStoreTests
         }
 
         [TestCase(".cs", ".cs.md")] // changed extension
-        [TestCase(".txt", ".txt")] // Valid extension
-        [TestCase(".unknown", ".unknown")] // Unknown extension
+        [TestCase(".txt", null)] // Valid extension
+        [TestCase(".unknown", null)] // Unknown extension
         public void GetNewExtension_EdgeCases_ReturnsExpected(string extension, string? expectedNewExtension)
         {
             var result = MimeTypeProvider.GetNewExtension(extension);
