@@ -15,6 +15,15 @@
     <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Config\LogConfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\LogConfig.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <Import Project="..\LogCtx\SeriLogShared\SeriLogShared.projitems" Label="Shared" />
 
   <Import Project="..\LogCtx\LogCtxShared\LogCtxShared.projitems" Label="Shared" />
