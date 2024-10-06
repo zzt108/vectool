@@ -16,10 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Config\LogConfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Config\LogConfig.xml">
+    <None Update="Config\nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

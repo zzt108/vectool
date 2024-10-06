@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{53AFF8
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "LogCtxShared", "LogCtx\LogCtxShared\LogCtxShared.shproj", "{7EC4223B-6D17-4608-816E-CD1E6A5411D9}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "NLogShared", "LogCtx\NLogShared\NLogShared.shproj", "{EBBB11C7-70A0-41D7-A255-5F47E6F30091}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{20D441B5-5A67-4BD2-85AB-5B8A98D1F907} = {53AFF8FD-EBC6-4A3D-8E96-27201177A44C}
 		{7EC4223B-6D17-4608-816E-CD1E6A5411D9} = {53AFF8FD-EBC6-4A3D-8E96-27201177A44C}
+		{EBBB11C7-70A0-41D7-A255-5F47E6F30091} = {53AFF8FD-EBC6-4A3D-8E96-27201177A44C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C0C89143-7E2F-41DD-BD67-F5BC7DB6BB4B}
@@ -61,5 +64,9 @@ Global
 		LogCtx\LogCtxShared\LogCtxShared.projitems*{7ec4223b-6d17-4608-816e-cd1e6a5411d9}*SharedItemsImports = 13
 		LogCtx\LogCtxShared\LogCtxShared.projitems*{ab47a1cc-420b-431a-b6ab-a156d39da7ca}*SharedItemsImports = 5
 		LogCtx\SeriLogShared\SeriLogShared.projitems*{ab47a1cc-420b-431a-b6ab-a156d39da7ca}*SharedItemsImports = 5
+		LogCtx\LogCtxShared\LogCtxShared.projitems*{e0724151-fea3-4332-87a9-bc75974a5ad8}*SharedItemsImports = 5
+		LogCtx\NLogShared\NLogShared.projitems*{e0724151-fea3-4332-87a9-bc75974a5ad8}*SharedItemsImports = 5
+		LogCtx\SeriLogShared\SeriLogShared.projitems*{e0724151-fea3-4332-87a9-bc75974a5ad8}*SharedItemsImports = 5
+		LogCtx\NLogShared\NLogShared.projitems*{ebbb11c7-70a0-41d7-a255-5f47e6f30091}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
