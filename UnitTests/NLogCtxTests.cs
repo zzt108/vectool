@@ -1,8 +1,7 @@
 ﻿using FluentAssertions;
 using NUnit.Framework;
-using NLogAdapter;
+using NLogShared;
 using LogCtxShared;
-using SeriLogShared;
 
 namespace NLogAdapter.Tests
 {
@@ -22,7 +21,7 @@ namespace NLogAdapter.Tests
         public void Init_ShouldInitializeLogger_WhenCanLogIsTrue()
         {
             // Arrange
-            var nLogCtx = new NLogCtx();
+            var nLogCtx = new CtxLogger();
 
             // Act
             var result = nLogCtx.ConfigureXml(ConfigPath);
@@ -64,12 +63,12 @@ namespace NLogAdapter.Tests
         {
             // Arrange
             // Serilog.Debugging.SelfLog.Enable(msg => Console.Error.WriteLine(msg));
-            using (var log1 = new NLogCtx())
+            using (var log1 = new CtxLogger())
             {
                 log1.ConfigureXml(ConfigPath);
             };
 
-            using var log = new NLogCtx();
+            using var log = new CtxLogger();
 
             var props = new Props("first", log);
 
