@@ -27,7 +27,7 @@ namespace SeriLogAdapter.Tests
         public void ConfigureJson_ShouldReadConfigurationFile()
         {
             // Arrange
-            var seriLogCtx = new SeriLogCtx();
+            var seriLogCtx = new CtxLogger();
 
             // Act
             var result = seriLogCtx.ConfigureJson(ConfigPathJson);
@@ -40,7 +40,7 @@ namespace SeriLogAdapter.Tests
         public void ConfigureXml_ShouldReadConfigurationFile()
         {
             // Arrange
-            var seriLogCtx = new SeriLogCtx();
+            var seriLogCtx = new CtxLogger();
 
             // Act
             var result = seriLogCtx.ConfigureXml(ConfigPathXml);
@@ -54,7 +54,7 @@ namespace SeriLogAdapter.Tests
         {
             // Arrange
             Serilog.Debugging.SelfLog.Enable(msg => Console.Error.WriteLine(msg));
-            using var log = new SeriLogCtx();
+            using var log = new CtxLogger();
             log.ConfigureXml(ConfigPathXml);
             var props = new Props("first", log);
 
@@ -72,7 +72,7 @@ namespace SeriLogAdapter.Tests
         public void Dispose_ShouldFlushLogs()
         {
             // Arrange
-            using var log = new SeriLogCtx();
+            using var log = new CtxLogger();
             log.ConfigureJson(ConfigPathJson);
 
             // Act

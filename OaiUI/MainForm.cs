@@ -1,7 +1,7 @@
 ﻿using LogCtxShared;
 using oaiVectorStore;
 using OpenAI;
-using SeriLogShared;
+using NLogShared;
 using System;
 using System.Linq;
 
@@ -24,7 +24,8 @@ namespace oaiUI
             // Initialize your OpenAIClient with appropriate API key and base URL
             _vectorStoreManager = new VectorStoreManager();
             LoadVectorStores(); // Load existing vector stores into ComboBox
-            using var log = new SeriLogCtx();
+            using var log = new 
+                CtxLogger();
             log.ConfigureXml("Config/LogConfig.xml");
         }
 
@@ -133,7 +134,7 @@ namespace oaiUI
             progressBar1.Value = 0;
 
             using var api = new OpenAIClient();
-            using var log = new SeriLogCtx();
+            using var log = new CtxLogger();
             log.ConfigureXml("Config/LogConfig.xml");
             var p = log.Ctx.Set(new Props()
                 .Add("vectorStoreId", vectorStoreId)
@@ -312,7 +313,7 @@ namespace oaiUI
                 progressBar1.Maximum = totalFiles;
                 progressBar1.Value = 0;
 
-                using var log = new SeriLogCtx();
+                using var log = new CtxLogger();
                 log.ConfigureXml("Config/LogConfig.xml");
                 var p = log.Ctx.Set(new Props()
                     .Add("vectorStoreId", vectorStoreId)
