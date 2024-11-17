@@ -202,6 +202,7 @@ namespace oaiUI
             MessageBox.Show("Files uploaded successfully.");
         }
 
+        [Obsolete("Legacy code, files now stored in docx containers", true)]
         private async Task StoreIndividualFiles(string vectorStoreId, OpenAIClient api, string folder)
         {
             var files = Directory.GetFiles(folder).ToList();
