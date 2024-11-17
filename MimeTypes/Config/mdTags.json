@@ -1,4 +1,6 @@
 {
+  "Known files surrounded by the provided language tags": "csharp, etc",
+  "Binary files are not included in the uploaded documents": "application/binary",
   ".cs": "csharp",
   ".csproj": "msbuild",
   ".feature": "gherkin",

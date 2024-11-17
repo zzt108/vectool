@@ -20,6 +20,7 @@
   ".sh": "application/x-sh",
   ".tex": "text/x-tex",
   ".ts": "application/typescript",
+  ".tsx": "application/typescript",
   ".txt": "text/plain",
   ".feature": "text/x-gherkin",
   ".xaml": "text/x-xaml",
