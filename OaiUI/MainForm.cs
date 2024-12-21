@@ -167,8 +167,6 @@ namespace oaiUI
                     // Create the outputDocxPath by appending ".docx" to the relative path
                     string outputDocxPath = Path.Combine(folder, relativePath + ".docx");
 
-                    log.Debug(outputDocxPath);
-
                     try
                     {
                         DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath);
