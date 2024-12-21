@@ -2,14 +2,25 @@
 using System.IO;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using System.Collections.Generic;
+//using System.Collections.Generic;
+//using LogCtxShared = LogCtx;
+using NLogS = NLogShared;
 
 namespace DocXHandler;
 
 public class DocXHandler
 {
+    private static NLogS.CtxLogger log = new ();
+
+    //public DocXHandler()
+    //{
+    //    log.ConfigureXml("Config/LogConfig.xml");
+    //}
+
     private static void ProcessFolder(string folderPath, Body body)
     {
+        log.Debug(folderPath);
+
         // Create a new paragraph for folder's name
         body.Append(new Paragraph(new Run(new Text($"<Folder name = {folderPath}>"))));
 

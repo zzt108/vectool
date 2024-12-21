@@ -6,12 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="OpenAI-DotNet" Version="8.4.1" />
-  </ItemGroup>
+  <Import Project="..\LogCtx\LogCtxShared\LogCtxShared.projitems" Label="Shared" />
 
-  <ItemGroup>
-    <ProjectReference Include="..\MimeTypes\MimeTypes.csproj" />
-  </ItemGroup>
+  <Import Project="..\LogCtx\NLogShared\NLogShared.projitems" Label="Shared" />
 
 </Project>
