@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using NUnit.Framework;
 using System.IO;
 using DocXHandler;
@@ -21,6 +21,35 @@ namespace DocXHandlerTests
 
             // Define the output DOCX file path
             outputDocxPath = Path.Combine(testFolderPath, "output.docx");
+        }
+
+        [Test]
+        public void ConvertFilesToDocx_MultipleFiles_ShouldIncludeAllInDocx()
+        {
+            // Arrange
+            string textFilePath1 = Path.Combine(testFolderPath, "test1.txt");
+            string textFilePath2 = Path.Combine(testFolderPath, "test2.txt");
+            string textFilePath3 = Path.Combine(testFolderPath, "test3.txt");
+            File.WriteAllText(textFilePath1, "Content of file 1");
+            File.WriteAllText(textFilePath2, "Content of file 2");
+            File.WriteAllText(textFilePath3, "Content of file 3");
+
+            // Act
+            DocXHandler.DocXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath);
+
+            // Assert
+            File.Exists(outputDocxPath).Should().BeTrue();
+
+            using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
+            {
+                var body = doc.MainDocumentPart.Document.Body;
+                body.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
+                body.FirstChild.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
+                body.LastChild.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
+                body.InnerText.Should().Contain("Content of file 1"); // Check if the content is included
+                body.InnerText.Should().Contain("Content of file 2"); // Check if the content is included
+                body.InnerText.Should().Contain("Content of file 3"); // Check if the content is included
+            }
         }
 
         [TearDown]
@@ -68,7 +97,17 @@ namespace DocXHandlerTests
             {
                 var body = doc.MainDocumentPart.Document.Body;
                 body.ChildElements.Count.Should().Be(2); // Expecting an empty document, folder tags added
+                body.FirstChild.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
+                body.LastChild.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
             }
+            /*
+            The reason why the test case ConvertFilesToDocx_EmptyFolder_ShouldCreateEmptyDocx expects body.ChildElements.Count.Should().Be(2); 
+            is due to the implementation of the ConvertFilesToDocx method in the DocXHandler class. 
+            This method adds a paragraph with a folder tag at the beginning and end of the document body, 
+            represented as <Folder name = {folderPath}> and </Folder>. 
+            These two tags are the reason for the count of 2 child elements in the document body when the folder is empty. 
+            The test verifies that these folder tags are correctly added to the document, ensuring it is well-formed even when there are no files to process within the folder.
+            */
         }
 
         [Test]
@@ -87,7 +126,9 @@ namespace DocXHandlerTests
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
                 var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().BeGreaterThan(0); // Expecting at least one element
+                body.ChildElements.Count.Should().BeGreaterThan(3); // Expecting at least one element
+                body.FirstChild.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
+                body.LastChild.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
                 body.InnerText.Should().Contain("Hello, World!"); // Check if the content is included
             }
         }
