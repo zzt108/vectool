@@ -1,4 +1,4 @@
-﻿using LogCtxShared;
+﻿﻿using LogCtxShared;
 using oaiVectorStore;
 using OpenAI;
 using NLogShared;
@@ -330,6 +330,35 @@ namespace oaiUI
                     UpdateProgress();
                 }
                 fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId); // List file IDs to delete
+            }
+        }
+
+        private void btnConvertToDocx_Click(object sender, EventArgs e)
+        {
+            if (selectedFolders.Count == 0)
+            {
+                MessageBox.Show("Please select at least one folder first.", "No Folders Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Word Document|*.docx";
+                saveFileDialog.Title = "Save DOCX File";
+                saveFileDialog.DefaultExt = "docx";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName);
+                        MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error converting folders to DOCX: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
             }
         }
 
