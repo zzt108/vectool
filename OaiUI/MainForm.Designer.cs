@@ -1,4 +1,4 @@
-﻿namespace oaiUI
+﻿﻿namespace oaiUI
 {
     partial class MainForm
     {
@@ -172,11 +172,22 @@
             btnClearFolders.Text = "Empty Selected";
             btnClearFolders.Click += btnClearFolders_Click;
             // 
+            // btnConvertToDocx
+            // 
+            btnConvertToDocx = new Button();
+            btnConvertToDocx.Location = new Point(232, 133);
+            btnConvertToDocx.Name = "btnConvertToDocx";
+            btnConvertToDocx.Size = new Size(108, 30);
+            btnConvertToDocx.TabIndex = 11;
+            btnConvertToDocx.Text = "Convert to DOCX";
+            btnConvertToDocx.Click += btnConvertToDocx_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnConvertToDocx);
             Controls.Add(btnClearFolders);
             Controls.Add(btnUploadNew);
             Controls.Add(statusStrip1);
@@ -210,5 +221,6 @@
         private Button btnUploadNew;
         private ToolStripStatusLabel toolStripStatusLabelInfo;
         private Button btnClearFolders;
+        private Button btnConvertToDocx;
     }
 }

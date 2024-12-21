@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch OaiUI",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/OaiUI/bin/Debug/net8.0-windows/oaiUI.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart"
+        }
+    ]
+}
