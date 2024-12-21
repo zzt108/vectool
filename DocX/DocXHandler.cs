@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using oaiVectorStore;
+﻿﻿using oaiVectorStore;
 using System.IO;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -89,6 +89,12 @@ public class DocXHandler
             foreach (string folderPath in folderPaths)
             {
                 ProcessFolder(folderPath, body);
+                // Process subfolders
+                string[] subfolders = Directory.GetDirectories(folderPath);
+                foreach (string subfolder in subfolders)
+                {
+                    ProcessFolder(subfolder, body);
+                }
             }
         }
     }

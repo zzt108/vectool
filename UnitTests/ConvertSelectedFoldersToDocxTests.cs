@@ -104,6 +104,42 @@ namespace DocXHandlerTests
             }
         }
 
+        [Test]
+        public void ConvertSelectedFoldersToDocx_Subfolders_ShouldIncludeAllInDocx()
+        {
+            // Arrange
+            string mainFolder = Path.Combine(testRootPath, "MainFolder");
+            string subFolder1 = Path.Combine(mainFolder, "SubFolder1");
+            string subFolder2 = Path.Combine(mainFolder, "SubFolder2");
+            Directory.CreateDirectory(mainFolder);
+            Directory.CreateDirectory(subFolder1);
+            Directory.CreateDirectory(subFolder2);
+
+            string textFilePath1 = Path.Combine(mainFolder, "mainFile.txt");
+            string textFilePath2 = Path.Combine(subFolder1, "subFile1.txt");
+            string textFilePath3 = Path.Combine(subFolder2, "subFile2.txt");
+            File.WriteAllText(textFilePath1, "Content of main file");
+            File.WriteAllText(textFilePath2, "Content of sub file 1");
+            File.WriteAllText(textFilePath3, "Content of sub file 2");
+
+            List<string> folderPaths = new List<string> { mainFolder };
+
+            // Act
+            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath);
+
+            // Assert
+            File.Exists(outputDocxPath).Should().BeTrue();
+
+            using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
+            {
+                var body = doc.MainDocumentPart.Document.Body;
+                body.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
+                body.InnerText.Should().Contain("Content of main file");
+                body.InnerText.Should().Contain("Content of sub file 1");
+                body.InnerText.Should().Contain("Content of sub file 2");
+            }
+        }
+
         [TearDown]
         public void Cleanup()
         {
