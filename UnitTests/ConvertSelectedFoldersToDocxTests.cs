@@ -140,6 +140,38 @@ namespace DocXHandlerTests
             }
         }
 
+        [Test]
+        public void ExportSelectedFoldersToMarkdown_MultipleFolders_ShouldIncludeAllInMarkdown()
+        {
+            // Arrange
+            string folder1 = Path.Combine(testRootPath, "MarkdownFolder1");
+            string folder2 = Path.Combine(testRootPath, "MarkdownFolder2");
+            Directory.CreateDirectory(folder1);
+            Directory.CreateDirectory(folder2);
+
+            string textFilePath1 = Path.Combine(folder1, "markdown1.txt");
+            string textFilePath2 = Path.Combine(folder2, "markdown2.txt");
+            File.WriteAllText(textFilePath1, "Content of markdown file 1");
+            File.WriteAllText(textFilePath2, "Content of markdown file 2");
+
+            string outputMarkdownPath = Path.Combine(testRootPath, "output.md");
+            List<string> folderPaths = new List<string> { folder1, folder2 };
+
+            // Act
+            DocXHandler.MDHandler.ExportSelectedFoldersToMarkdown(folderPaths, outputMarkdownPath);
+
+            // Assert
+            File.Exists(outputMarkdownPath).Should().BeTrue();
+
+            string markdownContent = File.ReadAllText(outputMarkdownPath);
+            markdownContent.Should().Contain($"# Folder: {folder1}");
+            markdownContent.Should().Contain($"## File: {Path.GetFileName(textFilePath1)}");
+            markdownContent.Should().Contain("Content of markdown file 1");
+            markdownContent.Should().Contain($"# Folder: {folder2}");
+            markdownContent.Should().Contain($"## File: {Path.GetFileName(textFilePath2)}");
+            markdownContent.Should().Contain("Content of markdown file 2");
+        }
+
         [TearDown]
         public void Cleanup()
         {
