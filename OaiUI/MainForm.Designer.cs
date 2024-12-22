@@ -45,6 +45,7 @@
             btnUploadNew = new Button();
             btnClearFolders = new Button();
             btnConvertToDocx = new Button();
+            btnConvertToMd = new Button();
             statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -163,6 +164,8 @@
             btnUploadNew.Size = new Size(100, 30);
             btnUploadNew.TabIndex = 10;
             btnUploadNew.Text = "Upload New";
+            btnUploadNew.Visible = false;
+            btnUploadNew.Click += btnUploadNew_Click;
             // 
             // btnClearFolders
             // 
@@ -182,11 +185,21 @@
             btnConvertToDocx.Text = "Convert to 1 DOCX";
             btnConvertToDocx.Click += btnConvertToDocx_Click;
             // 
+            // btnConvertToMd
+            // 
+            btnConvertToMd.Location = new Point(365, 133);
+            btnConvertToMd.Name = "btnConvertToMd";
+            btnConvertToMd.Size = new Size(127, 30);
+            btnConvertToMd.TabIndex = 12;
+            btnConvertToMd.Text = "Convert to 1 MD";
+            btnConvertToMd.Click += btnConvertToMD_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnConvertToMd);
             Controls.Add(btnConvertToDocx);
             Controls.Add(btnClearFolders);
             Controls.Add(btnUploadNew);
@@ -202,6 +215,7 @@
             Controls.Add(labelNewVectorStore);
             Name = "MainForm";
             Text = "Main Form";
+            Click += btnConvertToMD_Click;
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             ResumeLayout(false);
@@ -222,5 +236,6 @@
         private ToolStripStatusLabel toolStripStatusLabelInfo;
         private Button btnClearFolders;
         private Button btnConvertToDocx;
+        private Button btnConvertToMd;
     }
 }

@@ -344,21 +344,64 @@ namespace oaiUI
                 saveFileDialog.Filter = "Word Document|*.docx";
                 saveFileDialog.Title = "Save DOCX File";
                 saveFileDialog.DefaultExt = "docx";
-                if (txtNewVectorStoreName.Text.Trim().Length > 0) 
+                if (txtNewVectorStoreName.Text.Trim().Length > 0)
                 { saveFileDialog.FileName = txtNewVectorStoreName.Text.Trim(); }
-                else 
+                else
                 { saveFileDialog.FileName = comboBoxVectorStores.SelectedItem?.ToString(); }
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     try
                     {
+                        btnConvertToDocx.Enabled = false;
                         DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
                     {
                         MessageBox.Show($"Error converting folders to DOCX: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        btnConvertToDocx.Enabled = true;
+                    }
+                }
+            }
+        }
+
+        private void btnConvertToMD_Click(object sender, EventArgs e)
+        {
+            if (selectedFolders.Count == 0)
+            {
+                MessageBox.Show("Please select at least one folder first.", "No Folders Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "MarkDown Document|*.md";
+                saveFileDialog.Title = "Save MD File";
+                saveFileDialog.DefaultExt = "md";
+                if (txtNewVectorStoreName.Text.Trim().Length > 0)
+                { saveFileDialog.FileName = txtNewVectorStoreName.Text.Trim(); }
+                else
+                { saveFileDialog.FileName = comboBoxVectorStores.SelectedItem?.ToString(); }
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        btnConvertToMd.Enabled = false;
+                        DocXHandler.MDHandler.ConvertSelectedFoldersToMD(selectedFolders, saveFileDialog.FileName);
+                        MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error converting folders to MD: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        btnConvertToMd.Enabled = true;
                     }
                 }
             }
@@ -408,6 +451,11 @@ namespace oaiUI
             {
                 WorkFinish();
             }
+
+        }
+
+        private void btnUploadNew_Click(object sender, EventArgs e)
+        {
 
         }
     }
