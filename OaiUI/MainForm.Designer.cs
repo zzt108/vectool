@@ -44,6 +44,7 @@
             toolStripStatusLabelInfo = new ToolStripStatusLabel();
             btnUploadNew = new Button();
             btnClearFolders = new Button();
+            btnConvertToDocx = new Button();
             statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -174,12 +175,11 @@
             // 
             // btnConvertToDocx
             // 
-            btnConvertToDocx = new Button();
             btnConvertToDocx.Location = new Point(232, 133);
             btnConvertToDocx.Name = "btnConvertToDocx";
-            btnConvertToDocx.Size = new Size(108, 30);
+            btnConvertToDocx.Size = new Size(127, 30);
             btnConvertToDocx.TabIndex = 11;
-            btnConvertToDocx.Text = "Convert to DOCX";
+            btnConvertToDocx.Text = "Convert to 1 DOCX";
             btnConvertToDocx.Click += btnConvertToDocx_Click;
             // 
             // MainForm
