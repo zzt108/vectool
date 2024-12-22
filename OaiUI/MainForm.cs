@@ -3,7 +3,11 @@ using oaiVectorStore;
 using OpenAI;
 using NLogShared;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Windows.Forms;
 
 namespace oaiUI
 {
@@ -18,21 +22,74 @@ namespace oaiUI
         private Button btnUploadFiles;
         private int processedFolders;
 
+        // Store the mapping between vector store and selected folders
+        private Dictionary<string, List<string>> _vectorStoreFolders = new Dictionary<string, List<string>>();
+        private string _vectorStoreFoldersFilePath = "vectorStoreFolders.json"; // Path to save the mapping
+
         public MainForm()
         {
             InitializeComponent();
-            // Initialize your OpenAIClient with appropriate API key and base URL
             _vectorStoreManager = new VectorStoreManager();
-            LoadVectorStores(); // Load existing vector stores into ComboBox
-            using var log = new
-                CtxLogger();
+            LoadVectorStores();
+            LoadVectorStoreFolderData(); // Load saved folder data on startup
+            using var log = new CtxLogger();
             log.ConfigureXml("Config/LogConfig.xml");
+
+            comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged;
+        }
+
+        // Load the vector store folder mapping from the JSON file
+        private void LoadVectorStoreFolderData()
+        {
+            if (File.Exists(_vectorStoreFoldersFilePath))
+            {
+                try
+                {
+                    string json = File.ReadAllText(_vectorStoreFoldersFilePath);
+                    _vectorStoreFolders = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json)
+                                          ?? new Dictionary<string, List<string>>();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading vector store folder data: {ex.Message}", "Loading Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _vectorStoreFolders = new Dictionary<string, List<string>>();
+                }
+            }
+            else
+            {
+                _vectorStoreFolders = new Dictionary<string, List<string>>();
+            }
+        }
+
+        // Save the vector store folder mapping to the JSON file
+        private void SaveVectorStoreFolderData()
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string json = JsonSerializer.Serialize(_vectorStoreFolders, options);
+                File.WriteAllText(_vectorStoreFoldersFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving vector store folder data: {ex.Message}", "Saving Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void btnClearFolders_Click(object sender, EventArgs e)
         {
             listBoxSelectedFolders.Items.Clear();
-            selectedFolders.Clear(); // Assuming you have a list to store the selected folders
+            selectedFolders.Clear();
+            // Update the stored mapping when clearing folders
+            if (comboBoxVectorStores.SelectedItem != null)
+            {
+                string selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString();
+                if (_vectorStoreFolders.ContainsKey(selectedVectorStoreName))
+                {
+                    _vectorStoreFolders[selectedVectorStoreName] = new List<string>();
+                    SaveVectorStoreFolderData();
+                }
+            }
         }
 
         private async void LoadVectorStores()
@@ -44,9 +101,6 @@ namespace oaiUI
                 var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
 
                 comboBoxVectorStores.DataSource = vectorStores.Values.ToArray();
-                //comboBoxVectorStores.DataSource = new BindingSource(vectorStores, null);
-                //comboBoxVectorStores.DisplayMember = "Value";
-                //comboBoxVectorStores.ValueMember = "Key";
             }
             catch (Exception ex)
             {
@@ -61,9 +115,24 @@ namespace oaiUI
                 folderBrowserDialog.Description = "Select folders containing files to upload";
                 if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
                 {
-                    selectedFolders.Add(folderBrowserDialog.SelectedPath);
-                    // Update UI to show selected folders
-                    UpdateSelectedFoldersUI();
+                    string selectedPath = folderBrowserDialog.SelectedPath;
+                    if (!selectedFolders.Contains(selectedPath))
+                    {
+                        selectedFolders.Add(selectedPath);
+                        UpdateSelectedFoldersUI();
+
+                        // Save the selected folder for the current vector store
+                        if (comboBoxVectorStores.SelectedItem != null)
+                        {
+                            string selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString();
+                            if (!_vectorStoreFolders.ContainsKey(selectedVectorStoreName))
+                            {
+                                _vectorStoreFolders[selectedVectorStoreName] = new List<string>();
+                            }
+                            _vectorStoreFolders[selectedVectorStoreName].Add(selectedPath);
+                            SaveVectorStoreFolderData();
+                        }
+                    }
                 }
             }
         }
@@ -95,7 +164,6 @@ namespace oaiUI
 
         private async void btnUploadFiles_Click(object sender, EventArgs e)
         {
-
             try
             {
                 WorkStart("Upload/Replace files");
@@ -121,10 +189,8 @@ namespace oaiUI
             }
         }
 
-
         private async Task UploadFiles(string vectorStoreId)
         {
-
             var totalFolders = selectedFolders.Sum(folder =>
                 Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());
 
@@ -158,13 +224,7 @@ namespace oaiUI
 
                     toolStripStatusLabelInfo.Text = folder;
 
-                    // TODO create here the outputDocxPath by concatenating the difference between rootFolder and folder
-                    // TODO replace \ with _ and append .docx
-
-                    // Calculate the relative path from rootFolder to folder
                     string relativePath = Path.GetRelativePath(rootFolder, folder).Replace('\\', '_');
-
-                    // Create the outputDocxPath by appending ".docx" to the relative path
                     string outputDocxPath = Path.Combine(folder, relativePath + ".docx");
 
                     try
@@ -192,90 +252,9 @@ namespace oaiUI
                     {
                         new FileInfo(outputDocxPath).Delete();
                     }
-
                 }
-
             }
-
             MessageBox.Show("Files uploaded successfully.");
-        }
-
-        [Obsolete("Legacy code, files now stored in docx containers", true)]
-        private async Task StoreIndividualFiles(string vectorStoreId, OpenAIClient api, string folder)
-        {
-            var files = Directory.GetFiles(folder).ToList();
-            foreach (var file in files)
-            {
-
-                // Check MIME type and upload
-                string extension = Path.GetExtension(file);
-                if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
-                {
-                    continue;
-                }
-
-                // Check if the file content is not empty
-                if (new FileInfo(file).Length == 0)
-                {
-                    continue; // Skip empty files
-                }
-
-                toolStripStatusLabelInfo.Text = file;
-
-                string? newExtension = MimeTypeProvider.GetNewExtension(extension);
-                if (newExtension is not null)
-                {
-                    // Create a copy of the file with the new extension
-                    string newFilePath = Path.ChangeExtension(file, newExtension);
-                    File.Copy(file, newFilePath, true);
-
-                    try
-                    {
-                        var mdTag = MimeTypeProvider.GetMdTag(extension);
-                        if (mdTag != null)
-                        {
-                            // Add start and end language tags to the file content
-                            string content = File.ReadAllText(newFilePath);
-                            content = $"```{mdTag}\n{content}\n```";
-                            File.WriteAllText(newFilePath, content);                                // Upload the new copy
-                        }
-                        try
-                        {
-                            await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, newFilePath);
-                        }
-                        catch (Exception ex)
-                        {
-                            var response = MessageBox.Show(ex.Message, newFilePath, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
-                            if (response == DialogResult.Cancel)
-                            {
-                                throw;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        // Delete the temporary new extension file
-                        File.Delete(newFilePath);
-                    }
-                }
-                else
-                {
-                    // For files that do not have a new extension, upload as usual
-                    try
-                    {
-                        await _vectorStoreManager.AddFileToVectorStoreFromPathAsync(api, vectorStoreId, file);
-                    }
-                    catch (Exception ex)
-                    {
-                        var response = MessageBox.Show(ex.Message, file, MessageBoxButtons.CancelTryContinue, MessageBoxIcon.Error);
-                        if (response == DialogResult.Cancel)
-                        {
-                            throw;
-                        }
-                    }
-                }
-
-            }
         }
 
         private async Task<string> RecreateVectorStore(string vectorStoreName)
@@ -295,6 +274,12 @@ namespace oaiUI
             {
                 // Create the vector store
                 vectorStoreId = await _vectorStoreManager.CreateVectorStoreAsync(api, vectorStoreName, new List<string>());
+                // When a new vector store is created, ensure it exists in the folder mapping
+                if (!_vectorStoreFolders.ContainsKey(vectorStoreName))
+                {
+                    _vectorStoreFolders[vectorStoreName] = new List<string>();
+                    SaveVectorStoreFolderData();
+                }
             }
 
             return vectorStoreId;
@@ -435,13 +420,20 @@ namespace oaiUI
 
                 var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
 
-                var vectorStoreId = existingStores.First(s => s.Value == selectedVectorStore).Key;
-                await DeleteAllVSFiles(api, vectorStoreId);
+                if (existingStores.Any(s => s.Value == selectedVectorStore))
+                {
+                    var vectorStoreId = existingStores.First(s => s.Value == selectedVectorStore).Key;
+                    await DeleteAllVSFiles(api, vectorStoreId);
 
-                var fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId); // List file IDs to delete
-                toolStripStatusLabelInfo.Text = $"Files deleted successfully. Remaining:{fileIds.Count}";
+                    var fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId);
+                    toolStripStatusLabelInfo.Text = $"Files deleted successfully. Remaining:{fileIds.Count}";
 
-                MessageBox.Show($"Files deleted successfully. Remaining:{fileIds.Count}");
+                    MessageBox.Show($"Files deleted successfully. Remaining:{fileIds.Count}");
+                }
+                else
+                {
+                    MessageBox.Show("Please select a valid vector store to delete files from.", "Invalid Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
             catch (Exception ex)
             {
@@ -451,12 +443,122 @@ namespace oaiUI
             {
                 WorkFinish();
             }
-
         }
 
         private void btnUploadNew_Click(object sender, EventArgs e)
         {
+            // Implementation for uploading new files (if needed)
+        }
 
+        private void comboBoxVectorStores_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxVectorStores.SelectedItem != null)
+            {
+                string selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString();
+                LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
+            }
+        }
+
+        private void LoadSelectedFoldersForVectorStore(string vectorStoreName)
+        {
+            selectedFolders.Clear();
+            listBoxSelectedFolders.Items.Clear();
+
+            if (_vectorStoreFolders.ContainsKey(vectorStoreName))
+            {
+                selectedFolders.AddRange(_vectorStoreFolders[vectorStoreName]);
+                UpdateSelectedFoldersUI();
+            }
         }
     }
 }
+/**************************************************************
+content_copy
+download
+Use code with caution.
+C#
+
+Explanation of Changes:
+
+_vectorStoreFolders and _vectorStoreFoldersFilePath:
+
+A Dictionary<string, List<string>> _vectorStoreFolders is introduced to store the mapping between vector store names (strings) and their lists of selected folder paths.
+
+string _vectorStoreFoldersFilePath = "vectorStoreFolders.json"; defines the path where this mapping will be saved as a JSON file. You can adjust this path as needed.
+
+LoadVectorStoreFolderData():
+
+This method is called when the MainForm is initialized.
+
+It checks if the vectorStoreFolders.json file exists.
+
+If it exists, it reads the JSON content and deserializes it into the _vectorStoreFolders dictionary.
+
+It includes error handling in case the file is not found or the JSON is invalid.
+
+SaveVectorStoreFolderData():
+
+This method serializes the _vectorStoreFolders dictionary into JSON format.
+
+It then writes the JSON data to the vectorStoreFolders.json file.
+
+Error handling is included for potential file writing issues.
+
+btnSelectFolders_Click() Modification:
+
+After a folder is successfully selected and added to the selectedFolders list:
+
+It checks if a vector store is currently selected in the comboBoxVectorStores.
+
+If a vector store is selected, it retrieves the name of the selected vector store.
+
+It updates the _vectorStoreFolders dictionary:
+
+If the vector store name doesn't exist as a key, a new entry is created.
+
+The newly selected folder path is added to the list of folders associated with that vector store.
+
+Finally, SaveVectorStoreFolderData() is called to persist the changes to the JSON file.
+
+btnClearFolders_Click() Modification:
+
+When the "Empty Selected" button is clicked, and a vector store is selected, it clears the associated folder list in _vectorStoreFolders and saves the updated data.
+
+comboBoxVectorStores_SelectedIndexChanged():
+
+An event handler is added to the comboBoxVectorStores.SelectedIndexChanged event.
+
+When the selected item in the combo box changes (i.e., a different vector store is selected):
+
+It checks if a vector store is actually selected.
+
+It calls the new method LoadSelectedFoldersForVectorStore() to load the folders associated with the newly selected vector store.
+
+LoadSelectedFoldersForVectorStore():
+
+This method takes the name of the vector store as input.
+
+It clears the current selectedFolders list and the items in listBoxSelectedFolders.
+
+It checks if the _vectorStoreFolders dictionary contains an entry for the given vectorStoreName.
+
+If it does, it retrieves the list of folders associated with that vector store and populates the selectedFolders list and the listBoxSelectedFolders UI element.
+
+RecreateVectorStore() Modification:
+
+When a new vector store is created, the code now ensures that a corresponding entry (with an empty folder list) is added to the _vectorStoreFolders dictionary and saved. This handles the case where a new vector store has no associated folders initially.
+
+To Use This Functionality:
+
+Build and run your application.
+
+Select a vector store from the dropdown or create a new one.
+
+Click "Select Folders" to choose folders you want to associate with the selected vector store.
+
+The selected folders will be displayed in the list box, and the association will be saved in the vectorStoreFolders.json file.
+
+When you select a different vector store from the dropdown, the previously selected folders for that vector store will automatically load into the list box.
+
+This implementation ensures that the selected folders for each vector store are persisted and automatically loaded, enhancing the user experience. Remember to place the vectorStoreFolders.json file in a location where your application has write access. A good place would be in the same directory as your application's executable or in the user's application data folder if you need more robust storage management.
+*/
