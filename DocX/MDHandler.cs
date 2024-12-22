@@ -8,24 +8,24 @@ namespace DocXHandler
     {
         private static NLogS.CtxLogger log = new ();
 
-        public static void ExportSelectedFoldersToMarkdown(List<string> folderPaths, string outputPath)
+        public static void ExportSelectedFoldersToMarkdown(List<string> folderPaths, string outputPath, List<string> excludedFiles)
         {
             using (StreamWriter writer = new StreamWriter(outputPath))
             {
                 foreach (string folderPath in folderPaths)
                 {
-                    ProcessFolderForMarkdown(folderPath, writer, outputPath);
+                    ProcessFolderForMarkdown(folderPath, writer, outputPath, excludedFiles);
                     // Process subfolders
                     string[] subfolders = Directory.GetDirectories(folderPath);
                     foreach (string subfolder in subfolders)
                     {
-                        ProcessFolderForMarkdown(subfolder, writer, outputPath);
+                        ProcessFolderForMarkdown(subfolder, writer, outputPath, excludedFiles);
                     }
                 }
             }
         }
 
-        private static void ProcessFolderForMarkdown(string folderPath, StreamWriter writer, string outputPath)
+        private static void ProcessFolderForMarkdown(string folderPath, StreamWriter writer, string outputPath, List<string> excludedFiles)
         {
             log.Debug(folderPath);
             
@@ -37,10 +37,15 @@ namespace DocXHandler
             
             foreach (string file in files)
             {
+                string fileName = Path.GetFileName(file);
+                if (excludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    log.Debug($"Skipping excluded file: {file}");
+                    continue; // Skip this file
+                }
                 if (file == outputPath)
                 {
                     continue;
-
                 }
                 // Check MIME type and upload
                 string extension = Path.GetExtension(file);

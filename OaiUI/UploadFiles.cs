@@ -47,11 +47,13 @@ namespace oaiUI
 
                     try
                     {
-                        DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath);
+                        DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath, _excludedFiles);
                         string[] files = Directory.GetFiles(folder);
 
                         foreach (string file in files)
                         {
+                            string fileName = Path.GetFileName(file);
+                            if (_excludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase))) continue;
                             // Check MIME type and upload
                             string extension = Path.GetExtension(file);
                             if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
