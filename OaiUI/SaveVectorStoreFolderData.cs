@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
-using System.Windows.Forms;
+using System.Configuration;
 
 namespace oaiUI
 {
@@ -11,11 +8,12 @@ namespace oaiUI
         // Save the vector store folder mapping to the JSON file
         public void SaveVectorStoreFolderData()
         {
+            string vectorStoreFoldersPath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
             try
             {
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 string json = JsonSerializer.Serialize(_vectorStoreFolders, options);
-                File.WriteAllText(_vectorStoreFoldersFilePath, json);
+                File.WriteAllText(vectorStoreFoldersPath, json);
             }
             catch (Exception ex)
             {

@@ -1,8 +1,7 @@
-﻿using LogCtxShared;
-using oaiVectorStore;
+﻿using oaiVectorStore;
 using OpenAI;
 using NLogShared;
-using System.Text.Json;
+using System.Configuration;
 
 namespace oaiUI
 {
@@ -21,10 +20,10 @@ namespace oaiUI
         private Dictionary<string, List<string>> _vectorStoreFolders = new Dictionary<string, List<string>>();
         private string _vectorStoreFoldersFilePath; // Path to save the mapping
 
-        public MainForm(string vectorStoreFoldersFilePath = @"..\..\vectorStoreFolders.json")
+        public MainForm()
         {
             InitializeComponent();
-            _vectorStoreFoldersFilePath = vectorStoreFoldersFilePath; // Set the file path
+            _vectorStoreFoldersFilePath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json"; // Set the file path from config
             _vectorStoreManager = new VectorStoreManager();
             LoadVectorStores();
             LoadVectorStoreFolderData(); // Load saved folder data on startup
