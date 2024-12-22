@@ -1,6 +1,3 @@
-# Before 1st run 
-- Copy template.openai to .openai 
-- fill in API key and optionally OrgId and Project ID
 # OaiVectorStore
 
 ## Project Overview
@@ -22,65 +19,6 @@ The **OaiVectorStore** project is a C# based desktop application designed to str
 *   **Folder Association with Vector Stores:** Automatically saves and loads the association between selected folders and specific vector stores. This means when you select a vector store, the folders you previously used with it will be automatically loaded.
 *   **Export to Markdown:** Converts the content of selected folders into a single Markdown (`.md`) file.
 *   **Logging:** Comprehensive logging using NLog for debugging and monitoring.
-
-## Directory Structure
-
-OaiVectorStore/
-├── .cr/
-├── .git/
-├── .idea/
-├── .vs/
-├── .vscode/
-├── DocX/ # Handles DOCX file conversion
-│ ├── DocXHandler.cs
-│ ├── DocXHandler.csproj
-│ └── MDHandler.cs # Handles Markdown file export
-├── Log/ # Contains logging implementations
-│ └── Log.csproj
-├── LogCtx/ # Shared logging context components
-│ ├── LogCtxShared/
-│ │ ├── ILogCtxLogger.cs
-│ │ ├── IScopeContext.cs
-│ │ ├── JsonExtensions.cs
-│ │ ├── LogCtx.cs
-│ │ └── Props.cs
-│ └── NLogShared/
-│ └── CtxLogger.cs
-├── Logs/ # Default location for log files
-├── MimeTypes/ # Handles MIME type detection
-│ ├── Config/ # Configuration files for MIME types
-│ │ ├── mdTags.json
-│ │ ├── mimeTypes.json
-│ │ └── newExtensions.json
-│ ├── MimeTypeProvider.cs
-│ └── MimeTypes.csproj
-├── OaiUI/ # Windows Forms user interface
-│ ├── Config/ # Configuration files for the UI
-│ │ └── LogConfig.xml
-│ ├── MainForm.Designer.cs
-│ ├── MainForm.cs
-│ ├── oaiUI.csproj
-│ └── Program.cs
-├── oaiVectorStore/ # Core logic for vector store interaction
-│ ├── FileStoreManager.cs
-│ ├── MyOpenAIClient.cs
-│ ├── oaiVectorStore.csproj
-│ └── VectorStoreManager.cs
-├── packages/
-├── UnitTests/ # Unit tests for various components
-│ ├── Config/ # Configuration files for unit tests
-│ │ ├── NLogConfig.xml
-│ │ ├── SeriLogConfig.json
-│ │ └── SeriLogConfig.xml
-│ ├── ConvertSelectedFoldersToDocxTests.cs
-│ ├── DocXHandlerTests.cs
-│ ├── NLogCtxTests.cs
-│ ├── SeriLogCtxTests.cs
-│ ├── UnitTests.cs
-│ └── UnitTests.csproj
-├── projectsummary.md # Project summary (this file)
-├── README.md # Project README (this file)
-└── todo.md # List of pending tasks
 
 ## Before 1st Run
 
