@@ -6,7 +6,8 @@ The **OaiVectorStore** project is a C# based desktop application designed to str
 
 ## Key Features
 
-*   **Folder Selection:** Allows users to select multiple folders whose content (including subfolders) will be processed.
+*   **Folder Selection:** Allows users to select multiple folders whose content (including subfolders) will be processed. Selected folders are now remembered for each vector store.
+*   **Clear Selected Folders:** Provides a button to quickly clear the list of currently selected folders.
 *   **Automatic Folder Content Export to DOCX:** Exports the content of each selected folder and its subfolders into individual `.docx` files, making large codebases or document collections easier to manage within vector stores.
 *   **Vector Store Management:**
     *   **Selection:** Users can select an existing vector store from a dropdown.
@@ -16,7 +17,7 @@ The **OaiVectorStore** project is a C# based desktop application designed to str
     *   **Upload/Replace:** Uploads the content of selected folders to a specified vector store, replacing existing content if the vector store name is the same.
     *   **Binary File Handling:** Identifies and uploads binary files separately, ensuring all relevant file types can be included in the vector store.
 *   **MIME Type Handling:** Utilizes MIME types to correctly identify and process different file formats.
-*   **Folder Association with Vector Stores:** Automatically saves and loads the association between selected folders and specific vector stores. This means when you select a vector store, the folders you previously used with it will be automatically loaded.
+*   **Folder Association with Vector Stores:** Automatically saves and loads the association between selected folders and specific vector stores. This means when you select a vector store, the folders you previously used with it will be automatically loaded. This association is saved for future use.
 *   **Export to Markdown:** Converts the content of selected folders into a single Markdown (`.md`) file.
 *   **Logging:** Comprehensive logging using NLog for debugging and monitoring.
 
@@ -44,9 +45,13 @@ The **OaiVectorStore** project is a C# based desktop application designed to str
 3. In the folder browser dialog, navigate to and select the folder(s) you want to process. Click "OK".
 4. The selected folder paths will appear in the list box below the button.
 
+### Clearing Selected Folders
+
+1. Click the "Empty Selected" button next to the "Select Folders" button. This will clear the list of folders currently selected.
+
 ### Selecting or Creating a Vector Store
 
-1. **Select Existing:** Choose a vector store from the dropdown menu labeled "Select Existing Vector Store:".
+1. **Select Existing:** Choose a vector store from the dropdown menu labeled "Select Existing Vector Store:". Previously used folders for this vector store will be automatically loaded.
 2. **Create New:** If you want to create a new vector store:
     *   Enter a name for the new vector store in the text box next to the label "Or Enter New Name:".
     *   The new vector store will be created when you upload files.
@@ -87,7 +92,7 @@ This will create a single `.md` file containing the content of all selected fold
 
 ### Automatic Saving and Loading of Folder Associations
 
-The application automatically saves which folders you have selected for each vector store. When you select a vector store from the dropdown, the folders you previously used with that vector store will be automatically loaded into the "Selected Folders" list.
+The application automatically saves which folders you have selected for each vector store. When you select a vector store from the dropdown, the folders you previously used with that vector store will be automatically loaded into the "Selected Folders" list. This feature allows you to easily manage different sets of folders for different vector stores.
 
 ## Configuration
 
