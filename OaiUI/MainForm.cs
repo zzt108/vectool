@@ -1,4 +1,4 @@
-﻿using LogCtxShared;
+﻿﻿using LogCtxShared;
 using oaiVectorStore;
 using OpenAI;
 using NLogShared;
@@ -392,7 +392,7 @@ namespace oaiUI
                     try
                     {
                         btnConvertToMd.Enabled = false;
-                        DocXHandler.MDHandler.ConvertSelectedFoldersToMD(selectedFolders, saveFileDialog.FileName);
+                        DocXHandler.MDHandler.ExportSelectedFoldersToMarkdown(selectedFolders, saveFileDialog.FileName);
                         MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
