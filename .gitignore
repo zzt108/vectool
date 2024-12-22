@@ -242,3 +242,4 @@ ModelManifest.xml
 .fake/
 /.openai
 /.clinerules
+.clinerules

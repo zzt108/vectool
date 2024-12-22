@@ -1,7 +1,10 @@
-﻿using oaiVectorStore;
+﻿﻿using oaiVectorStore;
 using OpenAI;
 using NLogShared;
 using System.Configuration;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace oaiUI
 {
@@ -19,10 +22,12 @@ namespace oaiUI
         // Store the mapping between vector store and selected folders
         private Dictionary<string, List<string>> _vectorStoreFolders = new Dictionary<string, List<string>>();
         private string _vectorStoreFoldersFilePath; // Path to save the mapping
+        private List<string> _excludedFiles; // Added for excluded files
 
         public MainForm()
         {
             InitializeComponent();
+            LoadExcludedFilesConfig();
             _vectorStoreFoldersFilePath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json"; // Set the file path from config
             _vectorStoreManager = new VectorStoreManager();
             LoadVectorStores();
@@ -31,6 +36,15 @@ namespace oaiUI
             log.ConfigureXml("Config/LogConfig.xml");
 
             comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged;
+        }
+
+        private void LoadExcludedFilesConfig()
+        {
+            string excludedFilesConfig = ConfigurationManager.AppSettings["excludedFiles"];
+            if (!string.IsNullOrEmpty(excludedFilesConfig))
+            {
+                _excludedFiles = excludedFilesConfig.Split(',').Select(f => f.Trim()).ToList();
+            }
         }
 
         private void btnClearFolders_Click(object sender, EventArgs e)
@@ -150,10 +164,6 @@ namespace oaiUI
                 {
                     MessageBox.Show($"Error uploading files: {ex.Message}");
                 }
-                //else
-                //{
-                //    MessageBox.Show("OpenAI API key is not configured. Cannot upload files.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                //}
             }
             finally
             {
