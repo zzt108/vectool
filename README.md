@@ -17,13 +17,26 @@ The **OaiVectorStore** project is a C# based desktop application designed to str
     *   **Upload/Replace:** Uploads the content of selected folders to a specified vector store, replacing existing content if the vector store name is the same.
     *   **Binary File Handling:** Identifies and uploads binary files separately, ensuring all relevant file types can be included in the vector store.
 *   **MIME Type Handling:** Utilizes MIME types to correctly identify and process different file formats.
-*   **Folder Association with Vector Stores:** Automatically saves and loads the association between selected folders and specific vector stores. This means when you select a vector store, the folders you previously used with it will be automatically loaded. This association is saved for future use.
+*   **Folder Association with Vector Stores:** Automatically saves and loads the association between selected folders and specific vector stores. This means when you select a vector store, the folders you previously used with it will be automatically loaded. This association is saved for future use in a configurable JSON file.
 *   **Export to Markdown:** Converts the content of selected folders into a single Markdown (`.md`) file.
 *   **Logging:** Comprehensive logging using NLog for debugging and monitoring.
 
 ## Before 1st Run
 
-1. **Configure OpenAI API Key:**
+1. **Configure Application Settings:**
+    *   Locate the `app.config` file in the `OaiUI` project.
+    *   Add or modify the `vectorStoreFoldersPath` setting in the `appSettings` section to specify the path for the `vectorStoreFolders.json` file. If this setting is not present, a default path of `..\..\vectorStoreFolders.json` will be used.
+
+    ```xml
+    <?xml version="1.0" encoding="utf-8" ?>
+    <configuration>
+        <appSettings>
+            <add key="vectorStoreFoldersPath" value="path/to/your/vectorStoreFolders.json" />
+        </appSettings>
+    </configuration>
+    ```
+
+2. **Configure OpenAI API Key:**
     *   Copy the `template.openai` file located in the root directory to `.openai`.
     *   Open the newly created `.openai` file.
     *   Fill in your OpenAI API key. Optionally, you can also provide your Organization ID and Project ID if needed.
@@ -92,10 +105,11 @@ This will create a single `.md` file containing the content of all selected fold
 
 ### Automatic Saving and Loading of Folder Associations
 
-The application automatically saves which folders you have selected for each vector store. When you select a vector store from the dropdown, the folders you previously used with that vector store will be automatically loaded into the "Selected Folders" list. This feature allows you to easily manage different sets of folders for different vector stores.
+The application automatically saves which folders you have selected for each vector store. When you select a vector store from the dropdown, the folders you previously used with that vector store will be automatically loaded into the "Selected Folders" list. This feature allows you to easily manage different sets of folders for different vector stores. The path to the file where this information is stored can be configured in the `app.config` file.
 
 ## Configuration
 
+*   **app.config:** Contains application-level settings, including the path to the `vectorStoreFolders.json` file.
 *   **.openai:** Contains your OpenAI API key and optional organization/project identifiers. Ensure this file is properly configured before running the application.
 *   **OaiUI/Config/LogConfig.xml:** Configuration file for NLog, allowing you to customize logging behavior (e.g., log levels, output targets).
 *   **MimeTypes/Config/\*:** JSON files defining MIME types, new file extensions for processing, and Markdown tags for code blocks.

@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
-using System.Windows.Forms;
+using System.Configuration;
 
 namespace oaiUI
 {
@@ -11,11 +8,12 @@ namespace oaiUI
         // Load the vector store folder mapping from the JSON file
         public void LoadVectorStoreFolderData()
         {
-            if (File.Exists(_vectorStoreFoldersFilePath))
+            string vectorStoreFoldersPath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
+            if (File.Exists(vectorStoreFoldersPath))
             {
                 try
                 {
-                    string json = File.ReadAllText(_vectorStoreFoldersFilePath);
+                    string json = File.ReadAllText(vectorStoreFoldersPath);
                     _vectorStoreFolders = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json)
                                           ?? new Dictionary<string, List<string>>();
                 }
