@@ -41,7 +41,7 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
             // Act
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath);
+            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>());
 
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -67,7 +67,7 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { emptyFolder };
 
             // Act
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath);
+            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>());
 
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -92,7 +92,7 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { folder };
 
             // Act
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath);
+            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>());
 
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -125,7 +125,7 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { mainFolder };
 
             // Act
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath);
+            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>());
 
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -158,7 +158,7 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
             // Act
-            DocXHandler.MDHandler.ExportSelectedFoldersToMarkdown(folderPaths, outputMarkdownPath);
+            DocXHandler.MDHandler.ExportSelectedFoldersToMarkdown(folderPaths, outputMarkdownPath, new List<string>());
 
             // Assert
             File.Exists(outputMarkdownPath).Should().BeTrue();

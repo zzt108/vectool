@@ -194,7 +194,7 @@ namespace oaiUI
                     try
                     {
                         btnConvertToDocx.Enabled = false;
-                        DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName);
+                        DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, _excludedFiles);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
@@ -232,7 +232,7 @@ namespace oaiUI
                     try
                     {
                         btnConvertToMd.Enabled = false;
-                        DocXHandler.MDHandler.ExportSelectedFoldersToMarkdown(selectedFolders, saveFileDialog.FileName);
+                        DocXHandler.MDHandler.ExportSelectedFoldersToMarkdown(selectedFolders, saveFileDialog.FileName, _excludedFiles);
                         MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
