@@ -19,11 +19,12 @@ namespace oaiUI
 
         // Store the mapping between vector store and selected folders
         private Dictionary<string, List<string>> _vectorStoreFolders = new Dictionary<string, List<string>>();
-        private string _vectorStoreFoldersFilePath = "vectorStoreFolders.json"; // Path to save the mapping
+        private string _vectorStoreFoldersFilePath; // Path to save the mapping
 
-        public MainForm()
+        public MainForm(string vectorStoreFoldersFilePath = @"..\..\vectorStoreFolders.json")
         {
             InitializeComponent();
+            _vectorStoreFoldersFilePath = vectorStoreFoldersFilePath; // Set the file path
             _vectorStoreManager = new VectorStoreManager();
             LoadVectorStores();
             LoadVectorStoreFolderData(); // Load saved folder data on startup
