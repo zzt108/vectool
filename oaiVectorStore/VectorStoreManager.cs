@@ -1,4 +1,4 @@
-﻿﻿using System.Linq;
+﻿using System.Linq;
 using System.Text;
 /*
  File format	MIME type
@@ -56,12 +56,19 @@ namespace oaiVectorStore
 
         public async Task<Dictionary<string, string>> GetAllVectorStoresAsync(OpenAIClient api)
         {
-            var vectorStores = await api.VectorStoresEndpoint.ListVectorStoresAsync();
-            if (vectorStores?.Items != null)
+            try
             {
-                return vectorStores.Items.ToDictionary(vs => vs.Id, vs => vs.Name);
+                var vectorStores = await api.VectorStoresEndpoint.ListVectorStoresAsync();
+                if (vectorStores?.Items != null)
+                {
+                    return vectorStores.Items.ToDictionary(vs => vs.Id, vs => vs.Name);
+                }
+                else
+                {
+                    return new Dictionary<string, string>();
+                }
             }
-            else
+            catch (Exception ex)
             {
                 return new Dictionary<string, string>();
             }

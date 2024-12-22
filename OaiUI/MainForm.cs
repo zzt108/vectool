@@ -1,13 +1,8 @@
-﻿﻿using LogCtxShared;
+﻿using LogCtxShared;
 using oaiVectorStore;
 using OpenAI;
 using NLogShared;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
-using System.Windows.Forms;
 
 namespace oaiUI
 {
@@ -98,7 +93,7 @@ namespace oaiUI
             LoadVectorStoreFolderData();
 
             // Try to load vector stores from OpenAI if the API key is available
-            if (!string.IsNullOrEmpty(OpenAIClient.GetApiKey()))
+            try
             {
                 using var api = new OpenAIClient();
                 try
@@ -113,7 +108,7 @@ namespace oaiUI
                     MessageBox.Show($"Error loading vector stores from OpenAI: {ex.Message}. Using local data.", "OpenAI Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
-            else
+            catch
             {
                 MessageBox.Show("OpenAI API key is not configured. Cannot upload files.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
@@ -182,24 +177,21 @@ namespace oaiUI
                 string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
                 string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
-                if (!string.IsNullOrEmpty(OpenAIClient.GetApiKey()))
+                try
                 {
-                    try
-                    {
-                        string vectorStoreId = await RecreateVectorStore(vectorStoreName);
+                    string vectorStoreId = await RecreateVectorStore(vectorStoreName);
 
-                        // Upload files from all selected folders
-                        await UploadFiles(vectorStoreId);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Error uploading files: {ex.Message}");
-                    }
+                    // Upload files from all selected folders
+                    await UploadFiles(vectorStoreId);
                 }
-                else
+                catch (Exception ex)
                 {
-                    MessageBox.Show("OpenAI API key is not configured. Cannot upload files.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show($"Error uploading files: {ex.Message}");
                 }
+                //else
+                //{
+                //    MessageBox.Show("OpenAI API key is not configured. Cannot upload files.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                //}
             }
             finally
             {
@@ -429,37 +421,32 @@ namespace oaiUI
         private async void btnDeleteAllVSFiles_ClickAsync(object sender, EventArgs e)
         {
             using var api = new OpenAIClient();
-
+            string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(selectedVectorStore))
+            {
+                MessageBox.Show("Please select a vector store.", "Input Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             try
             {
-                WorkStart("Delete VectorStore files");
-
-                string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
-
+                WorkStart($"Delete VectorStore files from {selectedVectorStore}");
                 var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
-
-                if (existingStores.Any(s => s.Value == selectedVectorStore))
+                if (existingStores.ContainsKey(selectedVectorStore))
                 {
-                    var vectorStoreId = existingStores.First(s => s.Value == selectedVectorStore).Key;
+                    var vectorStoreId = existingStores.First(s => s.Key == selectedVectorStore).Key;
                     await DeleteAllVSFiles(api, vectorStoreId);
-
                     var fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId);
                     toolStripStatusLabelInfo.Text = $"Files deleted successfully. Remaining:{fileIds.Count}";
-
                     MessageBox.Show($"Files deleted successfully. Remaining:{fileIds.Count}");
                 }
                 else
                 {
-                    MessageBox.Show("Please select a valid vector store to delete files from.", "Invalid Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show($"Vector store '{selectedVectorStore}' not found on OpenAI.", "Invalid Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error deleting files: {ex.Message}");
-            }
-            finally
-            {
-                WorkFinish();
             }
         }
 
