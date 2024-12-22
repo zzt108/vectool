@@ -94,17 +94,28 @@ namespace oaiUI
 
         private async void LoadVectorStores()
         {
-            using var api = new OpenAIClient();
+            // Load vector store folder data first
+            LoadVectorStoreFolderData();
 
-            try
+            // Try to load vector stores from OpenAI if the API key is available
+            if (!string.IsNullOrEmpty(OpenAIClient.GetApiKey()))
             {
-                var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
-
-                comboBoxVectorStores.DataSource = vectorStores.Values.ToArray();
+                using var api = new OpenAIClient();
+                try
+                {
+                    var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
+                    // Merge loaded data with existing data, prioritizing data from the file
+                    var combinedStores = _vectorStoreFolders.Keys.Union(vectorStores.Values).Distinct().ToList();
+                    comboBoxVectorStores.DataSource = combinedStores;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading vector stores from OpenAI: {ex.Message}. Using local data.", "OpenAI Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show($"Error loading vector stores: {ex.Message}");
+                MessageBox.Show("OpenAI API key is not configured. Cannot upload files.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -171,16 +182,23 @@ namespace oaiUI
                 string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
                 string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
-                try
+                if (!string.IsNullOrEmpty(OpenAIClient.GetApiKey()))
                 {
-                    string vectorStoreId = await RecreateVectorStore(vectorStoreName);
+                    try
+                    {
+                        string vectorStoreId = await RecreateVectorStore(vectorStoreName);
 
-                    // Upload files from all selected folders
-                    await UploadFiles(vectorStoreId);
+                        // Upload files from all selected folders
+                        await UploadFiles(vectorStoreId);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error uploading files: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"Error uploading files: {ex.Message}");
+                    MessageBox.Show("OpenAI API key is not configured. Cannot upload files.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             finally
@@ -472,93 +490,3 @@ namespace oaiUI
         }
     }
 }
-/**************************************************************
-content_copy
-download
-Use code with caution.
-C#
-
-Explanation of Changes:
-
-_vectorStoreFolders and _vectorStoreFoldersFilePath:
-
-A Dictionary<string, List<string>> _vectorStoreFolders is introduced to store the mapping between vector store names (strings) and their lists of selected folder paths.
-
-string _vectorStoreFoldersFilePath = "vectorStoreFolders.json"; defines the path where this mapping will be saved as a JSON file. You can adjust this path as needed.
-
-LoadVectorStoreFolderData():
-
-This method is called when the MainForm is initialized.
-
-It checks if the vectorStoreFolders.json file exists.
-
-If it exists, it reads the JSON content and deserializes it into the _vectorStoreFolders dictionary.
-
-It includes error handling in case the file is not found or the JSON is invalid.
-
-SaveVectorStoreFolderData():
-
-This method serializes the _vectorStoreFolders dictionary into JSON format.
-
-It then writes the JSON data to the vectorStoreFolders.json file.
-
-Error handling is included for potential file writing issues.
-
-btnSelectFolders_Click() Modification:
-
-After a folder is successfully selected and added to the selectedFolders list:
-
-It checks if a vector store is currently selected in the comboBoxVectorStores.
-
-If a vector store is selected, it retrieves the name of the selected vector store.
-
-It updates the _vectorStoreFolders dictionary:
-
-If the vector store name doesn't exist as a key, a new entry is created.
-
-The newly selected folder path is added to the list of folders associated with that vector store.
-
-Finally, SaveVectorStoreFolderData() is called to persist the changes to the JSON file.
-
-btnClearFolders_Click() Modification:
-
-When the "Empty Selected" button is clicked, and a vector store is selected, it clears the associated folder list in _vectorStoreFolders and saves the updated data.
-
-comboBoxVectorStores_SelectedIndexChanged():
-
-An event handler is added to the comboBoxVectorStores.SelectedIndexChanged event.
-
-When the selected item in the combo box changes (i.e., a different vector store is selected):
-
-It checks if a vector store is actually selected.
-
-It calls the new method LoadSelectedFoldersForVectorStore() to load the folders associated with the newly selected vector store.
-
-LoadSelectedFoldersForVectorStore():
-
-This method takes the name of the vector store as input.
-
-It clears the current selectedFolders list and the items in listBoxSelectedFolders.
-
-It checks if the _vectorStoreFolders dictionary contains an entry for the given vectorStoreName.
-
-If it does, it retrieves the list of folders associated with that vector store and populates the selectedFolders list and the listBoxSelectedFolders UI element.
-
-RecreateVectorStore() Modification:
-
-When a new vector store is created, the code now ensures that a corresponding entry (with an empty folder list) is added to the _vectorStoreFolders dictionary and saved. This handles the case where a new vector store has no associated folders initially.
-
-To Use This Functionality:
-
-Build and run your application.
-
-Select a vector store from the dropdown or create a new one.
-
-Click "Select Folders" to choose folders you want to associate with the selected vector store.
-
-The selected folders will be displayed in the list box, and the association will be saved in the vectorStoreFolders.json file.
-
-When you select a different vector store from the dropdown, the previously selected folders for that vector store will automatically load into the list box.
-
-This implementation ensures that the selected folders for each vector store are persisted and automatically loaded, enhancing the user experience. Remember to place the vectorStoreFolders.json file in a location where your application has write access. A good place would be in the same directory as your application's executable or in the user's application data folder if you need more robust storage management.
-*/
