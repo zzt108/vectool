@@ -1,4 +1,4 @@
-﻿﻿using LogCtxShared;
+﻿using LogCtxShared;
 using oaiVectorStore;
 using OpenAI;
 using NLogShared;
@@ -24,7 +24,7 @@ namespace oaiUI
             // Initialize your OpenAIClient with appropriate API key and base URL
             _vectorStoreManager = new VectorStoreManager();
             LoadVectorStores(); // Load existing vector stores into ComboBox
-            using var log = new 
+            using var log = new
                 CtxLogger();
             log.ConfigureXml("Config/LogConfig.xml");
         }
@@ -344,6 +344,10 @@ namespace oaiUI
                 saveFileDialog.Filter = "Word Document|*.docx";
                 saveFileDialog.Title = "Save DOCX File";
                 saveFileDialog.DefaultExt = "docx";
+                if (txtNewVectorStoreName.Text.Trim().Length > 0) 
+                { saveFileDialog.FileName = txtNewVectorStoreName.Text.Trim(); }
+                else 
+                { saveFileDialog.FileName = comboBoxVectorStores.SelectedItem?.ToString(); }
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
