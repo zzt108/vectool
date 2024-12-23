@@ -90,8 +90,39 @@ namespace oaiUI
             }
         }
 
+        private string GetVectorStoreName()
+        {
+            // Get the vector store name
+            string newVectorStoreName = txtNewVectorStoreName.Text.Trim();
+            string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+            string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
+
+            // Modify the underlying data source
+            var currentDataSource = (List<string>)comboBoxVectorStores.DataSource;
+            if (!string.IsNullOrEmpty(newVectorStoreName) && !currentDataSource.Contains(newVectorStoreName))
+            {
+                currentDataSource.Add(newVectorStoreName);
+                comboBoxVectorStores.DataSource = null; // Temporarily detach the data source
+                comboBoxVectorStores.DataSource = currentDataSource; // Reattach the updated data source
+                comboBoxVectorStores.SelectedItem = newVectorStoreName; // Select the new item
+            }
+            else if (!string.IsNullOrEmpty(selectedVectorStore))
+            {
+                comboBoxVectorStores.SelectedItem = selectedVectorStore;
+            }
+
+            // Clear the new vector store name textbox if a new name was used
+            if (!string.IsNullOrEmpty(newVectorStoreName))
+            {
+                txtNewVectorStoreName.Text = "";
+            }
+
+            return vectorStoreName;
+        }
+
         private void btnSelectFolders_Click(object sender, EventArgs e)
         {
+            var vectorStoreName = GetVectorStoreName();
             using (var folderBrowserDialog = new FolderBrowserDialog())
             {
                 folderBrowserDialog.Description = "Select folders containing files to upload";
@@ -102,31 +133,6 @@ namespace oaiUI
                     {
                         selectedFolders.Add(selectedPath);
                         UpdateSelectedFoldersUI();
-
-                        // Get the vector store name
-                        string newVectorStoreName = txtNewVectorStoreName.Text.Trim();
-                        string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
-                        string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
-
-                        // Modify the underlying data source
-                        var currentDataSource = (List<string>)comboBoxVectorStores.DataSource;
-                        if (!string.IsNullOrEmpty(newVectorStoreName) && !currentDataSource.Contains(newVectorStoreName))
-                        {
-                            currentDataSource.Add(newVectorStoreName);
-                            comboBoxVectorStores.DataSource = null; // Temporarily detach the data source
-                            comboBoxVectorStores.DataSource = currentDataSource; // Reattach the updated data source
-                            comboBoxVectorStores.SelectedItem = newVectorStoreName; // Select the new item
-                        }
-                        else if (!string.IsNullOrEmpty(selectedVectorStore))
-                        {
-                            comboBoxVectorStores.SelectedItem = selectedVectorStore;
-                        }
-
-                        // Clear the new vector store name textbox if a new name was used
-                        if (!string.IsNullOrEmpty(newVectorStoreName))
-                        {
-                            txtNewVectorStoreName.Text = "";
-                        }
 
                         // Save the selected folder for the current vector store
                         if (!string.IsNullOrEmpty(vectorStoreName))
@@ -142,7 +148,7 @@ namespace oaiUI
                 }
             }
         }
-        
+
         private void UpdateSelectedFoldersUI()
         {
             listBoxSelectedFolders.Items.Clear();
