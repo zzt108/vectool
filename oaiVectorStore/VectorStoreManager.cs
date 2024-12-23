@@ -56,8 +56,22 @@ namespace oaiVectorStore
 
         public async Task<Dictionary<string, string>> GetAllVectorStoresAsync(OpenAIClient api)
         {
-            var vectorStores = await api.VectorStoresEndpoint.ListVectorStoresAsync();
-            return vectorStores.Items.ToDictionary(vs => vs.Id, vs => vs.Name);
+            try
+            {
+                var vectorStores = await api.VectorStoresEndpoint.ListVectorStoresAsync();
+                if (vectorStores?.Items != null)
+                {
+                    return vectorStores.Items.ToDictionary(vs => vs.Id, vs => vs.Name);
+                }
+                else
+                {
+                    return new Dictionary<string, string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                return new Dictionary<string, string>();
+            }
         }
 
         //public async Task AddFileToVectorStoreAsync(OpenAIClient api, string vectorStoreId, string fileId)

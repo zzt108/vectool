@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DocX\DocXHandler.csproj" />
+    <ProjectReference Include="..\Log\Log.csproj" />
     <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
   </ItemGroup>
 
@@ -20,9 +21,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
-  <Import Project="..\LogCtx\LogCtxShared\LogCtxShared.projitems" Label="Shared" />
-
-  <Import Project="..\LogCtx\NLogShared\NLogShared.projitems" Label="Shared" />
 
 </Project>
