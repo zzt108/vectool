@@ -1,4 +1,4 @@
-﻿﻿using oaiVectorStore;
+﻿﻿﻿﻿using oaiVectorStore;
 using OpenAI;
 using NLogShared;
 using System.Configuration;
@@ -28,7 +28,8 @@ namespace oaiUI
         {
             InitializeComponent();
             LoadExcludedFilesConfig();
-            _vectorStoreFoldersFilePath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json"; // Set the file path from config
+            LoadExcludedFoldersConfig(); // Add this line
+            _vectorStoreFoldersFilePath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
             _vectorStoreManager = new VectorStoreManager();
             LoadVectorStores();
             LoadVectorStoreFolderData(); // Load saved folder data on startup
@@ -36,6 +37,21 @@ namespace oaiUI
             log.ConfigureXml("Config/LogConfig.xml");
 
             comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged;
+        }
+
+        private List<string> _excludedFolders; // Add this field
+
+        private void LoadExcludedFoldersConfig()
+        {
+            string excludedFoldersConfig = ConfigurationManager.AppSettings["excludedFolders"];
+            if (!string.IsNullOrEmpty(excludedFoldersConfig))
+            {
+                _excludedFolders = excludedFoldersConfig.Split(',').Select(f => f.Trim()).ToList();
+            }
+            else
+            {
+                _excludedFolders = new List<string>(); // Initialize as empty list if not configured
+            }
         }
 
         private void LoadExcludedFilesConfig()
@@ -236,7 +252,7 @@ namespace oaiUI
                     try
                     {
                         btnConvertToDocx.Enabled = false;
-                        DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, _excludedFiles);
+                        DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)

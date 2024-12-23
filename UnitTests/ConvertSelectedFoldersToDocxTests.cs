@@ -41,8 +41,8 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
             // Act
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>());
-
+            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
+            
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
 
@@ -67,8 +67,8 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { emptyFolder };
 
             // Act
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>());
-
+            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
+            
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
 
@@ -92,8 +92,8 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { folder };
 
             // Act
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>());
-
+            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
+            
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
 
@@ -125,8 +125,8 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { mainFolder };
 
             // Act
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>());
-
+            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
+            
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
 
@@ -158,8 +158,8 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
             // Act
-            DocXHandler.MDHandler.ExportSelectedFoldersToMarkdown(folderPaths, outputMarkdownPath, new List<string>());
-
+            DocXHandler.MDHandler.ExportSelectedFoldersToMarkdown(folderPaths, outputMarkdownPath, new List<string>(), new List<string>());
+            
             // Assert
             File.Exists(outputMarkdownPath).Should().BeTrue();
 
@@ -170,6 +170,37 @@ namespace DocXHandlerTests
             markdownContent.Should().Contain($"# Folder: {folder2}");
             markdownContent.Should().Contain($"## File: {Path.GetFileName(textFilePath2)}");
             markdownContent.Should().Contain("Content of markdown file 2");
+        }
+
+        [Test]
+        public void ExportSelectedFoldersToMarkdown_WithSubfolders_ShouldIncludeAllFiles()
+        {
+            // Arrange
+            string mainFolder = Path.Combine(testRootPath, "MarkdownMainFolder");
+            string subFolder = Path.Combine(mainFolder, "MarkdownSubFolder");
+            Directory.CreateDirectory(mainFolder);
+            Directory.CreateDirectory(subFolder);
+
+            string mainFile = Path.Combine(mainFolder, "main.txt");
+            string subFile = Path.Combine(subFolder, "sub.txt");
+            File.WriteAllText(mainFile, "Content of main file");
+            File.WriteAllText(subFile, "Content of sub file");
+
+            string outputMarkdownPath = Path.Combine(testRootPath, "output_recursive.md");
+            List<string> folderPaths = new List<string> { mainFolder };
+
+            // Act
+            DocXHandler.MDHandler.ExportSelectedFoldersToMarkdown(folderPaths, outputMarkdownPath, new List<string>(), new List<string>());
+            
+            // Assert
+            File.Exists(outputMarkdownPath).Should().BeTrue();
+            string markdownContent = File.ReadAllText(outputMarkdownPath);
+            markdownContent.Should().Contain($"# Folder: {mainFolder}");
+            markdownContent.Should().Contain($"## File: {Path.GetFileName(mainFile)}");
+            markdownContent.Should().Contain("Content of main file");
+            markdownContent.Should().Contain($"# Folder: {subFolder}");
+            markdownContent.Should().Contain($"## File: {Path.GetFileName(subFile)}");
+            markdownContent.Should().Contain("Content of sub file");
         }
 
         [TearDown]
