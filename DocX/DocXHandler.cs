@@ -9,15 +9,18 @@ namespace DocXHandler;
 
 public class DocXHandler
 {
-    private static NLogS.CtxLogger log = new ();
+    private static NLogS.CtxLogger log = new();
 
-    //public DocXHandler()
-    //{
-    //    log.ConfigureXml("Config/LogConfig.xml");
-    //}
-
-    private static void ProcessFolder(string folderPath, Body body, List<string> excludedFiles)
+    private static void ProcessFolder(string folderPath, Body body, List<string> excludedFiles, List<string> excludedFolders)
     {
+
+        string folderName = new DirectoryInfo(folderPath).Name;
+        if (excludedFolders.Contains(folderName))
+        {
+            log.Debug($"Skipping excluded folder: {folderPath}");
+            return;
+        }
+
         log.Debug(folderPath);
 
         // Create a new paragraph for folder's name
@@ -77,7 +80,7 @@ public class DocXHandler
         body.Append(new Paragraph(new Run(new Text($"</Folder>"))));
     }
 
-    public static void ConvertFilesToDocx(string folderPath, string outputPath, List<string> excludedFiles)
+    public static void ConvertFilesToDocx(string folderPath, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
     {
         // Create a new Word document
         using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
@@ -87,11 +90,11 @@ public class DocXHandler
             Body body = new Body();
             mainPart.Document.Append(body);
 
-            ProcessFolder(folderPath, body, excludedFiles);
+            ProcessFolder(folderPath, body, excludedFiles, excludedFolders);
         }
     }
 
-    public static void ConvertSelectedFoldersToDocx(List<string> folderPaths, string outputPath, List<string> excludedFiles)
+    public static void ConvertSelectedFoldersToDocx(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
     {
         // Create a new Word document
         using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
@@ -103,13 +106,13 @@ public class DocXHandler
 
             foreach (string folderPath in folderPaths)
             {
-                ProcessFolder(folderPath, body, excludedFiles);
-                // Process subfolders
-                string[] subfolders = Directory.GetDirectories(folderPath);
-                foreach (string subfolder in subfolders)
-                {
-                    ProcessFolder(subfolder, body, excludedFiles);
-                }
+                ProcessFolder(folderPath, body, excludedFiles, excludedFolders);
+                // // Process subfolders
+                // string[] subfolders = Directory.GetDirectories(folderPath);
+                // foreach (string subfolder in subfolders)
+                // {
+                //     ProcessFolder(subfolder, body, excludedFiles);
+                // }
             }
         }
     }
