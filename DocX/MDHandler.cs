@@ -73,8 +73,10 @@ namespace DocXHandler
                     content = $"```{mdTag}\n{content}\n```";
                 }
 
+            DateTime lastModified = File.GetLastWriteTime(file);
+
                 // Write file name and content
-                writer.WriteLine($"## File: {Path.GetFileName(file)}");
+                writer.WriteLine($"## File: {Path.GetFileName(file)} Time:{lastModified}");
                 writer.WriteLine(content);
             }
 

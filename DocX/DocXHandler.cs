@@ -65,8 +65,10 @@ public class DocXHandler
             // Calculate the relative path from rootFolder to folder
             string relativePath = Path.GetRelativePath(folderPath, file).Replace('\\', '_');
 
+            DateTime lastModified = File.GetLastWriteTime(file);
+
             // Create a new paragraph for each file's name
-            body.Append(new Paragraph(new Run(new Text($"<File name = {relativePath}>"))));
+            body.Append(new Paragraph(new Run(new Text($"<File name = {relativePath}> <Time: {lastModified}>"))));
 
             // Create a new paragraph for each file's content
             Paragraph para = new Paragraph(new Run(new Text(content)));
