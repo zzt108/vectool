@@ -22,8 +22,10 @@ public class DocXHandler
 
         log.Debug(folderPath);
 
-        // Create a new paragraph for folder's name
-        body.Append(new Paragraph(new Run(new Text($"<Folder name = {folderPath}>"))));
+        // Create a new paragraph for folder's name with Heading 1 style
+        ParagraphProperties folderParagraphProperties = new ParagraphProperties(new ParagraphStyleId() { Val = "Heading 1" });
+        Paragraph folderParagraph = new Paragraph(folderParagraphProperties, new Run(new Text(folderName)));
+        body.Append(folderParagraph);
 
         // Get all text files in the folder
         string[] files = Directory.GetFiles(folderPath);
@@ -67,8 +69,10 @@ public class DocXHandler
 
             DateTime lastModified = File.GetLastWriteTime(file);
 
-            // Create a new paragraph for each file's name
-            body.Append(new Paragraph(new Run(new Text($"<File name = {relativePath}> <Time: {lastModified}>"))));
+            // Create a new paragraph for each file's name with Heading 2 style
+            ParagraphProperties fileParagraphProperties = new ParagraphProperties(new ParagraphStyleId() { Val = "Heading 2" });
+            Paragraph fileParagraph = new Paragraph(fileParagraphProperties, new Run(new Text($"<File name = {relativePath}> <Time: {lastModified}>")));
+            body.Append(fileParagraph);
 
             // Create a new paragraph for each file's content
             Paragraph para = new Paragraph(new Run(new Text(content)));
@@ -85,7 +89,7 @@ public class DocXHandler
             ProcessFolder(subfolder, body, excludedFiles, excludedFolders);
         }
 
-        // Create a new paragraph for folder's name
+        // Create a new paragraph for folder's end
         body.Append(new Paragraph(new Run(new Text($"</Folder>"))));
     }
 
