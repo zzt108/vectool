@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-The **VecTool** project is a C# based desktop application designed to streamline the process of managing files and interacting with OpenAI's vector stores. This tool allows users to easily select folders, convert their contents into manageable `.docx` files, and upload these files to specific vector stores for use with OpenAI's models. It also provides functionality to manage existing vector stores and export folder contents to Markdown.
+The **VecTool** project is a C# based desktop application designed to streamline the process of managing files and interacting with OpenAI's vector stores. This tool allows users to easily select folders, process their contents, and upload these files to specific vector stores for use with OpenAI's models. It also provides functionality to manage existing vector stores and export folder contents to Markdown or DOCX.
 
 ## Key Features
 
@@ -70,7 +70,7 @@ The **VecTool** project is a C# based desktop application designed to streamline
 
 1. **Select Existing:** Choose a vector store from the dropdown menu labeled "Select Existing Vector Store:". Previously used folders for this vector store will be automatically loaded into the "Selected Folders" list.
 2. **Create New:** If you want to create a new vector store:
-    *   Enter a name for the new vector store in the text box next to the label "Or Enter New Name:".
+    *   Enter a name for the new vector store in the text box next to the label "Or Enter New Name:". 
     *   The new vector store will be created when you upload files.
 
 ### Uploading/Replacing Files to a Vector Store
