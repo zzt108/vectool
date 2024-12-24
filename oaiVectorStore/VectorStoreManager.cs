@@ -68,7 +68,7 @@ namespace oaiVectorStore
                     return new Dictionary<string, string>();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new Dictionary<string, string>();
             }

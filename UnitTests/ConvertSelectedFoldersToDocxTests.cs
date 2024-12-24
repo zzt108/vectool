@@ -10,8 +10,8 @@ namespace DocXHandlerTests
     [TestFixture]
     public class ConvertSelectedFoldersToDocxTests
     {
-        private string testRootPath;
-        private string outputDocxPath;
+        private string testRootPath = "";
+        private string outputDocxPath = "";
 
         [SetUp]
         public void Setup()
@@ -48,12 +48,12 @@ namespace DocXHandlerTests
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
-                var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
-                body.InnerText.Should().Contain($"<Folder name = {folder1}>");
-                body.InnerText.Should().Contain($"<Folder name = {folder2}>");
-                body.InnerText.Should().Contain("Content of file 1");
-                body.InnerText.Should().Contain("Content of file 2");
+                var body = doc?.MainDocumentPart?.Document.Body;
+                body?.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
+                body?.InnerText.Should().Contain($"<Folder name = {folder1}>");
+                body?.InnerText.Should().Contain($"<Folder name = {folder2}>");
+                body?.InnerText.Should().Contain("Content of file 1");
+                body?.InnerText.Should().Contain("Content of file 2");
             }
         }
 
@@ -74,8 +74,8 @@ namespace DocXHandlerTests
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
-                var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().Be(2); // Folder tags added
+                var body = doc?.MainDocumentPart?.Document.Body;
+                body?.ChildElements.Count.Should().Be(2); // Folder tags added
             }
         }
 
@@ -99,8 +99,8 @@ namespace DocXHandlerTests
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
-                var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().Be(2); // Expecting an empty document, folder tags added
+                var body = doc?.MainDocumentPart?.Document.Body;
+                body?.ChildElements.Count.Should().Be(2); // Expecting an empty document, folder tags added
             }
         }
 
@@ -132,11 +132,11 @@ namespace DocXHandlerTests
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
-                var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
-                body.InnerText.Should().Contain("Content of main file");
-                body.InnerText.Should().Contain("Content of sub file 1");
-                body.InnerText.Should().Contain("Content of sub file 2");
+                var body = doc?.MainDocumentPart?.Document.Body;
+                body?.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
+                body?.InnerText.Should().Contain("Content of main file");
+                body?.InnerText.Should().Contain("Content of sub file 1");
+                body?.InnerText.Should().Contain("Content of sub file 2");
             }
         }
 

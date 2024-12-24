@@ -2,16 +2,20 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build OaiUI",
+      "label": "build VecTool",
       "command": "dotnet",
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/OaiUI/oaiUI.csproj",
+        "${workspaceFolder}/VecTool.sln",
         "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+        "/consoleloggerparameters:ForceNoAlign"
       ],
-      "problemMatcher": "$msCompile"
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     },
     {
       "label": "build UnitTests",
@@ -31,11 +35,12 @@
       "type": "process",
       "args": [
         "publish",
-        "${workspaceFolder}/OaiUI/oaiUI.csproj",
+        "${workspaceFolder}/VecTool.sln",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
-      "problemMatcher": "$msCompile"
+      "problemMatcher": "$msCompile",
+      "group": "build"
     },
     {
       "label": "watch",
