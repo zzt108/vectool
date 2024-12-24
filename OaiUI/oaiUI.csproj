@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
     <ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
+    <ApplicationIcon>..\Media\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

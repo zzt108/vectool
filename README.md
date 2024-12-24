@@ -1,8 +1,8 @@
-# OaiVectorStore
+# VecTool
 
 ## Project Overview
 
-The **OaiVectorStore** project is a C# based desktop application designed to streamline the process of managing files and interacting with OpenAI's vector stores. This tool allows users to easily select folders, convert their contents into manageable `.docx` files, and upload these files to specific vector stores for use with OpenAI's models. It also provides functionality to manage existing vector stores and export folder contents to Markdown.
+The **VecTool** project is a C# based desktop application designed to streamline the process of managing files and interacting with OpenAI's vector stores. This tool allows users to easily select folders, convert their contents into manageable `.docx` files, and upload these files to specific vector stores for use with OpenAI's models. It also provides functionality to manage existing vector stores and export folder contents to Markdown.
 
 ## Key Features
 
@@ -119,7 +119,7 @@ The application automatically saves which folders you have selected for each vec
 
 ## Contributing
 
-Contributions to the **OaiVectorStore** project are welcome! If you have ideas for improvements, new features, or bug fixes, please feel free to fork the repository and submit a pull request.
+Contributions to the **VecTool** project are welcome! If you have ideas for improvements, new features, or bug fixes, please feel free to fork the repository and submit a pull request.
 
 ## License
 
