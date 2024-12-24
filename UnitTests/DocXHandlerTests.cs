@@ -9,10 +9,10 @@ namespace DocXHandlerTests
     [TestFixture]
     public class DocXHandlerTests
     {
-        private string testFolderPath;
-        private string outputDocxPath;
-        private List<string> excludedFiles;
-        private List<string> excludedFolders;
+        private string testFolderPath = "";
+        private string outputDocxPath = "";
+        private List<string> excludedFiles = new List<string>();
+        private List<string> excludedFolders = new List<string>();
 
         [SetUp]
         public void Setup()
@@ -23,10 +23,6 @@ namespace DocXHandlerTests
 
             // Define the output DOCX file path
             outputDocxPath = Path.Combine(testFolderPath, "output.docx");
-
-            // Initialize excluded files list
-            excludedFiles = new List<string>();
-            excludedFolders = new List<string>();
         }
 
         [Test]
@@ -48,13 +44,13 @@ namespace DocXHandlerTests
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
-                var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
-                body.FirstChild.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
-                body.LastChild.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
-                body.InnerText.Should().Contain("Content of file 1"); // Check if the content is included
-                body.InnerText.Should().Contain("Content of file 2"); // Check if the content is included
-                body.InnerText.Should().Contain("Content of file 3"); // Check if the content is included
+                var body = doc?.MainDocumentPart?.Document.Body;
+                body?.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
+                body?.FirstChild.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
+                body?.LastChild.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
+                body?.InnerText.Should().Contain("Content of file 1"); // Check if the content is included
+                body?.InnerText.Should().Contain("Content of file 2"); // Check if the content is included
+                body?.InnerText.Should().Contain("Content of file 3"); // Check if the content is included
             }
         }
 
@@ -80,8 +76,8 @@ namespace DocXHandlerTests
             // Check if the document is empty
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
-                var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().Be(2); // Folder tags added
+                var body = doc?.MainDocumentPart?.Document.Body;
+                body?.ChildElements.Count.Should().Be(2); // Folder tags added
             }
         }
 
@@ -101,10 +97,10 @@ namespace DocXHandlerTests
             // Check if the document is empty
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
-                var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().Be(2); // Expecting an empty document, folder tags added
-                body.FirstChild.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
-                body.LastChild.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
+                var body = doc?.MainDocumentPart?.Document.Body;
+                body?.ChildElements.Count.Should().Be(2); // Expecting an empty document, folder tags added
+                body?.FirstChild?.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
+                body?.LastChild?.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
             }
             /*
             The reason why the test case ConvertFilesToDocx_EmptyFolder_ShouldCreateEmptyDocx expects body.ChildElements.Count.Should().Be(2); 
@@ -131,11 +127,11 @@ namespace DocXHandlerTests
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
-                var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().BeGreaterThan(3); // Expecting at least one element
-                body.FirstChild.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
-                body.LastChild.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
-                body.InnerText.Should().Contain("Hello, World!"); // Check if the content is included
+                var body = doc?.MainDocumentPart?.Document.Body;
+                body?.ChildElements.Count.Should().BeGreaterThan(3); // Expecting at least one element
+                body?.FirstChild?.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
+                body?.LastChild?.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
+                body?.InnerText.Should().Contain("Hello, World!"); // Check if the content is included
             }
         }
 
@@ -154,8 +150,8 @@ namespace DocXHandlerTests
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
-                var body = doc.MainDocumentPart.Document.Body;
-                body.ChildElements.Count.Should().Be(2); // Expecting an empty document
+                var body = doc?.MainDocumentPart?.Document.Body;
+                body?.ChildElements.Count.Should().Be(2); // Expecting an empty document
             }
         }
     }

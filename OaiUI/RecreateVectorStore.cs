@@ -9,7 +9,7 @@ namespace oaiUI
 {
     public partial class MainForm
     {
-        private async Task<string> RecreateVectorStore(string vectorStoreName)
+        private async Task<string> RecreateVectorStore(string? vectorStoreName)
         {
             using var api = new OpenAIClient();
 
@@ -24,6 +24,9 @@ namespace oaiUI
             }
             else
             {
+                if(string.IsNullOrEmpty(vectorStoreName)){
+                    throw new ArgumentException(_vectorStoreFoldersFilePath, nameof(vectorStoreName));
+                }
                 // Create the vector store
                 vectorStoreId = await _vectorStoreManager.CreateVectorStoreAsync(api, vectorStoreName, new List<string>());
                 // When a new vector store is created, ensure it exists in the folder mapping

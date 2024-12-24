@@ -34,7 +34,7 @@ namespace NLogAdapter.Tests
         public void Clear_ShouldClearScopeContext()
         {
             // Arrange
-            var nLogScopeContext = new NLogScopeContext();
+            var nLogScopeContext = new NLogShared.NLogScopeContext();
             nLogScopeContext.PushProperty("TestKey", "TestValue");
 
             // Act
@@ -48,7 +48,7 @@ namespace NLogAdapter.Tests
         public void PushProperty_ShouldAddPropertyToScopeContext()
         {
             // Arrange
-            var nLogScopeContext = new NLogScopeContext();
+            var nLogScopeContext = new NLogShared.NLogScopeContext();
             var key = "TestKey";
             var value = "TestValue";
 
@@ -70,7 +70,7 @@ namespace NLogAdapter.Tests
 
             using var log = new CtxLogger();
 
-            var props = new Props("first", log);
+            var props = new LogCtxShared.Props("first", log);
 
             // Act
             log.Ctx.Set(props);

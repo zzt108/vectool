@@ -56,7 +56,7 @@ namespace SeriLogAdapter.Tests
             Serilog.Debugging.SelfLog.Enable(msg => Console.Error.WriteLine(msg));
             using var log = new CtxLogger();
             log.ConfigureXml(ConfigPathXml);
-            var props = new Props("first", log);
+            var props = new LogCtxShared.Props("first", log);
 
             // Act
             log.Ctx.Set(props);

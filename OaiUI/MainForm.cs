@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using oaiVectorStore;
+﻿﻿using oaiVectorStore;
 using OpenAI;
 using NLogShared;
 using System.Configuration;
@@ -43,7 +43,7 @@ namespace oaiUI
 
         private void LoadExcludedFoldersConfig()
         {
-            string excludedFoldersConfig = ConfigurationManager.AppSettings["excludedFolders"];
+            string? excludedFoldersConfig = ConfigurationManager.AppSettings["excludedFolders"];
             if (!string.IsNullOrEmpty(excludedFoldersConfig))
             {
                 _excludedFolders = excludedFoldersConfig.Split(',').Select(f => f.Trim()).ToList();
@@ -56,7 +56,7 @@ namespace oaiUI
 
         private void LoadExcludedFilesConfig()
         {
-            string excludedFilesConfig = ConfigurationManager.AppSettings["excludedFiles"];
+            string? excludedFilesConfig = ConfigurationManager.AppSettings["excludedFiles"];
             if (!string.IsNullOrEmpty(excludedFilesConfig))
             {
                 _excludedFiles = excludedFilesConfig.Split(',').Select(f => f.Trim()).ToList();
@@ -70,7 +70,7 @@ namespace oaiUI
             // Update the stored mapping when clearing folders
             if (comboBoxVectorStores.SelectedItem != null)
             {
-                string selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString();
+                string? selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString();
                 if (_vectorStoreFolders.ContainsKey(selectedVectorStoreName))
                 {
                     _vectorStoreFolders[selectedVectorStoreName] = new List<string>();
@@ -106,15 +106,15 @@ namespace oaiUI
             }
         }
 
-        private string GetVectorStoreName()
+        private string? GetVectorStoreName()
         {
             // Get the vector store name
             string newVectorStoreName = txtNewVectorStoreName.Text.Trim();
-            string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
-            string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
+            string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+            string? vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
             // Modify the underlying data source
-            var currentDataSource = (List<string>)comboBoxVectorStores.DataSource;
+            List<string>? currentDataSource = (List<string>)comboBoxVectorStores.DataSource;
             if (!string.IsNullOrEmpty(newVectorStoreName) && !currentDataSource.Contains(newVectorStoreName))
             {
                 currentDataSource.Add(newVectorStoreName);
@@ -196,12 +196,12 @@ namespace oaiUI
             {
                 WorkStart("Upload/Replace files");
                 string newVectorStoreName = txtNewVectorStoreName.Text.Trim();
-                string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
-                string vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
+                string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+                string? vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
                 try
                 {
-                    string vectorStoreId = await RecreateVectorStore(vectorStoreName);
+                    string? vectorStoreId = await RecreateVectorStore(vectorStoreName);
 
                     // Add new vector store name to the combo box if it's not already there
                     if (!string.IsNullOrEmpty(newVectorStoreName) && !comboBoxVectorStores.Items.Contains(newVectorStoreName))
@@ -324,7 +324,7 @@ namespace oaiUI
         private async void btnDeleteAllVSFiles_ClickAsync(object sender, EventArgs e)
         {
             using var api = new OpenAIClient();
-            string selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+            string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
             if (string.IsNullOrEmpty(selectedVectorStore))
             {
                 MessageBox.Show("Please select a vector store.", "Input Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -362,20 +362,23 @@ namespace oaiUI
         {
             if (comboBoxVectorStores.SelectedItem != null)
             {
-                string selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString();
+                string? selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString();
                 LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
             }
         }
 
-        private void LoadSelectedFoldersForVectorStore(string vectorStoreName)
+        private void LoadSelectedFoldersForVectorStore(string? vectorStoreName)
         {
-            selectedFolders.Clear();
-            listBoxSelectedFolders.Items.Clear();
-
-            if (_vectorStoreFolders.ContainsKey(vectorStoreName))
+            if (!string.IsNullOrEmpty(vectorStoreName))
             {
-                selectedFolders.AddRange(_vectorStoreFolders[vectorStoreName]);
-                UpdateSelectedFoldersUI();
+                selectedFolders.Clear();
+                listBoxSelectedFolders.Items.Clear();
+
+                if (_vectorStoreFolders.ContainsKey(vectorStoreName))
+                {
+                    selectedFolders.AddRange(_vectorStoreFolders[vectorStoreName]);
+                    UpdateSelectedFoldersUI();
+                }
             }
         }
     }
