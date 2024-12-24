@@ -13,7 +13,6 @@ public class DocXHandler
 
     private static void ProcessFolder(string folderPath, Body body, List<string> excludedFiles, List<string> excludedFolders)
     {
-
         string folderName = new DirectoryInfo(folderPath).Name;
         if (excludedFolders.Contains(folderName))
         {
@@ -76,6 +75,14 @@ public class DocXHandler
             // Create a new paragraph for each file's end
             body.Append(new Paragraph(new Run(new Text($"</File>"))));
         }
+
+        // Process subfolders
+        string[] subfolders = Directory.GetDirectories(folderPath);
+        foreach (string subfolder in subfolders)
+        {
+            ProcessFolder(subfolder, body, excludedFiles, excludedFolders);
+        }
+
         // Create a new paragraph for folder's name
         body.Append(new Paragraph(new Run(new Text($"</Folder>"))));
     }
@@ -107,12 +114,6 @@ public class DocXHandler
             foreach (string folderPath in folderPaths)
             {
                 ProcessFolder(folderPath, body, excludedFiles, excludedFolders);
-                // // Process subfolders
-                // string[] subfolders = Directory.GetDirectories(folderPath);
-                // foreach (string subfolder in subfolders)
-                // {
-                //     ProcessFolder(subfolder, body, excludedFiles);
-                // }
             }
         }
     }
