@@ -20,7 +20,7 @@ namespace DocXHandler
         private static void ProcessFolderForMarkdown(string folderPath, StreamWriter writer, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
         {
             string folderName = new DirectoryInfo(folderPath).Name;
-            if (IsExcluded(folderName, excludedFolders))
+            if (FileHandlerBase.IsExcluded(folderName, excludedFolders))
             {
                 log.Debug($"Skipping excluded folder: {folderPath}");
                 return;
@@ -37,12 +37,12 @@ namespace DocXHandler
             foreach (string file in files)
             {
                 string fileName = Path.GetFileName(file);
-                if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, outputPath))
+                if (FileHandlerBase.IsFileExcluded(fileName, excludedFiles) || !FileHandlerBase.IsFileValid(file, outputPath))
                 {
                     log.Debug($"Skipping excluded file: {file}");
                     continue; // Skip this file
                 }
-                string content = GetFileContent(file);
+                string content = FileHandlerBase.GetFileContent(file);
                 DateTime lastModified = File.GetLastWriteTime(file);
 
                 writer.WriteLine($"## File: {Path.GetFileName(file)} Time:{lastModified}");

@@ -13,7 +13,7 @@ public class DocXHandler : FileHandlerBase
     private static void ProcessFolder(string folderPath, Body body, List<string> excludedFiles, List<string> excludedFolders)
     {
         string folderName = new DirectoryInfo(folderPath).Name;
-        if (IsExcluded(folderName, excludedFolders))
+        if (FileHandlerBase.IsExcluded(folderName, excludedFolders))
         {
             log.Debug($"Skipping excluded folder: {folderPath}");
             return;
@@ -32,12 +32,12 @@ public class DocXHandler : FileHandlerBase
         foreach (string file in files)
         {
             string fileName = Path.GetFileName(file);
-            if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, null))
+            if (FileHandlerBase.IsFileExcluded(fileName, excludedFiles) || !FileHandlerBase.IsFileValid(file, null))
             {
                 log.Debug($"Skipping excluded file: {file}");
                 continue; // Skip this file
             }
-            string content = GetFileContent(file);
+            string content = FileHandlerBase.GetFileContent(file);
 
             // Calculate the relative path from rootFolder to folder
             string relativePath = Path.GetRelativePath(folderPath, file).Replace('\\', '_');
