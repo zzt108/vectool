@@ -1,41 +1,9 @@
-﻿using System.Linq;
-using System.Text;
-/*
- File format	MIME type
-.c	text/x-c
-.cpp	text/x-c++
-.cs	text/x-csharp
-.css	text/css
-.doc	application/msword
-.docx	application/vnd.openxmlformats-officedocument.wordprocessingml.document
-.go	text/x-golang
-.html	text/html
-.java	text/x-java
-.js	text/javascript
-.json	application/json
-.md	text/markdown
-.pdf	application/pdf
-.php	text/x-php
-.pptx	application/vnd.openxmlformats-officedocument.presentationml.presentation
-.py	text/x-python
-.py	text/x-script.python
-.rb	text/x-ruby
-.sh	application/x-sh
-.tex	text/x-tex
-.ts	application/typescript
-.txt	text/plain 
- */
-
-namespace oaiVectorStore
+﻿namespace oaiVectorStore
 {
     using OpenAI.VectorStores;
     using OpenAI;
     using System;
     using System.Collections.Generic;
-    using System.Net.Http;
-    using System.Net.Http.Json;
-    using System.Text;
-    using System.Text.Json;
     using System.Threading.Tasks;
 
     public class VectorStoreManager
@@ -117,17 +85,6 @@ namespace oaiVectorStore
             }
             catch (Exception ex)
             {
-                /*
-Error deleting files: DeleteFileAsync Failed! HTTP status code: NotFound | Response body: {
-  "error": {
-    "message": "No such File object: file-QpBv6FnCOpRblkhDfmwG4XN8",
-    "type": "invalid_request_error",
-    "param": "id",
-    "code": null
-  }
-}
-
-                 */
                 if (ex.Message.ToLower().Contains("notfound"))
                 {
                     return false;
@@ -151,25 +108,5 @@ Error deleting files: DeleteFileAsync Failed! HTTP status code: NotFound | Respo
             return files.Items.Select(vs => vs.Id).ToList();
 
         }
-
-
-        //public async Task<List<string>> RetrieveAllFilesInVectorStoreAsync(OpenAIClient api, string vectorStoreId)
-        //{
-        //    List<string> allFileIds = new List<string>();
-        //    int offset = 0;
-        //    int limit = 20; // Adjust this limit based on your requirements
-        //    ListResponse<VectorStoreFileResponse> response;
-
-        //    do
-        //    {
-        //        response = await api.VectorStoresEndpoint.ListVectorStoreFilesAsync(vectorStoreId, limit: limit, offset: offset);
-        //        allFileIds.AddRange(response.Items.Select(vs => vs.Id));
-        //        offset += limit; // Move to the next set of files
-        //    }
-        //    while (response.Items.Count > 0); // Continue until there are no more files
-
-        //    return allFileIds;
-        //}
-
     }
 }

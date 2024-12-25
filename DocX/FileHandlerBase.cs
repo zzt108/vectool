@@ -1,6 +1,7 @@
 using oaiVectorStore;
 using NLogS = NLogShared;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace DocXHandler
 {
@@ -15,7 +16,15 @@ namespace DocXHandler
 
         protected static bool IsFileExcluded(string fileName, List<string> excludedFiles)
         {
-            return excludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase));
+            foreach (var pattern in excludedFiles)
+            {
+                string regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*") + "$";
+                if (Regex.IsMatch(fileName, regexPattern, RegexOptions.IgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         protected static bool IsFileValid(string file, string outputPath)

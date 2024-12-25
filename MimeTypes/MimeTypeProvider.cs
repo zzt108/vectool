@@ -65,21 +65,4 @@ namespace oaiVectorStore
             return mdTag is null ? false : mdTag.Equals("application/binary");
         }
     }
-}/*
- ---------------------------
-
----------------------------
-Error uploading files: UploadFileAsync Failed! HTTP status code: BadRequest | Response body: {
-  "error": {
-    "message": "Invalid extension cs. Supported formats: \"c\", \"cpp\", \"css\", \"csv\", \"docx\", \"gif\", \"go\", \"html\", \"java\", \"jpeg\", \"jpg\", \"js\", \"json\", \"md\", \"pdf\", \"php\", \"pkl\", \"png\", \"pptx\", \"py\", \"rb\", \"tar\", \"tex\", \"ts\", \"txt\", \"webp\", \"xlsx\", \"xml\", \"zip\"",
-    "type": "invalid_request_error",
-    "param": null,
-    "code": null
-  }
 }
-
----------------------------
-OK   
----------------------------
-
- */
