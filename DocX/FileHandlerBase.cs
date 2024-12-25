@@ -8,7 +8,7 @@ namespace DocXHandler
     {
         protected static NLogS.CtxLogger log = new();
 
-        protected static bool IsExcluded(string name, List<string> excludedList)
+        protected static bool IsFolderExcluded(string name, List<string> excludedList)
         {
             return excludedList.Contains(name);
         }

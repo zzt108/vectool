@@ -13,7 +13,7 @@ public class DocXHandler : FileHandlerBase
     private static void ProcessFolder(string folderPath, Body body, List<string> excludedFiles, List<string> excludedFolders)
     {
         string folderName = new DirectoryInfo(folderPath).Name;
-        if (FileHandlerBase.IsExcluded(folderName, excludedFolders))
+        if (FileHandlerBase.IsFolderExcluded(folderName, excludedFolders))
         {
             log.Debug($"Skipping excluded folder: {folderPath}");
             return;
