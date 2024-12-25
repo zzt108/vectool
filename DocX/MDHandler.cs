@@ -20,7 +20,7 @@ namespace DocXHandler
         private static void ProcessFolderForMarkdown(string folderPath, StreamWriter writer, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
         {
             string folderName = new DirectoryInfo(folderPath).Name;
-            if (FileHandlerBase.IsExcluded(folderName, excludedFolders))
+            if (FileHandlerBase.IsFolderExcluded(folderName, excludedFolders))
             {
                 log.Debug($"Skipping excluded folder: {folderPath}");
                 return;
