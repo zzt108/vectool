@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using oaiVectorStore;
 using DocXHandler;
-using System.Collections.Generic;
 
 namespace oaiVectorStoreTests
 {
