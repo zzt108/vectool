@@ -243,3 +243,5 @@ ModelManifest.xml
 /.openai
 /.clinerules
 .clinerules
+.aider*
+.env
