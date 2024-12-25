@@ -1,6 +1,8 @@
 ﻿using FluentAssertions;
 using NUnit.Framework;
 using oaiVectorStore;
+using DocXHandler;
+using System.Collections.Generic;
 
 namespace oaiVectorStoreTests
 {
@@ -79,6 +81,74 @@ namespace oaiVectorStoreTests
         {
             var result = MimeTypeProvider.IsBinary(extension);
             result.Should().Be(expected);
+        }
+    }
+
+    public class TestFileHandler : FileHandlerBase
+    {
+        public static bool TestIsFileExcluded(string fileName, List<string> excludedFiles)
+        {
+            return IsFileExcluded(fileName, excludedFiles);
+        }
+    }
+
+    [TestFixture]
+    public class FileHandlerBaseTests
+    {
+        [Test]
+        public void IsFileExcluded_ExactMatch_ReturnsTrue()
+        {
+            var excludedFiles = new List<string> { "test.txt", "example.doc" };
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public void IsFileExcluded_WildcardAtEnd_ReturnsTrue()
+        {
+            var excludedFiles = new List<string> { "test.*", "example.doc" };
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public void IsFileExcluded_WildcardAtStart_ReturnsTrue()
+        {
+            var excludedFiles = new List<string> { "*.txt", "example.doc" };
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public void IsFileExcluded_WildcardInMiddle_ReturnsTrue()
+        {
+            var excludedFiles = new List<string> { "te*t.txt", "example.doc" };
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public void IsFileExcluded_MultipleWildcards_ReturnsTrue()
+        {
+            var excludedFiles = new List<string> { "t*t.t*t", "example.doc" };
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public void IsFileExcluded_NoMatch_ReturnsFalse()
+        {
+            var excludedFiles = new List<string> { "test.*", "example.doc" };
+            var result = TestFileHandler.TestIsFileExcluded("other.txt", excludedFiles);
+            result.Should().BeFalse();
+        }
+
+        [Test]
+        public void IsFileExcluded_CaseInsensitive_ReturnsTrue()
+        {
+            var excludedFiles = new List<string> { "TEST.*", "example.doc" };
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
+            result.Should().BeTrue();
         }
     }
 }
