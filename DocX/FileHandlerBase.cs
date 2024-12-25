@@ -44,5 +44,40 @@ namespace DocXHandler
             }
             return content;
         }
+
+        protected static void ProcessFolder<T>(
+            string folderPath,
+            T context,
+            List<string> excludedFiles,
+            List<string> excludedFolders,
+            Action<string, T, List<string>, List<string>> processFile,
+            Action<T, string> writeFolderName,
+            Action<T> writeFolderEnd = null)
+        {
+            string folderName = new DirectoryInfo(folderPath).Name;
+            if (IsFolderExcluded(folderName, excludedFolders))
+            {
+                log.Debug($"Skipping excluded folder: {folderPath}");
+                return;
+            }
+
+            log.Debug(folderPath);
+
+            writeFolderName(context, folderName);
+
+            string[] files = Directory.GetFiles(folderPath);
+            foreach (string file in files)
+            {
+                processFile(file, context, excludedFiles, excludedFolders);
+            }
+
+            string[] subfolders = Directory.GetDirectories(folderPath);
+            foreach (string subfolder in subfolders)
+            {
+                ProcessFolder(subfolder, context, excludedFiles, excludedFolders, processFile, writeFolderName, writeFolderEnd);
+            }
+
+            writeFolderEnd?.Invoke(context);
+        }
     }
 }
