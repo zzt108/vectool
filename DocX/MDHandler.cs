@@ -3,9 +3,8 @@ using NLogS = NLogShared;
 
 namespace DocXHandler
 {
-    public class MDHandler
+    public class MDHandler : FileHandlerBase
     {
-        private static NLogS.CtxLogger log = new();
 
         public static void ExportSelectedFoldersToMarkdown(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
         {
@@ -21,7 +20,7 @@ namespace DocXHandler
         private static void ProcessFolderForMarkdown(string folderPath, StreamWriter writer, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
         {
             string folderName = new DirectoryInfo(folderPath).Name;
-            if (excludedFolders.Contains(folderName)) // Accessing the MainForm's excludedFolders
+            if (IsExcluded(folderName, excludedFolders))
             {
                 log.Debug($"Skipping excluded folder: {folderPath}");
                 return;
@@ -38,44 +37,14 @@ namespace DocXHandler
             foreach (string file in files)
             {
                 string fileName = Path.GetFileName(file);
-                if (excludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase)))
+                if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, outputPath))
                 {
                     log.Debug($"Skipping excluded file: {file}");
                     continue; // Skip this file
                 }
-                if (file == outputPath)
-                {
-                    continue;
-                }
-                // Check MIME type and upload
-                string extension = Path.GetExtension(file);
-                if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
-                {
-                    continue;
-                }
+                string content = GetFileContent(file);
+                DateTime lastModified = File.GetLastWriteTime(file);
 
-                if (MimeTypeProvider.IsBinary(extension)) // non text types should be uploaded separately
-                {
-                    continue;
-                }
-
-                // Check if the file content is not empty
-                if (new FileInfo(file).Length == 0)
-                {
-                    continue; // Skip empty files
-                }
-
-                string content = File.ReadAllText(file);
-                var mdTag = MimeTypeProvider.GetMdTag(extension);
-                if (mdTag != null)
-                {
-                    // Add start and end language tags to the file content
-                    content = $"```{mdTag}\n{content}\n```";
-                }
-
-            DateTime lastModified = File.GetLastWriteTime(file);
-
-                // Write file name and content
                 writer.WriteLine($"## File: {Path.GetFileName(file)} Time:{lastModified}");
                 writer.WriteLine(content);
             }

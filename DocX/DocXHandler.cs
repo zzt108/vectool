@@ -7,14 +7,13 @@ using NLogS = NLogShared;
 
 namespace DocXHandler;
 
-public class DocXHandler
+public class DocXHandler : FileHandlerBase
 {
-    private static NLogS.CtxLogger log = new();
 
     private static void ProcessFolder(string folderPath, Body body, List<string> excludedFiles, List<string> excludedFolders)
     {
         string folderName = new DirectoryInfo(folderPath).Name;
-        if (excludedFolders.Contains(folderName))
+        if (IsExcluded(folderName, excludedFolders))
         {
             log.Debug($"Skipping excluded folder: {folderPath}");
             return;
@@ -33,36 +32,12 @@ public class DocXHandler
         foreach (string file in files)
         {
             string fileName = Path.GetFileName(file);
-            if (excludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase)))
+            if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, null))
             {
                 log.Debug($"Skipping excluded file: {file}");
                 continue; // Skip this file
             }
-            // Check MIME type and upload
-            string extension = Path.GetExtension(file);
-            if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
-            {
-                continue;
-            }
-
-            if (MimeTypeProvider.IsBinary(extension)) // non text types should be uploaded separately
-            {
-                continue;
-            }
-
-            // Check if the file content is not empty
-            if (new FileInfo(file).Length == 0)
-            {
-                continue; // Skip empty files
-            }
-
-            string content = File.ReadAllText(file);
-            var mdTag = MimeTypeProvider.GetMdTag(extension);
-            if (mdTag != null)
-            {
-                // Add start and end language tags to the file content
-                content = $"```{mdTag}\n{content}\n```";
-            }
+            string content = GetFileContent(file);
 
             // Calculate the relative path from rootFolder to folder
             string relativePath = Path.GetRelativePath(folderPath, file).Replace('\\', '_');
