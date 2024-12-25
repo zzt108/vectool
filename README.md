@@ -19,6 +19,7 @@ The **VecTool** project is a C# based desktop application designed to streamline
 *   **MIME Type Handling:** Utilizes MIME types to correctly identify and process different file formats.
 *   **Folder Association with Vector Stores:** Automatically saves and loads the association between selected folders and specific vector stores. This means when you select a vector store, the folders you previously used with it will be automatically loaded. This association is saved for future use in a configurable JSON file.
 *   **Export to Markdown:** Converts the content of selected folders into a single Markdown (`.md`) file. Folder and file names are indicated using Markdown headings (`# Folder: ...`, `## File: ...`).
+    *   **Automatic Tag Generation:** If a file extension is not found in `mdTags.json`, the extension itself (without the leading dot) will be used as the code block tag in the Markdown output. For example, a file named `script.xyz` will have the tag `xyz` in the Markdown.
 *   **Excluding Files:** Users can configure a comma-separated list of filenames in the `app.config` to exclude them from processing.
 *   **Excluding Folders:** Users can configure a comma-separated list of folder names in the `app.config` to exclude their contents from processing.
 *   **Support for PowerShell and Jupyter/Polyglot files:** Added support for processing PowerShell scripts (`.ps1`, `.psm1`) and Jupyter/Polyglot notebook files (`.ipynb`).
@@ -110,6 +111,13 @@ This will create a single `.md` file containing the content of all selected fold
 2. Click the "MD" button in the "Convert to single file" panel.
 3. A "Save As" dialog will appear. Choose a location and filename for the output `.md` file. If you have entered a new Vector Store name or selected an existing one, that name will be used as the default file name. Click "Save".
 4. The content of each folder and its files will be added to the `.md` file, with folder names indicated by `# Folder: [folder path]` and file names by `## File: [file name]`.
+    *   **Automatic Tag Generation:** If a file's extension is not defined in `mdTags.json`, the extension itself (without the leading dot) will be used as the code block tag. For example:
+
+    ```markdown
+    ## File: my_script.xyz Time:2024-12-25 10:30:00
+    ```xyz
+    // Content of my_script.xyz
+    ```
 
 ### Automatic Saving and Loading of Folder Associations
 

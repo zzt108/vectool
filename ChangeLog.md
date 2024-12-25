@@ -1,5 +1,10 @@
 ## Changelog
 
+### VecTool v0.24.12.25b
+
+*   **Enhancement:** If an extension is not found in `mdTags.json`, the extension itself is now used as the tag in Markdown output (e.g., `.xyz` will use `xyz` as the tag).
+*   **Refactor:** Updated `mdTags.json` to include more default tags.
+
 ### VecTool v0.24.12.25
 
 *   **Feature:** Added support for PowerShell (`.ps1`, `.psm1`) and Jupyter/Polyglot (`.ipynb`) files.
