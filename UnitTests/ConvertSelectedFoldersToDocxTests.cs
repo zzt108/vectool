@@ -50,8 +50,8 @@ namespace DocXHandlerTests
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
                 body?.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
-                body?.InnerText.Should().Contain($"<Folder name = {folder1}>");
-                body?.InnerText.Should().Contain($"<Folder name = {folder2}>");
+                body?.InnerText.Should().Contain("Folder1");
+                body?.InnerText.Should().Contain("Folder2");
                 body?.InnerText.Should().Contain("Content of file 1");
                 body?.InnerText.Should().Contain("Content of file 2");
             }

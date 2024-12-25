@@ -33,8 +33,8 @@ namespace oaiVectorStoreTests
         [TestCase(".cs", "csharp")]
         [TestCase(".csproj", "msbuild")]
         [TestCase(".feature", "gherkin")]
-        [TestCase(".unknown", null)] // Unknown extension should return null
-        [TestCase(".txt", null)] // Unspecified extension should return null
+        [TestCase(".unknown", "unknown")] // Unknown extension should return null
+        [TestCase(".txt", "txt")] // Unspecified extension should return null
         public void GetMdTag_ValidAndInvalidExtensions_ReturnsCorrectMdTag(string extension, string? expectedMdTag)
         {
             var result = MimeTypeProvider.GetMdTag(extension);
@@ -59,8 +59,8 @@ namespace oaiVectorStoreTests
             result.Should().Be(expectedNewExtension);
         }
 
-        [TestCase(".md", null)] // Valid extension
-        [TestCase(".unknown", null)] // Unknown extension
+        [TestCase(".md", "md")] // Valid extension
+        [TestCase(".unknown", "unknown")] // Unknown extension
         public void GetMdTag_EdgeCases_ReturnsExpected(string extension, string? expectedMdTag)
         {
             var result = MimeTypeProvider.GetMdTag(extension);

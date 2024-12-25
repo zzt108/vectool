@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using NUnit.Framework;
 using System.IO;
 using DocXHandler;
@@ -46,8 +46,8 @@ namespace DocXHandlerTests
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
                 body?.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
-                body?.FirstChild.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
-                body?.LastChild.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
+                body?.FirstChild?.InnerText.Should().Be("DocXHandlerTests"); // Check if the folder name is correct
+                body?.LastChild?.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
                 body?.InnerText.Should().Contain("Content of file 1"); // Check if the content is included
                 body?.InnerText.Should().Contain("Content of file 2"); // Check if the content is included
                 body?.InnerText.Should().Contain("Content of file 3"); // Check if the content is included
@@ -99,7 +99,7 @@ namespace DocXHandlerTests
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
                 body?.ChildElements.Count.Should().Be(2); // Expecting an empty document, folder tags added
-                body?.FirstChild?.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
+                body?.FirstChild?.InnerText.Should().Be("DocXHandlerTests"); // Check if the folder name is correct
                 body?.LastChild?.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
             }
             /*
@@ -129,7 +129,7 @@ namespace DocXHandlerTests
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
                 body?.ChildElements.Count.Should().BeGreaterThan(3); // Expecting at least one element
-                body?.FirstChild?.InnerText.Should().Contain($"<Folder name = {testFolderPath}>"); // Check if the folder tag is included
+                body?.FirstChild?.InnerText.Should().Be("DocXHandlerTests"); // Check if the folder name is correct
                 body?.LastChild?.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
                 body?.InnerText.Should().Contain("Hello, World!"); // Check if the content is included
             }
