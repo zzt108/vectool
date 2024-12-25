@@ -21,6 +21,7 @@ The **VecTool** project is a C# based desktop application designed to streamline
 *   **Export to Markdown:** Converts the content of selected folders into a single Markdown (`.md`) file. Folder and file names are indicated using Markdown headings (`# Folder: ...`, `## File: ...`).
 *   **Excluding Files:** Users can configure a comma-separated list of filenames in the `app.config` to exclude them from processing.
 *   **Excluding Folders:** Users can configure a comma-separated list of folder names in the `app.config` to exclude their contents from processing.
+*   **Support for PowerShell and Jupyter/Polyglot files:** Added support for processing PowerShell scripts (`.ps1`, `.psm1`) and Jupyter/Polyglot notebook files (`.ipynb`).
 *   **Logging:** Comprehensive logging using NLog for debugging and monitoring.
 
 ## Before 1st Run
@@ -39,6 +40,7 @@ The **VecTool** project is a C# based desktop application designed to streamline
         <appSettings>
             <add key="vectorStoreFoldersPath" value="path/to/your/vectorStoreFolders.json" />
             <add key="excludedFiles" value=".gitignore,fileToExclude.txt" />
+            <add key="excludedFolders" value=".git,node_modules" />
         </appSettings>
     </configuration>
     ```
@@ -115,7 +117,7 @@ The application automatically saves which folders you have selected for each vec
 
 ## Configuration
 
-*   **app.config:** Contains application-level settings, including the path to the `vectorStoreFolders.json` file and the optional list of `excludedFiles`.
+*   **app.config:** Contains application-level settings, including the path to the `vectorStoreFolders.json` file and the optional list of `excludedFiles` and `excludedFolders`.
 *   **.openai:** Contains your OpenAI API key and optional organization/project identifiers. Ensure this file is properly configured before running the application.
 *   **OaiUI/Config/LogConfig.xml:** Configuration file for NLog, allowing you to customize logging behavior (e.g., log levels, output targets).
 *   **MimeTypes/Config/\*:** JSON files defining MIME types (`mimeTypes.json`), new file extensions for processing (`newExtensions.json`), and Markdown tags for code blocks (`mdTags.json`).
