@@ -1,5 +1,13 @@
 ## Changelog
 
+### VecTool v0.24.12.25c
+
+*   **Enhancement:** Improved the logic for clearing selected folders. Clearing the selected folders now correctly removes the folder association with the currently selected vector store.
+*   **Internal:** Refactored the `GetVectorStoreName` method in `MainForm.cs` for better clarity and to ensure consistent updating of the vector store combobox.
+*   **Internal:** Updated the `btnSelectFolders_Click` method to ensure that folder associations are correctly saved when new folders are selected.
+*   **Testing:** Added more robust assertions in `ConvertSelectedFoldersToDocxTests.cs` to verify the content and structure of the generated DOCX and Markdown files.
+*   **Testing:** Added new unit tests in `FileHandlerBaseTests.cs` to specifically test the `IsFileExcluded` method with various wildcard scenarios.
+
 ### VecTool v0.24.12.25b
 
 *   **Enhancement:** If an extension is not found in `mdTags.json`, the extension itself is now used as the tag in Markdown output (e.g., `.xyz` will use `xyz` as the tag).
