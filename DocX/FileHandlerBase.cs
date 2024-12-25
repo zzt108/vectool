@@ -8,17 +8,17 @@ namespace DocXHandler
     {
         protected static NLogS.CtxLogger log = new();
 
-        protected bool IsExcluded(string name, List<string> excludedList)
+        protected static bool IsExcluded(string name, List<string> excludedList)
         {
             return excludedList.Contains(name);
         }
 
-        protected bool IsFileExcluded(string fileName, List<string> excludedFiles)
+        protected static bool IsFileExcluded(string fileName, List<string> excludedFiles)
         {
             return excludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase));
         }
 
-        protected bool IsFileValid(string file, string outputPath)
+        protected static bool IsFileValid(string file, string outputPath)
         {
             if (file == outputPath)
             {
@@ -34,7 +34,7 @@ namespace DocXHandler
             return new FileInfo(file).Length > 0;
         }
 
-        protected string GetFileContent(string file)
+        protected static string GetFileContent(string file)
         {
             string content = File.ReadAllText(file);
             var mdTag = MimeTypeProvider.GetMdTag(Path.GetExtension(file));
