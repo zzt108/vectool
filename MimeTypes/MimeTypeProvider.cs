@@ -50,6 +50,11 @@ namespace oaiVectorStore
         public static string? GetMdTag(string fileExtension)
         {
             _mdTags.TryGetValue(fileExtension, out string? mdTag);
+            if (mdTag == null)
+            {
+                mdTag = fileExtension.TrimStart('.'); // Use the extension itself as the tag if not found in mdTags.json
+            }
+
             return mdTag;
         }
 

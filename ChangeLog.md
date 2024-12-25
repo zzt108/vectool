@@ -36,3 +36,4 @@
 
 *   Store last upload date for vector stores.
 *   Reviewing/Editing configuration settings on the Settings tab
+*   Store configured values with each vector store data (exclusions, etc)
