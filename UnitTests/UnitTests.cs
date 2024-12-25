@@ -3,7 +3,7 @@ using NUnit.Framework;
 using oaiVectorStore;
 using DocXHandler;
 
-namespace oaiVectorStoreTests
+namespace UnitTests
 {
     [TestFixture]
     public class MimeTypeProviderTests
