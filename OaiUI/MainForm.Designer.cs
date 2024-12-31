@@ -1,4 +1,4 @@
-﻿﻿namespace oaiUI
+﻿namespace oaiUI
 {
     partial class MainForm
     {
@@ -52,6 +52,7 @@
             label1 = new Label();
             btnConvertToDocx = new Button();
             btnConvertToMd = new Button();
+            btnDeleteVectorStoreAssoc = new Button();
             tabPage2 = new TabPage();
             statusStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
@@ -136,11 +137,11 @@
             // 
             // btnDeleteAllVSFiles
             // 
-            btnDeleteAllVSFiles.BackColor = Color.Firebrick;
+            btnDeleteAllVSFiles.BackColor = Color.Red;
             btnDeleteAllVSFiles.Location = new Point(12, 114);
             btnDeleteAllVSFiles.Margin = new Padding(3, 2, 3, 2);
             btnDeleteAllVSFiles.Name = "btnDeleteAllVSFiles";
-            btnDeleteAllVSFiles.Size = new Size(242, 28);
+            btnDeleteAllVSFiles.Size = new Size(232, 28);
             btnDeleteAllVSFiles.TabIndex = 8;
             btnDeleteAllVSFiles.Text = "Delete All VS files";
             btnDeleteAllVSFiles.UseVisualStyleBackColor = false;
@@ -232,6 +233,7 @@
             // 
             panel1.Controls.Add(splitContainer1);
             panel1.Controls.Add(btnDeleteAllVSFiles);
+            panel1.Controls.Add(btnDeleteVectorStoreAssoc);
             panel1.Controls.Add(btnClearFolders);
             panel1.Controls.Add(btnSelectFolders);
             panel1.Controls.Add(labelSelectVectorStore);
@@ -315,6 +317,18 @@
             btnConvertToMd.Text = "MD";
             btnConvertToMd.UseVisualStyleBackColor = true;
             btnConvertToMd.Click += btnConvertToMD_Click;
+            // 
+            // btnDeleteVectorStoreAssoc
+            // 
+            btnDeleteVectorStoreAssoc.BackColor = Color.Red;
+            btnDeleteVectorStoreAssoc.Location = new Point(261, 114);
+            btnDeleteVectorStoreAssoc.Margin = new Padding(3, 2, 3, 2);
+            btnDeleteVectorStoreAssoc.Name = "btnDeleteVectorStoreAssoc";
+            btnDeleteVectorStoreAssoc.Size = new Size(242, 28);
+            btnDeleteVectorStoreAssoc.TabIndex = 9;
+            btnDeleteVectorStoreAssoc.Text = "Delete VS Association";
+            btnDeleteVectorStoreAssoc.UseVisualStyleBackColor = false;
+            btnDeleteVectorStoreAssoc.Click += btnDeleteVectorStoreAssoc_Click;
             // 
             // tabPage2
             // 

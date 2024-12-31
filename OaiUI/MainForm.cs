@@ -2,9 +2,6 @@
 using OpenAI;
 using NLogShared;
 using System.Configuration;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
 
 namespace oaiUI
 {
@@ -17,6 +14,42 @@ namespace oaiUI
         private Button btnSelectFolders;
         private ListBox listBoxSelectedFolders;
         private Button btnUploadFiles;
+        private Button btnDeleteVectorStoreAssoc; // Declaration for the new button
+
+        private void btnDeleteVectorStoreAssoc_Click(object sender, EventArgs e)
+        {
+            string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+
+            if (string.IsNullOrEmpty(selectedVectorStore))
+            {
+                MessageBox.Show("Please select a vector store.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Remove the association from the dictionary
+            if (_vectorStoreFolders.ContainsKey(selectedVectorStore))
+            {
+                _vectorStoreFolders.Remove(selectedVectorStore);
+
+                // Update the UI (remove from combobox and clear selected folders)
+                List<string>? currentDataSource = (List<string>)comboBoxVectorStores.DataSource;
+                currentDataSource?.Remove(selectedVectorStore);
+                comboBoxVectorStores.DataSource = null; // Temporarily detach
+                comboBoxVectorStores.DataSource = currentDataSource; // Reattach
+                comboBoxVectorStores.SelectedItem = null;
+                selectedFolders.Clear();
+                listBoxSelectedFolders.Items.Clear();
+
+                // Save the updated data to the JSON file
+                SaveVectorStoreFolderData();
+
+                MessageBox.Show($"Folder associations for vector store '{selectedVectorStore}' deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show($"No folder associations found for vector store '{selectedVectorStore}'.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
         private int processedFolders;
 
         // Store the mapping between vector store and selected folders
@@ -27,6 +60,14 @@ namespace oaiUI
         public MainForm()
         {
             InitializeComponent();
+            // Initialize non-nullable fields
+            txtNewVectorStoreName = new TextBox();
+            btnSelectFolders = new Button();
+            listBoxSelectedFolders = new ListBox();
+            btnUploadFiles = new Button();
+            _excludedFiles = new List<string>();
+            _excludedFolders = new List<string>();
+            
             LoadExcludedFilesConfig();
             LoadExcludedFoldersConfig(); // Add this line
             _vectorStoreFoldersFilePath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
@@ -91,8 +132,15 @@ namespace oaiUI
                 try
                 {
                     var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
+
                     // Merge loaded data with existing data, prioritizing data from the file
-                    var combinedStores = _vectorStoreFolders.Keys.Union(vectorStores.Values).Distinct().ToList();
+                    // and removing any entries from OpenAI that are in the file.
+                    var combinedStores = vectorStores.Values
+                        .Where(v => !_vectorStoreFolders.ContainsKey(v))
+                        .Union(_vectorStoreFolders.Keys)
+                        .Distinct()
+                        .ToList();
+
                     comboBoxVectorStores.DataSource = combinedStores;
                 }
                 catch (Exception ex)
@@ -358,14 +406,17 @@ namespace oaiUI
             // Implementation for uploading new files (if needed)
         }
 
-        private void comboBoxVectorStores_SelectedIndexChanged(object sender, EventArgs e)
+private void comboBoxVectorStores_SelectedIndexChanged(object sender, EventArgs e)
+{
+    if (sender is ComboBox comboBox && comboBox.SelectedItem != null)
+    {
+        string? selectedVectorStoreName = comboBox.SelectedItem.ToString();
+        if (!string.IsNullOrEmpty(selectedVectorStoreName))
         {
-            if (comboBoxVectorStores.SelectedItem != null)
-            {
-                string? selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString();
-                LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
-            }
+            LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
         }
+    }
+}
 
         private void LoadSelectedFoldersForVectorStore(string? vectorStoreName)
         {
