@@ -13,11 +13,12 @@ The **VecTool** project is a C# based desktop application designed to streamline
     *   **Selection:** Allows users to select an existing vector store from a dropdown menu.
     *   **Creation:** Enables users to create new vector stores by entering a name.
     *   **Deletion (Files):** Provides a button to delete all files associated with a selected vector store.
+    *   **Deletion (Association):** Provides a button to delete the association between folders and a selected vector store.
 *   **File Upload to Vector Stores:**
     *   **Upload/Replace:** Uploads the content of selected folders to a specified vector store. If a vector store with the same name already exists, all its files will be deleted and replaced with the new content.
     *   **Binary File Handling:** Identifies and uploads binary files separately, ensuring all relevant file types can be included in the vector store.
 *   **MIME Type Handling:** Utilizes MIME types to correctly identify and process different file formats.
-*   **Folder Association with Vector Stores:** Automatically saves and loads the association between selected folders and specific vector stores. This means when you select a vector store, the folders you previously used with it will be automatically loaded. This association is saved for future use in a configurable JSON file.
+*   **Folder Association with Vector Stores:** Automatically saves and loads the association between selected folders and specific vector stores. This means when you select a vector store, the folders you previously used with it will be automatically loaded. This association is saved for future use in a configurable JSON file. The application now loads vector stores from both OpenAI and the local file, prioritizing the local file and removing any OpenAI entries that are in the file.
 *   **Export to Markdown:** Converts the content of selected folders into a single Markdown (`.md`) file. Folder and file names are indicated using Markdown headings (`# Folder: ...`, `## File: ...`).
     *   **Automatic Tag Generation:** If a file extension is not found in `mdTags.json`, the extension itself (without the leading dot) will be used as the code block tag in the Markdown output. For example, a file named `script.xyz` will have the tag `xyz` in the Markdown.
 *   **Excluding Files:** Users can configure a comma-separated list of filenames in the `app.config` to exclude them from processing.
@@ -93,6 +94,12 @@ This action will upload the content of the selected folders to the chosen vector
 1. Select the vector store from which you want to delete all files using the dropdown menu.
 2. Click the "Delete All VS files" button.
 3. Confirm the action if prompted. All files associated with the selected vector store in OpenAI will be deleted. The status bar will indicate the progress.
+
+### Deleting Vector Store Association
+
+1. Select the vector store from which you want to delete the association using the dropdown menu.
+2. Click the "Delete VS Association" button.
+3. The folder associations for the selected vector store will be deleted, the vector store will be removed from the dropdown menu, and the selected folders list will be cleared.
 
 ### Converting Selected Folders to a Single DOCX File
 

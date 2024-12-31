@@ -1,5 +1,17 @@
 ## Changelog
 
+### VecTool v0.24.12.31
+
+*   **Fix:** Delete VS Association button now correctly removes the VS name from the combobox.
+*   **Fix:** Delete VS Association button now correctly clears the selected folders listbox.
+*   **Fix:** Upload now correctly adds a new VS name to the combobox.
+*   **Fix:** Upload now correctly selects a new VS name in the combobox.
+*   **Fix:** Upload now correctly clears the new VS name textbox.
+*   **Enhancement:** Vector stores are now loaded from both OpenAI and the local file, prioritizing the local file and removing any OpenAI entries that are in the file.
+*   **Dependencies:** Updated `NUnit3TestAdapter` NuGet package to version 4.6.0.
+*   **Dependencies:** Updated `Microsoft.NET.Test.Sdk` NuGet package to version 17.12.0.
+*   **Dependencies:** Updated `NUnit.Analyzers` NuGet package to version 4.4.0.
+
 ### VecTool v0.24.12.25c
 
 *   **Enhancement:** Improved the logic for clearing selected folders. Clearing the selected folders now correctly removes the folder association with the currently selected vector store.
