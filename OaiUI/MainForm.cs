@@ -70,7 +70,7 @@ namespace oaiUI
             btnUploadFiles = new Button();
             _excludedFiles = new List<string>();
             _excludedFolders = new List<string>();
-            
+
             LoadExcludedFilesConfig();
             LoadExcludedFoldersConfig(); // Add this line
             _vectorStoreFoldersFilePath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
@@ -216,13 +216,34 @@ namespace oaiUI
             }
         }
 
+        //private void UpdateSelectedFoldersUI()
+        //{
+        //    listBoxSelectedFolders.Items.Clear();
+        //    foreach (var folder in selectedFolders)
+        //    {
+        //        listBoxSelectedFolders.Items.Add(folder);
+        //    }
+        //}
+
         private void UpdateSelectedFoldersUI()
         {
+            if (listBoxSelectedFolders.InvokeRequired)
+            {
+                listBoxSelectedFolders.Invoke(new Action(UpdateSelectedFoldersUI));
+                return;
+            }
+
+            listBoxSelectedFolders.BeginUpdate();
             listBoxSelectedFolders.Items.Clear();
             foreach (var folder in selectedFolders)
             {
                 listBoxSelectedFolders.Items.Add(folder);
             }
+            listBoxSelectedFolders.EndUpdate();
+
+            //listBoxSelectedFolders.DataSource = null;
+            //listBoxSelectedFolders.DataSource = selectedFolders;
+            listBoxSelectedFolders.Refresh();
         }
 
         void WorkStart(string str)
@@ -411,24 +432,28 @@ namespace oaiUI
             // Implementation for uploading new files (if needed)
         }
 
-private void comboBoxVectorStores_SelectedIndexChanged(object? sender, EventArgs e)
-{
-    if (sender is ComboBox comboBox && comboBox.SelectedItem != null)
-    {
-        string? selectedVectorStoreName = comboBox.SelectedItem.ToString();
-        if (!string.IsNullOrEmpty(selectedVectorStoreName))
+        private void comboBoxVectorStores_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
+            if (sender is ComboBox comboBox && comboBox.SelectedItem != null)
+            {
+                // Use BeginInvoke to defer the execution of LoadSelectedFoldersForVectorStore
+                // until after the current event handler has completed and the UI has updated.
+                BeginInvoke((Action)(() =>
+                {
+                    string? selectedVectorStoreName = comboBox.SelectedItem.ToString();
+                    if (!string.IsNullOrEmpty(selectedVectorStoreName))
+                    {
+                        LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
+                    }
+                }));
+            }
         }
-    }
-}
 
         private void LoadSelectedFoldersForVectorStore(string? vectorStoreName)
         {
             if (!string.IsNullOrEmpty(vectorStoreName))
             {
                 selectedFolders.Clear();
-                listBoxSelectedFolders.Items.Clear();
 
                 if (_vectorStoreFolders.ContainsKey(vectorStoreName))
                 {
