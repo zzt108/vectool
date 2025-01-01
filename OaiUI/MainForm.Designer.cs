@@ -49,13 +49,13 @@ namespace oaiUI
             tabPage1 = new TabPage();
             panel1 = new Panel();
             splitContainer1 = new SplitContainer();
+            richTextBox1 = new RichTextBox();
             panel2 = new Panel();
             label1 = new Label();
             btnConvertToDocx = new Button();
             btnConvertToMd = new Button();
             btnDeleteVectorStoreAssoc = new Button();
             tabPage2 = new TabPage();
-            richTextBox1 = new RichTextBox();
             statusStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -267,6 +267,15 @@ namespace oaiUI
             splitContainer1.SplitterDistance = 556;
             splitContainer1.TabIndex = 11;
             // 
+            // richTextBox1
+            // 
+            richTextBox1.Dock = DockStyle.Fill;
+            richTextBox1.Location = new Point(0, 0);
+            richTextBox1.Name = "richTextBox1";
+            richTextBox1.Size = new Size(556, 78);
+            richTextBox1.TabIndex = 13;
+            richTextBox1.Text = "";
+            // 
             // panel2
             // 
             panel2.Controls.Add(label1);
@@ -317,7 +326,7 @@ namespace oaiUI
             btnDeleteVectorStoreAssoc.Name = "btnDeleteVectorStoreAssoc";
             btnDeleteVectorStoreAssoc.Size = new Size(242, 28);
             btnDeleteVectorStoreAssoc.TabIndex = 9;
-            btnDeleteVectorStoreAssoc.Text = "Delete VS Association";
+            btnDeleteVectorStoreAssoc.Text = "Delete Folder Associations";
             btnDeleteVectorStoreAssoc.UseVisualStyleBackColor = false;
             btnDeleteVectorStoreAssoc.Click += btnDeleteVectorStoreAssoc_Click;
             // 
@@ -330,15 +339,6 @@ namespace oaiUI
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Settings";
             tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // richTextBox1
-            // 
-            richTextBox1.Dock = DockStyle.Fill;
-            richTextBox1.Location = new Point(0, 0);
-            richTextBox1.Name = "richTextBox1";
-            richTextBox1.Size = new Size(556, 78);
-            richTextBox1.TabIndex = 13;
-            richTextBox1.Text = "";
             // 
             // MainForm
             // 
@@ -387,10 +387,6 @@ namespace oaiUI
         private Button btnConvertToDocx;
         private Button btnConvertToMd;
 
-        // private ComboBox comboBoxVectorStores;
-        // private TextBox txtNewVectorStoreName;
-        // private Button btnSelectFolders;
-        // private Button btnUploadFiles;
         private TabControl tabControl1;
         private TabPage tabPage1;
         private TabPage tabPage2;

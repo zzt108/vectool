@@ -57,10 +57,6 @@ namespace oaiUI
         public MainForm()
         {
             InitializeComponent();
-            // Initialize non-nullable fields
-            txtNewVectorStoreName = new TextBox();
-            btnSelectFolders = new Button();
-            btnUploadFiles = new Button();
             _excludedFiles = new List<string>();
             _excludedFolders = new List<string>();
 
@@ -415,7 +411,7 @@ namespace oaiUI
                 // until after the current event handler has completed and the UI has updated.
                 BeginInvoke((Action)(() =>
                 {
-                    string? selectedVectorStoreName = comboBox.SelectedItem.ToString();
+                    string? selectedVectorStoreName = comboBox.SelectedItem?.ToString();
                     if (!string.IsNullOrEmpty(selectedVectorStoreName))
                     {
                         LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
