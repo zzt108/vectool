@@ -115,7 +115,7 @@ namespace oaiUI
             labelSelectVectorStore.AutoSize = true;
             labelSelectVectorStore.Location = new Point(12, 25);
             labelSelectVectorStore.Name = "labelSelectVectorStore";
-            labelSelectVectorStore.Size = new Size(150, 15);
+            labelSelectVectorStore.Size = new Size(151, 15);
             labelSelectVectorStore.TabIndex = 5;
             labelSelectVectorStore.Text = "Select Existing Vector Store:";
             // 
@@ -174,7 +174,7 @@ namespace oaiUI
             // toolStripStatusLabelMax
             // 
             toolStripStatusLabelMax.Name = "toolStripStatusLabelMax";
-            toolStripStatusLabelMax.Size = new Size(29, 17);
+            toolStripStatusLabelMax.Size = new Size(30, 17);
             toolStripStatusLabelMax.Text = "Max";
             // 
             // toolStripStatusLabelInfo
@@ -328,7 +328,7 @@ namespace oaiUI
             btnDeleteVectorStoreAssoc.Name = "btnDeleteVectorStoreAssoc";
             btnDeleteVectorStoreAssoc.Size = new Size(242, 28);
             btnDeleteVectorStoreAssoc.TabIndex = 9;
-            btnDeleteVectorStoreAssoc.Text = "Delete VS Association";
+            btnDeleteVectorStoreAssoc.Text = "Delete Folder Associations";
             btnDeleteVectorStoreAssoc.UseVisualStyleBackColor = false;
             btnDeleteVectorStoreAssoc.Click += btnDeleteVectorStoreAssoc_Click;
             // 
@@ -352,7 +352,6 @@ namespace oaiUI
             Controls.Add(progressBar1);
             Margin = new Padding(3, 2, 3, 2);
             Name = "MainForm";
-            Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             tabControl1.ResumeLayout(false);
@@ -385,10 +384,6 @@ namespace oaiUI
         private Button btnConvertToDocx;
         private Button btnConvertToMd;
 
-        // private ComboBox comboBoxVectorStores;
-        // private TextBox txtNewVectorStoreName;
-        // private Button btnSelectFolders;
-        // private Button btnUploadFiles;
         private TabControl tabControl1;
         private TabPage tabPage1;
         private TabPage tabPage2;

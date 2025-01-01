@@ -2,6 +2,7 @@
 using OpenAI;
 using NLogShared;
 using System.Configuration;
+using System.Reflection;
 
 namespace oaiUI
 {
@@ -63,11 +64,7 @@ namespace oaiUI
         public MainForm()
         {
             InitializeComponent();
-            // Initialize non-nullable fields
-            txtNewVectorStoreName = new TextBox();
-            btnSelectFolders = new Button();
-            listBoxSelectedFolders = new ListBox();
-            btnUploadFiles = new Button();
+
             _excludedFiles = new List<string>();
             _excludedFolders = new List<string>();
             
@@ -81,6 +78,7 @@ namespace oaiUI
             log.ConfigureXml("Config/LogConfig.xml");
 
             comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged;
+            Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
         }
 
         private List<string> _excludedFolders; // Add this field
