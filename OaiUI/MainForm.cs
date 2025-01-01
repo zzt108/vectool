@@ -2,6 +2,8 @@
 using OpenAI;
 using NLogShared;
 using System.Configuration;
+using System.ComponentModel;
+using System.Reflection;
 
 namespace oaiUI
 {
@@ -9,12 +11,11 @@ namespace oaiUI
     {
         private VectorStoreManager _vectorStoreManager;
         private List<string> selectedFolders = new List<string>();
-        private ComboBox comboBoxVectorStores = null!;
-        private TextBox txtNewVectorStoreName;
-        private Button btnSelectFolders;
-        private ListBox listBoxSelectedFolders;
-        private Button btnUploadFiles;
-        private Button btnDeleteVectorStoreAssoc = null!; // Declaration for the new button
+        private int processedFolders;
+        // Store the mapping between vector store and selected folders
+        private Dictionary<string, List<string>> _vectorStoreFolders = new Dictionary<string, List<string>>();
+        private string _vectorStoreFoldersFilePath; // Path to save the mapping
+        private List<string> _excludedFiles; // Added for excluded files
 
         private void btnDeleteVectorStoreAssoc_Click(object sender, EventArgs e)
         {
@@ -41,7 +42,7 @@ namespace oaiUI
                 }
                 comboBoxVectorStores.SelectedItem = null;
                 selectedFolders.Clear();
-                listBoxSelectedFolders.Items.Clear();
+                richTextBox1.Clear();
 
                 // Save the updated data to the JSON file
                 SaveVectorStoreFolderData();
@@ -53,20 +54,12 @@ namespace oaiUI
                 MessageBox.Show($"No folder associations found for vector store '{selectedVectorStore}'.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
-        private int processedFolders;
-
-        // Store the mapping between vector store and selected folders
-        private Dictionary<string, List<string>> _vectorStoreFolders = new Dictionary<string, List<string>>();
-        private string _vectorStoreFoldersFilePath; // Path to save the mapping
-        private List<string> _excludedFiles; // Added for excluded files
-
         public MainForm()
         {
             InitializeComponent();
             // Initialize non-nullable fields
             txtNewVectorStoreName = new TextBox();
             btnSelectFolders = new Button();
-            listBoxSelectedFolders = new ListBox();
             btnUploadFiles = new Button();
             _excludedFiles = new List<string>();
             _excludedFolders = new List<string>();
@@ -81,6 +74,8 @@ namespace oaiUI
             log.ConfigureXml("Config/LogConfig.xml");
 
             comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged;
+            Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
+
         }
 
         private List<string> _excludedFolders; // Add this field
@@ -109,7 +104,7 @@ namespace oaiUI
 
         private void btnClearFolders_Click(object sender, EventArgs e)
         {
-            listBoxSelectedFolders.Items.Clear();
+            richTextBox1.Clear();
             selectedFolders.Clear();
             // Update the stored mapping when clearing folders
             if (comboBoxVectorStores.SelectedItem != null)
@@ -216,34 +211,14 @@ namespace oaiUI
             }
         }
 
-        //private void UpdateSelectedFoldersUI()
-        //{
-        //    listBoxSelectedFolders.Items.Clear();
-        //    foreach (var folder in selectedFolders)
-        //    {
-        //        listBoxSelectedFolders.Items.Add(folder);
-        //    }
-        //}
-
         private void UpdateSelectedFoldersUI()
         {
-            if (listBoxSelectedFolders.InvokeRequired)
-            {
-                listBoxSelectedFolders.Invoke(new Action(UpdateSelectedFoldersUI));
-                return;
-            }
-
-            listBoxSelectedFolders.BeginUpdate();
-            listBoxSelectedFolders.Items.Clear();
+            richTextBox1.Clear();
             foreach (var folder in selectedFolders)
             {
-                listBoxSelectedFolders.Items.Add(folder);
+                richTextBox1.Text += folder + Environment.NewLine; // Add a newline after each folder);
             }
-            listBoxSelectedFolders.EndUpdate();
 
-            //listBoxSelectedFolders.DataSource = null;
-            //listBoxSelectedFolders.DataSource = selectedFolders;
-            listBoxSelectedFolders.Refresh();
         }
 
         void WorkStart(string str)
