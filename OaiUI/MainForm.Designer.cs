@@ -49,13 +49,13 @@ namespace oaiUI
             tabPage1 = new TabPage();
             panel1 = new Panel();
             splitContainer1 = new SplitContainer();
-            listBoxSelectedFolders = new ListBox();
             panel2 = new Panel();
             label1 = new Label();
             btnConvertToDocx = new Button();
             btnConvertToMd = new Button();
             btnDeleteVectorStoreAssoc = new Button();
             tabPage2 = new TabPage();
+            richTextBox1 = new RichTextBox();
             statusStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -115,7 +115,7 @@ namespace oaiUI
             labelSelectVectorStore.AutoSize = true;
             labelSelectVectorStore.Location = new Point(12, 25);
             labelSelectVectorStore.Name = "labelSelectVectorStore";
-            labelSelectVectorStore.Size = new Size(150, 15);
+            labelSelectVectorStore.Size = new Size(151, 15);
             labelSelectVectorStore.TabIndex = 5;
             labelSelectVectorStore.Text = "Select Existing Vector Store:";
             // 
@@ -174,7 +174,7 @@ namespace oaiUI
             // toolStripStatusLabelMax
             // 
             toolStripStatusLabelMax.Name = "toolStripStatusLabelMax";
-            toolStripStatusLabelMax.Size = new Size(29, 17);
+            toolStripStatusLabelMax.Size = new Size(30, 17);
             toolStripStatusLabelMax.Text = "Max";
             // 
             // toolStripStatusLabelInfo
@@ -258,7 +258,7 @@ namespace oaiUI
             // 
             // splitContainer1.Panel1
             // 
-            splitContainer1.Panel1.Controls.Add(listBoxSelectedFolders);
+            splitContainer1.Panel1.Controls.Add(richTextBox1);
             // 
             // splitContainer1.Panel2
             // 
@@ -266,17 +266,6 @@ namespace oaiUI
             splitContainer1.Size = new Size(771, 78);
             splitContainer1.SplitterDistance = 556;
             splitContainer1.TabIndex = 11;
-            // 
-            // listBoxSelectedFolders
-            // 
-            listBoxSelectedFolders.Dock = DockStyle.Fill;
-            listBoxSelectedFolders.FormattingEnabled = true;
-            listBoxSelectedFolders.ItemHeight = 15;
-            listBoxSelectedFolders.Location = new Point(0, 0);
-            listBoxSelectedFolders.Margin = new Padding(3, 2, 3, 2);
-            listBoxSelectedFolders.Name = "listBoxSelectedFolders";
-            listBoxSelectedFolders.Size = new Size(556, 78);
-            listBoxSelectedFolders.TabIndex = 3;
             // 
             // panel2
             // 
@@ -342,6 +331,15 @@ namespace oaiUI
             tabPage2.Text = "Settings";
             tabPage2.UseVisualStyleBackColor = true;
             // 
+            // richTextBox1
+            // 
+            richTextBox1.Dock = DockStyle.Fill;
+            richTextBox1.Location = new Point(0, 0);
+            richTextBox1.Name = "richTextBox1";
+            richTextBox1.Size = new Size(556, 78);
+            richTextBox1.TabIndex = 13;
+            richTextBox1.Text = "";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -352,7 +350,6 @@ namespace oaiUI
             Controls.Add(progressBar1);
             Margin = new Padding(3, 2, 3, 2);
             Name = "MainForm";
-            Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             tabControl1.ResumeLayout(false);
@@ -370,6 +367,11 @@ namespace oaiUI
         }
 
         #endregion
+        private ComboBox comboBoxVectorStores = null!;
+        private TextBox txtNewVectorStoreName;
+        private Button btnSelectFolders;
+        private Button btnUploadFiles;
+        private Button btnDeleteVectorStoreAssoc = null!; // Declaration for the new button
 
         private Label labelSelectVectorStore;
         private Label labelNewVectorStore;
@@ -394,8 +396,8 @@ namespace oaiUI
         private TabPage tabPage2;
         private Panel panel1;
         private SplitContainer splitContainer1;
-        // private ListBox listBoxSelectedFolders;
         private Panel panel2;
         private Label label1;
+        private RichTextBox richTextBox1;
     }
 }
