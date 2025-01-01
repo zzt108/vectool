@@ -47,7 +47,8 @@ namespace oaiUI
 
                     try
                     {
-                        DocXHandler.DocXHandler.ConvertFilesToDocx(folder, outputDocxPath, _excludedFiles, _excludedFolders);
+                        var docXHandler = new DocXHandler.DocXHandler();
+                        docXHandler.ConvertFilesToDocx(folder, outputDocxPath, _excludedFiles, _excludedFolders);
                         string[] files = Directory.GetFiles(folder);
 
                         foreach (string file in files)

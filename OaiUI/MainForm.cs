@@ -9,12 +9,12 @@ namespace oaiUI
     {
         private VectorStoreManager _vectorStoreManager;
         private List<string> selectedFolders = new List<string>();
-        private ComboBox comboBoxVectorStores;
+        private ComboBox comboBoxVectorStores = null!;
         private TextBox txtNewVectorStoreName;
         private Button btnSelectFolders;
         private ListBox listBoxSelectedFolders;
         private Button btnUploadFiles;
-        private Button btnDeleteVectorStoreAssoc; // Declaration for the new button
+        private Button btnDeleteVectorStoreAssoc = null!; // Declaration for the new button
 
         private void btnDeleteVectorStoreAssoc_Click(object sender, EventArgs e)
         {
@@ -32,10 +32,13 @@ namespace oaiUI
                 _vectorStoreFolders.Remove(selectedVectorStore);
 
                 // Update the UI (remove from combobox and clear selected folders)
-                List<string>? currentDataSource = (List<string>)comboBoxVectorStores.DataSource;
-                currentDataSource?.Remove(selectedVectorStore);
-                comboBoxVectorStores.DataSource = null; // Temporarily detach
-                comboBoxVectorStores.DataSource = currentDataSource; // Reattach
+                var currentDataSource = comboBoxVectorStores.DataSource as List<string>;
+                if (currentDataSource != null)
+                {
+                    currentDataSource.Remove(selectedVectorStore);
+                    comboBoxVectorStores.DataSource = null; // Temporarily detach
+                    comboBoxVectorStores.DataSource = currentDataSource; // Reattach
+                }
                 comboBoxVectorStores.SelectedItem = null;
                 selectedFolders.Clear();
                 listBoxSelectedFolders.Items.Clear();
@@ -111,8 +114,8 @@ namespace oaiUI
             // Update the stored mapping when clearing folders
             if (comboBoxVectorStores.SelectedItem != null)
             {
-                string? selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString();
-                if (_vectorStoreFolders.ContainsKey(selectedVectorStoreName))
+                string selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString() ?? string.Empty;
+                if (!string.IsNullOrEmpty(selectedVectorStoreName) && _vectorStoreFolders.ContainsKey(selectedVectorStoreName))
                 {
                     _vectorStoreFolders[selectedVectorStoreName] = new List<string>();
                     SaveVectorStoreFolderData();
@@ -162,8 +165,8 @@ namespace oaiUI
             string? vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
             // Modify the underlying data source
-            List<string>? currentDataSource = (List<string>)comboBoxVectorStores.DataSource;
-            if (!string.IsNullOrEmpty(newVectorStoreName) && !currentDataSource.Contains(newVectorStoreName))
+            var currentDataSource = comboBoxVectorStores.DataSource as List<string>;
+            if (currentDataSource != null && !string.IsNullOrEmpty(newVectorStoreName) && !currentDataSource.Contains(newVectorStoreName))
             {
                 currentDataSource.Add(newVectorStoreName);
                 comboBoxVectorStores.DataSource = null; // Temporarily detach the data source
@@ -300,7 +303,8 @@ namespace oaiUI
                     try
                     {
                         btnConvertToDocx.Enabled = false;
-                        DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
+                        var docXHandler = new DocXHandler.DocXHandler();
+                        docXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
@@ -338,7 +342,8 @@ namespace oaiUI
                     try
                     {
                         btnConvertToMd.Enabled = false;
-                        DocXHandler.MDHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
+                        var mdHandler = new DocXHandler.MDHandler();
+                        mdHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
                         MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
@@ -406,7 +411,7 @@ namespace oaiUI
             // Implementation for uploading new files (if needed)
         }
 
-private void comboBoxVectorStores_SelectedIndexChanged(object sender, EventArgs e)
+private void comboBoxVectorStores_SelectedIndexChanged(object? sender, EventArgs e)
 {
     if (sender is ComboBox comboBox && comboBox.SelectedItem != null)
     {

@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿﻿﻿using FluentAssertions;
 using oaiVectorStore;
 using DocXHandler;
 
@@ -86,7 +86,8 @@ namespace UnitTests
     {
         public static bool TestIsFileExcluded(string fileName, List<string> excludedFiles)
         {
-            return IsFileExcluded(fileName, excludedFiles);
+            var handler = new TestFileHandler();
+            return handler.IsFileExcluded(fileName, excludedFiles);
         }
     }
 

@@ -64,7 +64,8 @@ namespace DocXHandlerTests
 
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
+            var docXHandler = new DocXHandler.DocXHandler();
+            docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
             
             File.Exists(outputDocxPath).Should().BeTrue();
 
@@ -87,7 +88,8 @@ namespace DocXHandlerTests
 
             List<string> folderPaths = new List<string> { emptyFolder };
 
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
+            var docXHandler = new DocXHandler.DocXHandler();
+            docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
             
             File.Exists(outputDocxPath).Should().BeTrue();
 
@@ -109,7 +111,8 @@ namespace DocXHandlerTests
 
             List<string> folderPaths = new List<string> { folder };
 
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
+            var docXHandler = new DocXHandler.DocXHandler();
+            docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
             
             File.Exists(outputDocxPath).Should().BeTrue();
 
@@ -139,7 +142,8 @@ namespace DocXHandlerTests
 
             List<string> folderPaths = new List<string> { mainFolder };
 
-            DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
+            var docXHandler = new DocXHandler.DocXHandler();
+            docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new List<string>(), new List<string>());
             
             File.Exists(outputDocxPath).Should().BeTrue();
 
@@ -169,7 +173,8 @@ namespace DocXHandlerTests
             string outputMarkdownPath = Path.Combine(testRootPath, "output.md");
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
-            DocXHandler.MDHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new List<string>(), new List<string>());
+            var mdHandler = new DocXHandler.MDHandler();
+            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new List<string>(), new List<string>());
             
             File.Exists(outputMarkdownPath).Should().BeTrue();
 
@@ -198,7 +203,8 @@ namespace DocXHandlerTests
             string outputMarkdownPath = Path.Combine(testRootPath, "output_recursive.md");
             List<string> folderPaths = new List<string> { mainFolder };
 
-            DocXHandler.MDHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new List<string>(), new List<string>());
+            var mdHandler = new DocXHandler.MDHandler();
+            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new List<string>(), new List<string>());
             
             File.Exists(outputMarkdownPath).Should().BeTrue();
             string markdownContent = File.ReadAllText(outputMarkdownPath);
