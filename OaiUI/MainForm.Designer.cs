@@ -1,4 +1,6 @@
-﻿namespace oaiUI
+﻿using System.Reflection;
+
+namespace oaiUI
 {
     partial class MainForm
     {
@@ -350,7 +352,7 @@
             Controls.Add(progressBar1);
             Margin = new Padding(3, 2, 3, 2);
             Name = "MainForm";
-            Text = "Oai Vector Store Manager";
+            Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             tabControl1.ResumeLayout(false);

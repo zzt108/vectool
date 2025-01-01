@@ -9,7 +9,23 @@
     <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
     <ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
     <ApplicationIcon>..\Media\icon.ico</ApplicationIcon>
+
+    <!-- Version number properties -->
+    <zztMVersion>0</zztMVersion>
+    <BuildVersion>$([System.DateTime]::UtcNow.ToString("Hmm"))</BuildVersion>
+    <zztPVersion>$([System.DateTime]::UtcNow.ToString("MMdd"))</zztPVersion>
+    <zztMinVersion>$([System.DateTime]::UtcNow.ToString("yy"))</zztMinVersion>
+    <ApplicationDisplayVersion>$(zztMVersion).$(zztMinVersion).$(zztPVersion)</ApplicationDisplayVersion>
+    <AssemblyVersion>$(zztMVersion).$(zztMinVersion).$(zztPVersion).$(BuildVersion)</AssemblyVersion>
+    <FileVersion>$(zztMVersion).$(zztMinVersion).$(zztPVersion).$(BuildVersion)</FileVersion>
+    <PackageVersion>$(zztMVersion).$(zztMinVersion).$(zztPVersion).$(BuildVersion)</PackageVersion>
   </PropertyGroup>
+
+  <Target Name="IncrementVersion" BeforeTargets="Build">
+    <PropertyGroup>
+      <ApplicationVersion>1</ApplicationVersion>
+    </PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\DocX\DocXHandler.csproj" />
