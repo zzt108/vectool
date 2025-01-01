@@ -1,4 +1,4 @@
-﻿﻿using oaiVectorStore;
+﻿﻿﻿﻿﻿﻿﻿﻿using oaiVectorStore;
 using OpenAI;
 using NLogShared;
 using System.Configuration;
@@ -300,7 +300,8 @@ namespace oaiUI
                     try
                     {
                         btnConvertToDocx.Enabled = false;
-                        DocXHandler.DocXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
+                        var docXHandler = new DocXHandler.DocXHandler();
+                        docXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
@@ -338,7 +339,8 @@ namespace oaiUI
                     try
                     {
                         btnConvertToMd.Enabled = false;
-                        DocXHandler.MDHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
+                        var mdHandler = new DocXHandler.MDHandler();
+                        mdHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
                         MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)

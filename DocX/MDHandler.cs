@@ -7,7 +7,24 @@ namespace DocXHandler
 {
     public class MDHandler : FileHandlerBase
     {
-        private static void ProcessFile(string file, StreamWriter writer, List<string> excludedFiles, List<string> excludedFolders)
+        public void ExportSelectedFolders(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
+        {
+            using (StreamWriter writer = new StreamWriter(outputPath))
+            {
+                foreach (string folderPath in folderPaths)
+                {
+                    ProcessFolder(
+                        folderPath,
+                        writer,
+                        excludedFiles,
+                        excludedFolders,
+                        ProcessFile,
+                        WriteFolderName);
+                }
+            }
+        }
+
+        private void ProcessFile(string file, StreamWriter writer, List<string> excludedFiles, List<string> excludedFolders)
         {
             string fileName = Path.GetFileName(file);
             if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, null))
@@ -15,27 +32,16 @@ namespace DocXHandler
                 log.Debug($"Skipping excluded file: {file}");
                 return;
             }
-            
+
             string content = GetFileContent(file);
             DateTime lastModified = File.GetLastWriteTime(file);
-            writer.WriteLine($"## File: {Path.GetFileName(file)} Time:{lastModified}");
+            writer.WriteLine($"## File: {fileName} Time:{lastModified}");
             writer.WriteLine(content);
         }
 
-        private static void WriteFolderName(StreamWriter writer, string folderName)
+        private void WriteFolderName(StreamWriter writer, string folderName)
         {
             writer.WriteLine($"# Folder: {folderName}");
-        }
-
-        public static void ExportSelectedFolders(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
-        {
-            using (StreamWriter writer = new StreamWriter(outputPath))
-            {
-                foreach (string folderPath in folderPaths)
-                {
-                    ProcessFolder(folderPath, writer, excludedFiles, excludedFolders, ProcessFile, WriteFolderName);
-                }
-            }
         }
     }
 }

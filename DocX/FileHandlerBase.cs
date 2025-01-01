@@ -2,6 +2,7 @@ using oaiVectorStore;
 using NLogS = NLogShared;
 using System.IO;
 using System.Text.RegularExpressions;
+using System;
 
 namespace DocXHandler
 {
@@ -9,12 +10,12 @@ namespace DocXHandler
     {
         protected static NLogS.CtxLogger log = new();
 
-        protected static bool IsFolderExcluded(string name, List<string> excludedList)
+        protected bool IsFolderExcluded(string name, List<string> excludedList)
         {
             return excludedList.Contains(name);
         }
 
-        protected static bool IsFileExcluded(string fileName, List<string> excludedFiles)
+        protected bool IsFileExcluded(string fileName, List<string> excludedFiles)
         {
             foreach (var pattern in excludedFiles)
             {
@@ -27,7 +28,7 @@ namespace DocXHandler
             return false;
         }
 
-        protected static bool IsFileValid(string file, string outputPath)
+        protected bool IsFileValid(string file, string outputPath)
         {
             if (file == outputPath)
             {
@@ -43,7 +44,7 @@ namespace DocXHandler
             return new FileInfo(file).Length > 0;
         }
 
-        protected static string GetFileContent(string file)
+        protected string GetFileContent(string file)
         {
             string content = File.ReadAllText(file);
             var mdTag = MimeTypeProvider.GetMdTag(Path.GetExtension(file));
@@ -54,7 +55,7 @@ namespace DocXHandler
             return content;
         }
 
-        protected static void ProcessFolder<T>(
+        protected void ProcessFolder<T>(
             string folderPath,
             T context,
             List<string> excludedFiles,
