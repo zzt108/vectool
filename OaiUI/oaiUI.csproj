@@ -11,7 +11,7 @@
     <ApplicationIcon>..\Media\icon.ico</ApplicationIcon>
 
     <!-- Version number properties -->
-    <zztMVersion>0</zztMVersion>
+    <zztMVersion>1</zztMVersion>
     <BuildVersion>$([System.DateTime]::UtcNow.ToString("Hmm"))</BuildVersion>
     <zztPVersion>$([System.DateTime]::UtcNow.ToString("MMdd"))</zztPVersion>
     <zztMinVersion>$([System.DateTime]::UtcNow.ToString("yy"))</zztMinVersion>
