@@ -26,4 +26,8 @@
 
   <Import Project="..\LogCtx\NLogShared\NLogShared.projitems" Label="Shared" />
 
+  <ItemGroup>
+    <PackageReference Update="NLog" Version="5.4.0" />
+  </ItemGroup>
+
 </Project>

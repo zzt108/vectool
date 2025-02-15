@@ -54,6 +54,7 @@ namespace oaiUI
             label1 = new Label();
             btnConvertToDocx = new Button();
             btnConvertToMd = new Button();
+            btnConvertToPdf = new Button();
             btnDeleteVectorStoreAssoc = new Button();
             tabPage2 = new TabPage();
             statusStrip1.SuspendLayout();
@@ -319,6 +320,20 @@ namespace oaiUI
             btnConvertToMd.Text = "MD";
             btnConvertToMd.UseVisualStyleBackColor = true;
             btnConvertToMd.Click += btnConvertToMD_Click;
+
+            //
+            // btnConvertToPdf
+            //
+            this.btnConvertToPdf.Location = new System.Drawing.Point(212, 17); // Adjust position as needed
+            this.btnConvertToPdf.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnConvertToPdf.Name = "btnConvertToPdf";
+            this.btnConvertToPdf.Size = new System.Drawing.Size(100, 28);
+            this.btnConvertToPdf.TabIndex = 13; // Adjust tab index if needed
+            this.btnConvertToPdf.Text = "PDF";
+            this.btnConvertToPdf.UseVisualStyleBackColor = true;
+            this.btnConvertToPdf.Click += new System.EventHandler(this.btnConvertToPdf_Click);
+            this.panel2.Controls.Add(this.btnConvertToPdf); // Add to panel2 controls
+
             // 
             // btnDeleteVectorStoreAssoc
             // 
@@ -382,6 +397,7 @@ namespace oaiUI
         private ToolStripStatusLabel toolStripStatusLabelInfo;
         private Button btnClearFolders;
         private Button btnConvertToDocx;
+        private Button btnConvertToPdf;
         private Button btnConvertToMd;
 
         private TabControl tabControl1;

@@ -28,6 +28,10 @@
   </Target>
 
   <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2025.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DocX\DocXHandler.csproj" />
     <ProjectReference Include="..\Log\Log.csproj" />
     <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />

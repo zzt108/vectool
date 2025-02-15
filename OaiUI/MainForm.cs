@@ -67,7 +67,7 @@ namespace oaiUI
 
             _excludedFiles = new List<string>();
             _excludedFolders = new List<string>();
-            
+
             LoadExcludedFilesConfig();
             LoadExcludedFoldersConfig(); // Add this line
             _vectorStoreFoldersFilePath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
@@ -356,6 +356,52 @@ namespace oaiUI
             }
         }
 
+        private async void btnConvertToPdf_Click(object sender, EventArgs e)
+        {
+            if (selectedFolders.Count == 0)
+            {
+                MessageBox.Show("Please select at least one folder first.", "No Folders Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "PDF Document|*.pdf";
+                saveFileDialog.Title = "Save PDF File";
+                saveFileDialog.DefaultExt = "pdf";
+
+                if (txtNewVectorStoreName.Text.Trim().Length > 0)
+                {
+                    saveFileDialog.FileName = txtNewVectorStoreName.Text.Trim();
+                }
+                else
+                {
+                    saveFileDialog.FileName = comboBoxVectorStores.SelectedItem?.ToString();
+                }
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    btnConvertToPdf.Enabled = false;
+                    try
+                    {
+                        WorkStart("Converting to PDF...");
+                        var pdfHandler = new DocXHandler.PdfHandler();
+                        pdfHandler.ConvertSelectedFoldersToPdf(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
+                        MessageBox.Show("Folders successfully converted to PDF.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error converting folders to PDF: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        WorkFinish();
+                        btnConvertToPdf.Enabled = true;
+                    }
+                }
+            }
+        }
+
         private void UpdateProgress()
         {
             if (progressBar1.InvokeRequired)
@@ -409,17 +455,17 @@ namespace oaiUI
             // Implementation for uploading new files (if needed)
         }
 
-private void comboBoxVectorStores_SelectedIndexChanged(object? sender, EventArgs e)
-{
-    if (sender is ComboBox comboBox && comboBox.SelectedItem != null)
-    {
-        string? selectedVectorStoreName = comboBox.SelectedItem.ToString();
-        if (!string.IsNullOrEmpty(selectedVectorStoreName))
+        private void comboBoxVectorStores_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
+            if (sender is ComboBox comboBox && comboBox.SelectedItem != null)
+            {
+                string? selectedVectorStoreName = comboBox.SelectedItem.ToString();
+                if (!string.IsNullOrEmpty(selectedVectorStoreName))
+                {
+                    LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
+                }
+            }
         }
-    }
-}
 
         private void LoadSelectedFoldersForVectorStore(string? vectorStoreName)
         {

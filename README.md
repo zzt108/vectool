@@ -137,6 +137,12 @@ The application automatically saves which folders you have selected for each vec
 *   **OaiUI/Config/LogConfig.xml:** Configuration file for NLog, allowing you to customize logging behavior (e.g., log levels, output targets).
 *   **MimeTypes/Config/\*:** JSON files defining MIME types (`mimeTypes.json`), new file extensions for processing (`newExtensions.json`), and Markdown tags for code blocks (`mdTags.json`).
 
+## TODO
+
+* project specific exclusion patterns (file ^folder)
+* project specific storage of configured values
+* configured values should be editable on the settings tab
+   
 ## Contributing
 
 Contributions to the **VecTool** project are welcome! If you have ideas for improvements, new features, or bug fixes, please feel free to fork the repository and submit a pull request.
