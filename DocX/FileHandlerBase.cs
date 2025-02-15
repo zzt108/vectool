@@ -15,6 +15,23 @@ namespace DocXHandler
             return excludedList.Contains(name);
         }
 
+        public virtual void ExportSelectedFolders(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
+        {
+            using (StreamWriter writer = new StreamWriter(outputPath))
+            {
+                foreach (string folderPath in folderPaths)
+                {
+                    ProcessFolder(
+                        folderPath,
+                        writer,
+                        excludedFiles,
+                        excludedFolders,
+                        ProcessFile,
+                        WriteFolderName);
+                }
+            }
+        }
+
         protected bool IsFileExcluded(string fileName, List<string> excludedFiles)
         {
             foreach (var pattern in excludedFiles)
@@ -89,5 +106,14 @@ namespace DocXHandler
 
             writeFolderEnd?.Invoke(context);
         }
+
+        protected virtual void ProcessFile(string file, StreamWriter writer, List<string> excludedFiles, List<string> excludedFolders)
+        {
+        }
+
+        protected virtual void WriteFolderName(StreamWriter writer, string folderName)
+        {
+        }
+
     }
 }

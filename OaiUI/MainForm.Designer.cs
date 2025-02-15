@@ -284,6 +284,7 @@ namespace oaiUI
             panel2.Controls.Add(label1);
             panel2.Controls.Add(btnConvertToDocx);
             panel2.Controls.Add(btnConvertToMd);
+            panel2.Controls.Add(btnConvertToPdf);
             panel2.Dock = DockStyle.Fill;
             panel2.Location = new Point(0, 0);
             panel2.Name = "panel2";
@@ -320,20 +321,17 @@ namespace oaiUI
             btnConvertToMd.Text = "MD";
             btnConvertToMd.UseVisualStyleBackColor = true;
             btnConvertToMd.Click += btnConvertToMD_Click;
-
-            //
+            // 
             // btnConvertToPdf
-            //
-            this.btnConvertToPdf.Location = new System.Drawing.Point(212, 17); // Adjust position as needed
-            this.btnConvertToPdf.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnConvertToPdf.Name = "btnConvertToPdf";
-            this.btnConvertToPdf.Size = new System.Drawing.Size(100, 28);
-            this.btnConvertToPdf.TabIndex = 13; // Adjust tab index if needed
-            this.btnConvertToPdf.Text = "PDF";
-            this.btnConvertToPdf.UseVisualStyleBackColor = true;
-            this.btnConvertToPdf.Click += new System.EventHandler(this.btnConvertToPdf_Click);
-            this.panel2.Controls.Add(this.btnConvertToPdf); // Add to panel2 controls
-
+            // 
+            btnConvertToPdf.Location = new Point(3, 48);
+            btnConvertToPdf.Margin = new Padding(3, 2, 3, 2);
+            btnConvertToPdf.Name = "btnConvertToPdf";
+            btnConvertToPdf.Size = new Size(97, 28);
+            btnConvertToPdf.TabIndex = 13;
+            btnConvertToPdf.Text = "PDF";
+            btnConvertToPdf.UseVisualStyleBackColor = true;
+            btnConvertToPdf.Click += btnConvertToPdf_Click;
             // 
             // btnDeleteVectorStoreAssoc
             // 

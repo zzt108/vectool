@@ -34,7 +34,7 @@ namespace DocXHandler
             string fileName = Path.GetFileName(file);
             if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, null))
             {
-                log.Debug($"Skipping excluded file: {file}");
+                log.Trace($"Skipping excluded file: {file}");
                 return;
             }
 

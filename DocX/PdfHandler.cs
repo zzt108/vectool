@@ -1,19 +1,22 @@
-using System.Collections.Generic;
-using System.IO;
-using System;
 using System.Text.RegularExpressions;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using NLogShared = NLogShared;
 
 namespace DocXHandler
 {
     public class PdfHandler : FileHandlerBase
     {
+        static PdfHandler()
+        {
+            QuestPDF.Settings.License = LicenseType.Community;
+            QuestPDF.Settings.EnableDebugging = false;
+            QuestPDF.Settings.CheckIfAllTextGlyphsAreAvailable = false;
+        }
+
         public void ConvertSelectedFoldersToPdf(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
         {
-            Document.Create(document =>
+            var d = Document.Create(document =>
             {
                 document.Page(page =>
                 {
@@ -35,7 +38,15 @@ namespace DocXHandler
                         }
                     });
                 });
-            }).GeneratePdf(outputPath);
+            })
+                .WithSettings(new DocumentSettings
+                {
+                    PdfA = false,
+                    CompressDocument = true,
+                    ImageCompressionQuality = ImageCompressionQuality.Medium,
+                    ImageRasterDpi = 72
+                });
+            d.GeneratePdf(outputPath);
         }
 
         private void ProcessFile(string file, ColumnDescriptor column, List<string> excludedFiles, List<string> excludedFolders)
@@ -45,7 +56,7 @@ namespace DocXHandler
                 string fileName = Path.GetFileName(file);
                 if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, null))
                 {
-                    log.Debug($"Skipping excluded file: {file}");
+                    log.Trace($"Skipping excluded file: {file}");
                     return;
                 }
 
@@ -61,7 +72,7 @@ namespace DocXHandler
                 {
                     directoryName = ".";
                 }
-                
+
                 string relativePath = Path.GetRelativePath(directoryName, file);
                 string sectionId = Regex.Replace(relativePath, @"[^a-zA-Z0-9_-]", "_");
                 DateTime lastModified = File.GetLastWriteTime(file);

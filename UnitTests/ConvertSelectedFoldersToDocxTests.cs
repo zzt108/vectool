@@ -1,45 +1,46 @@
 using FluentAssertions;
-using NUnit.Framework;
-using System.IO;
-using System.Collections.Generic;
-using DocXHandler;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocXHandlerTests
 {
-    [TestFixture]
-    public class ConvertSelectedFoldersToDocxTests
+    public class DocTestBase
     {
-        private const string Folder1Name = "Folder1";
-        private const string Folder2Name = "Folder2";
-        private const string MarkdownFolder1Name = "MarkdownFolder1";
-        private const string MarkdownFolder2Name = "MarkdownFolder2";
-        private const string MarkdownMainFolderName = "MarkdownMainFolder";
-        private const string MarkdownSubFolderName = "MarkdownSubFolder";
-        private const string EmptyFolderName = "EmptyFolder";
-        private const string MainFolderName = "MainFolder";
-        private const string SubFolder1Name = "SubFolder1";
-        private const string SubFolder2Name = "SubFolder2";
+        protected const string Folder1Name = "Folder1";
+        protected const string Folder2Name = "Folder2";
+        protected const string MarkdownFolder1Name = "MarkdownFolder1";
+        protected const string MarkdownFolder2Name = "MarkdownFolder2";
+        protected const string MarkdownMainFolderName = "MarkdownMainFolder";
+        protected const string MarkdownSubFolderName = "MarkdownSubFolder";
+        protected const string EmptyFolderName = "EmptyFolder";
+        protected const string MainFolderName = "MainFolder";
+        protected const string SubFolder1Name = "SubFolder1";
+        protected const string SubFolder2Name = "SubFolder2";
         
-        private const string Test1FileName = "test1.txt";
-        private const string Test2FileName = "test2.txt";
-        private const string Markdown1FileName = "markdown1.txt";
-        private const string Markdown2FileName = "markdown2.txt";
-        private const string MainFileName = "main.txt";
-        private const string SubFileName = "sub.txt";
-        private const string ImageFileName = "image.png";
+        protected const string Test1FileName = "test1.txt";
+        protected const string Test2FileName = "test2.txt";
+        protected const string Markdown1FileName = "markdown1.txt";
+        protected const string Markdown2FileName = "markdown2.txt";
+        protected const string MainFileName = "main.txt";
+        protected const string SubFileName = "sub.txt";
+        protected const string ImageFileName = "image.png";
         
-        private const string ContentOfFile1 = "Content of file 1";
-        private const string ContentOfFile2 = "Content of file 2";
-        private const string ContentOfMarkdownFile1 = "Content of markdown file 1";
-        private const string ContentOfMarkdownFile2 = "Content of markdown file 2";
-        private const string ContentOfMainFile = "Content of main file";
-        private const string ContentOfSubFile1 = "Content of sub file 1";
-        private const string ContentOfSubFile2 = "Content of sub file 2";
-        private const string ContentOfSubFile = "Content of sub file";
+        protected const string ContentOfFile1 = "Content of file 1";
+        protected const string ContentOfFile2 = "Content of file 2";
+        protected const string ContentOfMarkdownFile1 = "Content of markdown file 1";
+        protected const string ContentOfMarkdownFile2 = "Content of markdown file 2";
+        protected const string ContentOfMainFile = "Content of main file";
+        protected const string ContentOfSubFile1 = "Content of sub file 1";
+        protected const string ContentOfSubFile2 = "Content of sub file 2";
+        protected const string ContentOfSubFile = "Content of sub file";
 
-        private string testRootPath = "";
-        private string outputDocxPath = "";
+        protected string testRootPath = "";
+        protected string outputDocxPath = "";
+        
+    }
+
+    [TestFixture]
+    public class ConvertSelectedFoldersToDocxTests : DocTestBase
+    {
 
         [SetUp]
         public void Setup()
@@ -170,6 +171,110 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath1, ContentOfMarkdownFile1);
             File.WriteAllText(textFilePath2, ContentOfMarkdownFile2);
 
+            string outputDocXPath = Path.Combine(testRootPath, "output.docx");
+            List<string> folderPaths = new List<string> { folder1, folder2 };
+
+            var mdHandler = new DocXHandler.DocXHandler();
+            mdHandler.ExportSelectedFolders(folderPaths, outputDocXPath, new List<string>(), new List<string>());
+            
+            File.Exists(outputDocXPath).Should().BeTrue();
+
+            // string markdownContent = File.ReadAllText(outputDocXPath);
+            // markdownContent.Should().Contain($"# Folder: {MarkdownFolder1Name}");
+            // markdownContent.Should().Contain($"## File: {Markdown1FileName}");
+            // markdownContent.Should().Contain(ContentOfMarkdownFile1);
+            // markdownContent.Should().Contain($"# Folder: {MarkdownFolder2Name}");
+            // markdownContent.Should().Contain($"## File: {Markdown2FileName}");
+            // markdownContent.Should().Contain(ContentOfMarkdownFile2);
+
+            using var doc = WordprocessingDocument.Open(outputDocxPath, false);
+            var body = doc?.MainDocumentPart?.Document.Body;
+            body?.ChildElements.Count.Should().BeGreaterThan(5);
+            body?.InnerText.Should().Contain($"# Folder: {MarkdownFolder1Name}");
+            body?.InnerText.Should().Contain($"## File: {Markdown1FileName}");
+            body?.InnerText.Should().Contain(ContentOfMarkdownFile1);
+            body?.InnerText.Should().Contain($"# Folder: {MarkdownFolder2Name}");
+            body?.InnerText.Should().Contain($"## File: {Markdown2FileName}");
+            body?.InnerText.Should().Contain(ContentOfMarkdownFile2);
+
+
+        }
+
+        [Test]
+        public void ExportSelectedFoldersToMarkdown_WithSubfolders_ShouldIncludeAllFiles()
+        {
+            string mainFolder = Path.Combine(testRootPath, MarkdownMainFolderName);
+            string subFolder = Path.Combine(mainFolder, MarkdownSubFolderName);
+            Directory.CreateDirectory(mainFolder);
+            Directory.CreateDirectory(subFolder);
+
+            string mainFile = Path.Combine(mainFolder, MainFileName);
+            string subFile = Path.Combine(subFolder, SubFileName);
+            File.WriteAllText(mainFile, ContentOfMainFile);
+            File.WriteAllText(subFile, ContentOfSubFile);
+
+            string outputDocxPath = Path.Combine(testRootPath, "output_recursive.docx");
+            List<string> folderPaths = new List<string> { mainFolder };
+
+            var mdHandler = new DocXHandler.DocXHandler();
+            mdHandler.ExportSelectedFolders(folderPaths, outputDocxPath, new List<string>(), new List<string>());
+            
+            File.Exists(outputDocxPath).Should().BeTrue();
+
+            using var doc = WordprocessingDocument.Open(base.outputDocxPath, false);
+            var body = doc?.MainDocumentPart?.Document.Body;
+            body?.ChildElements.Count.Should().BeGreaterThan(5);
+            body?.InnerText.Should().Contain($"# Folder: {MarkdownFolder1Name}");
+            body?.InnerText.Should().Contain($"## File: {Markdown1FileName}");
+            body?.InnerText.Should().Contain(ContentOfMarkdownFile1);
+            body?.InnerText.Should().Contain($"# Folder: {MarkdownFolder2Name}");
+            body?.InnerText.Should().Contain($"## File: {Markdown2FileName}");
+            body?.InnerText.Should().Contain(ContentOfMarkdownFile2);
+
+            // string markdownContent = File.ReadAllText(outputDocxPath);
+            // markdownContent.Should().Contain($"# Folder: {MarkdownMainFolderName}");
+            // markdownContent.Should().Contain($"## File: {MainFileName}");
+            // markdownContent.Should().Contain(ContentOfMainFile);
+            // markdownContent.Should().Contain($"# Folder: {MarkdownSubFolderName}");
+            // markdownContent.Should().Contain($"## File: {SubFileName}");
+            // markdownContent.Should().Contain(ContentOfSubFile);
+        }
+
+        [TearDown]
+        public void Cleanup()
+        {
+            if (Directory.Exists(testRootPath))
+            {
+                Directory.Delete(testRootPath, true);
+            }
+        }
+    }
+
+[TestFixture]
+    public class ConvertSelectedFoldersToMDTests : DocTestBase
+    {
+
+        [SetUp]
+        public void Setup()
+        {
+            testRootPath = Path.Combine(Path.GetTempPath(), "ConvertSelectedFoldersToDocxTests");
+            Directory.CreateDirectory(testRootPath);
+            outputDocxPath = Path.Combine(testRootPath, "output.docx");
+        }
+
+        [Test]
+        public void ExportSelectedFoldersToMarkdown_MultipleFolders_ShouldIncludeAllInMarkdown()
+        {
+            string folder1 = Path.Combine(testRootPath, MarkdownFolder1Name);
+            string folder2 = Path.Combine(testRootPath, MarkdownFolder2Name);
+            Directory.CreateDirectory(folder1);
+            Directory.CreateDirectory(folder2);
+
+            string textFilePath1 = Path.Combine(folder1, Markdown1FileName);
+            string textFilePath2 = Path.Combine(folder2, Markdown2FileName);
+            File.WriteAllText(textFilePath1, ContentOfMarkdownFile1);
+            File.WriteAllText(textFilePath2, ContentOfMarkdownFile2);
+
             string outputMarkdownPath = Path.Combine(testRootPath, "output.md");
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
@@ -225,4 +330,5 @@ namespace DocXHandlerTests
             }
         }
     }
+
 }
