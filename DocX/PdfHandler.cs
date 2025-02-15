@@ -1,42 +1,71 @@
-using System.Collections.Generic;
-using System.IO;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
-using NLogShared = NLogShared;
+using MigraDoc.DocumentObjectModel;
+using MigraDoc.Rendering;
+using NLogS = NLogShared;
+using PdfSharp.Pdf;
 
 namespace DocXHandler
 {
-    public class PdfHandler : FileHandlerBase
+    public class PDFHandler : FileHandlerBase
     {
-        public void ConvertSelectedFoldersToPdf(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
-        {
-            Document.Create(document =>
-            {
-                document.Page(page =>
-                {
-                    page.Margin(20);
-                    page.Content().Column(column =>
-                    {
-                        column.Spacing(10);
+        private static readonly NLogS.CtxLogger log = new NLogS.CtxLogger();
 
-                        foreach (var folderPath in folderPaths)
-                        {
-                            ProcessFolder(
-                                folderPath,
-                                column,
-                                ProcessFile,
-                                excludedFiles,
-                                excludedFolders,
-                                WriteFolderName,
-                                WriteFolderEnd);
-                        }
-                    });
-                });
-            }).GeneratePdf(outputPath);
+        public void ExportSelectedFoldersToPdf(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
+        {
+            using (var document = new Document())
+            {
+                DefineStyles(document); // Define styles for the document
+                Section section = document.AddSection();
+
+                foreach (var folderPath in folderPaths)
+                {
+                    ProcessFolder(
+                        folderPath,
+                        section, // Pass the section as context
+                        excludedFiles,
+                        excludedFolders,
+                        ProcessFile,
+                        WriteFolderName,
+                        WriteFolderEnd
+                    );
+                }
+
+                PdfDocumentRenderer renderer = new PdfDocumentRenderer(true, PdfFontEmbedding.Always)
+                {
+                    Document = document
+                };
+                renderer.RenderDocument();
+                renderer.PdfDocument.Save(outputPath);
+            }
         }
 
-        private void ProcessFile(string file, ColumnDescriptor column, List<string> excludedFiles, List<string> excludedFolders)
+        private void DefineStyles(Document document)
+        {
+            // Get predefined style "Normal".
+            Style style = document.Styles["Normal"];
+            // Because all styles are derived from Normal, this is the
+            // easiest way to change the default.
+            style.Font.Name = "Verdana";
+            style = document.Styles.AddStyle("FolderHeading", "Normal");
+            style.Font.Size = 16;
+            style.Font.Bold = true;
+            style = document.Styles.AddStyle("FileHeading", "Normal");
+            style.Font.Size = 12;
+            style.Font.Bold = true;
+        }
+
+        private void WriteFolderName(Section section, string folderName)
+        {
+            Paragraph paragraph = section.AddParagraph();
+            paragraph.Style = "FolderHeading";
+            paragraph.AddText($"Folder: {folderName}");
+        }
+
+        private void WriteFolderEnd(Section section)
+        {
+            // You can add something at the end of each folder if needed
+        }
+
+        private void ProcessFile(string file, Section section, List<string> excludedFiles, List<string> excludedFolders)
         {
             string fileName = Path.GetFileName(file);
             if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, null))
@@ -45,70 +74,43 @@ namespace DocXHandler
                 return;
             }
 
-            string content = GetFileContent(file);
-            string relativePath = Path.GetRelativePath(Path.GetDirectoryName(file), file).Replace('\\', '_');
+            string relativePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), file).Replace('\\', '_'); // Or use folderPath as base if needed
             DateTime lastModified = File.GetLastWriteTime(file);
 
-            column.Section().PaddingLeft(10).Content(section =>
-            {
-                section.Column(fileColumn =>
-                {
-                    fileColumn.Item().Text(text =>
-                    {
-                        text.Span("<File name = ").SemiBold();
-                        text.Span($"{relativePath}>").SemiBold().Color(Colors.Grey.Darken2);
-                        text.Span(" <Time: ").SemiBold();
-                        text.Span($"{lastModified}>").SemiBold().Color(Colors.Grey.Darken2);
-                    }).FontSize(10).FontColor(Colors.Black);
-                    fileColumn.Item().PaddingLeft(5).Text(content).FontSize(10);
-                });
-            });
+            Paragraph fileParagraph = section.AddParagraph();
+            fileParagraph.Style = "FileHeading";
+            fileParagraph.AddText($"File: {relativePath} Time: {lastModified}");
+
+            string content = GetFileContent(file);
+            Paragraph para = section.AddParagraph();
+            para.AddText(content);
         }
 
-        private void WriteFolderName(ColumnDescriptor column, string folderName)
-        {
-            column.Item().Text(folderName).FontSize(14).Bold().FontColor(Colors.Black);
-        }
+        // protected override void ProcessFolder<T>(string folderPath, T context, List<string> excludedFiles, List<string> excludedFolders, List<string>> processFile, Action<T, string> writeFolderName, Action<T> writeFolderEnd = null)
 
-        private void WriteFolderEnd(ColumnDescriptor column)
-        {
-            // You can add something here if you want to mark the end of a folder in PDF
-        }
+        // protected override void ProcessFolder<T>(string folderPath, T context, List<string> excludedFiles, List<string> excludedFolders, List<string>> processFile, Action<T, string> writeFolderName, Action<T> writeFolderEnd = null)
+        // {
+        //     string folderName = new DirectoryInfo(folderPath).Name;
+        //     if (IsFolderExcluded(folderName, excludedFolders))
+        //     {
+        //         log.Debug($"Skipping excluded folder: {folderPath}");
+        //         return;
+        //     }
+        //     log.Debug(folderPath);
+        //     writeFolderName(context, folderName);
 
-        private void ProcessFolder<TDescriptor, TContext, TProcessFile, TWriteFolderName, TWriteFolderEnd>(
-            string folderPath,
-            TDescriptor context,
-            TProcessFile processFile,
-            List<string> excludedFiles,
-            List<string> excludedFolders,
-            TWriteFolderName writeFolderName,
-            TWriteFolderEnd writeFolderEnd = null)
-            where TDescriptor : QuestPDF.Fluent.ColumnDescriptor
-            where TProcessFile : System.Delegate
-            where TWriteFolderName : System.Delegate
-            where TWriteFolderEnd : System.Delegate
-        {
-            string folderName = new DirectoryInfo(folderPath).Name;
-            if (IsFolderExcluded(folderName, excludedFolders))
-            {
-                log.Debug($"Skipping excluded folder: {folderPath}");
-                return;
-            }
-            log.Debug(folderPath);
-            writeFolderName.DynamicInvoke(context, folderName);
+        //     string[] files = Directory.GetFiles(folderPath);
+        //     foreach (string file in files)
+        //     {
+        //         processFile(file, context, excludedFiles, excludedFolders);
+        //     }
 
-            string[] files = Directory.GetFiles(folderPath);
-            foreach (string file in files)
-            {
-                processFile.DynamicInvoke(file, context, excludedFiles, excludedFolders);
-            }
-
-            string[] subfolders = Directory.GetDirectories(folderPath);
-            foreach (string subfolder in subfolders)
-            {
-                ProcessFolder(subfolder, context, processFile, excludedFiles, excludedFolders, writeFolderName, writeFolderEnd);
-            }
-            writeFolderEnd?.DynamicInvoke(context);
-        }
+        //     string[] subfolders = Directory.GetDirectories(folderPath);
+        //     foreach (string subfolder in subfolders)
+        //     {
+        //         ProcessFolder(subfolder, context, excludedFiles, excludedFolders, processFile, writeFolderName, writeFolderEnd);
+        //     }
+        //     writeFolderEnd?.Invoke(context);
+        // }
     }
 }
