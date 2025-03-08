@@ -1,9 +1,5 @@
 ﻿using FluentAssertions;
-using NUnit.Framework;
-using SeriLogAdapter;
-using System;
 using SeriLogShared;
-using LogCtxShared;
 
 namespace SeriLogAdapter.Tests
 {

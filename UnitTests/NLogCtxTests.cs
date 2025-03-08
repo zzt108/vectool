@@ -1,7 +1,5 @@
 ﻿using FluentAssertions;
-using NUnit.Framework;
 using NLogShared;
-using LogCtxShared;
 
 namespace NLogAdapter.Tests
 {

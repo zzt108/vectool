@@ -1,7 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using FluentAssertions;
-using NUnit.Framework;
-using System.IO;
-using DocXHandler;
+﻿﻿using FluentAssertions;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocXHandlerTests
