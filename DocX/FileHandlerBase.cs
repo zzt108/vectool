@@ -84,11 +84,11 @@ namespace DocXHandler
             string folderName = new DirectoryInfo(folderPath).Name;
             if (IsFolderExcluded(folderName, excludedFolders))
             {
-                log.Debug($"Skipping excluded folder: {folderPath}");
+                log.Trace($"Skipping excluded folder: {folderPath}");
                 return;
             }
 
-            log.Debug(folderPath);
+            log.Debug($"Processing folder: {folderPath}");
 
             writeFolderName(context, folderName);
 
