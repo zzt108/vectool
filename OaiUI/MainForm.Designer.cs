@@ -56,6 +56,7 @@ namespace oaiUI
             btnConvertToMd = new Button();
             btnConvertToPdf = new Button();
             btnDeleteVectorStoreAssoc = new Button();
+            btnGetGitChanges = new Button();
             tabPage2 = new TabPage();
             statusStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
@@ -116,7 +117,7 @@ namespace oaiUI
             labelSelectVectorStore.AutoSize = true;
             labelSelectVectorStore.Location = new Point(12, 25);
             labelSelectVectorStore.Name = "labelSelectVectorStore";
-            labelSelectVectorStore.Size = new Size(151, 15);
+            labelSelectVectorStore.Size = new Size(150, 15);
             labelSelectVectorStore.TabIndex = 5;
             labelSelectVectorStore.Text = "Select Existing Vector Store:";
             // 
@@ -175,7 +176,7 @@ namespace oaiUI
             // toolStripStatusLabelMax
             // 
             toolStripStatusLabelMax.Name = "toolStripStatusLabelMax";
-            toolStripStatusLabelMax.Size = new Size(30, 17);
+            toolStripStatusLabelMax.Size = new Size(29, 17);
             toolStripStatusLabelMax.Text = "Max";
             // 
             // toolStripStatusLabelInfo
@@ -187,10 +188,10 @@ namespace oaiUI
             // btnUploadNew
             // 
             btnUploadNew.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnUploadNew.Location = new Point(131, 231);
+            btnUploadNew.Location = new Point(130, 231);
             btnUploadNew.Margin = new Padding(3, 2, 3, 2);
             btnUploadNew.Name = "btnUploadNew";
-            btnUploadNew.Size = new Size(113, 28);
+            btnUploadNew.Size = new Size(86, 28);
             btnUploadNew.TabIndex = 10;
             btnUploadNew.Text = "Upload New";
             btnUploadNew.UseVisualStyleBackColor = true;
@@ -243,6 +244,7 @@ namespace oaiUI
             panel1.Controls.Add(btnUploadNew);
             panel1.Controls.Add(labelNewVectorStore);
             panel1.Controls.Add(btnUploadFiles);
+            panel1.Controls.Add(btnGetGitChanges);
             panel1.Controls.Add(comboBoxVectorStores);
             panel1.Controls.Add(txtNewVectorStoreName);
             panel1.Dock = DockStyle.Fill;
@@ -345,6 +347,17 @@ namespace oaiUI
             btnDeleteVectorStoreAssoc.UseVisualStyleBackColor = false;
             btnDeleteVectorStoreAssoc.Click += btnDeleteVectorStoreAssoc_Click;
             // 
+            // btnGetGitChanges
+            // 
+            btnGetGitChanges.Location = new Point(222, 231);
+            btnGetGitChanges.Margin = new Padding(3, 2, 3, 2);
+            btnGetGitChanges.Name = "btnGetGitChanges";
+            btnGetGitChanges.Size = new Size(100, 28);
+            btnGetGitChanges.TabIndex = 11;
+            btnGetGitChanges.Text = "Get Git Changes";
+            btnGetGitChanges.UseVisualStyleBackColor = true;
+            btnGetGitChanges.Click += btnGetGitChanges_Click;
+            // 
             // tabPage2
             // 
             tabPage2.Location = new Point(4, 24);
@@ -397,6 +410,7 @@ namespace oaiUI
         private Button btnConvertToDocx;
         private Button btnConvertToPdf;
         private Button btnConvertToMd;
+        private Button btnGetGitChanges;
 
         private TabControl tabControl1;
         private TabPage tabPage1;

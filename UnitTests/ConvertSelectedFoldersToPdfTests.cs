@@ -1,14 +1,6 @@
 // ConvertSelectedFoldersToPdfTests.cs
 using FluentAssertions;
-using QuestPDF.Fluent;  //Ensure QuestPDF is correctly referenced
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using System.IO;
-using System.Linq;
-using NUnit.Framework;
-using DocXHandler;
-using System.Collections.Generic;
-using System;
 
 namespace DocXHandlerTests
 {

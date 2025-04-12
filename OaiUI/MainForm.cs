@@ -402,6 +402,63 @@ namespace oaiUI
             }
         }
 
+        private void btnGetGitChanges_Click(object sender, EventArgs e)
+        {
+            if (selectedFolders.Count == 0)
+            {
+                MessageBox.Show("Please select at least one folder first.", "No Folders Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Markdown Document|*.md";
+                saveFileDialog.Title = "Save Git Changes File";
+                saveFileDialog.DefaultExt = "md";
+
+                if (txtNewVectorStoreName.Text.Trim().Length > 0)
+                {
+                    saveFileDialog.FileName = $"{txtNewVectorStoreName.Text.Trim()}_git_changes";
+                }
+                else
+                {
+                    saveFileDialog.FileName = $"{comboBoxVectorStores.SelectedItem?.ToString()}_git_changes";
+                }
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        btnGetGitChanges.Enabled = false;
+                        WorkStart("Getting Git changes...");
+
+                        var gitChangesHandler = new DocXHandler.GitChangesHandler();
+                        string changes = gitChangesHandler.GetGitChanges(selectedFolders, saveFileDialog.FileName);
+
+                        if (string.IsNullOrWhiteSpace(changes))
+                        {
+                            MessageBox.Show("No Git changes found in the selected folders.", "No Changes", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Git changes successfully saved to file.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error getting Git changes: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        WorkFinish();
+                        btnGetGitChanges.Enabled = true;
+                    }
+                }
+            }
+        }
+
+
+
         private void UpdateProgress()
         {
             if (progressBar1.InvokeRequired)
