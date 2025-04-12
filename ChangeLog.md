@@ -1,5 +1,39 @@
 ## Changelog
 
+### VecTool v1.25.0412
+
+*   **Enhancement:** Added a new "Get Git Changes" button to the main form. This feature allows users to retrieve and save Git changes from selected folders. (MainForm.cs, MainForm.Designer.cs)
+*   **Enhancement:** Implemented a new `GitChangesHandler` class to process Git changes and generate a Markdown file with the changes. (GitChangesHandler.cs)
+*   **UI Improvement:** Updated the main form layout to accommodate the new Git changes feature. (MainForm.Designer.cs)
+*   **Testing:** Added new unit tests for PDF conversion functionality. (ConvertSelectedFoldersToPdfTests.cs)
+*   **Dependencies:** Updated `QuestPDF` NuGet package to version 2025.1.2. (oaiUI.csproj, DocXHandler.csproj)
+
+### VecTool v1.25.0308
+
+*   **Enhancement:** Improved file exclusion logic in `FileHandlerBase` class to support wildcard patterns. (FileHandlerBase.cs)
+*   **Testing:** Enhanced unit tests for DOCX and Markdown conversion, adding more comprehensive assertions and edge cases. (ConvertSelectedFoldersToDocxTests.cs, ConvertSelectedFoldersToMDTests.cs)
+
+### VecTool v1.25.0215
+
+*   **Feature:** Implemented PDF conversion functionality using QuestPDF library. (PdfHandler.cs)
+*   **UI Improvement:** Added a "Convert to PDF" button in the main form. (MainForm.cs, MainForm.Designer.cs)
+*   **Enhancement:** Updated `README.md` with detailed information on new features, configuration, and usage instructions.
+*   **Refactor:** Updated `mdTags.json` to include more default tags.
+
+### VecTool v1.25.0102
+
+*   **Enhancement:** Implemented automatic saving and loading of folder associations with vector stores. (MainForm.cs, LoadVectorStoreFolderData.cs, SaveVectorStoreFolderData.cs)
+*   **Feature:** Added support for deleting vector store associations. (MainForm.cs)
+*   **UI Improvement:** Added a "Delete Folder Associations" button in the main form. (MainForm.Designer.cs)
+*   **Configuration:** Introduced `vectorStoreFoldersPath` setting in `app.config` to configure the path for the `vectorStoreFolders.json` file.
+
+### VecTool v1.25.0101
+
+*   **Enhancement:** Improved vector store loading logic to prioritize local file data over OpenAI data. (MainForm.cs)
+*   **Refactor:** Updated file upload process to handle binary files separately. (UploadFiles.cs)
+*   **Enhancement:** Implemented more robust error handling and logging in file upload process. (UploadFiles.cs)
+*   **Configuration:** Added support for excluded folders in `app.config`. (MainForm.cs)
+
 ### VecTool v0.24.12.31
 
 *   **Fix:** Delete VS Association button now correctly removes the VS name from the combobox.
