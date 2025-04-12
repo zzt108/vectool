@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -13,7 +14,20 @@ namespace DocXHandler
 
         public string GetGitChanges(List<string> folderPaths, string outputPath)
         {
+
+            // Get the AI prompt from app.config
+            string aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"] ??
+                "Analyze the following Git changes and provide a concise, descriptive commit message.";
+
             StringBuilder allChanges = new StringBuilder();
+
+            // Add the AI prompt at the beginning of the document
+            allChanges.AppendLine("# AI Prompt for Commit Message");
+            allChanges.AppendLine();
+            allChanges.AppendLine(aiPrompt);
+            allChanges.AppendLine();
+            allChanges.AppendLine("---");
+            allChanges.AppendLine();
 
             foreach (var folderPath in folderPaths)
             {
