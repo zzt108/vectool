@@ -102,8 +102,7 @@ namespace oaiUI
             // 
             // btnUploadFiles
             // 
-            btnUploadFiles.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnUploadFiles.Location = new Point(12, 231);
+            btnUploadFiles.Location = new Point(12, 230);
             btnUploadFiles.Margin = new Padding(3, 2, 3, 2);
             btnUploadFiles.Name = "btnUploadFiles";
             btnUploadFiles.Size = new Size(113, 28);
@@ -187,8 +186,7 @@ namespace oaiUI
             // 
             // btnUploadNew
             // 
-            btnUploadNew.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnUploadNew.Location = new Point(130, 231);
+            btnUploadNew.Location = new Point(237, 230);
             btnUploadNew.Margin = new Padding(3, 2, 3, 2);
             btnUploadNew.Name = "btnUploadNew";
             btnUploadNew.Size = new Size(86, 28);
@@ -349,7 +347,7 @@ namespace oaiUI
             // 
             // btnGetGitChanges
             // 
-            btnGetGitChanges.Location = new Point(222, 231);
+            btnGetGitChanges.Location = new Point(131, 230);
             btnGetGitChanges.Margin = new Padding(3, 2, 3, 2);
             btnGetGitChanges.Name = "btnGetGitChanges";
             btnGetGitChanges.Size = new Size(100, 28);
