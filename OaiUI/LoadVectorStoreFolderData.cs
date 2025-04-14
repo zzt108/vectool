@@ -1,14 +1,9 @@
 using System.Text.Json;
 using System.Configuration;
+using DocXHandler;
 
 namespace oaiUI
 {
-    public class VectorStoreConfig
-    {
-        public List<string> FolderPaths { get; set; } = new List<string>();
-        public List<string> ExcludedFiles { get; set; } = new List<string>();
-        public List<string> ExcludedFolders { get; set; } = new List<string>();
-    }
 
     public partial class MainForm
     {
@@ -21,10 +16,27 @@ namespace oaiUI
                 try
                 {
                     string json = File.ReadAllText(vectorStoreFoldersPath);
-                    //_vectorStoreFolders = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json)
-                    //                      ?? new Dictionary<string, List<string>>();
                     _vectorStoreFolders = JsonSerializer.Deserialize<Dictionary<string, VectorStoreConfig>>(json)
                                           ?? new Dictionary<string, VectorStoreConfig>();
+
+                    // Handle migration from old format (if needed)
+                    if (_vectorStoreFolders.Count == 0)
+                    {
+                        var oldFormat = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json);
+                        if (oldFormat != null)
+                        {
+                            foreach (var kvp in oldFormat)
+                            {
+                                _vectorStoreFolders[kvp.Key] = new VectorStoreConfig
+                                {
+                                    FolderPaths = kvp.Value,
+                                    ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles),
+                                    ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
+                                };
+                            }
+                            SaveVectorStoreFolderData(); // Save in new format
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {

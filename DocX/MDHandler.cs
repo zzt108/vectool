@@ -8,10 +8,10 @@ namespace DocXHandler
     public class MDHandler : FileHandlerBase
     {
 
-        protected override void ProcessFile(string file, StreamWriter writer, List<string> excludedFiles, List<string> excludedFolders)
+        protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
             string fileName = Path.GetFileName(file);
-            if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, null))
+            if (IsFileExcluded(fileName, vectorStoreConfig.ExcludedFiles) || !IsFileValid(file, null))
             {
                 log.Trace($"Skipping excluded file: {file}");
                 return;

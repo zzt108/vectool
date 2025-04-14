@@ -14,7 +14,7 @@ namespace DocXHandler
             QuestPDF.Settings.CheckIfAllTextGlyphsAreAvailable = false;
         }
 
-        public void ConvertSelectedFoldersToPdf(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
+        public void ConvertSelectedFoldersToPdf(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
         {
             var d = Document.Create(document =>
             {
@@ -30,8 +30,7 @@ namespace DocXHandler
                             ProcessFolder(
                                 folderPath,
                                 column,
-                                excludedFiles,
-                                excludedFolders,
+                                vectorStoreConfig,
                                 ProcessFile,
                                 WriteFolderName,
                                 WriteFolderEnd);
@@ -49,12 +48,12 @@ namespace DocXHandler
             d.GeneratePdf(outputPath);
         }
 
-        private void ProcessFile(string file, ColumnDescriptor column, List<string> excludedFiles, List<string> excludedFolders)
+        private void ProcessFile(string file, ColumnDescriptor column, VectorStoreConfig vectorStoreConfig)
         {
             try
             {
                 string fileName = Path.GetFileName(file);
-                if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, null))
+                if (IsFileExcluded(fileName, vectorStoreConfig.ExcludedFiles) || !IsFileValid(file, null))
                 {
                     log.Trace($"Skipping excluded file: {file}");
                     return;

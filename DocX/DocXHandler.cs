@@ -9,7 +9,7 @@ namespace DocXHandler
 {
     public class DocXHandler : FileHandlerBase
     {
-        public void ConvertFilesToDocx(string folderPath, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
+        public void ConvertFilesToDocx(string folderPath, string outputPath, VectorStoreConfig vectorStoreConfig)
         {
             using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
             {
@@ -21,18 +21,17 @@ namespace DocXHandler
                 ProcessFolder(
                     folderPath,
                     body,
-                    excludedFiles,
-                    excludedFolders,
+                    vectorStoreConfig,
                     ProcessFile,
                     WriteFolderName,
                     WriteFolderEnd);
             }
         }
 
-        private void ProcessFile(string file, Body body, List<string> excludedFiles, List<string> excludedFolders)
+        private void ProcessFile(string file, Body body, VectorStoreConfig vectorStoreConfig)
         {
             string fileName = Path.GetFileName(file);
-            if (IsFileExcluded(fileName, excludedFiles) || !IsFileValid(file, null))
+            if (IsFileExcluded(fileName, vectorStoreConfig.ExcludedFiles) || !IsFileValid(file, null))
             {
                 log.Trace($"Skipping excluded file: {file}");
                 return;
@@ -64,7 +63,7 @@ namespace DocXHandler
             body.Append(new Paragraph(new Run(new Text($"</Folder>"))));
         }
 
-        public void ConvertSelectedFoldersToDocx(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
+        public void ConvertSelectedFoldersToDocx(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
         {
             using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
             {
@@ -78,8 +77,7 @@ namespace DocXHandler
                     ProcessFolder(
                         folderPath,
                         body,
-                        excludedFiles,
-                        excludedFolders,
+                        vectorStoreConfig,
                         ProcessFile,
                         WriteFolderName,
                         WriteFolderEnd);

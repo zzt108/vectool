@@ -3,6 +3,7 @@ using OpenAI;
 using NLogShared;
 using System.Configuration;
 using System.Reflection;
+using DocXHandler;
 
 namespace oaiUI
 {
@@ -59,14 +60,13 @@ namespace oaiUI
         // Store the mapping between vector store and selected folders
         private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
         private string _vectorStoreFoldersFilePath; // Path to save the mapping
-        private List<string> _excludedFiles; // Added for excluded files
+        private VectorStoreConfig _vectorStoreConfig;
 
         public MainForm()
         {
             InitializeComponent();
 
-            _excludedFiles = new List<string>();
-            _excludedFolders = new List<string>();
+            _vectorStoreConfig = new VectorStoreConfig();
 
             LoadExcludedFilesConfig();
             LoadExcludedFoldersConfig(); // Add this line
@@ -81,18 +81,12 @@ namespace oaiUI
             Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
         }
 
-        private List<string> _excludedFolders; // Add this field
-
         private void LoadExcludedFoldersConfig()
         {
             string? excludedFoldersConfig = ConfigurationManager.AppSettings["excludedFolders"];
             if (!string.IsNullOrEmpty(excludedFoldersConfig))
             {
-                _excludedFolders = excludedFoldersConfig.Split(',').Select(f => f.Trim()).ToList();
-            }
-            else
-            {
-                _excludedFolders = new List<string>(); // Initialize as empty list if not configured
+                _vectorStoreConfig.ExcludedFolders = excludedFoldersConfig.Split(',').Select(f => f.Trim()).ToList();
             }
         }
 
@@ -101,7 +95,7 @@ namespace oaiUI
             string? excludedFilesConfig = ConfigurationManager.AppSettings["excludedFiles"];
             if (!string.IsNullOrEmpty(excludedFilesConfig))
             {
-                _excludedFiles = excludedFilesConfig.Split(',').Select(f => f.Trim()).ToList();
+                _vectorStoreConfig.ExcludedFiles = excludedFilesConfig.Split(',').Select(f => f.Trim()).ToList();
             }
         }
 
@@ -115,7 +109,7 @@ namespace oaiUI
                 string selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString() ?? string.Empty;
                 if (!string.IsNullOrEmpty(selectedVectorStoreName) && _vectorStoreFolders.ContainsKey(selectedVectorStoreName))
                 {
-                    _vectorStoreFolders[selectedVectorStoreName] = new List<string>();
+                    _vectorStoreFolders[selectedVectorStoreName] = new VectorStoreConfig();
                     SaveVectorStoreFolderData();
                 }
             }
@@ -204,9 +198,13 @@ namespace oaiUI
                         {
                             if (!_vectorStoreFolders.ContainsKey(vectorStoreName))
                             {
-                                _vectorStoreFolders[vectorStoreName] = new List<string>();
+                                _vectorStoreFolders[vectorStoreName] = new VectorStoreConfig
+                                {
+                                    ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles),
+                                    ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
+                                };
                             }
-                            _vectorStoreFolders[vectorStoreName].Add(selectedPath);
+                            _vectorStoreFolders[vectorStoreName].FolderPaths.Add(selectedPath);
                             SaveVectorStoreFolderData();
                         }
                     }
@@ -243,9 +241,15 @@ namespace oaiUI
         {
             try
             {
+                string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+                VectorStoreConfig? vectorStoreConfig = GetVectorStore(selectedVectorStore);
+                if (vectorStoreConfig == null)
+                {
+                    return;
+                }
+
                 WorkStart("Upload/Replace files");
                 string newVectorStoreName = txtNewVectorStoreName.Text.Trim();
-                string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
                 string? vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
                 try
@@ -265,7 +269,7 @@ namespace oaiUI
                     txtNewVectorStoreName.Text = "";
 
                     // Upload files from all selected folders
-                    await UploadFiles(vectorStoreId);
+                    await UploadFiles(vectorStoreId, _vectorStoreConfig);
                 }
                 catch (Exception ex)
                 {
@@ -288,6 +292,14 @@ namespace oaiUI
 
             using (var saveFileDialog = new SaveFileDialog())
             {
+
+                string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+                VectorStoreConfig? vectorStoreConfig= GetVectorStore(selectedVectorStore);
+                if (vectorStoreConfig == null)
+                {
+                    return;
+                }
+
                 saveFileDialog.Filter = "Word Document|*.docx";
                 saveFileDialog.Title = "Save DOCX File";
                 saveFileDialog.DefaultExt = "docx";
@@ -302,7 +314,7 @@ namespace oaiUI
                     {
                         btnConvertToDocx.Enabled = false;
                         var docXHandler = new DocXHandler.DocXHandler();
-                        docXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
+                        docXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
@@ -317,6 +329,25 @@ namespace oaiUI
             }
         }
 
+        private VectorStoreConfig? GetVectorStore(string? selectedVectorStore)
+        {
+            VectorStoreConfig? vectorStoreConfig = null;
+            if (!string.IsNullOrEmpty(selectedVectorStore) && _vectorStoreFolders.ContainsKey(selectedVectorStore))
+            {
+                vectorStoreConfig = _vectorStoreFolders[selectedVectorStore];
+            }
+
+            if (vectorStoreConfig == null)
+            {
+                MessageBox.Show("Please select a vector store first.", "No Vector Store Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return null;
+            }
+            else
+            {
+                return vectorStoreConfig;
+            }
+        }
+
         private void btnConvertToMD_Click(object sender, EventArgs e)
         {
             if (selectedFolders.Count == 0)
@@ -324,6 +355,14 @@ namespace oaiUI
                 MessageBox.Show("Please select at least one folder first.", "No Folders Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
+            string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+            VectorStoreConfig? vectorStoreConfig = GetVectorStore(selectedVectorStore);
+            if (vectorStoreConfig == null)
+            {
+                return;
+            }
+
 
             using (var saveFileDialog = new SaveFileDialog())
             {
@@ -341,7 +380,7 @@ namespace oaiUI
                     {
                         btnConvertToMd.Enabled = false;
                         var mdHandler = new DocXHandler.MDHandler();
-                        mdHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
+                        mdHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
@@ -364,11 +403,19 @@ namespace oaiUI
                 return;
             }
 
+            string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+            VectorStoreConfig? vectorStoreConfig = GetVectorStore(selectedVectorStore);
+            if (vectorStoreConfig == null)  
+            {   
+                return; 
+            }
+
             using (var saveFileDialog = new SaveFileDialog())
             {
                 saveFileDialog.Filter = "PDF Document|*.pdf";
                 saveFileDialog.Title = "Save PDF File";
                 saveFileDialog.DefaultExt = "pdf";
+
 
                 if (txtNewVectorStoreName.Text.Trim().Length > 0)
                 {
@@ -386,7 +433,7 @@ namespace oaiUI
                     {
                         WorkStart("Converting to PDF...");
                         var pdfHandler = new DocXHandler.PdfHandler();
-                        pdfHandler.ConvertSelectedFoldersToPdf(selectedFolders, saveFileDialog.FileName, _excludedFiles, _excludedFolders);
+                        pdfHandler.ConvertSelectedFoldersToPdf(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to PDF.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
@@ -456,8 +503,6 @@ namespace oaiUI
                 }
             }
         }
-
-
 
         private void UpdateProgress()
         {
@@ -533,7 +578,7 @@ namespace oaiUI
 
                 if (_vectorStoreFolders.ContainsKey(vectorStoreName))
                 {
-                    selectedFolders.AddRange(_vectorStoreFolders[vectorStoreName]);
+                    selectedFolders.AddRange(_vectorStoreFolders[vectorStoreName].FolderPaths);
                     UpdateSelectedFoldersUI();
                 }
             }

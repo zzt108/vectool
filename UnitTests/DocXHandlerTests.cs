@@ -1,5 +1,6 @@
 ﻿﻿using FluentAssertions;
 using DocumentFormat.OpenXml.Packaging;
+using DocXHandler;
 
 namespace DocXHandlerTests
 {
@@ -8,8 +9,9 @@ namespace DocXHandlerTests
     {
         private string testFolderPath = "";
         private string outputDocxPath = "";
-        private List<string> excludedFiles = new List<string>();
-        private List<string> excludedFolders = new List<string>();
+
+        private VectorStoreConfig vectorStoreConfig = new VectorStoreConfig();
+
         private DocXHandler.DocXHandler docXHandler;
 
         [SetUp]
@@ -38,7 +40,7 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath3, "Content of file 3");
 
             // Act
-            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, excludedFiles, excludedFolders);
+            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -69,7 +71,7 @@ namespace DocXHandlerTests
         public void ConvertFilesToDocx_EmptyFolder_ShouldCreateEmptyDocx()
         {
             // Act
-            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, excludedFiles, excludedFolders);
+            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -90,7 +92,7 @@ namespace DocXHandlerTests
             File.WriteAllBytes(nonTextFilePath, new byte[] { 0, 1, 2 }); // Create a dummy image file
 
             // Act
-            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, excludedFiles, excludedFolders);
+            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -121,7 +123,7 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath, "Hello, World!");
 
             // Act
-            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, excludedFiles, excludedFolders);
+            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -144,7 +146,7 @@ namespace DocXHandlerTests
             File.WriteAllText(emptyFilePath, ""); // Create an empty file
 
             // Act
-            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, excludedFiles, excludedFolders);
+            docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
             File.Exists(outputDocxPath).Should().BeTrue();

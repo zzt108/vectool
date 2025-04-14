@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using OpenAI; // Assuming this is where OpenAIClient is defined
-using LogCtxShared; // Assuming this is where CtxLogger and Props are defined
+using LogCtxShared;
+using DocXHandler; // Assuming this is where CtxLogger and Props are defined
 
 namespace oaiUI
 {
@@ -32,7 +33,11 @@ namespace oaiUI
                 // When a new vector store is created, ensure it exists in the folder mapping
                 if (!_vectorStoreFolders.ContainsKey(vectorStoreName))
                 {
-                    _vectorStoreFolders[vectorStoreName] = new List<string>();
+                    _vectorStoreFolders[vectorStoreName] = new VectorStoreConfig
+                    {
+                        ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles), // Copy from global settings
+                        ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
+                    };
                     SaveVectorStoreFolderData();
                 }
             }

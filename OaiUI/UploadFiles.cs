@@ -2,12 +2,13 @@ using LogCtxShared; // Assuming this is where CtxLogger and Props are defined
 using OpenAI;
 using NLogShared;
 using oaiVectorStore;
+using DocXHandler;
 
 namespace oaiUI
 {
     public partial class MainForm
     {
-        private async Task UploadFiles(string vectorStoreId)
+        private async Task UploadFiles(string vectorStoreId, VectorStoreConfig vectorStoreConfig)
         {
             var totalFolders = selectedFolders.Sum(folder =>
                 Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());
@@ -48,13 +49,13 @@ namespace oaiUI
                     try
                     {
                         var docXHandler = new DocXHandler.DocXHandler();
-                        docXHandler.ConvertFilesToDocx(folder, outputDocxPath, _excludedFiles, _excludedFolders);
+                        docXHandler.ConvertFilesToDocx(folder, outputDocxPath, _vectorStoreConfig);
                         string[] files = Directory.GetFiles(folder);
 
                         foreach (string file in files)
                         {
                             string fileName = Path.GetFileName(file);
-                            if (_excludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase))) continue;
+                            if (_vectorStoreConfig.ExcludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase))) continue;
                             // Check MIME type and upload
                             string extension = Path.GetExtension(file);
                             if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types

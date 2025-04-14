@@ -15,7 +15,7 @@ namespace DocXHandler
             return excludedList.Contains(name);
         }
 
-        public virtual void ExportSelectedFolders(List<string> folderPaths, string outputPath, List<string> excludedFiles, List<string> excludedFolders)
+        public virtual void ExportSelectedFolders(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
         {
             using (StreamWriter writer = new StreamWriter(outputPath))
             {
@@ -24,8 +24,7 @@ namespace DocXHandler
                     ProcessFolder(
                         folderPath,
                         writer,
-                        excludedFiles,
-                        excludedFolders,
+                        vectorStoreConfig,
                         ProcessFile,
                         WriteFolderName);
                 }
@@ -75,14 +74,13 @@ namespace DocXHandler
         protected void ProcessFolder<T>(
             string folderPath,
             T context,
-            List<string> excludedFiles,
-            List<string> excludedFolders,
-            Action<string, T, List<string>, List<string>> processFile,
+            VectorStoreConfig vectorStoreConfig,
+            Action<string, T, VectorStoreConfig> processFile,
             Action<T, string> writeFolderName,
             Action<T> writeFolderEnd = null)
         {
             string folderName = new DirectoryInfo(folderPath).Name;
-            if (IsFolderExcluded(folderName, excludedFolders))
+            if (IsFolderExcluded(folderName, vectorStoreConfig.ExcludedFolders))
             {
                 log.Trace($"Skipping excluded folder: {folderPath}");
                 return;
@@ -95,19 +93,19 @@ namespace DocXHandler
             string[] files = Directory.GetFiles(folderPath);
             foreach (string file in files)
             {
-                processFile(file, context, excludedFiles, excludedFolders);
+                processFile(file, context, vectorStoreConfig);
             }
 
             string[] subfolders = Directory.GetDirectories(folderPath);
             foreach (string subfolder in subfolders)
             {
-                ProcessFolder(subfolder, context, excludedFiles, excludedFolders, processFile, writeFolderName, writeFolderEnd);
+                ProcessFolder(subfolder, context, vectorStoreConfig, processFile, writeFolderName, writeFolderEnd);
             }
 
             writeFolderEnd?.Invoke(context);
         }
 
-        protected virtual void ProcessFile(string file, StreamWriter writer, List<string> excludedFiles, List<string> excludedFolders)
+        protected virtual void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
         }
 
