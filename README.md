@@ -1,61 +1,69 @@
 ## VecTool
 
-VecTool is a C# based desktop application designed to streamline the process of managing files and interacting with OpenAI's vector stores. This tool allows users to easily select folders, process their contents, and upload these files to specific vector stores for use with OpenAI's models. It also provides functionality to manage existing vector stores and export folder contents to various formats.
+VecTool is a C# based desktop application designed to streamline the process of managing and exporting code projects for use with Large Language Models (LLMs). While it originally focused on OpenAI vector stores, its most valuable features now are the ability to export entire projects to single files and generate AI-ready commit comments.
 
 ### Key Features
 
+#### Single File Project Export (Recommended)
+
+- **Convert to DOCX/MD/PDF:** Export your entire project or selected folders to a single, well-formatted file that's perfect for uploading to any LLM chat interface.
+- **Code-Aware Formatting:** Automatically detects file types and applies appropriate syntax highlighting tags in the exported files.
+- **Hierarchical Organization:** Maintains your project's folder structure in the exported file for easy navigation.
+- **Multiple Format Support:** Export to DOCX, Markdown, or PDF depending on your needs and the LLM platform you're using.
+
 #### Git Changes Integration (Added: April 12, 2025)
 
-- **Get Git Changes:** A new button has been added to retrieve and save Git changes from selected folders.
-- **Git Changes Handler:** Implemented a new `GitChangesHandler` class to process Git changes and generate a Markdown file with the changes.
-- **AI-Assisted Commit Messages:** The tool now includes an AI prompt (configurable in `app.config`) to analyze Git changes and provide concise, descriptive commit messages.
+- **Get Git Changes:** Retrieve and save Git changes from selected folders into a single, well-formatted Markdown file.
+- **AI-Assisted Commit Messages:** Includes a configurable AI prompt to analyze Git changes and provide concise, descriptive commit messages.
+- **Comprehensive Diff Information:** Captures both status changes and detailed diffs for complete context.
 
 #### PDF Conversion (Added: February 15, 2025)
 
-- **Convert to PDF:** Users can now convert selected folders to a single PDF file.
-- **PDF Handler:** A new `PdfHandler` class has been implemented to handle the conversion of folders and files to PDF format.
-- **QuestPDF Integration:** The project now uses QuestPDF library for PDF generation, with the license set to Community.
+- **Convert to PDF:** Generate professional-looking PDF documents from your project folders.
+- **QuestPDF Integration:** Uses QuestPDF library for high-quality PDF generation.
 
-#### Enhanced DOCX and Markdown Conversion (Updated: March 8, 2025)
+#### Enhanced File Handling (Updated: March 8, 2025)
 
-- **Improved File Handling:** The `FileHandlerBase` class has been updated to support wildcard patterns in file exclusion logic.
-- **Comprehensive Unit Tests:** Enhanced unit tests for DOCX and Markdown conversion, adding more assertions and edge cases.
+- **Improved Exclusion Logic:** Support for wildcard patterns when excluding files and folders.
+- **Comprehensive Content Processing:** Handles various file types appropriately in the exported documents.
 
-#### Vector Store Management Improvements (Updated: January 1, 2025)
+#### OpenAI Vector Store Management (Legacy Feature)
 
-- **Automatic Folder Association:** The application now automatically saves and loads the association between selected folders and specific vector stores.
-- **Local Data Prioritization:** When loading vector stores, the application now prioritizes local file data over OpenAI data, removing any OpenAI entries that are in the local file.
+> **Note:** The vector store features have not been updated recently. For most use cases, we recommend using the single file export options instead, which work with any LLM chat interface that allows file uploads.
 
-#### User Interface Enhancements (Updated: April 12, 2025)
+- **Vector Store Association:** The application can save and load associations between selected folders and specific vector stores.
+- **Upload/Replace Files:** Process and upload selected folder contents to chosen vector stores.
 
-- **Progress Tracking:** Improved progress bar and status updates for various operations.
-- **New Buttons:** Added buttons for PDF conversion and Git changes retrieval.
-- **Layout Updates:** The main form layout has been updated to accommodate new features.
+### No API Key Required for Core Features
+
+The most useful features of VecTool (single file export and Git changes) **do not require any API keys** and can be used with any LLM platform that supports file uploads, including:
+
+- ChatGPT
+- Claude
+- Gemini
+- Perplexity
+- Any other chat interface that allows document uploads
 
 ### Configuration
 
 - **app.config:** Contains application-level settings, including:
-  - `vectorStoreFoldersPath`: Specifies the path for the `vectorStoreFolders.json` file.
   - `excludedFiles` and `excludedFolders`: Optional lists for excluding specific files and folders from processing.
   - `gitAiPrompt`: Configurable AI prompt for generating commit messages from Git changes.
 
-- **.openai:** Contains your OpenAI API key and optional organization/project identifiers.
 - **Config/LogConfig.xml:** Configuration file for NLog, allowing customization of logging behavior.
-- **MimeTypes/Config/\*:** JSON files defining MIME types, new file extensions for processing, and Markdown tags for code blocks.
+- **MimeTypes/Config/*:** JSON files defining MIME types, new file extensions for processing, and Markdown tags for code blocks.
 
 ### Usage
 
 1. **Select Folders:** Use the "Select Folders" button to choose directories for processing.
-2. **Manage Vector Stores:** Select existing vector stores or create new ones using the provided dropdown and text input.
-3. **Upload/Replace Files:** Process and upload selected folder contents to the chosen vector store.
-4. **Convert Files:** Use the "Convert to single file" section to generate DOCX, MD, or PDF files from selected folders.
-5. **Retrieve Git Changes:** Click the "Get Git Changes" button to analyze and save Git changes from selected folders.
+2. **Export to Single File:** Use the "Convert to single file" section to generate DOCX, MD, or PDF files from selected folders.
+3. **Retrieve Git Changes:** Click the "Get Git Changes" button to analyze and save Git changes from selected folders.
+4. **Upload to LLM:** Take the generated single file and upload it to your preferred LLM chat interface for analysis, questions, or code review.
 
 ### Planned Features (TODO)
 
-- Store last upload date for vector stores.
 - Review/Edit configuration settings on the Settings tab.
-- Store configured values with each vector store data (exclusions, etc.).
+- Store configured values with each project (exclusions, etc.).
 
 ### Contributing
 
