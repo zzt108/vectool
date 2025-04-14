@@ -1,6 +1,6 @@
 ## VecTool
 
-VecTool is a C# based desktop application designed to streamline the process of managing and exporting code projects for use with Large Language Models (LLMs). While it originally focused on OpenAI vector stores, its most valuable features now are the ability to export entire projects to single files and generate AI-ready commit comments.
+VecTool is a C# based desktop application designed to streamline the process of managing and exporting code projects for use with Large Language Models (LLMs). While it originally focused on OpenAI vector stores, its most valuable features now are the ability to export entire projects to single files digestable efficiently by AI and generate AI-ready output of git changes for generating commit comments with AI.
 
 ### Key Features
 
