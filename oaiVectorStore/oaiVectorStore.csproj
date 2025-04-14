@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DocX\DocXHandler.csproj" />
     <ProjectReference Include="..\MimeTypes\MimeTypes.csproj" />
   </ItemGroup>
 

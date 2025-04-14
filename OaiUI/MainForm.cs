@@ -58,22 +58,21 @@ namespace oaiUI
         private int processedFolders;
 
         // Store the mapping between vector store and selected folders
-        private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
-        private string _vectorStoreFoldersFilePath; // Path to save the mapping
+        // private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
+        // private string _vectorStoreFoldersFilePath; // Path to save the mapping
         private VectorStoreConfig _vectorStoreConfig;
 
         public MainForm()
         {
             InitializeComponent();
 
-            _vectorStoreConfig = VectorStoreConfig.FromAppConfig();
-
-            _vectorStoreFoldersFilePath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
-            _vectorStoreManager = new VectorStoreManager();
-            LoadVectorStores();
-            LoadVectorStoreFolderData(); // Load saved folder data on startup
             using var log = new CtxLogger();
             log.ConfigureXml("Config/LogConfig.xml");
+
+
+            _vectorStoreManager = new VectorStoreManager(ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json");
+            LoadVectorStores();
+            LoadVectorStoreFolderData(); // Load saved folder data on startup
 
             comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged;
             Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
@@ -111,8 +110,8 @@ namespace oaiUI
                     // Merge loaded data with existing data, prioritizing data from the file
                     // and removing any entries from OpenAI that are in the file.
                     var combinedStores = vectorStores.Values
-                        .Where(v => !_vectorStoreFolders.ContainsKey(v))
-                        .Union(_vectorStoreFolders.Keys)
+                        .Where(v => !_vectorStoreManager.Folders.ContainsKey(v))
+                        .Union(_vectorStoreManager.Folders.Keys)
                         .Distinct()
                         .ToList();
 

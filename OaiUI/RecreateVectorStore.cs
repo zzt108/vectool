@@ -10,39 +10,5 @@ namespace oaiUI
 {
     public partial class MainForm
     {
-        private async Task<string> RecreateVectorStore(string? vectorStoreName)
-        {
-            using var api = new OpenAIClient();
-
-            var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
-            string vectorStoreId;
-
-            if (existingStores.Values.Contains(vectorStoreName))
-            {
-                // If it exists, delete all files
-                vectorStoreId = existingStores.First(s => s.Value == vectorStoreName).Key;
-                await DeleteAllVSFiles(api, vectorStoreId);
-            }
-            else
-            {
-                if(string.IsNullOrEmpty(vectorStoreName)){
-                    throw new ArgumentException(_vectorStoreFoldersFilePath, nameof(vectorStoreName));
-                }
-                // Create the vector store
-                vectorStoreId = await _vectorStoreManager.CreateVectorStoreAsync(api, vectorStoreName, new List<string>());
-                // When a new vector store is created, ensure it exists in the folder mapping
-                if (!_vectorStoreFolders.ContainsKey(vectorStoreName))
-                {
-                    _vectorStoreFolders[vectorStoreName] = new VectorStoreConfig
-                    {
-                        ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles), // Copy from global settings
-                        ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
-                    };
-                    SaveVectorStoreFolderData();
-                }
-            }
-
-            return vectorStoreId;
-        }
     }
 }
