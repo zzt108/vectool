@@ -7,9 +7,11 @@ using DocXHandler;
 
 namespace oaiUI
 {
+
     public partial class MainForm : Form
     {
         private VectorStoreManager _vectorStoreManager;
+        private IUserInterface _userInterface;
         private List<string> selectedFolders = new List<string>();
         private ComboBox comboBoxVectorStores = null!;
         private TextBox txtNewVectorStoreName;
@@ -69,8 +71,9 @@ namespace oaiUI
             using var log = new CtxLogger();
             log.ConfigureXml("Config/LogConfig.xml");
 
+            _userInterface = new WinFormsUserInterface(toolStripStatusLabelInfo, progressBar1);
 
-            _vectorStoreManager = new VectorStoreManager(ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json");
+            _vectorStoreManager = new VectorStoreManager(ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json", _userInterface);
             LoadVectorStores();
             _vectorStoreManager.LoadVectorStoreFolderData(); // Load saved folder data on startup
 

@@ -9,19 +9,20 @@ using System.Text.Json;
 namespace oaiVectorStore
 {
 
-
     public class VectorStoreManager
     {
         private string _vectorStoreFoldersFilePath;
         private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new (); // not readonly
         private readonly VectorStoreConfig _vectorStoreConfig;
+        private readonly IUserInterface _ui;
 
         public Dictionary<string, VectorStoreConfig>  Folders => _vectorStoreFolders;
         public VectorStoreConfig Config => _vectorStoreConfig;
-        public VectorStoreManager(string vectorStoreFoldersFilePath)
+        public VectorStoreManager(string vectorStoreFoldersFilePath, IUserInterface ui)
         {
             _vectorStoreConfig = VectorStoreConfig.FromAppConfig();
             _vectorStoreFoldersFilePath = vectorStoreFoldersFilePath;
+            _ui = ui ?? throw new ArgumentNullException(nameof(ui));
         }
 
         public async Task<string> CreateVectorStoreAsync(OpenAIClient api, string name, List<string> fileIds)
@@ -162,10 +163,8 @@ namespace oaiVectorStore
             {
                 var totalFiles = fileIds.Count;
 
-                processedFolders = 0;
-                progressBar1.Minimum = 0;
-                progressBar1.Maximum = totalFiles;
-                progressBar1.Value = 0;
+                int processedFiles = 0;
+                _ui.UpdateProgress(processedFiles, totalFiles);
 
                 using var log = new CtxLogger();
                 log.ConfigureXml("Config/LogConfig.xml");
@@ -179,8 +178,8 @@ namespace oaiVectorStore
                 {
                     log.Info($"Deleting file {fileId}");
                     await DeleteFileFromAllStoreAsync(api, vectorStoreId, fileId);
-                    processedFolders++;
-                    UpdateProgress();
+                    processedFiles++;
+                    _ui.UpdateProgress(processedFiles, totalFiles);
                 }
                 fileIds = await ListAllFiles(api, vectorStoreId); // List file IDs to delete
             }
@@ -191,10 +190,8 @@ namespace oaiVectorStore
             var totalFolders = selectedFolders.Sum(folder =>
                 Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());
 
-            processedFolders = 0;
-            progressBar1.Minimum = 0;
-            progressBar1.Maximum = totalFolders;
-            progressBar1.Value = 0;
+            int processedFolders = 0;
+            _ui.UpdateProgress(0, totalFolders);
 
             using var api = new OpenAIClient();
             using var log = new CtxLogger();
@@ -211,7 +208,7 @@ namespace oaiVectorStore
                 foreach (var folder in folders)
                 {
                     processedFolders++;
-                    UpdateProgress();
+                    _ui.UpdateProgress(processedFolders, totalFolders);
                     log.Debug(folder);
 
                     if (folder.Contains("\\.") || folder.Contains("\\obj") || folder.Contains("\\bin") || folder.Contains("\\packages"))
@@ -219,14 +216,14 @@ namespace oaiVectorStore
                         continue;
                     }
 
-                    toolStripStatusLabelInfo.Text = folder;
+                    _ui.UpdateStatus(folder);
 
                     string relativePath = Path.GetRelativePath(rootFolder, folder).Replace('\\', '_');
                     string outputDocxPath = Path.Combine(folder, relativePath + ".docx");
 
                     try
                     {
-                        var docXHandler = new DocXHandler();
+                        var docXHandler = new DocXHandler.DocXHandler();
                         docXHandler.ConvertFilesToDocx(folder, outputDocxPath, _vectorStoreConfig);
                         string[] files = Directory.GetFiles(folder);
 
@@ -254,7 +251,7 @@ namespace oaiVectorStore
                     }
                 }
             }
-            MessageBox.Show("Files uploaded successfully.");
+            _ui.ShowMessage("Files uploaded successfully.");
         }
 
         public void SaveVectorStoreFolderData()
@@ -268,7 +265,7 @@ namespace oaiVectorStore
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving vector store folder data: {ex.Message}", "Saving Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _ui.ShowMessage($"Error saving vector store folder data: {ex.Message}", "Saving Error", MessageType.Error);
             }
         }
         public void LoadVectorStoreFolderData()
@@ -303,7 +300,7 @@ namespace oaiVectorStore
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error loading vector store folder data: {ex.Message}", "Loading Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _ui.ShowMessage($"Error loading vector store folder data: {ex.Message}", "Loading Error", MessageType.Warning);
                     _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
                 }
             }
