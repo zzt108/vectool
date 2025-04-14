@@ -57,7 +57,7 @@ namespace oaiUI
         private int processedFolders;
 
         // Store the mapping between vector store and selected folders
-        private Dictionary<string, List<string>> _vectorStoreFolders = new Dictionary<string, List<string>>();
+        private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
         private string _vectorStoreFoldersFilePath; // Path to save the mapping
         private List<string> _excludedFiles; // Added for excluded files
 
