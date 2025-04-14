@@ -1,16 +1,14 @@
-﻿namespace oaiVectorStore
+﻿using OpenAI.VectorStores;
+using OpenAI;
+using DocXHandler;
+using LogCtxShared;
+using NLogShared;
+using System.Configuration;
+using System.Text.Json;
+
+namespace oaiVectorStore
 {
-    using OpenAI.VectorStores;
-    using OpenAI;
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using System.Runtime.Serialization;
-    using DocXHandler;
-    using LogCtxShared;
-    using NLogShared;
-    using System.Configuration;
-    using System.Text.Json;
+
 
     public class VectorStoreManager
     {
@@ -188,7 +186,7 @@
             }
         }
 
-        private async Task UploadFiles(string vectorStoreId, VectorStoreConfig vectorStoreConfig)
+        public async Task UploadFiles(string vectorStoreId, VectorStoreConfig vectorStoreConfig, List<string> selectedFolders)
         {
             var totalFolders = selectedFolders.Sum(folder =>
                 Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());

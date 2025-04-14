@@ -29,9 +29,9 @@ namespace oaiUI
             }
 
             // Remove the association from the dictionary
-            if (_vectorStoreFolders.ContainsKey(selectedVectorStore))
+            if (_vectorStoreManager.Folders.ContainsKey(selectedVectorStore))
             {
-                _vectorStoreFolders.Remove(selectedVectorStore);
+                _vectorStoreManager.Folders.Remove(selectedVectorStore);
 
                 // Update the UI (remove from combobox and clear selected folders)
                 var currentDataSource = comboBoxVectorStores.DataSource as List<string>;
@@ -46,7 +46,7 @@ namespace oaiUI
                 listBoxSelectedFolders.Items.Clear();
 
                 // Save the updated data to the JSON file
-                SaveVectorStoreFolderData();
+                _vectorStoreManager.SaveVectorStoreFolderData();
 
                 MessageBox.Show($"Folder associations for vector store '{selectedVectorStore}' deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -72,7 +72,7 @@ namespace oaiUI
 
             _vectorStoreManager = new VectorStoreManager(ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json");
             LoadVectorStores();
-            LoadVectorStoreFolderData(); // Load saved folder data on startup
+            _vectorStoreManager.LoadVectorStoreFolderData(); // Load saved folder data on startup
 
             comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged;
             Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
@@ -86,10 +86,10 @@ namespace oaiUI
             if (comboBoxVectorStores.SelectedItem != null)
             {
                 string selectedVectorStoreName = comboBoxVectorStores.SelectedItem.ToString() ?? string.Empty;
-                if (!string.IsNullOrEmpty(selectedVectorStoreName) && _vectorStoreFolders.ContainsKey(selectedVectorStoreName))
+                if (!string.IsNullOrEmpty(selectedVectorStoreName) && _vectorStoreManager.Folders.ContainsKey(selectedVectorStoreName))
                 {
-                    _vectorStoreFolders[selectedVectorStoreName] = new VectorStoreConfig();
-                    SaveVectorStoreFolderData();
+                    _vectorStoreManager.Folders[selectedVectorStoreName] = new VectorStoreConfig();
+                    _vectorStoreManager.SaveVectorStoreFolderData();
                 }
             }
         }
@@ -97,7 +97,7 @@ namespace oaiUI
         private async void LoadVectorStores()
         {
             // Load vector store folder data first
-            LoadVectorStoreFolderData();
+            _vectorStoreManager.LoadVectorStoreFolderData();
 
             // Try to load vector stores from OpenAI if the API key is available
             try
@@ -175,16 +175,16 @@ namespace oaiUI
                         // Save the selected folder for the current vector store
                         if (!string.IsNullOrEmpty(vectorStoreName))
                         {
-                            if (!_vectorStoreFolders.ContainsKey(vectorStoreName))
+                            if (!_vectorStoreManager.Folders.ContainsKey(vectorStoreName))
                             {
-                                _vectorStoreFolders[vectorStoreName] = new VectorStoreConfig
+                                _vectorStoreManager.Folders[vectorStoreName] = new VectorStoreConfig
                                 {
                                     ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles),
                                     ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
                                 };
                             }
-                            _vectorStoreFolders[vectorStoreName].FolderPaths.Add(selectedPath);
-                            SaveVectorStoreFolderData();
+                            _vectorStoreManager.Folders[vectorStoreName].FolderPaths.Add(selectedPath);
+                            _vectorStoreManager.SaveVectorStoreFolderData();
                         }
                     }
                 }
@@ -233,7 +233,7 @@ namespace oaiUI
 
                 try
                 {
-                    string? vectorStoreId = await RecreateVectorStore(vectorStoreName);
+                    string? vectorStoreId = await _vectorStoreManager.RecreateVectorStore(vectorStoreName);
 
                     // Add new vector store name to the combo box if it's not already there
                     if (!string.IsNullOrEmpty(newVectorStoreName) && !comboBoxVectorStores.Items.Contains(newVectorStoreName))
@@ -248,7 +248,7 @@ namespace oaiUI
                     txtNewVectorStoreName.Text = "";
 
                     // Upload files from all selected folders
-                    await UploadFiles(vectorStoreId, _vectorStoreConfig);
+                    await _vectorStoreManager.UploadFiles(vectorStoreId, _vectorStoreConfig, selectedFolders);
                 }
                 catch (Exception ex)
                 {
@@ -311,9 +311,9 @@ namespace oaiUI
         private VectorStoreConfig? GetVectorStore(string? selectedVectorStore)
         {
             VectorStoreConfig? vectorStoreConfig = null;
-            if (!string.IsNullOrEmpty(selectedVectorStore) && _vectorStoreFolders.ContainsKey(selectedVectorStore))
+            if (!string.IsNullOrEmpty(selectedVectorStore) && _vectorStoreManager.Folders.ContainsKey(selectedVectorStore))
             {
-                vectorStoreConfig = _vectorStoreFolders[selectedVectorStore];
+                vectorStoreConfig = _vectorStoreManager.Folders[selectedVectorStore];
             }
 
             if (vectorStoreConfig == null)
@@ -515,7 +515,7 @@ namespace oaiUI
                 if (existingStores.ContainsKey(selectedVectorStore))
                 {
                     var vectorStoreId = existingStores.First(s => s.Key == selectedVectorStore).Key;
-                    await DeleteAllVSFiles(api, vectorStoreId);
+                    await _vectorStoreManager.DeleteAllVSFiles(api, vectorStoreId);
                     var fileIds = await _vectorStoreManager.ListAllFiles(api, vectorStoreId);
                     toolStripStatusLabelInfo.Text = $"Files deleted successfully. Remaining:{fileIds.Count}";
                     MessageBox.Show($"Files deleted successfully. Remaining:{fileIds.Count}");
@@ -555,9 +555,9 @@ namespace oaiUI
                 selectedFolders.Clear();
                 listBoxSelectedFolders.Items.Clear();
 
-                if (_vectorStoreFolders.ContainsKey(vectorStoreName))
+                if (_vectorStoreManager.Folders.ContainsKey(vectorStoreName))
                 {
-                    selectedFolders.AddRange(_vectorStoreFolders[vectorStoreName].FolderPaths);
+                    selectedFolders.AddRange(_vectorStoreManager.Folders[vectorStoreName].FolderPaths);
                     UpdateSelectedFoldersUI();
                 }
             }
