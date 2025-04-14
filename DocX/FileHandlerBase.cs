@@ -10,9 +10,9 @@ namespace DocXHandler
     {
         protected static NLogS.CtxLogger log = new();
 
-        protected bool IsFolderExcluded(string name, List<string> excludedList)
+        protected bool IsFolderExcluded(string name, VectorStoreConfig vectorStoreConfig)
         {
-            return excludedList.Contains(name);
+            return vectorStoreConfig.IsFolderExcluded(name);
         }
 
         public virtual void ExportSelectedFolders(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
@@ -31,17 +31,9 @@ namespace DocXHandler
             }
         }
 
-        protected bool IsFileExcluded(string fileName, List<string> excludedFiles)
+        protected bool IsFileExcluded(string fileName, VectorStoreConfig vectorStoreConfig)
         {
-            foreach (var pattern in excludedFiles)
-            {
-                string regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*") + "$";
-                if (Regex.IsMatch(fileName, regexPattern, RegexOptions.IgnoreCase))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return vectorStoreConfig.IsFileExcluded(fileName);
         }
 
         protected bool IsFileValid(string file, string outputPath)
@@ -80,7 +72,7 @@ namespace DocXHandler
             Action<T> writeFolderEnd = null)
         {
             string folderName = new DirectoryInfo(folderPath).Name;
-            if (IsFolderExcluded(folderName, vectorStoreConfig.ExcludedFolders))
+            if (IsFolderExcluded(folderName, vectorStoreConfig))
             {
                 log.Trace($"Skipping excluded folder: {folderPath}");
                 return;

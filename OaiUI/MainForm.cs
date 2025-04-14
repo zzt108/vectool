@@ -66,10 +66,8 @@ namespace oaiUI
         {
             InitializeComponent();
 
-            _vectorStoreConfig = new VectorStoreConfig();
+            _vectorStoreConfig = VectorStoreConfig.FromAppConfig();
 
-            LoadExcludedFilesConfig();
-            LoadExcludedFoldersConfig(); // Add this line
             _vectorStoreFoldersFilePath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
             _vectorStoreManager = new VectorStoreManager();
             LoadVectorStores();
@@ -79,24 +77,6 @@ namespace oaiUI
 
             comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged;
             Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
-        }
-
-        private void LoadExcludedFoldersConfig()
-        {
-            string? excludedFoldersConfig = ConfigurationManager.AppSettings["excludedFolders"];
-            if (!string.IsNullOrEmpty(excludedFoldersConfig))
-            {
-                _vectorStoreConfig.ExcludedFolders = excludedFoldersConfig.Split(',').Select(f => f.Trim()).ToList();
-            }
-        }
-
-        private void LoadExcludedFilesConfig()
-        {
-            string? excludedFilesConfig = ConfigurationManager.AppSettings["excludedFiles"];
-            if (!string.IsNullOrEmpty(excludedFilesConfig))
-            {
-                _vectorStoreConfig.ExcludedFiles = excludedFilesConfig.Split(',').Select(f => f.Trim()).ToList();
-            }
         }
 
         private void btnClearFolders_Click(object sender, EventArgs e)

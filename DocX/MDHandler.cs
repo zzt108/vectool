@@ -11,7 +11,7 @@ namespace DocXHandler
         protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
             string fileName = Path.GetFileName(file);
-            if (IsFileExcluded(fileName, vectorStoreConfig.ExcludedFiles) || !IsFileValid(file, null))
+            if (IsFileExcluded(fileName, vectorStoreConfig) || !IsFileValid(file, null))
             {
                 log.Trace($"Skipping excluded file: {file}");
                 return;

@@ -31,7 +31,7 @@ namespace DocXHandler
         private void ProcessFile(string file, Body body, VectorStoreConfig vectorStoreConfig)
         {
             string fileName = Path.GetFileName(file);
-            if (IsFileExcluded(fileName, vectorStoreConfig.ExcludedFiles) || !IsFileValid(file, null))
+            if (IsFileExcluded(fileName, vectorStoreConfig) || !IsFileValid(file, null))
             {
                 log.Trace($"Skipping excluded file: {file}");
                 return;

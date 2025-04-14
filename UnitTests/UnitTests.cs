@@ -87,7 +87,7 @@ namespace UnitTests
         public static bool TestIsFileExcluded(string fileName, List<string> excludedFiles)
         {
             var handler = new TestFileHandler();
-            return handler.IsFileExcluded(fileName, excludedFiles);
+            return handler.IsFileExcluded(fileName, new VectorStoreConfig { ExcludedFiles = excludedFiles });
         }
     }
 
