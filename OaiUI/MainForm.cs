@@ -444,14 +444,16 @@ namespace oaiUI
                 saveFileDialog.Filter = "Markdown Document|*.md";
                 saveFileDialog.Title = "Save Git Changes File";
                 saveFileDialog.DefaultExt = "md";
+                const string gitChangesFileNameSuffix = "-git-changes";
+                saveFileDialog.Filter = "Markdown Document|*.md";
 
                 if (txtNewVectorStoreName.Text.Trim().Length > 0)
                 {
-                    saveFileDialog.FileName = $"{txtNewVectorStoreName.Text.Trim()}_git_changes";
+                    saveFileDialog.FileName = $"{txtNewVectorStoreName.Text.Trim()}{gitChangesFileNameSuffix}";
                 }
                 else
                 {
-                    saveFileDialog.FileName = $"{comboBoxVectorStores.SelectedItem?.ToString()}_git_changes";
+                    saveFileDialog.FileName = $"{comboBoxVectorStores.SelectedItem?.ToString()}{gitChangesFileNameSuffix}";
                 }
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
