@@ -185,7 +185,7 @@ namespace oaiVectorStore
             }
         }
 
-        public async Task UploadFiles(string vectorStoreId, VectorStoreConfig vectorStoreConfig, List<string> selectedFolders)
+        public async Task UploadFiles(string vectorStoreId, List<string> selectedFolders)
         {
             var totalFolders = selectedFolders.Sum(folder =>
                 Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());

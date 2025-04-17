@@ -62,7 +62,7 @@ namespace oaiUI
         // Store the mapping between vector store and selected folders
         // private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
         // private string _vectorStoreFoldersFilePath; // Path to save the mapping
-        private VectorStoreConfig _vectorStoreConfig;
+        // private VectorStoreConfig _vectorStoreConfig;
 
         public MainForm()
         {
@@ -182,8 +182,8 @@ namespace oaiUI
                             {
                                 _vectorStoreManager.Folders[vectorStoreName] = new VectorStoreConfig
                                 {
-                                    ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles),
-                                    ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
+                                    ExcludedFiles = new List<string>(_vectorStoreManager.Config.ExcludedFiles),
+                                    ExcludedFolders = new List<string>(_vectorStoreManager.Config.ExcludedFolders)
                                 };
                             }
                             _vectorStoreManager.Folders[vectorStoreName].FolderPaths.Add(selectedPath);
@@ -251,7 +251,7 @@ namespace oaiUI
                     txtNewVectorStoreName.Text = "";
 
                     // Upload files from all selected folders
-                    await _vectorStoreManager.UploadFiles(vectorStoreId, _vectorStoreConfig, selectedFolders);
+                    await _vectorStoreManager.UploadFiles(vectorStoreId, selectedFolders);
                 }
                 catch (Exception ex)
                 {

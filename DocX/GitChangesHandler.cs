@@ -67,7 +67,8 @@ namespace DocXHandler
 
         private bool IsGitRepository(string folderPath)
         {
-            return Directory.Exists(Path.Combine(folderPath, ".git"));
+            string gitPath = Path.Combine(folderPath, ".git");
+            return Directory.Exists(gitPath) || File.Exists(gitPath);
         }
 
         private void FindGitRepositoriesRecursively(string folderPath, StringBuilder allChanges)
@@ -122,7 +123,25 @@ namespace DocXHandler
 
         private string GetGitDiff(string repositoryPath)
         {
-            return ExecuteGitCommand(repositoryPath, "diff");
+            var unstaged = ExecuteGitCommand(repositoryPath, "diff");
+            var staged = ExecuteGitCommand(repositoryPath, "diff --cached");
+
+            var sb = new StringBuilder();
+            if (!string.IsNullOrWhiteSpace(unstaged))
+            {
+                sb.AppendLine("### Unstaged Changes");
+                sb.AppendLine(unstaged);
+            }
+            if (!string.IsNullOrWhiteSpace(staged))
+            {
+                sb.AppendLine("### Staged Changes");
+                sb.AppendLine(staged);
+            }
+            if (sb.Length == 0)
+            {
+                sb.AppendLine("No diff changes.");
+            }
+            return sb.ToString();
         }
 
         private string ExecuteGitCommand(string workingDirectory, string arguments)
