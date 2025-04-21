@@ -25,7 +25,7 @@ namespace DocXHandlerTests
             outputDocxPath = Path.Combine(testFolderPath, "output.docx");
             
             // Initialize DocXHandler instance
-            docXHandler = new DocXHandler.DocXHandler();
+            docXHandler = new DocXHandler.DocXHandler(null);
         }
 
         [Test]

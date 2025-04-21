@@ -82,11 +82,11 @@ namespace UnitTests
         }
     }
 
-    public class TestFileHandler : FileHandlerBase
+    public class TestFileHandler(IUserInterface ui) : FileHandlerBase(ui)
     {
         public static bool TestIsFileExcluded(string fileName, List<string> excludedFiles)
         {
-            var handler = new TestFileHandler();
+            var handler = new TestFileHandler(null);
             return handler.IsFileExcluded(fileName, new VectorStoreConfig { ExcludedFiles = excludedFiles });
         }
     }

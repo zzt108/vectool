@@ -295,7 +295,7 @@ namespace oaiUI
                     try
                     {
                         btnConvertToDocx.Enabled = false;
-                        var docXHandler = new DocXHandler.DocXHandler();
+                        var docXHandler = new DocXHandler.DocXHandler(_userInterface);
                         docXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -361,7 +361,7 @@ namespace oaiUI
                     try
                     {
                         btnConvertToMd.Enabled = false;
-                        var mdHandler = new DocXHandler.MDHandler();
+                        var mdHandler = new DocXHandler.MDHandler(null);
                         mdHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -414,7 +414,7 @@ namespace oaiUI
                     try
                     {
                         WorkStart("Converting to PDF...");
-                        var pdfHandler = new DocXHandler.PdfHandler();
+                        var pdfHandler = new DocXHandler.PdfHandler(null);
                         pdfHandler.ConvertSelectedFoldersToPdf(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to PDF.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -463,7 +463,7 @@ namespace oaiUI
                         btnGetGitChanges.Enabled = false;
                         WorkStart("Getting Git changes...");
 
-                        var gitChangesHandler = new DocXHandler.GitChangesHandler();
+                        var gitChangesHandler = new DocXHandler.GitChangesHandler(_userInterface);
                         string changes = gitChangesHandler.GetGitChanges(selectedFolders, saveFileDialog.FileName);
 
                         if (string.IsNullOrWhiteSpace(changes))

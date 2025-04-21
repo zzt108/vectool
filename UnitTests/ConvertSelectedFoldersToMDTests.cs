@@ -30,7 +30,7 @@ namespace DocXHandlerTests
             string outputMarkdownPath = Path.Combine(testRootPath, "output.md");
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
-            var mdHandler = new DocXHandler.MDHandler();
+            var mdHandler = new DocXHandler.MDHandler(null);
             mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new DocXHandler.VectorStoreConfig());
             
             File.Exists(outputMarkdownPath).Should().BeTrue();
@@ -60,7 +60,7 @@ namespace DocXHandlerTests
             string outputMarkdownPath = Path.Combine(testRootPath, "output_recursive.md");
             List<string> folderPaths = new List<string> { mainFolder };
 
-            var mdHandler = new DocXHandler.MDHandler();
+            var mdHandler = new DocXHandler.MDHandler(null);
             mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new DocXHandler.VectorStoreConfig());
             
             File.Exists(outputMarkdownPath).Should().BeTrue();

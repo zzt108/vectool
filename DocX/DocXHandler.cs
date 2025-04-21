@@ -7,7 +7,8 @@ using NLogS = NLogShared;
 
 namespace DocXHandler
 {
-    public class DocXHandler : FileHandlerBase
+    
+    public class DocXHandler(IUserInterface ui) : FileHandlerBase(ui)
     {
         public void ConvertFilesToDocx(string folderPath, string outputPath, VectorStoreConfig vectorStoreConfig)
         {

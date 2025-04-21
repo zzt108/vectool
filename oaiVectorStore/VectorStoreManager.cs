@@ -223,7 +223,7 @@ namespace oaiVectorStore
 
                     try
                     {
-                        var docXHandler = new DocXHandler.DocXHandler();
+                        var docXHandler = new DocXHandler.DocXHandler(_ui);
                         docXHandler.ConvertFilesToDocx(folder, outputDocxPath, _vectorStoreConfig);
                         string[] files = Directory.GetFiles(folder);
 

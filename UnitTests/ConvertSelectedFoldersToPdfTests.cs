@@ -31,7 +31,7 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath2, ContentOfFile2);
 
             List<string> folderPaths = new List<string> { folder1, folder2 };
-            var pdfHandler = new DocXHandler.PdfHandler();
+            var pdfHandler = new DocXHandler.PdfHandler(null);
 
             // Act
             pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
@@ -51,7 +51,7 @@ namespace DocXHandlerTests
             Directory.CreateDirectory(emptyFolder);
 
             List<string> folderPaths = new List<string> { emptyFolder };
-            var pdfHandler = new DocXHandler.PdfHandler();
+            var pdfHandler = new DocXHandler.PdfHandler(null);
 
             pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
 
@@ -69,7 +69,7 @@ namespace DocXHandlerTests
             File.WriteAllBytes(nonTextFilePath, new byte[] { 0, 1, 2 }); // Create a dummy image file
 
             List<string> folderPaths = new List<string> { folder };
-            var pdfHandler = new DocXHandler.PdfHandler();
+            var pdfHandler = new DocXHandler.PdfHandler(null);
 
             pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
 
@@ -95,7 +95,7 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath3, ContentOfMarkdownFile1);
 
             List<string> folderPaths = new List<string> { mainFolder };
-            var pdfHandler = new DocXHandler.PdfHandler();
+            var pdfHandler = new DocXHandler.PdfHandler(null);
 
             pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
 
@@ -113,7 +113,7 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath, "Hello, World!");
 
             List<string> folderPaths = new List<string> { folder };
-            var pdfHandler = new DocXHandler.PdfHandler();
+            var pdfHandler = new DocXHandler.PdfHandler(null);
 
             // Act
             pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
@@ -133,7 +133,7 @@ namespace DocXHandlerTests
             File.WriteAllText(emptyFilePath, ""); // Create an empty file
 
             List<string> folderPaths = new List<string> { folder };
-            var pdfHandler = new DocXHandler.PdfHandler();
+            var pdfHandler = new DocXHandler.PdfHandler(null);
             // Act
             pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
 

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace DocXHandler
 {
-    public class MDHandler : FileHandlerBase
+    public class MDHandler(IUserInterface? ui) : FileHandlerBase(ui)
     {
 
         protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)

@@ -5,7 +5,7 @@ using QuestPDF.Infrastructure;
 
 namespace DocXHandler
 {
-    public class PdfHandler : FileHandlerBase
+    public class PdfHandler(IUserInterface? ui) : FileHandlerBase(ui)
     {
         static PdfHandler()
         {

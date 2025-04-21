@@ -8,7 +8,7 @@ using NLogS = NLogShared;
 
 namespace DocXHandler
 {
-    public class GitChangesHandler : FileHandlerBase
+    public class GitChangesHandler(IUserInterface ui) : FileHandlerBase(ui)
     {
         private static NLogS.CtxLogger _log = new();
         private string _aiPrompt;

@@ -9,6 +9,12 @@ namespace DocXHandler
     public abstract class FileHandlerBase
     {
         protected static NLogS.CtxLogger log = new();
+        protected readonly IUserInterface? _ui;
+
+        protected FileHandlerBase(IUserInterface? ui)
+        {
+            _ui = ui;
+        }
 
         protected bool IsFolderExcluded(string name, VectorStoreConfig vectorStoreConfig)
         {
