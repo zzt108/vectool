@@ -69,6 +69,7 @@ namespace DocXHandler
             try
             {
                 _ui?.WorkStart("To Docx", folderPaths);
+                int work = 0;
                 using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
                 {
                     MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
@@ -78,6 +79,10 @@ namespace DocXHandler
 
                     foreach (var folderPath in folderPaths)
                     {
+                        // Update the UI status for the current folder
+                        // _ui?.UpdateStatus($"Processing folder: {folderPath}");
+
+                        _ui?.UpdateProgress(work++);
                         ProcessFolder(
                             folderPath,
                             body,

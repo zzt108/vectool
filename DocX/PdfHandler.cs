@@ -19,6 +19,7 @@ namespace DocXHandler
             try
             {
                 _ui?.WorkStart("To Pdf", folderPaths);
+                int work = 0;
                 var d = Document.Create(document =>
                 {
                     document.Page(page =>
@@ -30,6 +31,7 @@ namespace DocXHandler
 
                             foreach (var folderPath in folderPaths)
                             {
+                                _ui?.UpdateProgress(work++);
                                 ProcessFolder(
                                     folderPath,
                                     column,

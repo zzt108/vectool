@@ -13,10 +13,12 @@ namespace DocXHandler
             try
             {
                 _ui?.WorkStart("Exporting to MD", folderPaths);
+                var work = 0;
                 using (StreamWriter writer = new StreamWriter(outputPath))
                 {
                     foreach (string folderPath in folderPaths)
                     {
+                        _ui?.UpdateProgress(work++);
                         ProcessFolder(
                             folderPath,
                             writer,
