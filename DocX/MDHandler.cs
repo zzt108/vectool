@@ -8,6 +8,30 @@ namespace DocXHandler
     public class MDHandler(IUserInterface? ui) : FileHandlerBase(ui)
     {
 
+        public void ExportSelectedFolders(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
+        {
+            try
+            {
+                _ui?.WorkStart("Exporting to MD", folderPaths);
+                using (StreamWriter writer = new StreamWriter(outputPath))
+                {
+                    foreach (string folderPath in folderPaths)
+                    {
+                        ProcessFolder(
+                            folderPath,
+                            writer,
+                            vectorStoreConfig,
+                            ProcessFile,
+                            WriteFolderName);
+                    }
+                }
+            }
+            finally
+            {
+                _ui?.WorkFinish();
+            }
+        }
+
         protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
             string fileName = Path.GetFileName(file);

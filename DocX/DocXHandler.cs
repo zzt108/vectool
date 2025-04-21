@@ -66,23 +66,30 @@ namespace DocXHandler
 
         public void ConvertSelectedFoldersToDocx(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
         {
-            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
+            try
             {
-                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
-                mainPart.Document = new Document();
-                Body body = new Body();
-                mainPart.Document.Append(body);
-
-                foreach (var folderPath in folderPaths)
+                _ui?.WorkStart("To Docx", folderPaths);
+                using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
                 {
-                    ProcessFolder(
-                        folderPath,
-                        body,
-                        vectorStoreConfig,
-                        ProcessFile,
-                        WriteFolderName,
-                        WriteFolderEnd);
+                    MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+                    mainPart.Document = new Document();
+                    Body body = new Body();
+                    mainPart.Document.Append(body);
+
+                    foreach (var folderPath in folderPaths)
+                    {
+                        ProcessFolder(
+                            folderPath,
+                            body,
+                            vectorStoreConfig,
+                            ProcessFile,
+                            WriteFolderName,
+                            WriteFolderEnd);
+                    }
                 }
+            }
+            finally {
+                _ui?.WorkFinish();
             }
         }
     }

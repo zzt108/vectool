@@ -158,47 +158,54 @@ namespace oaiVectorStore
 
         public async Task DeleteAllVSFiles(OpenAIClient api, string vectorStoreId)
         {
-            var fileIds = await ListAllFiles(api, vectorStoreId); // List file IDs to delete
-            while (fileIds.Count > 0)
+            try
             {
-                var totalFiles = fileIds.Count;
-
-                int processedFiles = 0;
-                _ui.UpdateProgress(processedFiles, totalFiles);
-
-                using var log = new CtxLogger();
-                log.ConfigureXml("Config/LogConfig.xml");
-                var p = log.Ctx.Set(new Props()
-                    .Add("vectorStoreId", vectorStoreId)
-                    .Add("totalFiles", totalFiles)
-                );
-
-                log.Info($"Deleting from VS {vectorStoreId}");
-                foreach (var fileId in fileIds)
+                var fileIds = await ListAllFiles(api, vectorStoreId); // List file IDs to delete
+                _ui.WorkStart($"Deleting from VS {vectorStoreId}", fileIds);
+                while (fileIds.Count > 0)
                 {
-                    log.Info($"Deleting file {fileId}");
-                    await DeleteFileFromAllStoreAsync(api, vectorStoreId, fileId);
-                    processedFiles++;
-                    _ui.UpdateProgress(processedFiles, totalFiles);
+                    _ui.TotalWork = fileIds.Count;
+
+                    int processedFiles = 0;
+                    _ui.UpdateProgress(processedFiles);
+
+                    using var log = new CtxLogger();
+                    log.ConfigureXml("Config/LogConfig.xml");
+                    var p = log.Ctx.Set(new Props()
+                        .Add("vectorStoreId", vectorStoreId)
+                        .Add("totalFiles", _ui.TotalWork)
+                    );
+
+                    log.Info($"Deleting from VS {vectorStoreId}");
+                    foreach (var fileId in fileIds)
+                    {
+                        log.Info($"Deleting file {fileId}");
+                        await DeleteFileFromAllStoreAsync(api, vectorStoreId, fileId);
+                        processedFiles++;
+                        _ui.UpdateProgress(processedFiles);
+                    }
+                    fileIds = await ListAllFiles(api, vectorStoreId); // List file IDs to delete
                 }
-                fileIds = await ListAllFiles(api, vectorStoreId); // List file IDs to delete
+            }
+            finally
+            {
+                _ui.WorkFinish();
             }
         }
 
         public async Task UploadFiles(string vectorStoreId, List<string> selectedFolders)
         {
-            var totalFolders = selectedFolders.Sum(folder =>
-                Directory.GetDirectories(folder, "*", SearchOption.AllDirectories).Count());
 
             int processedFolders = 0;
-            _ui.UpdateProgress(0, totalFolders);
+            _ui.UpdateProgress(0);
+
 
             using var api = new OpenAIClient();
             using var log = new CtxLogger();
             log.ConfigureXml("Config/LogConfig.xml");
             var p = log.Ctx.Set(new Props()
                 .Add("vectorStoreId", vectorStoreId)
-                .Add("totalFolders", totalFolders)
+                .Add("totalFolders", _ui.TotalWork)
                 .Add("selectedFolders", string.Join(", ", selectedFolders)) // Replacing AsJson with a simple join
             );
 
@@ -208,7 +215,7 @@ namespace oaiVectorStore
                 foreach (var folder in folders)
                 {
                     processedFolders++;
-                    _ui.UpdateProgress(processedFolders, totalFolders);
+                    _ui.UpdateProgress(processedFolders);
                     log.Debug(folder);
 
                     if (folder.Contains("\\.") || folder.Contains("\\obj") || folder.Contains("\\bin") || folder.Contains("\\packages"))
@@ -223,7 +230,7 @@ namespace oaiVectorStore
 
                     try
                     {
-                        var docXHandler = new DocXHandler.DocXHandler(_ui);
+                        var docXHandler = new DocXHandler.DocXHandler(null); // UI not needed, handled outside
                         docXHandler.ConvertFilesToDocx(folder, outputDocxPath, _vectorStoreConfig);
                         string[] files = Directory.GetFiles(folder);
 

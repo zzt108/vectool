@@ -21,22 +21,6 @@ namespace DocXHandler
             return vectorStoreConfig.IsFolderExcluded(name);
         }
 
-        public virtual void ExportSelectedFolders(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
-        {
-            using (StreamWriter writer = new StreamWriter(outputPath))
-            {
-                foreach (string folderPath in folderPaths)
-                {
-                    ProcessFolder(
-                        folderPath,
-                        writer,
-                        vectorStoreConfig,
-                        ProcessFile,
-                        WriteFolderName);
-                }
-            }
-        }
-
         protected bool IsFileExcluded(string fileName, VectorStoreConfig vectorStoreConfig)
         {
             return vectorStoreConfig.IsFileExcluded(fileName);
@@ -69,6 +53,16 @@ namespace DocXHandler
             return content;
         }
 
+        /// <summary>
+        /// Recursively processes a folder and its subfolders while updating UI progress and status.
+        /// </summary>
+        /// <typeparam name="T">The type of context used for writing output (for example, a StreamWriter or a QuestPDF ColumnDescriptor).</typeparam>
+        /// <param name="folderPath">The folder to process.</param>
+        /// <param name="context">A context for the output.</param>
+        /// <param name="vectorStoreConfig">The configuration containing exclusion logic.</param>
+        /// <param name="processFile">A delegate to process individual files.</param>
+        /// <param name="writeFolderName">A delegate to write the folder name to the output.</param>
+        /// <param name="writeFolderEnd">An optional delegate to mark the end of folder processing.</param>
         protected void ProcessFolder<T>(
             string folderPath,
             T context,
@@ -84,6 +78,8 @@ namespace DocXHandler
                 return;
             }
 
+            // Update the UI status for the current folder
+            _ui?.UpdateStatus($"Processing folder: {folderPath}");
             log.Debug($"Processing folder: {folderPath}");
 
             writeFolderName(context, folderName);

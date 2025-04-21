@@ -16,36 +16,45 @@ namespace DocXHandler
 
         public void ConvertSelectedFoldersToPdf(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
         {
-            var d = Document.Create(document =>
+            try
             {
-                document.Page(page =>
+                _ui?.WorkStart("To Pdf", folderPaths);
+                var d = Document.Create(document =>
                 {
-                    page.Margin(20);
-                    page.Content().Column(column =>
+                    document.Page(page =>
                     {
-                        column.Spacing(10);
-
-                        foreach (var folderPath in folderPaths)
+                        page.Margin(20);
+                        page.Content().Column(column =>
                         {
-                            ProcessFolder(
-                                folderPath,
-                                column,
-                                vectorStoreConfig,
-                                ProcessFile,
-                                WriteFolderName,
-                                WriteFolderEnd);
-                        }
+                            column.Spacing(10);
+
+                            foreach (var folderPath in folderPaths)
+                            {
+                                ProcessFolder(
+                                    folderPath,
+                                    column,
+                                    vectorStoreConfig,
+                                    ProcessFile,
+                                    WriteFolderName,
+                                    WriteFolderEnd);
+                            }
+                        });
                     });
-                });
-            })
-                .WithSettings(new DocumentSettings
-                {
-                    PdfA = false,
-                    CompressDocument = true,
-                    ImageCompressionQuality = ImageCompressionQuality.Medium,
-                    ImageRasterDpi = 72
-                });
-            d.GeneratePdf(outputPath);
+                })
+                    .WithSettings(new DocumentSettings
+                    {
+                        PdfA = false,
+                        CompressDocument = true,
+                        ImageCompressionQuality = ImageCompressionQuality.Medium,
+                        ImageRasterDpi = 72
+                    });
+                d.GeneratePdf(outputPath);
+            }
+            finally
+            {
+                _ui?.WorkFinish();
+                log.Debug("PDF conversion completed.");
+            }
         }
 
         private void ProcessFile(string file, ColumnDescriptor column, VectorStoreConfig vectorStoreConfig)

@@ -203,9 +203,9 @@ namespace oaiUI
             }
         }
 
-        void WorkStart(string str)
+        void WorkStart(string str, List<string> selectedFolders)
         {
-            toolStripStatusLabelState.Text = str;
+            _userInterface.WorkStart(str, selectedFolders);
             btnDeleteAllVSFiles.Enabled = false;
             btnUploadFiles.Enabled = false;
             btnUploadNew.Enabled = false;
@@ -213,7 +213,7 @@ namespace oaiUI
 
         void WorkFinish()
         {
-            toolStripStatusLabelState.Text = "Finished " + toolStripStatusLabelState.Text;
+            _userInterface.WorkFinish();
             btnDeleteAllVSFiles.Enabled = true;
             btnUploadFiles.Enabled = true;
             btnUploadNew.Enabled = true;
@@ -230,7 +230,7 @@ namespace oaiUI
                     return;
                 }
 
-                WorkStart("Upload/Replace files");
+                WorkStart("Upload/Replace files", selectedFolders);
                 string newVectorStoreName = txtNewVectorStoreName.Text.Trim();
                 string? vectorStoreName = string.IsNullOrEmpty(newVectorStoreName) ? selectedVectorStore : newVectorStoreName;
 
@@ -294,6 +294,8 @@ namespace oaiUI
                 {
                     try
                     {
+                        _userInterface.WorkStart("Converting to DOCX", selectedFolders);
+
                         btnConvertToDocx.Enabled = false;
                         var docXHandler = new DocXHandler.DocXHandler(_userInterface);
                         docXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
@@ -305,6 +307,7 @@ namespace oaiUI
                     }
                     finally
                     {
+                        _userInterface.WorkFinish();
                         btnConvertToDocx.Enabled = true;
                     }
                 }
@@ -361,7 +364,7 @@ namespace oaiUI
                     try
                     {
                         btnConvertToMd.Enabled = false;
-                        var mdHandler = new DocXHandler.MDHandler(null);
+                        var mdHandler = new DocXHandler.MDHandler(_userInterface);
                         mdHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -413,7 +416,7 @@ namespace oaiUI
                     btnConvertToPdf.Enabled = false;
                     try
                     {
-                        WorkStart("Converting to PDF...");
+                        WorkStart("Converting to PDF...", selectedFolders);
                         var pdfHandler = new DocXHandler.PdfHandler(null);
                         pdfHandler.ConvertSelectedFoldersToPdf(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to PDF.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -461,7 +464,7 @@ namespace oaiUI
                     try
                     {
                         btnGetGitChanges.Enabled = false;
-                        WorkStart("Getting Git changes...");
+                        WorkStart("Getting Git changes...", selectedFolders);
 
                         var gitChangesHandler = new DocXHandler.GitChangesHandler(_userInterface);
                         string changes = gitChangesHandler.GetGitChanges(selectedFolders, saveFileDialog.FileName);
@@ -515,7 +518,7 @@ namespace oaiUI
             }
             try
             {
-                WorkStart($"Delete VectorStore files from {selectedVectorStore}");
+                WorkStart($"Delete VectorStore files from {selectedVectorStore}", selectedFolders);
                 var existingStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
                 if (existingStores.ContainsKey(selectedVectorStore))
                 {
