@@ -355,6 +355,21 @@ namespace oaiUI
             btnGetGitChanges.Text = "Get Git Changes";
             btnGetGitChanges.UseVisualStyleBackColor = true;
             btnGetGitChanges.Click += btnGetGitChanges_Click;
+
+
+            // In InitializeComponent method:
+            btnFileSizeSummary = new Button();
+            btnFileSizeSummary.Location = new Point(106, 48);
+            btnFileSizeSummary.Name = "btnFileSizeSummary";
+            btnFileSizeSummary.Size = new Size(97, 28);
+            btnFileSizeSummary.TabIndex = 14;
+            btnFileSizeSummary.Text = "File Size Report";
+            btnFileSizeSummary.UseVisualStyleBackColor = true;
+            btnFileSizeSummary.Click += btnFileSizeSummary_Click;
+
+            // Add to panel2.Controls
+            panel2.Controls.Add(btnFileSizeSummary);
+
             // 
             // tabPage2
             // 

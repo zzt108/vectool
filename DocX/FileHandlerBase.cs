@@ -26,20 +26,37 @@ namespace DocXHandler
             return vectorStoreConfig.IsFileExcluded(fileName);
         }
 
-        protected bool IsFileValid(string file, string outputPath)
+        protected bool IsFileValid(string filePath, string? outputPath)
         {
-            if (file == outputPath)
+            // Skip output file itself
+            if (outputPath != null && filePath == outputPath)
             {
                 return false;
             }
 
-            string extension = Path.GetExtension(file);
-            if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream" || MimeTypeProvider.IsBinary(extension))
+            try
+            {
+                var fileInfo = new FileInfo(filePath);
+
+                // Skip empty files
+                if (fileInfo.Length == 0)
+                {
+                    return false;
+                }
+
+                // Skip binary files or check MIME type
+                string extension = Path.GetExtension(filePath);
+                if (MimeTypeProvider.IsBinary(extension))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+            catch
             {
                 return false;
             }
-
-            return new FileInfo(file).Length > 0;
         }
 
         protected string GetFileContent(string file)

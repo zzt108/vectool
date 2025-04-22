@@ -19,6 +19,7 @@ namespace oaiUI
         private ListBox listBoxSelectedFolders;
         private Button btnUploadFiles;
         private Button btnDeleteVectorStoreAssoc = null!; // Declaration for the new button
+        private Button btnFileSizeSummary;
 
         private void btnDeleteVectorStoreAssoc_Click(object sender, EventArgs e)
         {
@@ -542,6 +543,57 @@ namespace oaiUI
         private void btnUploadNew_Click(object sender, EventArgs e)
         {
             // Implementation for uploading new files (if needed)
+        }
+
+        private void btnFileSizeSummary_Click(object sender, EventArgs e)
+        {
+            if (selectedFolders.Count == 0)
+            {
+                MessageBox.Show("Please select at least one folder first.", "No Folders Selected",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
+            VectorStoreConfig? vectorStoreConfig = GetVectorStore(selectedVectorStore);
+            if (vectorStoreConfig == null)
+            {
+                return;
+            }
+
+            using (var saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Markdown File|*.md";
+                saveFileDialog.Title = "Save File Size Summary";
+
+                string fileName = $"{comboBoxVectorStores.SelectedItem}_size_summary";
+
+                saveFileDialog.FileName = fileName;
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        btnFileSizeSummary.Enabled = false;
+                        _userInterface.WorkStart("Generating file size summary...", selectedFolders);
+                        var sizeHandler = new FileSizeSummaryHandler(_userInterface);
+                        sizeHandler.GenerateFileSizeSummary(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
+
+                        MessageBox.Show("File size summary generated successfully.",
+                            "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error generating file size summary: {ex.Message}",
+                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        _userInterface.WorkFinish();
+                        btnFileSizeSummary.Enabled = true;
+                    }
+                }
+            }
         }
 
         private void comboBoxVectorStores_SelectedIndexChanged(object? sender, EventArgs e)
