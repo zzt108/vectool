@@ -55,7 +55,7 @@ namespace DocXHandler
             finally
             {
                 _ui?.WorkFinish();
-                log.Debug("PDF conversion completed.");
+                _log.Debug("PDF conversion completed.");
             }
         }
 
@@ -66,14 +66,14 @@ namespace DocXHandler
                 string fileName = Path.GetFileName(file);
                 if (IsFileExcluded(fileName, vectorStoreConfig) || !IsFileValid(file, null))
                 {
-                    log.Trace($"Skipping excluded file: {file}");
+                    _log.Trace($"Skipping excluded file: {file}");
                     return;
                 }
 
                 string content = GetFileContent(file);
                 if (string.IsNullOrEmpty(content))
                 {
-                    log.Debug($"Empty content for file: {file}");
+                    _log.Debug($"Empty content for file: {file}");
                     return;
                 }
 
@@ -99,7 +99,7 @@ namespace DocXHandler
             }
             catch (Exception ex)
             {
-                log.Debug($"Error processing file {file}: {ex.Message}");
+                _log.Debug($"Error processing file {file}: {ex.Message}");
                 // Continue processing other files
             }
         }

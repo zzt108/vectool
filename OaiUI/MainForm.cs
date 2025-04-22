@@ -59,6 +59,7 @@ namespace oaiUI
             }
         }
         private int processedFolders;
+        private CtxLogger _log = new CtxLogger();
 
         // Store the mapping between vector store and selected folders
         // private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
@@ -69,8 +70,7 @@ namespace oaiUI
         {
             InitializeComponent();
 
-            using var log = new CtxLogger();
-            log.ConfigureXml("Config/LogConfig.xml");
+            _log.ConfigureXml("Config/LogConfig.xml");
 
             _userInterface = new WinFormsUserInterface(toolStripStatusLabelInfo, progressBar1);
 
@@ -302,10 +302,11 @@ namespace oaiUI
                         docXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Error converting folders to DOCX: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    //catch (Exception ex)
+                    //{
+                    //    _log.Error(ex, "Error converting folders to DOCX");
+                    //    MessageBox.Show($"Error converting folders to DOCX: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //}
                     finally
                     {
                         _userInterface.WorkFinish();

@@ -193,7 +193,7 @@ namespace DocXHandler
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Error searching for Git repositories in {folderPath}");
+                FileHandlerBase._log.Error(ex, $"Error searching for Git repositories in {folderPath}");
             }
         }
 

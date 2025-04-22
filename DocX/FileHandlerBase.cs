@@ -8,7 +8,7 @@ namespace DocXHandler
 {
     public abstract class FileHandlerBase
     {
-        protected static NLogS.CtxLogger log = new();
+        protected static NLogS.CtxLogger _log = new();
         protected readonly IUserInterface? _ui;
 
         protected FileHandlerBase(IUserInterface? ui)
@@ -91,20 +91,28 @@ namespace DocXHandler
             string folderName = new DirectoryInfo(folderPath).Name;
             if (IsFolderExcluded(folderName, vectorStoreConfig))
             {
-                log.Trace($"Skipping excluded folder: {folderPath}");
+                _log.Trace($"Skipping excluded folder: {folderPath}");
                 return;
             }
 
             // Update the UI status for the current folder
             _ui?.UpdateStatus($"Processing folder: {folderPath}");
-            log.Debug($"Processing folder: {folderPath}");
+            _log.Debug($"Processing folder: {folderPath}");
 
             writeFolderName(context, folderName);
 
             string[] files = Directory.GetFiles(folderPath);
             foreach (string file in files)
             {
+                try
+                {
                 processFile(file, context, vectorStoreConfig);
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, $"Error processing file: {file}");
+                    throw;
+                }
             }
 
             string[] subfolders = Directory.GetDirectories(folderPath);

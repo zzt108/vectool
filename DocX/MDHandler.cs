@@ -39,7 +39,7 @@ namespace DocXHandler
             string fileName = Path.GetFileName(file);
             if (IsFileExcluded(fileName, vectorStoreConfig) || !IsFileValid(file, null))
             {
-                log.Trace($"Skipping excluded file: {file}");
+                _log.Trace($"Skipping excluded file: {file}");
                 return;
             }
 
