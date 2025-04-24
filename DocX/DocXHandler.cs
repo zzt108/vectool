@@ -3,41 +3,6 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace DocXHandler
 {
-    public interface IDocumentContentValidator
-    {
-        bool IsValid(string content);
-        IEnumerable<char> FindInvalidCharacters(string content);
-    }
-
-    public class OpenXmlContentValidator : IDocumentContentValidator
-    {
-        private static readonly char[] NonPrintableCharacters =
-            Enumerable.Range(0, 9)             // ASCII 0-8
-            .Concat(Enumerable.Range(11, 2))   // ASCII 11-12
-            .Concat(Enumerable.Range(14, 18))  // ASCII 14-31
-            .Select(i => (char)i)
-            .ToArray();
-
-        public bool IsValid(string content)
-        {
-            if (content == null)
-                return true;
-
-            return !NonPrintableCharacters.Any(content.Contains);
-        }
-
-        public IEnumerable<char> FindInvalidCharacters(string content)
-        {
-            if (content == null)
-                return Enumerable.Empty<char>();
-
-            return NonPrintableCharacters
-                .Where(content.Contains)
-                .ToList();
-        }
-    }
-
-
     public class DocXHandler(IUserInterface ui) : FileHandlerBase(ui)
     {
         public void ConvertFilesToDocx(string folderPath, string outputPath, VectorStoreConfig vectorStoreConfig)
@@ -70,18 +35,13 @@ namespace DocXHandler
 
             try
             {
-                string content = GetFileContent(file);
-                //if (content.Contains('\0'))
-                //{
-                //    var ex =  new InvalidDataException($"File contains character #0: {file}. This is not allowed in DocX.");
-                //    _log.Error(ex, $"File contains character #0: {file}. This is not allowed in DocX."); 
-                //}
+                string enhancedContent = GetEnhancedFileContent(file);
 
                 var validator = new OpenXmlContentValidator();
 
-                if (!validator.IsValid(content))
+                if (!validator.IsValid(enhancedContent))
                 {
-                    var violations = validator.FindInvalidCharacters(content);
+                    var violations = validator.FindInvalidCharacters(enhancedContent);
                     var invalidChars = string.Join(", ", violations.Select(c => $"'{((short)c):X}'"));
                     var ex = new InvalidDataException($"{file} contains invalid characters: {invalidChars}. These are not allowed in DocX.");
                     _log.Error(ex, $"File contains invalid characters: {file}. These are not allowed in DocX.");
@@ -92,13 +52,19 @@ namespace DocXHandler
                 DateTime lastModified = File.GetLastWriteTime(file);
 
                 ParagraphProperties fileParagraphProperties = new ParagraphProperties(new ParagraphStyleId() { Val = "Heading 2" });
-                Paragraph fileParagraph = new Paragraph(fileParagraphProperties, new Run(new Text($"<File name = {relativePath}> <Time: {lastModified}>")));
+                Paragraph fileParagraph = new Paragraph(fileParagraphProperties,
+                    new Run(new Text($"<FileProps path=\"{relativePath}\" last_modified=\"{lastModified}\">")));
                 body.Append(fileParagraph);
 
-                Paragraph para = new Paragraph(new Run(new Text(content)));
-                body.Append(para);
+                // Paragraph para = new Paragraph(new Run(new Text(content)));
+                // body.Append(para);
+                foreach (var line in enhancedContent.Split(Environment.NewLine))
+                {
+                    Paragraph para = new Paragraph(new Run(new Text(line)));
+                    body.Append(para);
+                }
 
-                body.Append(new Paragraph(new Run(new Text($"</File>"))));
+                body.Append(new Paragraph(new Run(new Text($"</FileProps>"))));
             }
             catch (Exception ex)
             {
@@ -132,6 +98,15 @@ namespace DocXHandler
                         mainPart.Document = new Document();
                         Body body = new Body();
                         mainPart.Document.Append(body);
+
+                        // Add AI-optimized context at the beginning
+                        AddAIOptimizedContext(folderPaths, body, (bodyContext, content) => {
+                            foreach (var line in content.Split(Environment.NewLine))
+                            {
+                                Paragraph para = new Paragraph(new Run(new Text(line)));
+                                bodyContext.Append(para);
+                            }
+                        });
 
                         foreach (var folderPath in folderPaths)
                         {
