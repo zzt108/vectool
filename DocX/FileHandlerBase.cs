@@ -149,35 +149,38 @@ namespace DocXHandler
             writeContent(context, projectContext);
         }
 
+        // DocX/FileHandlerBase.cs
         /// <summary>
-        /// Generates project context information for AI to better understand the code
+        /// Generates project context information for Al to better understand the code
         /// </summary>
         protected string GenerateProjectContext(List<string> folderPaths)
         {
             var projectInfo = new StringBuilder();
-
             // Basic project information
             projectInfo.AppendLine("<project_summary>");
-            projectInfo.AppendLine($"  <timestamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timestamp>");
-            projectInfo.AppendLine($"  <folder_count>{folderPaths.Count}</folder_count>");
+            projectInfo.AppendLine($" <timestamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timestamp>");
+            projectInfo.AppendLine($" <folder_count>{folderPaths.Count}</folder_count>");
 
             // Try to detect project type and language
             var projectLanguage = DetectProjectLanguage(folderPaths);
             if (!string.IsNullOrEmpty(projectLanguage))
             {
-                projectInfo.AppendLine($"  <primary_language>{projectLanguage}</primary_language>");
+                projectInfo.AppendLine($" <primary_language>{projectLanguage}</primary_language>");
             }
 
             // Include project structure overview
-            projectInfo.AppendLine("  <directory_structure>");
+            projectInfo.AppendLine(" <directory_structure>");
+
+            // Create a properly configured VectorStoreConfig with excluded folders from app.config
+            var vectorStoreConfig = VectorStoreConfig.FromAppConfig();
+
             foreach (var folderPath in folderPaths)
             {
-                GenerateDirectoryStructure(folderPath, projectInfo, "    ");
+                GenerateDirectoryStructure(folderPath, projectInfo, " ", vectorStoreConfig);
             }
-            projectInfo.AppendLine("  </directory_structure>");
 
+            projectInfo.AppendLine(" </directory_structure>");
             projectInfo.AppendLine("</project_summary>");
-
             return projectInfo.ToString();
         }
 
@@ -243,35 +246,33 @@ namespace DocXHandler
         /// <summary>
         /// Recursively generates a directory structure overview
         /// </summary>
-        private void GenerateDirectoryStructure(string path, StringBuilder output, string indent)
+        // DocX/FileHandlerBase.cs
+        private void GenerateDirectoryStructure(string path, StringBuilder output, string indent, VectorStoreConfig vectorStoreConfig)
         {
             var dirInfo = new DirectoryInfo(path);
             output.AppendLine($"{indent}<directory name=\"{dirInfo.Name}\">");
-
             try
             {
                 // Add subdirectories
                 foreach (var subDir in Directory.GetDirectories(path))
                 {
                     var subDirName = Path.GetFileName(subDir);
-                    if (!IsFolderExcluded(subDirName, new VectorStoreConfig()))
+                    if (!IsFolderExcluded(subDirName, vectorStoreConfig))
                     {
-                        GenerateDirectoryStructure(subDir, output, indent + "  ");
+                        GenerateDirectoryStructure(subDir, output, indent + " ", vectorStoreConfig);
                     }
                 }
-
                 // Add file count information
                 var files = Directory.GetFiles(path);
                 if (files.Length > 0)
                 {
-                    output.AppendLine($"{indent}  <file_count>{files.Length}</file_count>");
+                    output.AppendLine($"{indent} <file_count>{files.Length}</file_count>");
                 }
             }
             catch (Exception ex)
             {
                 _log.Error(ex, $"Error processing directory structure for {path}");
             }
-
             output.AppendLine($"{indent}</directory>");
         }
 
