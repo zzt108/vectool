@@ -4,6 +4,7 @@
   ".cs": "text/x-csharp",
   ".csproj": "text/x-msbuild",
   ".css": "text/css",
+  ".dart": "text/dart",
   ".doc": "application/msword",
   ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ".go": "text/x-golang",
