@@ -31,5 +31,7 @@
   ".txt": "text/plain",
   ".feature": "text/x-gherkin",
   ".xaml": "text/x-xaml",
-  ".xml": "text/x-xml"
+  ".xml": "text/x-xml",
+  ".yaml": "text/x-yaml",
+  ".yml": "text/x-yml"
 }
