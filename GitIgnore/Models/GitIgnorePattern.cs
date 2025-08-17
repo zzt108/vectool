@@ -51,26 +51,32 @@ namespace GitIgnore.Models
             if (string.IsNullOrEmpty(pattern))
                 return null;
 
-            // Escape special regex characters except our wildcards
-            var escaped = Regex.Escape(pattern);
-            
-            // Handle ** (match zero or more directories)
-            escaped = Regex.Replace(escaped, @"\\?\*\\?\*", ".*");
-            
-            // Handle * (match any characters except directory separator)
+            //var escapedPattern = pattern.Replace("/", @"\/");
+
+            // 1) Escape all regex metachars
+            string escaped = Regex.Escape(pattern);
+
+            // 2) Replace the GitIgnore wildcards
+            // Note: order matters—replace ** before *
+            escaped = escaped.Replace(@"\*\*/", ".*");
             escaped = escaped.Replace(@"\*", @"[^/\\]*");
-            
-            // Handle ? (match single character except directory separator)  
             escaped = escaped.Replace(@"\?", @"[^/\\]");
 
-            // Make the pattern match from the beginning if it's root relative
-            if (IsRootRelative)
+            // 3) Anchor
+            bool startsWithDoubleStar = pattern.StartsWith("**/") || pattern.StartsWith(@"**\");
+            if (IsRootRelative && !startsWithDoubleStar)
                 escaped = "^" + escaped;
-            else
-                escaped = "(^|[/\\\\])" + escaped;
+            else if (!startsWithDoubleStar)
+                escaped = @"(^|[/\\])" + escaped;
 
-            // Add end anchor
+            // 4) Escape forward slashes 
+            escaped = escaped.Replace("/", @"\/");
+
             escaped += "$";
+
+            // pattern: @" "src/**/*.tmp""
+            // @"^src/.*/[^/\\]*\.tmp$"
+            // escaped = @"^src\/.*[^\/\\]*\.tmp$";
 
             return new Regex(escaped, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
