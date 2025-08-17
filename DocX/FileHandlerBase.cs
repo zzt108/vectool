@@ -4,6 +4,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System;
 using System.Text;
+using GitIgnore.Services;
+using GitIgnore.Extensions;
 
 namespace DocXHandler
 {
@@ -71,6 +73,13 @@ namespace DocXHandler
             return content;
         }
 
+        public virtual IEnumerable<string> GetProcessableFiles(string directory)
+        {
+            // OLD: return Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+
+            return directory.EnumerateFilesRespectingGitIgnore("*.*", respectGitIgnore: true);
+        }
+
         /// <summary>
         /// Recursively processes a folder and its subfolders while updating UI progress and status.
         /// </summary>
@@ -102,7 +111,8 @@ namespace DocXHandler
 
             writeFolderName(context, folderName);
 
-            string[] files = Directory.GetFiles(folderPath);
+            // string[] files = Directory.GetFiles(folderPath);
+            string[] files = GetProcessableFiles(folderPath).ToArray();
             foreach (string file in files)
             {
                 try
@@ -193,7 +203,8 @@ namespace DocXHandler
 
             foreach (var folderPath in folderPaths)
             {
-                var files = Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories);
+                // var files = Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories);
+                var files = GetProcessableFiles(folderPath);
                 foreach (var file in files)
                 {
                     var extension = Path.GetExtension(file).ToLowerInvariant();
@@ -263,10 +274,11 @@ namespace DocXHandler
                     }
                 }
                 // Add file count information
-                var files = Directory.GetFiles(path);
-                if (files.Length > 0)
+                // var files = Directory.GetFiles(path);
+                var files = GetProcessableFiles(path);
+                if (files.Any())
                 {
-                    output.AppendLine($"{indent} <file_count>{files.Length}</file_count>");
+                    output.AppendLine($"{indent} <file_count>{files.Count()}</file_count>");
                 }
             }
             catch (Exception ex)

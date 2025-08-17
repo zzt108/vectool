@@ -1,8 +1,9 @@
-﻿using OpenAI.VectorStores;
-using OpenAI;
-using DocXHandler;
+﻿using DocXHandler;
+using GitIgnore.Extensions;
 using LogCtxShared;
 using NLogShared;
+using OpenAI;
+using OpenAI.VectorStores;
 using System.Configuration;
 using System.Text.Json;
 
@@ -232,7 +233,7 @@ namespace oaiVectorStore
                     {
                         var docXHandler = new DocXHandler.DocXHandler(null); // UI not needed, handled outside
                         docXHandler.ConvertFilesToDocx(folder, outputDocxPath, _vectorStoreConfig);
-                        string[] files = Directory.GetFiles(folder);
+                        string[] files = GetProcessableFiles(folder).ToArray();
 
                         foreach (string file in files)
                         {
@@ -259,6 +260,13 @@ namespace oaiVectorStore
                 }
             }
             _ui.ShowMessage("Files uploaded successfully.");
+        }
+
+        public virtual IEnumerable<string> GetProcessableFiles(string directory)
+        {
+            // OLD: return Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+
+            return directory.EnumerateFilesRespectingGitIgnore("*.*", respectGitIgnore: true);
         }
 
         public void SaveVectorStoreFolderData()

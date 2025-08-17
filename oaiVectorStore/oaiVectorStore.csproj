@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DocX\DocXHandler.csproj" />
+    <ProjectReference Include="..\GitIgnore\GitIgnore.csproj" />
     <ProjectReference Include="..\MimeTypes\MimeTypes.csproj" />
   </ItemGroup>
 
