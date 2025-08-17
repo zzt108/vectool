@@ -58,7 +58,7 @@ namespace DocXHandler
 
             try
             {
-                foreach (var file in GetProcessableFiles(folderPath))
+                foreach (var file in GetProcessableFiles(folderPath, config))
                 {
                     string fileName = Path.GetFileName(file);
                     if (IsFileExcluded(fileName, config) || !IsFileValid(file, null))

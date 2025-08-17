@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using System;
 using System.Text;
 using GitIgnore.Services;
-using GitIgnore.Extensions;
 
 namespace DocXHandler
 {
@@ -73,11 +72,11 @@ namespace DocXHandler
             return content;
         }
 
-        public virtual IEnumerable<string> GetProcessableFiles(string directory)
+        public virtual IEnumerable<string> GetProcessableFiles(string directory, VectorStoreConfig _vectorStoreConfig)
         {
             // OLD: return Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-            return directory.EnumerateFilesRespectingGitIgnore("*.*", respectGitIgnore: true);
+            return directory.EnumerateFilesRespectingGitIgnore("*.*", respectGitIgnore: true, _vectorStoreConfig);
         }
 
         /// <summary>
@@ -112,7 +111,7 @@ namespace DocXHandler
             writeFolderName(context, folderName);
 
             // string[] files = Directory.GetFiles(folderPath);
-            string[] files = GetProcessableFiles(folderPath).ToArray();
+            string[] files = GetProcessableFiles(folderPath, vectorStoreConfig).ToArray();
             foreach (string file in files)
             {
                 try
@@ -204,7 +203,7 @@ namespace DocXHandler
             foreach (var folderPath in folderPaths)
             {
                 // var files = Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories);
-                var files = GetProcessableFiles(folderPath);
+                var files = GetProcessableFiles(folderPath, VectorStoreConfig.FromAppConfig());
                 foreach (var file in files)
                 {
                     var extension = Path.GetExtension(file).ToLowerInvariant();
@@ -275,7 +274,7 @@ namespace DocXHandler
                 }
                 // Add file count information
                 // var files = Directory.GetFiles(path);
-                var files = GetProcessableFiles(path);
+                var files = GetProcessableFiles(path, vectorStoreConfig);
                 if (files.Any())
                 {
                     output.AppendLine($"{indent} <file_count>{files.Count()}</file_count>");

@@ -1,5 +1,5 @@
-﻿using DocXHandler;
-using GitIgnore.Extensions;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using DocXHandler;
 using LogCtxShared;
 using NLogShared;
 using OpenAI;
@@ -13,11 +13,11 @@ namespace oaiVectorStore
     public class VectorStoreManager
     {
         private string _vectorStoreFoldersFilePath;
-        private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new (); // not readonly
+        private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new(); // not readonly
         private readonly VectorStoreConfig _vectorStoreConfig;
         private readonly IUserInterface _ui;
 
-        public Dictionary<string, VectorStoreConfig>  Folders => _vectorStoreFolders;
+        public Dictionary<string, VectorStoreConfig> Folders => _vectorStoreFolders;
         public VectorStoreConfig Config => _vectorStoreConfig;
         public VectorStoreManager(string vectorStoreFoldersFilePath, IUserInterface ui)
         {
@@ -266,7 +266,7 @@ namespace oaiVectorStore
         {
             // OLD: return Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-            return directory.EnumerateFilesRespectingGitIgnore("*.*", respectGitIgnore: true);
+            return directory.EnumerateFilesRespectingGitIgnore("*.*", respectGitIgnore: true, _vectorStoreConfig);
         }
 
         public void SaveVectorStoreFolderData()

@@ -1,10 +1,12 @@
 using GitIgnore.Services;
+using oaiVectorStore;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static System.Net.WebRequestMethods;
 
-namespace GitIgnore.Extensions
+namespace DocXHandler
 {
     /// <summary>
     /// Extension methods to integrate GitIgnore functionality with existing VecTool components
@@ -21,20 +23,44 @@ namespace GitIgnore.Extensions
         public static IEnumerable<string> EnumerateFilesRespectingGitIgnore(
             this string directoryPath,
             string searchPattern = "*.*",
-            bool respectGitIgnore = true)
+            bool respectGitIgnore = true, VectorStoreConfig _vectorStoreConfig = null)
         {
+            IEnumerable<string>? files = null;
+
             if (!Directory.Exists(directoryPath))
                 return Enumerable.Empty<string>();
 
             if (!respectGitIgnore)
             {
-                return Directory.EnumerateFiles(directoryPath, searchPattern, SearchOption.AllDirectories);
+                files = Directory.EnumerateFiles(directoryPath, searchPattern, SearchOption.AllDirectories);
             }
 
             using var processor = new GitIgnoreAwareFileProcessor(directoryPath);
-            return processor.GetNonIgnoredFiles(directoryPath)
+            files = processor.GetNonIgnoredFiles(directoryPath)
                 .Where(f => IsMatchingPattern(f.Name, searchPattern))
                 .Select(f => f.FullName);
+
+            var result = new List<string>();
+            foreach (var file in files)
+            {
+                string fileName = Path.GetFileName(file);
+                if (_vectorStoreConfig.ExcludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase))) continue;
+                // Check MIME type and binary
+                string extension = Path.GetExtension(file);
+                if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
+                {
+                    continue;
+                }
+
+                if (MimeTypeProvider.IsBinary(extension)) // non text types should be uploaded separately
+                {
+                    continue;
+                }
+                result.Add(file);
+
+            }
+            return result;
+
         }
 
         /// <summary>
