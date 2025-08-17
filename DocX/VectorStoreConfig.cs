@@ -71,8 +71,14 @@ public class VectorStoreConfig
     }
 
     // Check if a file should be excluded
-    public bool IsFileExcluded(string fileName)
+    public bool IsFileExcluded(string file)
     {
+        if (IsFolderExcluded(file))
+        {
+            return true;
+        }
+
+        string fileName = Path.GetFileName(file);
         foreach (var pattern in ExcludedFiles)
         {
             string regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*") + "$";

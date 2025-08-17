@@ -63,13 +63,8 @@ namespace DocXHandler
         {
             try
             {
-                if (IsFolderExcluded(file, vectorStoreConfig))
-                {
-                    return;
-                }
 
-                string fileName = Path.GetFileName(file);
-                if (IsFileExcluded(fileName, vectorStoreConfig) || !IsFileValid(file, null))
+                if (IsFileExcluded(file, vectorStoreConfig) || !IsFileValid(file, null))
                 {
                     _log.Trace($"Skipping excluded file: {file}");
                     return;
