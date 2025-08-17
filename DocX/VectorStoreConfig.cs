@@ -35,6 +35,8 @@ public class VectorStoreConfig
     public List<string> ExcludedFiles { get; set; } = new List<string>();
     public List<string> ExcludedFolders { get; set; } = new List<string>();
 
+    public string CommonRootPath => VectorStoreConfig.GetCommonRootPath(FolderPaths);
+
     // Create a VectorStoreConfig from app.config settings
     public static VectorStoreConfig FromAppConfig()
     {
@@ -62,7 +64,7 @@ public class VectorStoreConfig
         string? excludedFoldersConfig = ConfigurationManager.AppSettings["excludedFolders"];
         if (!string.IsNullOrEmpty(excludedFoldersConfig))
         {
-            ExcludedFolders = excludedFoldersConfig.Split(',')
+            ExcludedFolders = excludedFoldersConfig.ToLower().Split(',')
                 .Select(f => f.Trim())
                 .ToList();
         }
@@ -86,10 +88,15 @@ public class VectorStoreConfig
     // Check if a folder should be excluded
     public bool IsFolderExcluded(string folderName)
     {
-        bool isExcluded = ExcludedFolders.Contains(folderName);
-        if (isExcluded)
+        bool isExcluded = false;
+        foreach (var pattern in ExcludedFolders)
         {
-            _log.Trace($"Folder '{folderName}' is in excluded list");
+            isExcluded = folderName.Contains('\\'+pattern);
+            if (isExcluded)
+            {
+                _log.Trace($"Folder '{folderName}' excluded '{pattern}'");
+                break;
+            }
         }
         return isExcluded;
     }
@@ -179,4 +186,70 @@ public class VectorStoreConfig
             _log.Error(ex, $"Error saving vector store configurations to {vectorStoreFoldersPath}");
         }
     }
+
+    /// <summary>
+    /// Gets the minimal common root path from a list of full file paths.
+    /// It uses a clever trick by sorting the paths and comparing the first and last elements.
+    /// </summary>
+    /// <param name="paths">A list of full file paths.</param>
+    /// <returns>The common directory path ending with a separator, or an empty string if no common path is found.</returns>
+    public static string GetCommonRootPath(List<string> paths)
+    {
+        // --- Step 1: Handle edge cases ---
+        // If the list is null, empty, or has only one path, we can take a shortcut.
+        if (paths == null || paths.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        if (paths.Count == 1)
+        {
+            string singlePathDir = Path.GetDirectoryName(paths[0]);
+            if (string.IsNullOrEmpty(singlePathDir))
+            {
+                return string.Empty;
+            }
+            // Ensure the path ends with a directory separator (e.g., '\')
+            return singlePathDir.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        }
+
+        // --- Step 2: The magic sort ---
+        // Sort the paths alphabetically. This brings the most different paths to the start and end of the list.
+        var sortedPaths = paths.OrderBy(p => p, StringComparer.OrdinalIgnoreCase).ToList();
+        string firstPath = sortedPaths.First();
+        string lastPath = sortedPaths.Last();
+        int minLength = Math.Min(firstPath.Length, lastPath.Length);
+
+        // --- Step 3: Find the common prefix ---
+        // Find the last character index where the first and last paths still match.
+        int lastMatchingIndex = -1;
+        for (int i = 0; i < minLength; i++)
+        {
+            if (char.ToLower(firstPath[i]) != char.ToLower(lastPath[i]))
+            {
+                break;
+            }
+            lastMatchingIndex = i;
+        }
+
+        if (lastMatchingIndex == -1)
+        {
+            return string.Empty; // No common characters found at all.
+        }
+
+        // --- Step 4: Trim to the last complete folder ---
+        // The common string might end mid-filename (e.g., "C:\Users\Test\Docu").
+        // We need to find the last directory separator to get the full common path.
+        string commonPrefix = firstPath.Substring(0, lastMatchingIndex + 1);
+        int lastSeparatorIndex = commonPrefix.LastIndexOf(Path.DirectorySeparatorChar);
+
+        if (lastSeparatorIndex == -1)
+        {
+            return string.Empty; // Common part doesn't even contain a full directory.
+        }
+
+        // Return the path up to and including the last separator.
+        return commonPrefix.Substring(0, lastSeparatorIndex + 1);
+    }
+
 }

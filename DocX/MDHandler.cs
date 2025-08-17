@@ -36,6 +36,11 @@ namespace DocXHandler
 
         protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
+            if (IsFolderExcluded(file, vectorStoreConfig))
+            {
+                return;
+            }
+
             string fileName = Path.GetFileName(file);
             if (IsFileExcluded(fileName, vectorStoreConfig) || !IsFileValid(file, null))
             {
@@ -43,9 +48,11 @@ namespace DocXHandler
                 return;
             }
 
+            var relativePath = Path.GetRelativePath(vectorStoreConfig.CommonRootPath, file).Replace('\\', '/');
+
             string content = GetFileContent(file);
             DateTime lastModified = File.GetLastWriteTime(file);
-            writer.WriteLine($"## File: {fileName} Time:{lastModified}");
+            writer.WriteLine($"## File: {relativePath} Time:{lastModified}");
             writer.WriteLine(content);
         }
 

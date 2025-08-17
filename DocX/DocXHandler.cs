@@ -26,6 +26,11 @@ namespace DocXHandler
 
         private void ProcessFile(string file, Body body, VectorStoreConfig vectorStoreConfig)
         {
+            if (IsFolderExcluded(file, vectorStoreConfig))
+            {
+                return;
+            }
+
             string fileName = Path.GetFileName(file);
             if (IsFileExcluded(fileName, vectorStoreConfig) || !IsFileValid(file, null))
             {
@@ -35,7 +40,7 @@ namespace DocXHandler
 
             try
             {
-                string enhancedContent = GetEnhancedFileContent(file);
+                string enhancedContent = GetEnhancedFileContent(file, vectorStoreConfig);
 
                 var validator = new OpenXmlContentValidator();
 
@@ -48,12 +53,12 @@ namespace DocXHandler
                     return;
                 }
 
-                string relativePath = Path.GetRelativePath(Path.GetDirectoryName(file), file).Replace('\\', '_');
-                DateTime lastModified = File.GetLastWriteTime(file);
+                var relativePath = Path.GetRelativePath(vectorStoreConfig.CommonRootPath, file).Replace('\\', '/');
+                var lastModified = File.GetLastWriteTime(file);
 
                 ParagraphProperties fileParagraphProperties = new ParagraphProperties(new ParagraphStyleId() { Val = "Heading 2" });
                 Paragraph fileParagraph = new Paragraph(fileParagraphProperties,
-                    new Run(new Text($"<FileProps path=\"{relativePath}\" last_modified=\"{lastModified}\">")));
+                    new Run(new Text($"<file path=\"{relativePath}\" last_modified=\"{lastModified}\">")));
                 body.Append(fileParagraph);
 
                 // Paragraph para = new Paragraph(new Run(new Text(content)));
@@ -64,7 +69,7 @@ namespace DocXHandler
                     body.Append(para);
                 }
 
-                body.Append(new Paragraph(new Run(new Text($"</FileProps>"))));
+                body.Append(new Paragraph(new Run(new Text($"</file>"))));
             }
             catch (Exception ex)
             {

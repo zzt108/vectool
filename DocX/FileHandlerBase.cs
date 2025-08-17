@@ -20,7 +20,7 @@ namespace DocXHandler
 
         protected bool IsFolderExcluded(string name, VectorStoreConfig vectorStoreConfig)
         {
-            return vectorStoreConfig.IsFolderExcluded(name);
+            return vectorStoreConfig.IsFolderExcluded(Path.GetDirectoryName(name));
         }
 
         protected bool IsFileExcluded(string fileName, VectorStoreConfig vectorStoreConfig)
@@ -63,11 +63,12 @@ namespace DocXHandler
 
         protected string GetFileContent(string file)
         {
+
             string content = File.ReadAllText(file);
             var mdTag = MimeTypeProvider.GetMdTag(Path.GetExtension(file));
             if (mdTag != null)
             {
-                content = $"```{mdTag}\n{content}\n```";
+                content = $"```{mdTag}\n// File: {file}\n{content}\n```";
             }
             return content;
         }
@@ -316,9 +317,9 @@ namespace DocXHandler
         /// <summary>
         /// Generates file metadata in a consistent format across all handlers
         /// </summary>
-        protected string GenerateFileMetadata(string filePath)
+        protected string GenerateFileMetadata(string filePath, VectorStoreConfig vectorStoreConfig)
         {
-            string relativePath = Path.GetRelativePath(Path.GetDirectoryName(filePath), filePath);
+            string relativePath = Path.GetRelativePath(vectorStoreConfig.CommonRootPath, filePath);
             DateTime lastModified = File.GetLastWriteTime(filePath);
             string extension = Path.GetExtension(filePath);
             long fileSize = new FileInfo(filePath).Length;
@@ -337,7 +338,7 @@ namespace DocXHandler
         /// <summary>
         /// Enhanced version of GetFileContent that includes XML-style tags and metadata
         /// </summary>
-        protected string GetEnhancedFileContent(string file)
+        protected string GetEnhancedFileContent(string file, VectorStoreConfig vectorStoreConfig)
         {
             try
             {
@@ -346,12 +347,12 @@ namespace DocXHandler
                 var mdTag = MimeTypeProvider.GetMdTag(extension);
 
                 // Generate enhanced content with XML-style tags
-                string relativePath = Path.GetRelativePath(Path.GetDirectoryName(file), file);
+                string relativePath = Path.GetRelativePath(vectorStoreConfig.CommonRootPath, file);
                 DateTime lastModified = File.GetLastWriteTime(file);
 
                 var sb = new StringBuilder();
                 // sb.AppendLine($"<file path=\"{relativePath}\" last_modified=\"{lastModified:yyyy-MM-dd HH:mm:ss}\">");
-                sb.AppendLine(GenerateFileMetadata(file));
+                sb.AppendLine(GenerateFileMetadata(file, vectorStoreConfig));
 
                 // Add content with appropriate syntax highlighting
                 if (mdTag != null)
