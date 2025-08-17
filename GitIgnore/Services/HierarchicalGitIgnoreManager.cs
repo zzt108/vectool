@@ -174,7 +174,12 @@ namespace GitIgnore.Services
         /// </summary>
         private string NormalizePath(string path)
         {
-            return Path.GetFullPath(path).Replace('/', '\\');
+            if (!string.IsNullOrEmpty(path.Trim()))
+            {
+                return Path.GetFullPath(path).Replace('/', '\\');
+            }
+
+            return path;
         }
 
         /// <summary>
