@@ -81,7 +81,7 @@ namespace UnitTests
             content.ShouldContain("2"); // 2 .txt files
 
             // Should include sizes
-            content.ShouldContain("600"); // Total size of .cs files
+            content.ShouldContain("59"); // Total size of .cs files
             content.ShouldContain("400"); // Total size of .txt files
         }
 

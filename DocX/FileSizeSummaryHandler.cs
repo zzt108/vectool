@@ -83,10 +83,11 @@ namespace DocXHandler
                     fileCountByType[extension]++;
                 }
 
-                foreach (var subDir in Directory.GetDirectories(folderPath))
-                {
-                    CalculateFolderSizes(subDir, config, fileSizesByType, fileCountByType);
-                }
+                // All subfolders are processed recursively already
+                //foreach (var subDir in Directory.GetDirectories(folderPath))
+                //{
+                //    CalculateFolderSizes(subDir, config, fileSizesByType, fileCountByType);
+                //}
             }
             catch (Exception ex)
             {
