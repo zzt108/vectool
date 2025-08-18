@@ -1,5 +1,18 @@
 ## Changelog
 
+### VecTool v2 (2025-08-18)
+
+* **Breaking:** Removed `excludedFiles` and `excludedFolders` settings from `app.config`.
+  All path filtering now follows `.gitignore` / `*.VTIgnore` exclusively.  
+  (VectorStoreConfig.cs, FileHandlerBase.cs)
+* **Refactor:** `IsFileExcluded` replaced by `IsFileBinaryOrEmpty`; binary/empty
+  detection uses `MimeTypeProvider` only.  
+  (FileHandlerBase.cs, all concrete handlers)
+* **Cleanup:** All conditional flags controlling git-ignore behaviour deleted;
+  every traversal respects ignore patterns by default.
+* **Docs:** Updated README and inline comments to remove references to legacy
+  exclusion lists.
+
 ### VecTool v1.25.0412
 
 *   **Enhancement:** Added a new "Get Git Changes" button to the main form. This feature allows users to retrieve and save Git changes from selected folders. (MainForm.cs, MainForm.Designer.cs)

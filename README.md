@@ -1,6 +1,5 @@
-## VecTool
-
-VecTool is a C# based desktop application designed to streamline the process of managing and exporting code projects for use with Large Language Models (LLMs). While it originally focused on OpenAI vector stores, its most valuable features now are the ability to export entire projects to single files digestable efficiently by AI and generate AI-ready output of git changes for generating commit comments with AI.
+## VecTool...
+VecTool is a C# based desktop application designed to streamline the process of managing and exporting code projects for use with Large Language Models (LLMs). While it originally focused on OpenAI vector stores, its most valuable features now are the ability to export entire projects to single files digestible efficiently by AI and generate AI-ready output of git changes for generating commit comments with AI.
 
 ### Key Features
 
@@ -10,6 +9,18 @@ VecTool is a C# based desktop application designed to streamline the process of 
 - **Code-Aware Formatting:** Automatically detects file types and applies appropriate syntax highlighting tags in the exported files.
 - **Hierarchical Organization:** Maintains your project's folder structure in the exported file for easy navigation.
 - **Multiple Format Support:** Export to DOCX, Markdown, or PDF depending on your needs and the LLM platform you're using.
+
+#### .gitignore and *.vtignore based exclusion. Legacy Exclusion Removed (V2, 2025-08-18)
+
+`app.config` settings `excludedFiles` and `excludedFolders` are **deprecated** and
+no longer read at runtime.  Path filtering is now handled exclusively by:
+
+* `.gitignore` files – identical precedence and override semantics to git.
+* Optional `*.VTIgnore` files – same syntax, evaluated after `.gitignore`.
+
+To exclude a path, add a matching pattern to one of these files at any level
+of the project tree.  No application restart is necessary; VecTool detects
+changes automatically.
 
 #### Git Changes Integration (Added: April 12, 2025)
 
