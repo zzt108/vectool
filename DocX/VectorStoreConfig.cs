@@ -32,8 +32,6 @@ public class VectorStoreConfig
     private static readonly NLogS.CtxLogger _log = new();
 
     public List<string> FolderPaths { get; set; } = new List<string>();
-    public List<string> ExcludedFiles { get; set; } = new List<string>();
-    public List<string> ExcludedFolders { get; set; } = new List<string>();
 
     public string CommonRootPath => VectorStoreConfig.GetCommonRootPath(FolderPaths);
 
@@ -41,71 +39,11 @@ public class VectorStoreConfig
     public static VectorStoreConfig FromAppConfig()
     {
         var config = new VectorStoreConfig();
-        config.LoadExcludedFilesConfig();
-        config.LoadExcludedFoldersConfig();
         return config;
     }
 
-    // Load excluded files from app.config
-    public void LoadExcludedFilesConfig()
-    {
-        string? excludedFilesConfig = ConfigurationManager.AppSettings["excludedFiles"];
-        if (!string.IsNullOrEmpty(excludedFilesConfig))
-        {
-            ExcludedFiles = excludedFilesConfig.Split(',')
-                .Select(f => f.Trim())
-                .ToList();
-        }
-    }
 
-    // Load excluded folders from app.config
-    public void LoadExcludedFoldersConfig()
-    {
-        string? excludedFoldersConfig = ConfigurationManager.AppSettings["excludedFolders"];
-        if (!string.IsNullOrEmpty(excludedFoldersConfig))
-        {
-            ExcludedFolders = excludedFoldersConfig.ToLower().Split(',')
-                .Select(f => f.Trim())
-                .ToList();
-        }
-    }
 
-    // Check if a file should be excluded
-    public bool IsFileExcluded(string file)
-    {
-        if (IsFolderExcluded(file))
-        {
-            return true;
-        }
-
-        string fileName = Path.GetFileName(file);
-        foreach (var pattern in ExcludedFiles)
-        {
-            string regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*") + "$";
-            if (Regex.IsMatch(fileName, regexPattern, RegexOptions.IgnoreCase))
-            {
-                _log.Trace($"File '{fileName}' excluded by pattern '{pattern}'");
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Check if a folder should be excluded
-    public bool IsFolderExcluded(string folderName)
-    {
-        bool isExcluded = false;
-        foreach (var pattern in ExcludedFolders)
-        {
-            isExcluded = folderName.Contains('\\'+pattern);
-            if (isExcluded)
-            {
-                _log.Trace($"Folder '{folderName}' excluded '{pattern}'");
-                break;
-            }
-        }
-        return isExcluded;
-    }
 
     // Add a folder path if it doesn't exist
     public bool AddFolderPath(string folderPath)
@@ -136,8 +74,6 @@ public class VectorStoreConfig
         return new VectorStoreConfig
         {
             FolderPaths = new List<string>(FolderPaths),
-            ExcludedFiles = new List<string>(ExcludedFiles),
-            ExcludedFolders = new List<string>(ExcludedFolders)
         };
     }
 

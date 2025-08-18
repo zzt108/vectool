@@ -51,19 +51,10 @@ namespace DocXHandler
         private void CalculateFolderSizes(string folderPath, VectorStoreConfig config,
             Dictionary<string, long> fileSizesByType, Dictionary<string, int> fileCountByType)
         {
-            if (IsFolderExcluded(folderPath, config))
-            {
-                return;
-            }
-
             try
             {
                 foreach (var file in GetProcessableFiles(folderPath, config))
                 {
-                    if (IsFileExcluded(file, config) || !IsFileValid(file, null))
-                    {
-                        continue;
-                    }
 
                     string extension = Path.GetExtension(file).ToLowerInvariant();
                     if (string.IsNullOrEmpty(extension))

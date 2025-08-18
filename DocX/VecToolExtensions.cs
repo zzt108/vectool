@@ -44,7 +44,6 @@ namespace DocXHandler
             foreach (var file in files)
             {
                 string fileName = Path.GetFileName(file);
-                if (_vectorStoreConfig.ExcludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase))) continue;
                 // Check MIME type and binary
                 string extension = Path.GetExtension(file);
                 if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types

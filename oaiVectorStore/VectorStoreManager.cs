@@ -147,8 +147,6 @@ namespace oaiVectorStore
                 {
                     _vectorStoreFolders[vectorStoreName] = new VectorStoreConfig
                     {
-                        ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles), // Copy from global settings
-                        ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
                     };
                     SaveVectorStoreFolderData();
                 }
@@ -238,7 +236,6 @@ namespace oaiVectorStore
                         foreach (string file in files)
                         {
                             string fileName = Path.GetFileName(file);
-                            if (_vectorStoreConfig.ExcludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase))) continue;
                             // Check MIME type and upload
                             string extension = Path.GetExtension(file);
                             if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
@@ -305,8 +302,6 @@ namespace oaiVectorStore
                                 _vectorStoreFolders[kvp.Key] = new VectorStoreConfig
                                 {
                                     FolderPaths = kvp.Value,
-                                    ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles),
-                                    ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
                                 };
                             }
                             SaveVectorStoreFolderData(); // Save in new format

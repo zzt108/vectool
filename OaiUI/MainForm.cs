@@ -183,8 +183,6 @@ namespace oaiUI
                             {
                                 _vectorStoreManager.Folders[vectorStoreName] = new VectorStoreConfig
                                 {
-                                    ExcludedFiles = new List<string>(_vectorStoreManager.Config.ExcludedFiles),
-                                    ExcludedFolders = new List<string>(_vectorStoreManager.Config.ExcludedFolders)
                                 };
                             }
                             _vectorStoreManager.Folders[vectorStoreName].FolderPaths.Add(selectedPath);

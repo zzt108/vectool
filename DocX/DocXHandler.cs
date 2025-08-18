@@ -27,12 +27,6 @@ namespace DocXHandler
         private void ProcessFile(string file, Body body, VectorStoreConfig vectorStoreConfig)
         {
 
-            if (IsFileExcluded(file, vectorStoreConfig) || !IsFileValid(file, null))
-            {
-                _log.Trace($"Skipping excluded file: {file}");
-                return;
-            }
-
             try
             {
                 string enhancedContent = GetEnhancedFileContent(file, vectorStoreConfig);

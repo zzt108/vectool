@@ -18,16 +18,6 @@ namespace DocXHandler
             _ui = ui;
         }
 
-        protected bool IsFolderExcluded(string name, VectorStoreConfig vectorStoreConfig)
-        {
-            return vectorStoreConfig.IsFolderExcluded(Path.GetDirectoryName(name));
-        }
-
-        protected bool IsFileExcluded(string fileName, VectorStoreConfig vectorStoreConfig)
-        {
-            return vectorStoreConfig.IsFileExcluded(fileName);
-        }
-
         protected bool IsFileValid(string filePath, string? outputPath)
         {
             // Skip output file itself
@@ -99,11 +89,6 @@ namespace DocXHandler
             Action<T> writeFolderEnd = null)
         {
             string folderName = new DirectoryInfo(folderPath).Name;
-            if (IsFolderExcluded(folderName, vectorStoreConfig))
-            {
-                _log.Trace($"Skipping excluded folder: {folderPath}");
-                return;
-            }
 
             // Update the UI status for the current folder
             _ui?.UpdateStatus($"Processing folder: {folderPath}");
@@ -267,11 +252,7 @@ namespace DocXHandler
                 // Add subdirectories
                 foreach (var subDir in Directory.GetDirectories(path))
                 {
-                    var subDirName = Path.GetFileName(subDir);
-                    if (!IsFolderExcluded(subDirName, vectorStoreConfig))
-                    {
-                        GenerateDirectoryStructure(subDir, output, indent + " ", vectorStoreConfig);
-                    }
+                    GenerateDirectoryStructure(subDir, output, indent + " ", vectorStoreConfig);
                 }
                 // Add file count information
                 // var files = Directory.GetFiles(path);

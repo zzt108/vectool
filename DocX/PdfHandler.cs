@@ -64,12 +64,6 @@ namespace DocXHandler
             try
             {
 
-                if (IsFileExcluded(file, vectorStoreConfig) || !IsFileValid(file, null))
-                {
-                    _log.Trace($"Skipping excluded file: {file}");
-                    return;
-                }
-
                 string content = GetFileContent(file);
                 if (string.IsNullOrEmpty(content))
                 {

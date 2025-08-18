@@ -37,12 +37,6 @@ namespace DocXHandler
         protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
 
-            if (IsFileExcluded(file, vectorStoreConfig) || !IsFileValid(file, null))
-            {
-                _log.Trace($"Skipping excluded file: {file}");
-                return;
-            }
-
             var relativePath = Path.GetRelativePath(vectorStoreConfig.CommonRootPath, file).Replace('\\', '/');
 
             string content = GetFileContent(file);
