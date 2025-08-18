@@ -49,6 +49,9 @@ namespace GitIgnore.Services
 
             try
             {
+                if (_gitIgnoreManager.ShouldIgnore(directory.FullName, true))
+                    return;
+                    
                 // Process files in current directory
                 foreach (var file in directory.GetFiles())
                 {

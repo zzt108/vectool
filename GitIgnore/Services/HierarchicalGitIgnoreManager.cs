@@ -25,7 +25,7 @@ namespace GitIgnore.Services
         private void LoadIgnoreFiles()
         {
             // Discover both .gitignore and *.vtignore
-            var patterns = new[] { ".gitignore" }.Concat(_additionalIgnorePatterns).ToArray();
+            var patterns = new[] { ".gitignore", "*.vtignore" }.Concat(_additionalIgnorePatterns).ToArray();
             foreach (var pattern in patterns)
             {
                 var files = Directory.GetFiles(_rootDirectory, pattern, SearchOption.AllDirectories);
