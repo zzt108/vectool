@@ -23,7 +23,7 @@
 
   <Target Name="IncrementVersion" BeforeTargets="Build">
     <PropertyGroup>
-      <ApplicationVersion>1</ApplicationVersion>
+      <ApplicationVersion>2</ApplicationVersion>
     </PropertyGroup>
   </Target>
 
