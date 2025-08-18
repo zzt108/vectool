@@ -1,114 +1,113 @@
+// File: ExtendedHierarchicalIgnoreManager.cs
 using GitIgnore.Models;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace GitIgnore.Services
 {
-    /// <summary>
-    /// Manages hierarchical .gitignore files and provides ignore checking functionality
-    /// Following Git's precedence rules: child .gitignore patterns override parent patterns
-    /// </summary>
-    public class HierarchicalGitIgnoreManager: IDisposable
+    public class HierarchicalIgnoreManager : IDisposable
     {
-        private readonly Dictionary<string, GitIgnoreFile> _gitIgnoreFiles;
+        private readonly Dictionary<string, GitIgnoreFile> _ignoreFiles;
         private readonly string _rootDirectory;
         private readonly bool _cacheEnabled;
+        private readonly string[] _additionalIgnorePatterns = new[] { ".vtignore" };
 
-        public HierarchicalGitIgnoreManager(string rootDirectory, bool enableCache = true)
+        public HierarchicalIgnoreManager(string rootDirectory, bool enableCache = true)
         {
             _rootDirectory = Path.GetFullPath(rootDirectory ?? throw new ArgumentNullException(nameof(rootDirectory)));
             _cacheEnabled = enableCache;
-            _gitIgnoreFiles = new Dictionary<string, GitIgnoreFile>(StringComparer.OrdinalIgnoreCase);
-            
+            _ignoreFiles = new Dictionary<string, GitIgnoreFile>(StringComparer.OrdinalIgnoreCase);
+
             if (!Directory.Exists(_rootDirectory))
                 throw new DirectoryNotFoundException($"Root directory not found: {_rootDirectory}");
 
-            LoadGitIgnoreFiles();
+            LoadIgnoreFiles();
         }
 
-        /// <summary>
-        /// Discovers and loads all .gitignore files in the directory hierarchy
-        /// </summary>
-        private void LoadGitIgnoreFiles()
+        private void LoadIgnoreFiles()
         {
-            try
+            // Discover both .gitignore and *.vtignore
+            var patterns = new[] { ".gitignore" }.Concat(_additionalIgnorePatterns).ToArray();
+            foreach (var pattern in patterns)
             {
-                var gitIgnoreFiles = Directory.GetFiles(_rootDirectory, ".gitignore", SearchOption.AllDirectories);
-                
-                foreach (var filePath in gitIgnoreFiles)
+                var files = Directory.GetFiles(_rootDirectory, pattern, SearchOption.AllDirectories);
+                foreach (var filePath in files)
                 {
-                    var directory = Path.GetDirectoryName(filePath);
-                    var normalizedDir = NormalizePath(directory);
-                    
-                    if (!_gitIgnoreFiles.ContainsKey(normalizedDir))
+                    var dirKey = NormalizePath(Path.GetDirectoryName(filePath)!);
+                    if (!_ignoreFiles.ContainsKey(dirKey))
                     {
-                        _gitIgnoreFiles[normalizedDir] = new GitIgnoreFile(filePath);
+                        _ignoreFiles[dirKey] = new GitIgnoreFile(filePath);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("Failed to load .gitignore files from hierarchy", ex);
-            }
         }
 
-        /// <summary>
-        /// Refreshes all cached .gitignore files if caching is enabled
-        /// </summary>
         public void RefreshCache()
         {
-            if (!_cacheEnabled)
-                return;
+            if (!_cacheEnabled) return;
+            foreach (var igf in _ignoreFiles.Values)
+                igf.RefreshIfNeeded();
 
-            foreach (var gitIgnoreFile in _gitIgnoreFiles.Values)
-            {
-                gitIgnoreFile.RefreshIfNeeded();
-            }
-
-            // Check for new .gitignore files
-            LoadGitIgnoreFiles();
+            // Check for newly added ignore files
+            LoadIgnoreFiles();
         }
 
-        /// <summary>
-        /// Determines if a file or directory should be ignored based on hierarchical .gitignore rules
-        /// </summary>
-        /// <param name="fullPath">Full path to the file or directory</param>
-        /// <param name="isDirectory">Whether the path represents a directory</param>
-        /// <returns>True if the path should be ignored</returns>
         public bool ShouldIgnore(string fullPath, bool isDirectory)
         {
-            if (string.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath)) return false;
+
+            var normalized = NormalizePath(fullPath);
+            if (!normalized.StartsWith(NormalizePath(_rootDirectory), StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            var normalizedPath = NormalizePath(fullPath);
-            
-            // Path must be within our root directory
-            if (!normalizedPath.StartsWith(NormalizePath(_rootDirectory), StringComparison.OrdinalIgnoreCase))
-                return false;
+            var relative = GetRelativePath(_rootDirectory, normalized);
+            var containingDir = isDirectory ? normalized : Path.GetDirectoryName(normalized)!;
 
-            var relativePath = GetRelativePath(_rootDirectory, normalizedPath);
-            var pathDirectory = isDirectory ? normalizedPath : Path.GetDirectoryName(normalizedPath);
-
-            // Get all applicable .gitignore files in order (root to specific)
-            var applicableGitIgnores = GetApplicableGitIgnoreFiles(pathDirectory);
+            // Collect all ignore files from root to specific
+            var applicable = GetApplicableIgnoreFiles(containingDir)
+                .OrderBy(f => f.Directory.Length);
 
             var result = IgnoreResult.NotMatched;
-
-            // Process .gitignore files from root to most specific (child overrides parent)
-            foreach (var gitIgnoreFile in applicableGitIgnores.OrderBy(g => g.Directory.Length))
+            foreach (var igf in applicable)
             {
-                var relativeToGitIgnore = GetRelativePath(gitIgnoreFile.Directory, normalizedPath);
-                var checkResult = gitIgnoreFile.CheckPath(relativeToGitIgnore, isDirectory);
-
-                if (checkResult != IgnoreResult.NotMatched)
-                {
-                    result = checkResult;
-                }
+                var relToIgnore = GetRelativePath(igf.Directory, normalized);
+                var check = igf.CheckPath(relToIgnore, isDirectory);
+                if (check != IgnoreResult.NotMatched)
+                    result = check;
             }
 
             return result == IgnoreResult.Ignored;
+        }
+
+        private IEnumerable<GitIgnoreFile> GetApplicableIgnoreFiles(string directoryPath)
+        {
+            var dir = NormalizePath(directoryPath);
+            var root = NormalizePath(_rootDirectory);
+
+            while (dir.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            {
+                if (_ignoreFiles.TryGetValue(dir, out var igf))
+                    yield return igf;
+
+                if (string.Equals(dir, root, StringComparison.OrdinalIgnoreCase))
+                    break;
+
+                dir = NormalizePath(Path.GetDirectoryName(dir)!);
+            }
+        }
+
+        public void Dispose()
+        {
+            _ignoreFiles.Clear();
+        }
+
+        private static string NormalizePath(string path) =>
+            Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar).Replace('/', '\\');
+
+        private static string GetRelativePath(string basePath, string targetPath)
+        {
+            var baseUri = new Uri(NormalizePath(basePath) + Path.DirectorySeparatorChar);
+            var targetUri = new Uri(NormalizePath(targetPath));
+            return Uri.UnescapeDataString(baseUri.MakeRelativeUri(targetUri).ToString())
+                      .Replace('/', '\\');
         }
 
         /// <summary>
@@ -140,71 +139,17 @@ namespace GitIgnore.Services
         }
 
         /// <summary>
-        /// Gets .gitignore files that apply to the given directory path
-        /// </summary>
-        private List<GitIgnoreFile> GetApplicableGitIgnoreFiles(string directoryPath)
-        {
-            var applicableFiles = new List<GitIgnoreFile>();
-            var currentDir = NormalizePath(directoryPath);
-            var rootDir = NormalizePath(_rootDirectory);
-
-            // Walk up the directory tree to find applicable .gitignore files
-            while (currentDir.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase))
-            {
-                if (_gitIgnoreFiles.TryGetValue(currentDir, out var gitIgnoreFile))
-                {
-                    applicableFiles.Add(gitIgnoreFile);
-                }
-
-                if (string.Equals(currentDir, rootDir, StringComparison.OrdinalIgnoreCase))
-                    break;
-
-                var parentDir = Path.GetDirectoryName(currentDir);
-                if (string.IsNullOrEmpty(parentDir) || parentDir == currentDir)
-                    break;
-
-                currentDir = NormalizePath(parentDir);
-            }
-
-            return applicableFiles;
-        }
-
-        /// <summary>
-        /// Normalizes path separators and ensures consistent formatting
-        /// </summary>
-        private string NormalizePath(string path)
-        {
-            if (!string.IsNullOrEmpty(path.Trim()))
-            {
-                return Path.GetFullPath(path).Replace('/', '\\');
-            }
-
-            return path;
-        }
-
-        /// <summary>
-        /// Gets relative path from base to target
-        /// </summary>
-        private string GetRelativePath(string basePath, string targetPath)
-        {
-            var baseUri = new Uri(NormalizePath(basePath) + "\\");
-            var targetUri = new Uri(NormalizePath(targetPath));
-            
-            return baseUri.MakeRelativeUri(targetUri).ToString().Replace('/', '\\');
-        }
-
-        /// <summary>
         /// Gets statistics about loaded .gitignore files
         /// </summary>
         public GitIgnoreStatistics GetStatistics()
         {
-            var totalPatterns = _gitIgnoreFiles.Values.Sum(f => f.Patterns.Count);
-            var negationPatterns = _gitIgnoreFiles.Values.Sum(f => f.Patterns.Count(p => p.IsNegation));
-            var directoryOnlyPatterns = _gitIgnoreFiles.Values.Sum(f => f.Patterns.Count(p => p.IsDirectoryOnly));
+            var totalPatterns = _ignoreFiles.Values.Sum(f => f.Patterns.Count);
+            var negationPatterns = _ignoreFiles.Values.Sum(f => f.Patterns.Count(p => p.IsNegation));
+            var directoryOnlyPatterns = _ignoreFiles.Values.Sum(f => f.Patterns.Count(p => p.IsDirectoryOnly));
 
             return new GitIgnoreStatistics
             {
-                GitIgnoreFileCount = _gitIgnoreFiles.Count,
+                GitIgnoreFileCount = _ignoreFiles.Count,
                 TotalPatterns = totalPatterns,
                 NegationPatterns = negationPatterns,
                 DirectoryOnlyPatterns = directoryOnlyPatterns,
@@ -212,9 +157,5 @@ namespace GitIgnore.Services
             };
         }
 
-        public void Dispose()
-        {
-            _gitIgnoreFiles?.Clear();
-        }
     }
 }

@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using GitIgnore.Models;
-
 namespace GitIgnore.Services
 {
     /// <summary>
@@ -12,12 +6,12 @@ namespace GitIgnore.Services
     /// </summary>
     public class GitIgnoreAwareFileProcessor : IDisposable
     {
-        private readonly HierarchicalGitIgnoreManager _gitIgnoreManager;
+        private readonly HierarchicalIgnoreManager _gitIgnoreManager;
         private readonly FileProcessorOptions _options;
 
         public GitIgnoreAwareFileProcessor(string rootDirectory, FileProcessorOptions options = null)
         {
-            _gitIgnoreManager = new HierarchicalGitIgnoreManager(rootDirectory, options?.EnableCache ?? true);
+            _gitIgnoreManager = new HierarchicalIgnoreManager(rootDirectory, options?.EnableCache ?? true);
             _options = options ?? new FileProcessorOptions();
         }
 

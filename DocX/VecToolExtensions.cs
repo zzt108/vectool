@@ -1,10 +1,5 @@
 using GitIgnore.Services;
 using oaiVectorStore;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using static System.Net.WebRequestMethods;
 
 namespace DocXHandler
 {
@@ -75,7 +70,7 @@ namespace DocXHandler
             if (filePaths == null || !Directory.Exists(rootDirectory))
                 return Enumerable.Empty<string>();
 
-            using var manager = new HierarchicalGitIgnoreManager(rootDirectory);
+            using var manager = new HierarchicalIgnoreManager(rootDirectory);
 
             return filePaths.Where(path =>
             {
@@ -114,7 +109,7 @@ namespace DocXHandler
             if (string.IsNullOrEmpty(filePath) || !Directory.Exists(rootDirectory))
                 return false;
 
-            using var manager = new HierarchicalGitIgnoreManager(rootDirectory);
+            using var manager = new HierarchicalIgnoreManager(rootDirectory);
             var isDirectory = Directory.Exists(filePath);
             return manager.ShouldIgnore(filePath, isDirectory);
         }
@@ -129,7 +124,7 @@ namespace DocXHandler
             if (!Directory.Exists(rootDirectory))
                 throw new DirectoryNotFoundException($"Directory not found: {rootDirectory}");
 
-            using var manager = new HierarchicalGitIgnoreManager(rootDirectory);
+            using var manager = new HierarchicalIgnoreManager(rootDirectory);
             return manager.GetStatistics();
         }
 

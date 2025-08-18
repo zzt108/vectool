@@ -1,17 +1,13 @@
-using System;
-using System.IO;
-using System.Linq;
-using NUnit.Framework;
 using Shouldly;
 using GitIgnore.Services;
 
 namespace GitIgnore.Tests
 {
     [TestFixture]
-    public class HierarchicalGitIgnoreManagerTests
+    public class HierarchicalIgnoreManagerTests
     {
         private string _testRootDirectory;
-        private HierarchicalGitIgnoreManager _manager;
+        private HierarchicalIgnoreManager _manager;
 
         [SetUp]
         public void Setup()
@@ -21,7 +17,7 @@ namespace GitIgnore.Tests
             Directory.CreateDirectory(_testRootDirectory);
 
             CreateTestDirectoryStructure();
-            _manager = new HierarchicalGitIgnoreManager(_testRootDirectory);
+            _manager = new HierarchicalIgnoreManager(_testRootDirectory);
         }
 
         [TearDown]
@@ -112,7 +108,7 @@ namespace GitIgnore.Tests
             var invalidDirectory = @"C:\NonExistentDirectory\Invalid";
 
             // Act & Assert
-            Should.Throw<DirectoryNotFoundException>(() => new HierarchicalGitIgnoreManager(invalidDirectory));
+            Should.Throw<DirectoryNotFoundException>(() => new HierarchicalIgnoreManager(invalidDirectory));
         }
 
         [Test]
