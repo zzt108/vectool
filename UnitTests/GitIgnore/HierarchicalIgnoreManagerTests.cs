@@ -1,7 +1,7 @@
 using Shouldly;
 using GitIgnore.Services;
 
-namespace GitIgnore.Tests
+namespace UnitTests.GitIgnore
 {
     [TestFixture]
     public class HierarchicalIgnoreManagerTests

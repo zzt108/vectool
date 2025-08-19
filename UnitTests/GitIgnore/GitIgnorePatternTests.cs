@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Shouldly;
 using GitIgnore.Models;
 
-namespace GitIgnore.Tests
+namespace UnitTests.GitIgnore
 {
     [TestFixture]
     public class GitIgnorePatternTests
