@@ -31,6 +31,15 @@ public class VectorStoreConfig
 {
     private static readonly NLogS.CtxLogger _log = new();
 
+    public VectorStoreConfig(List<string> folderPaths)
+    {
+        FolderPaths = folderPaths;
+    }
+
+    public VectorStoreConfig()
+    {
+    }
+
     public List<string> FolderPaths { get; set; } = new List<string>();
 
     public string CommonRootPath => VectorStoreConfig.GetCommonRootPath(FolderPaths);
@@ -38,6 +47,7 @@ public class VectorStoreConfig
     // Create a VectorStoreConfig from app.config settings
     public static VectorStoreConfig FromAppConfig()
     {
+        //todo: How does this read the config file? Is this a bug?
         var config = new VectorStoreConfig();
         return config;
     }

@@ -1,3 +1,4 @@
+using DocXHandler;
 using FluentAssertions;
 
 namespace DocXHandlerTests
@@ -29,18 +30,19 @@ namespace DocXHandlerTests
 
             string outputMarkdownPath = Path.Combine(testRootPath, "output.md");
             List<string> folderPaths = new List<string> { folder1, folder2 };
-
-            var mdHandler = new DocXHandler.MDHandler(null);
-            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new DocXHandler.VectorStoreConfig());
+            
+            var mdHandler = new MDHandler(null);
+            
+            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new DocXHandler.VectorStoreConfig(folderPaths));
             
             File.Exists(outputMarkdownPath).Should().BeTrue();
 
             string markdownContent = File.ReadAllText(outputMarkdownPath);
             markdownContent.Should().Contain($"# Folder: {MarkdownFolder1Name}");
-            markdownContent.Should().Contain($"## File: {Markdown1FileName}");
+            markdownContent.Should().Contain($"## File: {MarkdownFolder1Name}/{Markdown1FileName}");
             markdownContent.Should().Contain(ContentOfMarkdownFile1);
             markdownContent.Should().Contain($"# Folder: {MarkdownFolder2Name}");
-            markdownContent.Should().Contain($"## File: {Markdown2FileName}");
+            markdownContent.Should().Contain($"## File: {MarkdownFolder2Name}/{Markdown2FileName}");
             markdownContent.Should().Contain(ContentOfMarkdownFile2);
         }
 
@@ -61,15 +63,15 @@ namespace DocXHandlerTests
             List<string> folderPaths = new List<string> { mainFolder };
 
             var mdHandler = new DocXHandler.MDHandler(null);
-            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new DocXHandler.VectorStoreConfig());
+            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new DocXHandler.VectorStoreConfig(folderPaths));
             
             File.Exists(outputMarkdownPath).Should().BeTrue();
             string markdownContent = File.ReadAllText(outputMarkdownPath);
             markdownContent.Should().Contain($"# Folder: {MarkdownMainFolderName}");
-            markdownContent.Should().Contain($"## File: {MainFileName}");
+            markdownContent.Should().Contain($"## File: {MarkdownMainFolderName}/{MainFileName}");
             markdownContent.Should().Contain(ContentOfMainFile);
             markdownContent.Should().Contain($"# Folder: {MarkdownSubFolderName}");
-            markdownContent.Should().Contain($"## File: {SubFileName}");
+            markdownContent.Should().Contain($"## File: {MarkdownMainFolderName}/{MarkdownSubFolderName}/{SubFileName}");
             markdownContent.Should().Contain(ContentOfSubFile);
         }
 

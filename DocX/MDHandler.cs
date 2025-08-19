@@ -1,9 +1,4 @@
-﻿﻿using oaiVectorStore;
-using NLogS = NLogShared;
-using System.IO;
-using System.Collections.Generic;
-
-namespace DocXHandler
+﻿namespace DocXHandler
 {
     public class MDHandler(IUserInterface? ui) : FileHandlerBase(ui)
     {

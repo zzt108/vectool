@@ -20,18 +20,14 @@ namespace DocXHandler
 
         public static string RelativePath(string commonRootPath, string file)
         {
-            var relativePath = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(commonRootPath) && string.IsNullOrWhiteSpace(file))
+            if (string.IsNullOrWhiteSpace(commonRootPath) || string.IsNullOrWhiteSpace(file))
             {
-            relativePath = Path.GetRelativePath(commonRootPath, file)
-                                   .Replace('\\', '/');                
+                return file;                 
             }
 
-            return relativePath;
+            return Path.GetRelativePath(commonRootPath, file)
+                                   .Replace('\\', '/');
         }
-
-
 
         protected bool IsFileValid(string filePath, string? outputPath)
         {
