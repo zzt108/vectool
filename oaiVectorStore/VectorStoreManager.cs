@@ -263,7 +263,7 @@ namespace oaiVectorStore
         {
             // OLD: return Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-            return directory.EnumerateFilesRespectingGitIgnore("*.*", respectGitIgnore: true, _vectorStoreConfig);
+            return directory.EnumerateFilesRespectingGitIgnore("*.*", _vectorStoreConfig);
         }
 
         public void SaveVectorStoreFolderData()

@@ -18,6 +18,21 @@ namespace DocXHandler
             _ui = ui;
         }
 
+        public static string RelativePath(string commonRootPath, string file)
+        {
+            var relativePath = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(commonRootPath) && string.IsNullOrWhiteSpace(file))
+            {
+            relativePath = Path.GetRelativePath(commonRootPath, file)
+                                   .Replace('\\', '/');                
+            }
+
+            return relativePath;
+        }
+
+
+
         protected bool IsFileValid(string filePath, string? outputPath)
         {
             // Skip output file itself
@@ -67,7 +82,7 @@ namespace DocXHandler
         {
             // OLD: return Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-            return directory.EnumerateFilesRespectingGitIgnore("*.*", respectGitIgnore: true, _vectorStoreConfig);
+            return directory.EnumerateFilesRespectingGitIgnore("*.*", _vectorStoreConfig);
         }
 
         /// <summary>
@@ -300,7 +315,7 @@ namespace DocXHandler
         /// </summary>
         protected string GenerateFileMetadata(string filePath, VectorStoreConfig vectorStoreConfig)
         {
-            string relativePath = Path.GetRelativePath(vectorStoreConfig.CommonRootPath, filePath);
+            string relativePath = RelativePath(vectorStoreConfig.CommonRootPath, filePath);
             DateTime lastModified = File.GetLastWriteTime(filePath);
             string extension = Path.GetExtension(filePath);
             long fileSize = new FileInfo(filePath).Length;
@@ -328,7 +343,7 @@ namespace DocXHandler
                 var mdTag = MimeTypeProvider.GetMdTag(extension);
 
                 // Generate enhanced content with XML-style tags
-                string relativePath = Path.GetRelativePath(vectorStoreConfig.CommonRootPath, file);
+                string relativePath = RelativePath(vectorStoreConfig.CommonRootPath, file);
                 DateTime lastModified = File.GetLastWriteTime(file);
 
                 var sb = new StringBuilder();
@@ -354,7 +369,7 @@ namespace DocXHandler
             catch (Exception ex)
             {
                 _log.Error(ex, $"Error in GetEnhancedFileContent for file {file}");
-                return $"<error>Failed to process file: {Path.GetFileName(file)}</error>";
+                return $"<error>Failed to process file: {Path.GetFileName(file)} {ex.Message}</error>";
             }
         }
 

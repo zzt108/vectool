@@ -42,7 +42,7 @@ namespace DocXHandler
                     return;
                 }
 
-                var relativePath = Path.GetRelativePath(vectorStoreConfig.CommonRootPath, file).Replace('\\', '/');
+                var relativePath = RelativePath(vectorStoreConfig.CommonRootPath, file);
                 var lastModified = File.GetLastWriteTime(file);
 
                 ParagraphProperties fileParagraphProperties = new ParagraphProperties(new ParagraphStyleId() { Val = "Heading 2" });

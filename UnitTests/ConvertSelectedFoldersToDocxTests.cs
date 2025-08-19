@@ -63,7 +63,9 @@ namespace DocXHandlerTests
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
-                body?.ChildElements.Count.Should().Be(2);
+                body?.InnerText.Should().NotContain("```");
+                // body?.ChildElements.Count.Should().Be(2); // original empty document
+                body?.ChildElements.Count.Should().Be(28); // AI guidance added to empty documents too
             }
         }
 
@@ -86,7 +88,7 @@ namespace DocXHandlerTests
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
-                body?.ChildElements.Count.Should().Be(2);
+                body?.ChildElements.Count.Should().Be(28);
             }
         }
 

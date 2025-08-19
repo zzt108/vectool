@@ -36,8 +36,7 @@ namespace DocXHandler
 
         protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
-
-            var relativePath = Path.GetRelativePath(vectorStoreConfig.CommonRootPath, file).Replace('\\', '/');
+            var relativePath = RelativePath(vectorStoreConfig.CommonRootPath, file);
 
             string content = GetFileContent(file);
             DateTime lastModified = File.GetLastWriteTime(file);

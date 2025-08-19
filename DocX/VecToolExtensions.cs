@@ -18,17 +18,17 @@ namespace DocXHandler
         public static IEnumerable<string> EnumerateFilesRespectingGitIgnore(
             this string directoryPath,
             string searchPattern = "*.*",
-            bool respectGitIgnore = true, VectorStoreConfig _vectorStoreConfig = null)
+            VectorStoreConfig _vectorStoreConfig = null)
         {
             IEnumerable<string>? files = null;
 
             if (!Directory.Exists(directoryPath))
                 return Enumerable.Empty<string>();
 
-            if (!respectGitIgnore)
-            {
-                files = Directory.EnumerateFiles(directoryPath, searchPattern, SearchOption.AllDirectories);
-            }
+            //if (!respectGitIgnore)
+            //{
+            //    files = Directory.EnumerateFiles(directoryPath, searchPattern, SearchOption.AllDirectories);
+            //}
 
             using var processor = new GitIgnoreAwareFileProcessor(directoryPath);
             files = processor.GetNonIgnoredFiles(directoryPath)

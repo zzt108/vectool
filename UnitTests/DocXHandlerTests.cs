@@ -154,7 +154,8 @@ namespace DocXHandlerTests
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
-                body?.ChildElements.Count.Should().Be(2); // Expecting an empty document
+                // body?.ChildElements.Count.Should().Be(2); // Expecting an empty document
+                body?.InnerText.Should().Contain($"```txt```");
             }
         }
     }

@@ -77,7 +77,7 @@ namespace DocXHandler
                     directoryName = ".";
                 }
 
-                string relativePath = Path.GetRelativePath(directoryName, file);
+                string relativePath = RelativePath(directoryName, file);
                 string sectionId = Regex.Replace(relativePath, @"[^a-zA-Z0-9_-]", "_");
                 DateTime lastModified = File.GetLastWriteTime(file);
 

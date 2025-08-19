@@ -99,7 +99,7 @@ namespace GitIgnore.Services
             _ignoreFiles.Clear();
         }
 
-        private static string NormalizePath(string path) =>
+        private static string NormalizePath(string path) => string.IsNullOrEmpty(path.Trim()) ? path :
             Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar).Replace('/', '\\');
 
         private static string GetRelativePath(string basePath, string targetPath)
