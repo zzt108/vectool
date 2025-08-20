@@ -8,7 +8,7 @@ namespace GitIgnore.Services
         private readonly Dictionary<string, GitIgnoreFile> _ignoreFiles;
         private readonly string _rootDirectory;
         private readonly bool _cacheEnabled;
-        private readonly string[] _additionalIgnorePatterns = new[] { ".vtignore" };
+        private readonly string[] _additionalIgnorePatterns = new[] {".gitignore", "*.vtignore" };
 
         public HierarchicalIgnoreManager(string rootDirectory, bool enableCache = true)
         {
@@ -25,7 +25,7 @@ namespace GitIgnore.Services
         private void LoadIgnoreFiles()
         {
             // Discover both .gitignore and *.vtignore
-            var patterns = new[] { ".gitignore", "*.vtignore" }.Concat(_additionalIgnorePatterns).ToArray();
+            var patterns = _additionalIgnorePatterns;
             foreach (var pattern in patterns)
             {
                 var files = Directory.GetFiles(_rootDirectory, pattern, SearchOption.AllDirectories);

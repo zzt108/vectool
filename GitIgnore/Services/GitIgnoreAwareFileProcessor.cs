@@ -121,7 +121,7 @@ namespace GitIgnore.Services
         public IEnumerable<FileInfo> GetNonIgnoredFiles(string directoryPath, bool recursive = true)
         {
             return _gitIgnoreManager.GetNonIgnoredPaths(directoryPath, recursive)
-                .Where(path => File.Exists(path))
+                .Where(path => File.Exists(path) && !_gitIgnoreManager.ShouldIgnore(path, false))
                 .Select(path => new FileInfo(path));
         }
 
