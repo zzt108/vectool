@@ -31,7 +31,7 @@ namespace GitIgnore.Services
                 var files = Directory.GetFiles(_rootDirectory, pattern, SearchOption.AllDirectories);
                 foreach (var filePath in files)
                 {
-                    var dirKey = NormalizePath(Path.GetDirectoryName(filePath)!);
+                    var dirKey = NormalizePath(filePath);
                     if (!_ignoreFiles.ContainsKey(dirKey))
                     {
                         _ignoreFiles[dirKey] = new GitIgnoreFile(filePath);
@@ -84,8 +84,12 @@ namespace GitIgnore.Services
 
             while (dir.StartsWith(root, StringComparison.OrdinalIgnoreCase))
             {
-                if (_ignoreFiles.TryGetValue(dir, out var igf))
-                    yield return igf;
+                var folderIgnoreFiles = _ignoreFiles.Where(ifs => ifs.Key.StartsWith(directoryPath));
+                foreach (var folderIgnoreFile in folderIgnoreFiles)
+                    yield return folderIgnoreFile.Value;
+
+                //if (_ignoreFiles.TryGetValue(dir, out var igf))
+                //    yield return igf;
 
                 if (string.Equals(dir, root, StringComparison.OrdinalIgnoreCase))
                     break;
@@ -99,6 +103,11 @@ namespace GitIgnore.Services
             _ignoreFiles.Clear();
         }
 
+        /// <summary>
+        /// replaces slashes (/) with backslashes (\), removes last slash
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         private static string NormalizePath(string path) => string.IsNullOrEmpty(path.Trim()) ? path :
             Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar).Replace('/', '\\');
 
