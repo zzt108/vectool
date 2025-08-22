@@ -9,15 +9,17 @@ package-lock.json
 # VTIgnore folders
 # android,build,ios,windows,linux,macos,.dart_tool,ephemeral,x64,x86,
 [Pp]ackages/
-[Oo]bj
-[Bb]in/
+**/[Oo]bj
+**/[Bb]in/
 [Bb]uild/
-[Tt]mp/
+**/[Tt]mp/
 .gradle/
 translations/
 .git/
 .vs/
 .cr/
 .idea/
+.vscode/
+.vs/
 [Ll]ogs/
 [Ll]og[Cc]tx/
