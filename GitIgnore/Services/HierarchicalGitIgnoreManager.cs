@@ -61,9 +61,9 @@ namespace GitIgnore.Services
             var relative = GetRelativePath(_rootDirectory, normalized);
             var containingDir = isDirectory ? normalized : Path.GetDirectoryName(normalized)!;
 
-            // Collect all ignore files from root to specific
-            var applicable = GetApplicableIgnoreFiles(containingDir)
-                .OrderBy(f => f.Directory.Length);
+            var sut = new IgnoreFileResolver(_rootDirectory, _ignoreFiles);
+
+            var applicable = new List<GitIgnoreFile>(sut.GetApplicableIgnoreFiles(containingDir)).OrderBy(f => f.Directory.Length);
 
             var result = IgnoreResult.NotMatched;
             foreach (var igf in applicable)
@@ -75,27 +75,6 @@ namespace GitIgnore.Services
             }
 
             return result == IgnoreResult.Ignored;
-        }
-
-        private IEnumerable<GitIgnoreFile> GetApplicableIgnoreFiles(string directoryPath)
-        {
-            var dir = NormalizePath(directoryPath);
-            var root = NormalizePath(_rootDirectory);
-
-            while (dir.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-            {
-                var folderIgnoreFiles = _ignoreFiles.Where(ifs => ifs.Key.StartsWith(directoryPath));
-                foreach (var folderIgnoreFile in folderIgnoreFiles)
-                    yield return folderIgnoreFile.Value;
-
-                //if (_ignoreFiles.TryGetValue(dir, out var igf))
-                //    yield return igf;
-
-                if (string.Equals(dir, root, StringComparison.OrdinalIgnoreCase))
-                    break;
-
-                dir = NormalizePath(Path.GetDirectoryName(dir)!);
-            }
         }
 
         public void Dispose()

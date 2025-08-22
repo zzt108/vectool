@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace GitIgnore.Models
@@ -21,6 +19,16 @@ namespace GitIgnore.Models
             Directory = Path.GetDirectoryName(filePath);
             Patterns = new List<GitIgnorePattern>();
             LoadPatterns();
+        }
+
+        public GitIgnoreFile(string filePath, IEnumerable<string> patterns):this(filePath)
+        {
+            foreach (var line in patterns)
+            {
+                var pattern = new GitIgnorePattern(line, Directory);
+                if (pattern.IsValid)
+                    Patterns.Add(pattern);
+            }
         }
 
         /// <summary>
@@ -86,7 +94,7 @@ namespace GitIgnore.Models
                 return IgnoreResult.NotMatched;
 
             var result = IgnoreResult.NotMatched;
-            
+
             // Process patterns in order - later patterns override earlier ones
             foreach (var pattern in Patterns)
             {
