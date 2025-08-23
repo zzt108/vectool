@@ -55,6 +55,7 @@ namespace oaiUI
             btnConvertToDocx = new Button();
             btnConvertToMd = new Button();
             btnConvertToPdf = new Button();
+            btnFileSizeSummary = new Button();
             btnDeleteVectorStoreAssoc = new Button();
             btnGetGitChanges = new Button();
             tabPage2 = new TabPage();
@@ -186,7 +187,7 @@ namespace oaiUI
             // 
             // btnUploadNew
             // 
-            btnUploadNew.Location = new Point(237, 230);
+            btnUploadNew.Location = new Point(12, 262);
             btnUploadNew.Margin = new Padding(3, 2, 3, 2);
             btnUploadNew.Name = "btnUploadNew";
             btnUploadNew.Size = new Size(86, 28);
@@ -285,6 +286,7 @@ namespace oaiUI
             panel2.Controls.Add(btnConvertToDocx);
             panel2.Controls.Add(btnConvertToMd);
             panel2.Controls.Add(btnConvertToPdf);
+            panel2.Controls.Add(btnFileSizeSummary);
             panel2.Dock = DockStyle.Fill;
             panel2.Location = new Point(0, 0);
             panel2.Name = "panel2";
@@ -333,6 +335,16 @@ namespace oaiUI
             btnConvertToPdf.UseVisualStyleBackColor = true;
             btnConvertToPdf.Click += btnConvertToPdf_Click;
             // 
+            // btnFileSizeSummary
+            // 
+            btnFileSizeSummary.Location = new Point(106, 48);
+            btnFileSizeSummary.Name = "btnFileSizeSummary";
+            btnFileSizeSummary.Size = new Size(97, 28);
+            btnFileSizeSummary.TabIndex = 14;
+            btnFileSizeSummary.Text = "File Size Report";
+            btnFileSizeSummary.UseVisualStyleBackColor = true;
+            btnFileSizeSummary.Click += btnFileSizeSummary_Click;
+            // 
             // btnDeleteVectorStoreAssoc
             // 
             btnDeleteVectorStoreAssoc.BackColor = Color.Red;
@@ -350,26 +362,11 @@ namespace oaiUI
             btnGetGitChanges.Location = new Point(131, 230);
             btnGetGitChanges.Margin = new Padding(3, 2, 3, 2);
             btnGetGitChanges.Name = "btnGetGitChanges";
-            btnGetGitChanges.Size = new Size(100, 28);
+            btnGetGitChanges.Size = new Size(123, 28);
             btnGetGitChanges.TabIndex = 11;
             btnGetGitChanges.Text = "Get Git Changes";
             btnGetGitChanges.UseVisualStyleBackColor = true;
             btnGetGitChanges.Click += btnGetGitChanges_Click;
-
-
-            // In InitializeComponent method:
-            btnFileSizeSummary = new Button();
-            btnFileSizeSummary.Location = new Point(106, 48);
-            btnFileSizeSummary.Name = "btnFileSizeSummary";
-            btnFileSizeSummary.Size = new Size(97, 28);
-            btnFileSizeSummary.TabIndex = 14;
-            btnFileSizeSummary.Text = "File Size Report";
-            btnFileSizeSummary.UseVisualStyleBackColor = true;
-            btnFileSizeSummary.Click += btnFileSizeSummary_Click;
-
-            // Add to panel2.Controls
-            panel2.Controls.Add(btnFileSizeSummary);
-
             // 
             // tabPage2
             // 
