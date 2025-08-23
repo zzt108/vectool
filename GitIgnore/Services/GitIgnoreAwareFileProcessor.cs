@@ -62,6 +62,7 @@ namespace GitIgnore.Services
                             try
                             {
                                 fileProcessor(file);
+                                ProcessedFileCount++;
                             }
                             catch (Exception ex) when (_options.ContinueOnError)
                             {
@@ -87,6 +88,7 @@ namespace GitIgnore.Services
                             {
                                 // Process the directory itself if processor provided
                                 directoryProcessor?.Invoke(subDir);
+                                ProcessedDirectoryCount++;
 
                                 // Recurse into subdirectory
                                 ProcessDirectoryRecursive(subDir, fileProcessor, directoryProcessor);

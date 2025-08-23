@@ -199,7 +199,7 @@ namespace UnitTests.GitIgnore
             stats.GitIgnoreFileCount.ShouldBe(3);
             stats.TotalPatterns.ShouldBeGreaterThan(5);
             stats.NegationPatterns.ShouldBe(2); // !important.log and !*.log
-            stats.DirectoryOnlyPatterns.ShouldBe(3); // bin/, temp/, coverage/
+            stats.DirectoryOnlyPatterns.ShouldBe(4); // bin/, obj/, temp/, coverage/
             stats.RootDirectory.ShouldBe(_testRootDirectory);
         }
 

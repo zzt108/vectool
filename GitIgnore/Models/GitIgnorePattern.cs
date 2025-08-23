@@ -57,7 +57,7 @@ namespace GitIgnore.Models
             string escaped = Regex.Escape(pattern);
 
             // 2) Replace the GitIgnore wildcards
-            // Note: order matters—replace ** before *
+            // Note: order mattersâ€”replace ** before *
             escaped = escaped.Replace(@"\*\*/", ".*");
             escaped = escaped.Replace(@"\*", @"[^/\\]*");
             escaped = escaped.Replace(@"\?", @"[^/\\]");
