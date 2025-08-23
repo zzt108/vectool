@@ -10,12 +10,6 @@ namespace UnitTests.GitIgnore
     {
         private const string TestDirectory = @"C:\TestProject";
 
-        [SetUp]
-        public void Setup()
-        {
-            // Setup runs before each test method
-        }
-
         [Test]
         public void Constructor_WithValidPattern_ShouldCreatePattern()
         {
@@ -75,25 +69,10 @@ namespace UnitTests.GitIgnore
             gitIgnorePattern.ProcessedPattern.ShouldBe("bin/debug");
         }
 
-        [Test]
-        public void Constructor_WithCommentPattern_ShouldCreateInvalidPattern()
+        [TestCase("# This is a comment", TestName = "Constructor_WithCommentPattern_ShouldCreateInvalidPattern")]
+        [TestCase("   ", TestName = "Constructor_WithEmptyPattern_ShouldCreateInvalidPattern")]
+        public void Constructor_WithInvalidInput_ShouldCreateInvalidPattern(string pattern)
         {
-            // Arrange
-            var pattern = "# This is a comment";
-
-            // Act
-            var gitIgnorePattern = new GitIgnorePattern(pattern, TestDirectory);
-
-            // Assert
-            gitIgnorePattern.IsValid.ShouldBe(false);
-        }
-
-        [Test]
-        public void Constructor_WithEmptyPattern_ShouldCreateInvalidPattern()
-        {
-            // Arrange
-            var pattern = "   ";
-
             // Act
             var gitIgnorePattern = new GitIgnorePattern(pattern, TestDirectory);
 
@@ -105,7 +84,7 @@ namespace UnitTests.GitIgnore
         public void Constructor_WithNullPattern_ShouldThrowException()
         {
             // Act & Assert
-            Should.Throw<ArgumentNullException>(() => new GitIgnorePattern(null, TestDirectory));
+            Should.Throw<ArgumentNullException>(() => new GitIgnorePattern(null!, TestDirectory));
         }
 
         [Test]
@@ -128,7 +107,7 @@ namespace UnitTests.GitIgnore
             var pattern = new GitIgnorePattern("build/", TestDirectory);
 
             // Act & Assert
-            pattern.IsMatch("build", true).ShouldBe(true);   // Directory
+            pattern.IsMatch("build", true).ShouldBe(true);    // Directory
             pattern.IsMatch("build", false).ShouldBe(false);  // File
         }
 
@@ -137,12 +116,17 @@ namespace UnitTests.GitIgnore
         {
             // Arrange
             var pattern = new GitIgnorePattern("**/temp", TestDirectory);
+            var pattern2 = new GitIgnorePattern("**/temp/", TestDirectory);
 
             // Act & Assert
             pattern.IsMatch("temp", false).ShouldBe(true);
             pattern.IsMatch("src/temp", false).ShouldBe(true);
             pattern.IsMatch("src/deep/temp", false).ShouldBe(true);
             pattern.IsMatch("temp/file.txt", false).ShouldBe(false);
+
+            // A pattern ending in `/` should match files inside that directory.
+            pattern2.IsMatch("temp", true).ShouldBe(true);
+            pattern2.IsMatch("temp/file.txt", false).ShouldBe(true);
         }
 
         [Test]
@@ -179,12 +163,6 @@ namespace UnitTests.GitIgnore
             pattern.IsMatch("src/test.tmp", false).ShouldBe(true);
             pattern.IsMatch("src/deep/nested/test.tmp", false).ShouldBe(true);
             pattern.IsMatch("lib/test.tmp", false).ShouldBe(false);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            // Cleanup after each test method
         }
     }
 }

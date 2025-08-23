@@ -13,7 +13,7 @@ namespace GitIgnore.Models
         public bool IsDirectoryOnly { get; }
         public bool IsRootRelative { get; }
         public string ProcessedPattern { get; }
-        public Regex CompiledPattern { get; }
+        public Regex? CompiledPattern { get; }
         public string SourceDirectory { get; }
 
         public GitIgnorePattern(string pattern, string sourceDirectory)
@@ -37,8 +37,10 @@ namespace GitIgnore.Models
             if (IsDirectoryOnly)
                 workingPattern = workingPattern.TrimEnd('/');
 
-            // Check if root relative
-            IsRootRelative = workingPattern.StartsWith("/") || workingPattern.Contains("/");
+            // Check if root relative. A pattern is root-relative if it starts with a `/`
+            // or contains a `/`, unless it's a `**/` pattern.
+            bool startsWithDoubleStar = workingPattern.StartsWith("**/");
+            IsRootRelative = workingPattern.StartsWith("/") || (!startsWithDoubleStar && workingPattern.Contains("/"));
             if (workingPattern.StartsWith("/"))
                 workingPattern = workingPattern.Substring(1);
 
@@ -46,7 +48,7 @@ namespace GitIgnore.Models
             CompiledPattern = CreateRegex(workingPattern);
         }
 
-        private Regex CreateRegex(string pattern)
+        private Regex? CreateRegex(string pattern)
         {
             if (string.IsNullOrEmpty(pattern))
                 return null;
@@ -69,14 +71,36 @@ namespace GitIgnore.Models
             else if (!startsWithDoubleStar)
                 escaped = @"(^|[/\\])" + escaped;
 
-            // 4) Escape forward slashes 
-            escaped = escaped.Replace("/", @"\/");
+            // 4) Anchor the end of the pattern. This is the crucial part.
+            // A pattern that describes a directory should match the directory itself, or paths inside it.
+            // A pattern that describes a file should match the path exactly.
+            if (IsDirectoryOnly)
+            {
+                // Pattern was "build/". It should match "build" and "build/file".
+                // The regex should match "build" followed by the end of the string or a slash.
+                escaped += @"($|[/\\])";
+            }
+            else if (pattern.EndsWith("/**"))
+            {
+                // Pattern is "a/b/**". Regex is `^a/b/.*`.
+                // This correctly matches everything in the directory. No end anchor is needed.
+            }
+            else if (IsRootRelative) // Covers "src/obj" and "src/**/*.tmp"
+            {
+                // Distinguish "src/obj" from "src/file.log".
+                // If the last part has no wildcards or extension, treat as a directory.
+                string lastSegment = pattern.Substring(pattern.LastIndexOf('/') + 1);
+                bool hasWildcard = lastSegment.Contains('*') || lastSegment.Contains('?');
+                // Heuristic: a dot not at the start suggests an extension.
+                bool hasExtension = lastSegment.Contains('.') && lastSegment.LastIndexOf('.') > 0;
 
-            escaped += "$";
-
-            // pattern: @" "src/**/*.tmp""
-            // @"^src/.*/[^/\\]*\.tmp$"
-            // escaped = @"^src\/.*[^\/\\]*\.tmp$";
+                escaped += (!hasWildcard && !hasExtension) ? @"($|[/\\])" : "$";
+            }
+            else
+            {
+                // Not root-relative, e.g., "*.log" or "**/temp". These must match the end of the string.
+                escaped += "$";
+            }
 
             return new Regex(escaped, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
@@ -86,12 +110,19 @@ namespace GitIgnore.Models
             if (CompiledPattern == null || string.IsNullOrEmpty(ProcessedPattern))
                 return false;
 
-            // If pattern is directory-only but item is not a directory, no match
-            if (IsDirectoryOnly && !isDirectory)
-                return false;
-
             // Normalize path separators
             var normalizedPath = relativePath.Replace('\\', '/');
+
+            // If a pattern is directory-only (e.g., "build/"), it should not match a FILE with the same name (e.g., a file named "build").
+            // It should, however, match a DIRECTORY with that name, or any path WITHIN that directory (e.g., "build/log.txt").
+            if (IsDirectoryOnly && !isDirectory)
+            {
+                // This is a directory-only pattern, but we're checking against a file path.
+                // We should only return false if the file path exactly matches the directory name (e.g., path is "build" for pattern "build/").
+                // If the path contains a separator, it's a file inside the directory, which should be matched.
+                if (!normalizedPath.Contains('/'))
+                    return false;
+            }
 
             return CompiledPattern.IsMatch(normalizedPath);
         }
