@@ -1,9 +1,10 @@
-﻿﻿using oaiVectorStore;
+using oaiVectorStore;
 using OpenAI;
 using NLogShared;
 using System.Configuration;
 using System.Reflection;
 using DocXHandler;
+using System.Windows.Forms;
 
 namespace oaiUI
 {
@@ -468,6 +469,11 @@ namespace oaiUI
 
                         var gitChangesHandler = new DocXHandler.GitChangesHandler(_userInterface);
                         string changes = gitChangesHandler.GetGitChanges(selectedFolders, saveFileDialog.FileName);
+
+                        if (chkCopyToClipboard.Checked)
+                        {
+                            Clipboard.SetText(changes);
+                        }
 
                         if (string.IsNullOrWhiteSpace(changes))
                         {

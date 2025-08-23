@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 
 namespace oaiUI
 {
@@ -58,6 +58,7 @@ namespace oaiUI
             btnFileSizeSummary = new Button();
             btnDeleteVectorStoreAssoc = new Button();
             btnGetGitChanges = new Button();
+            chkCopyToClipboard = new CheckBox();
             tabPage2 = new TabPage();
             statusStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
@@ -244,6 +245,7 @@ namespace oaiUI
             panel1.Controls.Add(labelNewVectorStore);
             panel1.Controls.Add(btnUploadFiles);
             panel1.Controls.Add(btnGetGitChanges);
+            panel1.Controls.Add(chkCopyToClipboard);
             panel1.Controls.Add(comboBoxVectorStores);
             panel1.Controls.Add(txtNewVectorStoreName);
             panel1.Dock = DockStyle.Fill;
@@ -368,6 +370,18 @@ namespace oaiUI
             btnGetGitChanges.UseVisualStyleBackColor = true;
             btnGetGitChanges.Click += btnGetGitChanges_Click;
             // 
+            // chkCopyToClipboard
+            // 
+            this.chkCopyToClipboard.AutoSize = true;
+            this.chkCopyToClipboard.Checked = true;
+            this.chkCopyToClipboard.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkCopyToClipboard.Location = new System.Drawing.Point(260, 236);
+            this.chkCopyToClipboard.Name = "chkCopyToClipboard";
+            this.chkCopyToClipboard.Size = new System.Drawing.Size(128, 19);
+            this.chkCopyToClipboard.TabIndex = 12;
+            this.chkCopyToClipboard.Text = "Copy to Clipboard";
+            this.chkCopyToClipboard.UseVisualStyleBackColor = true;
+            // 
             // tabPage2
             // 
             tabPage2.Location = new Point(4, 24);
@@ -421,6 +435,7 @@ namespace oaiUI
         private Button btnConvertToPdf;
         private Button btnConvertToMd;
         private Button btnGetGitChanges;
+        private System.Windows.Forms.CheckBox chkCopyToClipboard;
 
         private TabControl tabControl1;
         private TabPage tabPage1;

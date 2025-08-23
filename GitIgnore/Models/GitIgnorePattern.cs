@@ -32,6 +32,13 @@ namespace GitIgnore.Models
             IsNegation = pattern.StartsWith("!");
             var workingPattern = IsNegation ? pattern.Substring(1) : pattern;
 
+            // A pattern like `**/foo` is equivalent to `foo`. This simplifies the logic
+            // by handling this special case before regex creation.
+            if (workingPattern.StartsWith("**/") && workingPattern.IndexOfAny(new[] { '/', '\\' }, 3) < 0)
+            {
+                workingPattern = workingPattern.Substring(3);
+            }
+
             // Check if directory only
             IsDirectoryOnly = workingPattern.EndsWith("/") && workingPattern.Length > 1;
             if (IsDirectoryOnly)
@@ -113,13 +120,12 @@ namespace GitIgnore.Models
             // Normalize path separators
             var normalizedPath = relativePath.Replace('\\', '/');
 
-            // If a pattern is directory-only (e.g., "build/"), it should not match a FILE with the same name (e.g., a file named "build").
-            // It should, however, match a DIRECTORY with that name, or any path WITHIN that directory (e.g., "build/log.txt").
+            // For a directory-only pattern (e.g., "build/"), we must distinguish between
+            // a file named "build" (no match) and a file inside, like "build/log.txt" (match).
             if (IsDirectoryOnly && !isDirectory)
             {
-                // This is a directory-only pattern, but we're checking against a file path.
-                // We should only return false if the file path exactly matches the directory name (e.g., path is "build" for pattern "build/").
-                // If the path contains a separator, it's a file inside the directory, which should be matched.
+                // If the path we are checking is a file and does not contain a path separator,
+                // it cannot be a file *within* the directory, so it's not a match.
                 if (!normalizedPath.Contains('/'))
                     return false;
             }
