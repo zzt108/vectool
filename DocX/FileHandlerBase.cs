@@ -64,12 +64,15 @@ namespace DocXHandler
 
         protected string GetFileContent(string file)
         {
-
             string content = File.ReadAllText(file);
             var mdTag = MimeTypeProvider.GetMdTag(Path.GetExtension(file));
             if (mdTag != null)
             {
-                content = $"```{mdTag}\n// File: {file}\n{content}\n```";
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine($"```{mdTag}");
+                sb.AppendLine(content);
+                sb.AppendLine("```");
+                return sb.ToString();
             }
             return content;
         }

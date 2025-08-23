@@ -22,7 +22,8 @@ namespace DocXHandlerTests
             Directory.CreateDirectory(testFolderPath);
 
             // Define the output DOCX file path
-            outputDocxPath = Path.Combine(testFolderPath, "output.docx");
+            outputDocxPath = Path.Combine(Path.GetTempPath(), "DocXHandlerTests_output", "output.docx");
+            Directory.CreateDirectory(Path.GetDirectoryName(outputDocxPath));
             
             // Initialize DocXHandler instance
             docXHandler = new DocXHandler.DocXHandler(null);
