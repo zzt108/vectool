@@ -46,8 +46,9 @@ namespace GitIgnore.Models
 
             // Check if root relative. A pattern is root-relative if it starts with a `/`
             // or contains a `/`, unless it's a `**/` pattern.
-            bool startsWithDoubleStar = workingPattern.StartsWith("**/");
-            IsRootRelative = workingPattern.StartsWith("/") || (!startsWithDoubleStar && workingPattern.Contains("/"));
+            // Corrected logic: If it starts with `**/`, it's never root relative.
+            // Otherwise, if it starts with `/` or contains `/`, it's root relative.
+            IsRootRelative = !OriginalPattern.StartsWith("**/") && (OriginalPattern.StartsWith("/") || OriginalPattern.Contains("/"));
             if (workingPattern.StartsWith("/"))
                 workingPattern = workingPattern.Substring(1);
 
@@ -60,56 +61,69 @@ namespace GitIgnore.Models
             if (string.IsNullOrEmpty(pattern))
                 return null;
 
-            //var escapedPattern = pattern.Replace("/", @"\/");
+            string regexPattern = Regex.Escape(pattern); // Escape all regex metachars first
 
-            // 1) Escape all regex metachars
-            string escaped = Regex.Escape(pattern);
-
-            // 2) Replace the GitIgnore wildcards
+            // Replace GitIgnore wildcards with regex equivalents
             // Note: order matters—replace ** before *
-            escaped = escaped.Replace(@"\*\*/", ".*");
-            escaped = escaped.Replace(@"\*", @"[^/\\]*");
-            escaped = escaped.Replace(@"\?", @"[^/\\]");
+            regexPattern = regexPattern.Replace(@"\*\*/", ".*"); // For Windows paths (escaped \ becomes \\)
+            regexPattern = regexPattern.Replace(@"\*\*/", ".*");  // For Unix paths (escaped / becomes \/)
 
-            // 3) Anchor
-            bool startsWithDoubleStar = pattern.StartsWith("**/") || pattern.StartsWith(@"**\");
-            if (IsRootRelative && !startsWithDoubleStar)
-                escaped = "^" + escaped;
-            else if (!startsWithDoubleStar)
-                escaped = @"(^|[/\\])" + escaped;
+            // Replace * and ? with regex that matches any char except path separators
+            // Here, we need to be careful with escaping.
+            // The literal characters are / and \.
+            // In a regex character class, \ needs to be \\.
+            // So, [^/\\] means match any character except / or \
+            // In a C# string, this would be "[^/\\]".
+            regexPattern = regexPattern.Replace(@"\*", "[^/\\]*"); // Match any char except path separators
+            regexPattern = regexPattern.Replace(@"\?", "[^/\\]");  // Match single char except path separators
 
-            // 4) Anchor the end of the pattern. This is the crucial part.
-            // A pattern that describes a directory should match the directory itself, or paths inside it.
-            // A pattern that describes a file should match the path exactly.
+            // Determine if the original pattern started with **/, which implies matching anywhere
+            bool originalStartsWithDoubleStarSlash = OriginalPattern.StartsWith("**/" ) || OriginalPattern.StartsWith(@"**\");
+
+            // Anchoring
+            if (IsRootRelative)
+            {
+                regexPattern = "^" + regexPattern;
+            }
+            else if (originalStartsWithDoubleStarSlash)
+            {
+                // If original pattern was like "**/foo", it should match "foo", "dir/foo", "dir/subdir/foo"
+                // This means it can be at the string or preceded by any path segments.
+                // The `ProcessedPattern` already removed the `**/` prefix.
+                // So, we need to add `(^|.*/)` to the beginning of the regex.
+                regexPattern = @"(^|.*/)" + regexPattern;
+            }
+            else
+            {
+                // Not root-relative, not starting with **, e.g., "*.log" or "foo".
+                // These should match at the start of a segment or after a slash.
+                regexPattern = @"(^|[/\])" + regexPattern;
+            }
+
+            // End anchoring
             if (IsDirectoryOnly)
             {
-                // Pattern was "build/". It should match "build" and "build/file".
-                // The regex should match "build" followed by the end of the string or a slash.
-                escaped += @"($|[/\\])";
+                regexPattern += @"($|[/\])";
             }
             else if (pattern.EndsWith("/**"))
             {
                 // Pattern is "a/b/**". Regex is `^a/b/.*`.
                 // This correctly matches everything in the directory. No end anchor is needed.
             }
-            else if (IsRootRelative) // Covers "src/obj" and "src/**/*.tmp"
+            else if (IsRootRelative)
             {
-                // Distinguish "src/obj" from "src/file.log".
-                // If the last part has no wildcards or extension, treat as a directory.
-                string lastSegment = pattern.Substring(pattern.LastIndexOf('/') + 1);
-                bool hasWildcard = lastSegment.Contains('*') || lastSegment.Contains('?');
-                // Heuristic: a dot not at the start suggests an extension.
-                bool hasExtension = lastSegment.Contains('.') && lastSegment.LastIndexOf('.') > 0;
-
-                escaped += (!hasWildcard && !hasExtension) ? @"($|[/\\])" : "$";
+                // For root-relative patterns that don't end with /**, they should match the end of the string.
+                // This covers "src/obj" and "src/file.log"
+                regexPattern += "$";
             }
             else
             {
-                // Not root-relative, e.g., "*.log" or "**/temp". These must match the end of the string.
-                escaped += "$";
+                // For patterns that are not root-relative and don't end with /**,
+                // they should match the end of the string. This covers "*.log" or "foo".
+                regexPattern += "$";
             }
 
-            return new Regex(escaped, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            return new Regex(regexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
 
         public bool IsMatch(string relativePath, bool isDirectory)

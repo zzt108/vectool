@@ -164,5 +164,32 @@ namespace UnitTests.GitIgnore
             pattern.IsMatch("src/deep/nested/test.tmp", false).ShouldBe(true);
             pattern.IsMatch("lib/test.tmp", false).ShouldBe(false);
         }
+
+        [Test]
+        public void IsMatch_WithDoubleAsteriskObjPattern_ShouldMatchProjectAssetsJson()
+        {
+            // Arrange
+            var pattern = new GitIgnorePattern("**/obj", TestDirectory);
+
+            // Act & Assert
+            // Should match obj directory itself
+            pattern.IsMatch("obj", true).ShouldBe(true);
+            pattern.IsMatch("src/obj", true).ShouldBe(true);
+            pattern.IsMatch("src/deep/obj", true).ShouldBe(true);
+
+            // Should match files directly inside obj
+            pattern.IsMatch("obj/file.txt", false).ShouldBe(true);
+            pattern.IsMatch("src/obj/file.txt", false).ShouldBe(true);
+            pattern.IsMatch("src/deep/obj/file.txt", false).ShouldBe(true);
+
+            // Specifically test project.assets.json
+            pattern.IsMatch("MimeTypes/obj/project.assets.json", false).ShouldBe(true);
+            pattern.IsMatch("AnotherProject/bin/Debug/net8.0/obj/project.assets.json", false).ShouldBe(true);
+
+            // Should not match if "obj" is part of a filename or not a directory segment
+            pattern.IsMatch("object.txt", false).ShouldBe(false);
+            pattern.IsMatch("myobjfile.log", false).ShouldBe(false);
+            pattern.IsMatch("notobj/file.txt", false).ShouldBe(false);
+        }
     }
 }
