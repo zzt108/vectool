@@ -4,7 +4,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System;
 using System.Text;
-using GitIgnore.Services;
 
 namespace DocXHandler
 {
