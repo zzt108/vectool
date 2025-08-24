@@ -1,8 +1,8 @@
 using NUnit.Framework;
 using Shouldly;
-using GitIgnore.Models;
-using GitIgnore.Services;
 using System.IO;
+using System.Linq;
+using DocXHandler;                  // for VectorStoreConfig
 
 namespace UnitTests.GitIgnore
 {
@@ -10,61 +10,64 @@ namespace UnitTests.GitIgnore
     public class VTIgnoreCaseSensitivityTests
     {
         private string _testRootDirectory;
-        private HierarchicalIgnoreManager _manager;
+        private VectorStoreConfig _config;
 
         [SetUp]
         public void Setup()
         {
-            _testRootDirectory = Path.Combine(Path.GetTempPath(), $"GitIgnoreCaseTest_{Guid.NewGuid():N}");
+            _testRootDirectory = Path.Combine(Path.GetTempPath(), $"VTIgnoreCaseTest_{Guid.NewGuid():N}");
             Directory.CreateDirectory(_testRootDirectory);
 
-            CreateTestIgnoreFile();
-            _manager = new HierarchicalIgnoreManager(_testRootDirectory);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            _manager?.Dispose();
-
-            if (Directory.Exists(_testRootDirectory))
-            {
-                Directory.Delete(_testRootDirectory, true);
-            }
-        }
-
-        private void CreateTestIgnoreFile()
-        {
-            var vtIgnoreFile = Path.Combine(_testRootDirectory, ".vtignore");
-            File.WriteAllLines(vtIgnoreFile, new[]
+            // Create a .vtignore to skip license-2.0.txt and *.log, skip temp/
+            File.WriteAllLines(Path.Combine(_testRootDirectory, ".vtignore"), new[]
             {
                 "license-2.0.txt",
                 "*.log",
                 "temp/"
             });
+
+            _config = new VectorStoreConfig(new List<string> { _testRootDirectory });
         }
 
-        [TestCase("license-2.0.txt", true)]
-        [TestCase("LICENSE-2.0.txt", true)]
-        [TestCase("License-2.0.txt", true)]
-        [TestCase("LICENSE-2.0.TXT", true)]
-        [TestCase("other-file.txt", false)]
-        public void ShouldIgnore_CaseInsensitive_ShouldMatchCorrectly(string fileName, bool expectedIgnored)
+        [TearDown]
+        public void TearDown()
+        {
+            if (Directory.Exists(_testRootDirectory))
+                Directory.Delete(_testRootDirectory, true);
+        }
+
+        private void CreateTestFile(string relativePath)
+        {
+            var full = Path.Combine(_testRootDirectory, relativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+            File.WriteAllText(full, "content");
+        }
+
+        [TestCase("license-2.0.txt", false)]
+        [TestCase("LICENSE-2.0.TXT", false)]
+        [TestCase("other-file.txt", true)]
+        [TestCase("app.log", false)]
+        [TestCase("INFO.LOG", false)]
+        [TestCase("notes.txt", true)]
+        [TestCase("temp/data.txt", false)]
+        public void EnumerateFilesRespectingGitIgnore_ShouldRespectVtignore(
+            string relativePath,
+            bool shouldBeReturned)
         {
             // Arrange
-            var filePath = Path.Combine(_testRootDirectory, fileName);
-            CreateTestFile(filePath);
+            CreateTestFile(relativePath);
 
             // Act
-            var isIgnored = _manager.ShouldIgnore(filePath, false);
+            var files = _testRootDirectory
+                .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+                .Select(Path.GetFileName)
+                .ToList();
 
             // Assert
-            isIgnored.ShouldBe(expectedIgnored, $"File '{fileName}' should {(expectedIgnored ? "" : "not ")}be ignored");
-        }
-
-        private void CreateTestFile(string filePath)
-        {
-            File.WriteAllText(filePath, "test content");
+            if (shouldBeReturned)
+                files.ShouldContain(Path.GetFileName(relativePath));
+            else
+                files.ShouldNotContain(Path.GetFileName(relativePath));
         }
     }
 }

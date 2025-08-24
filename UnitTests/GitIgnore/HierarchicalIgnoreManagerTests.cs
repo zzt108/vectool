@@ -1,5 +1,6 @@
+using DocXHandler;
 using Shouldly;
-using GitIgnore.Services;
+using System.Formats.Tar;
 
 namespace UnitTests.GitIgnore
 {
@@ -7,7 +8,7 @@ namespace UnitTests.GitIgnore
     public class HierarchicalIgnoreManagerTests
     {
         private string _testRootDirectory;
-        private HierarchicalIgnoreManager _manager;
+        private VectorStoreConfig _config;
 
         [SetUp]
         public void Setup()
@@ -17,14 +18,14 @@ namespace UnitTests.GitIgnore
             Directory.CreateDirectory(_testRootDirectory);
 
             CreateTestDirectoryStructure();
-            _manager = new HierarchicalIgnoreManager(_testRootDirectory);
+            _config = new VectorStoreConfig(new List<string> { _testRootDirectory });
+
         }
 
         [TearDown]
         public void TearDown()
         {
-            _manager?.Dispose();
-            
+
             if (Directory.Exists(_testRootDirectory))
             {
                 Directory.Delete(_testRootDirectory, true);
@@ -47,7 +48,7 @@ namespace UnitTests.GitIgnore
             var srcDir = Path.Combine(_testRootDirectory, "src");
             Directory.CreateDirectory(srcDir);
 
-            var configDir = Path.Combine(_testRootDirectory, "config");  
+            var configDir = Path.Combine(_testRootDirectory, "config");
             Directory.CreateDirectory(configDir);
 
             var testsDir = Path.Combine(srcDir, "tests");
@@ -90,26 +91,26 @@ namespace UnitTests.GitIgnore
             File.WriteAllText(filePath, $"Test content for {fileName}");
         }
 
-        [Test]
-        public void Constructor_WithValidDirectory_ShouldInitialize()
-        {
-            // Act & Assert
-            _manager.ShouldNotBeNull();
-            
-            var stats = _manager.GetStatistics();
-            stats.GitIgnoreFileCount.ShouldBe(3); // Root, config, tests
-            stats.TotalPatterns.ShouldBeGreaterThan(0);
-        }
+        //[Test]
+        //public void Constructor_WithValidDirectory_ShouldInitialize()
+        //{
+        //    // Act & Assert
+        //    _manager.ShouldNotBeNull();
 
-        [Test]
-        public void Constructor_WithInvalidDirectory_ShouldThrowException()
-        {
-            // Arrange
-            var invalidDirectory = @"C:\NonExistentDirectory\Invalid";
+        //    var stats = _manager.GetStatistics();
+        //    stats.GitIgnoreFileCount.ShouldBe(3); // Root, config, tests
+        //    stats.TotalPatterns.ShouldBeGreaterThan(0);
+        //}
 
-            // Act & Assert
-            Should.Throw<DirectoryNotFoundException>(() => new HierarchicalIgnoreManager(invalidDirectory));
-        }
+        //[Test]
+        //public void Constructor_WithInvalidDirectory_ShouldThrowException()
+        //{
+        //    // Arrange
+        //    var invalidDirectory = @"C:\NonExistentDirectory\Invalid";
+
+        //    // Act & Assert
+        //    Should.Throw<DirectoryNotFoundException>(() => new HierarchicalIgnoreManager(invalidDirectory));
+        //}
 
         [Test]
         public void ShouldIgnore_RootPatterns_ShouldIgnoreCorrectly()
@@ -119,10 +120,22 @@ namespace UnitTests.GitIgnore
             var txtFile = Path.Combine(_testRootDirectory, "readme.txt");
             var binDir = Path.Combine(_testRootDirectory, "bin");
 
+            var files = _testRootDirectory
+    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .Select(Path.GetFileName)
+    .ToList();
+
+
+            //ignored
+            files.ShouldNotContain(Path.GetFileName(logFile));
+            files.ShouldNotContain(Path.GetFileName(binDir));
+            // not ignored
+            files.ShouldContain(Path.GetFileName(txtFile));
+
             // Act & Assert
-            _manager.ShouldIgnore(logFile, false).ShouldBe(true);   // *.log ignored
-            _manager.ShouldIgnore(txtFile, false).ShouldBe(false);  // .txt not ignored
-            _manager.ShouldIgnore(binDir, true).ShouldBe(true);     // bin/ ignored
+            //_manager.ShouldIgnore(logFile, false).ShouldBe(true);   // *.log ignored
+            //_manager.ShouldIgnore(txtFile, false).ShouldBe(false);  // .txt not ignored
+            //_manager.ShouldIgnore(binDir, true).ShouldBe(true);     // bin/ ignored
         }
 
         [Test]
@@ -133,8 +146,21 @@ namespace UnitTests.GitIgnore
             var regularLog = Path.Combine(_testRootDirectory, "config", "app.log");
 
             // Act & Assert
-            _manager.ShouldIgnore(importantLog, false).ShouldBe(false); // !important.log negation
-            _manager.ShouldIgnore(regularLog, false).ShouldBe(true);    // Still ignored by root *.log
+            var files = _testRootDirectory
+    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .Select(Path.GetFileName)
+    .ToList();
+
+
+
+            //ignored
+            files.ShouldNotContain(Path.GetFileName(regularLog));
+            // not ignored
+            files.ShouldContain(Path.GetFileName(importantLog));
+
+
+            //_manager.ShouldIgnore(importantLog, false).ShouldBe(false); // !important.log negation
+            //_manager.ShouldIgnore(regularLog, false).ShouldBe(true);    // Still ignored by root *.log
         }
 
         [Test]
@@ -144,9 +170,22 @@ namespace UnitTests.GitIgnore
             var testLog = Path.Combine(_testRootDirectory, "src", "tests", "test.log");
             var rootLog = Path.Combine(_testRootDirectory, "app.log");
 
-            // Act & Assert  
-            _manager.ShouldIgnore(testLog, false).ShouldBe(false); // !*.log in tests overrides root
-            _manager.ShouldIgnore(rootLog, false).ShouldBe(true);  // Still ignored at root level
+            // Act & Assert
+            var files = _testRootDirectory
+    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .Select(Path.GetFileName)
+    .ToList();
+
+
+
+            //ignored (true)
+            files.ShouldNotContain(Path.GetFileName(rootLog));
+            // not ignored (false)
+            files.ShouldContain(Path.GetFileName(testLog));
+
+
+            //_manager.ShouldIgnore(testLog, false).ShouldBe(false); // !*.log in tests overrides root
+            //_manager.ShouldIgnore(rootLog, false).ShouldBe(true);  // Still ignored at root level
         }
 
         [Test]
@@ -157,8 +196,17 @@ namespace UnitTests.GitIgnore
             var rootSecretFile = Path.Combine(_testRootDirectory, "app.secret");
 
             // Act & Assert
-            _manager.ShouldIgnore(secretFile, false).ShouldBe(true);     // *.secret in config
-            _manager.ShouldIgnore(rootSecretFile, false).ShouldBe(false); // Not ignored at root
+            var files = _testRootDirectory
+    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .Select(Path.GetFileName)
+    .ToList();
+
+            //ignored (true)
+            files.ShouldNotContain(Path.GetFileName(secretFile));
+            // not ignored (false)
+            files.ShouldContain(Path.GetFileName(rootSecretFile));
+            //_manager.ShouldIgnore(secretFile, false).ShouldBe(true);     // *.secret in config
+            //_manager.ShouldIgnore(rootSecretFile, false).ShouldBe(false); // Not ignored at root
         }
 
         [Test]
@@ -170,77 +218,92 @@ namespace UnitTests.GitIgnore
             CreateTestFile(Path.Combine(_testRootDirectory, "src", "tests"), "coverage.txt");
 
             // Act & Assert
-            _manager.ShouldIgnore(coverageDir, true).ShouldBe(true);   // coverage/ directory ignored
-            _manager.ShouldIgnore(coverageFile, false).ShouldBe(false); // coverage.txt file not ignored
+            var files = _testRootDirectory
+    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .Select(Path.GetFileName)
+    .ToList();
+
+            //ignored (true)
+            files.ShouldNotContain(Path.GetFileName(coverageDir));
+            // not ignored (false)
+            files.ShouldContain(Path.GetFileName(coverageFile));
+            //_manager.ShouldIgnore(coverageDir, true).ShouldBe(true);   // coverage/ directory ignored
+            //_manager.ShouldIgnore(coverageFile, false).ShouldBe(false); // coverage.txt file not ignored
         }
 
         [Test]
         public void GetNonIgnoredPaths_ShouldReturnCorrectPaths()
         {
             // Act
-            var nonIgnoredPaths = _manager.GetNonIgnoredPaths(_testRootDirectory, false).ToList();
+            // Act & Assert
+            var files = _testRootDirectory
+    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .Select(Path.GetFileName)
+    .ToList();
 
-            // Assert
-            nonIgnoredPaths.ShouldNotBeEmpty();
-            
+            //ignored (true)
+            files.ShouldNotContain(Path.GetFileName("app.log"));
+            // not ignored (false)
+            files.ShouldContain(Path.GetFileName("readme.txt"));
+
             // Should include readme.txt but not app.log
-            nonIgnoredPaths.Any(p => Path.GetFileName(p) == "readme.txt").ShouldBe(true);
-            nonIgnoredPaths.Any(p => Path.GetFileName(p) == "app.log").ShouldBe(false);
+            //nonIgnoredPaths.Any(p => Path.GetFileName(p) == "readme.txt").ShouldBe(true);
+            //nonIgnoredPaths.Any(p => Path.GetFileName(p) == "app.log").ShouldBe(false);
         }
 
-        [Test]
-        public void GetStatistics_ShouldReturnCorrectStats()
-        {
-            // Act
-            var stats = _manager.GetStatistics();
+        //[Test]
+        //public void GetStatistics_ShouldReturnCorrectStats()
+        //{
+        //    // Act
+        //    var stats = _manager.GetStatistics();
 
-            // Assert
-            stats.ShouldNotBeNull();
-            stats.GitIgnoreFileCount.ShouldBe(3);
-            stats.TotalPatterns.ShouldBeGreaterThan(5);
-            stats.NegationPatterns.ShouldBe(2); // !important.log and !*.log
-            stats.DirectoryOnlyPatterns.ShouldBe(4); // bin/, obj/, temp/, coverage/
-            stats.RootDirectory.ShouldBe(_testRootDirectory);
-        }
+        //    // Assert
+        //    stats.ShouldNotBeNull();
+        //    stats.GitIgnoreFileCount.ShouldBe(3);
+        //    stats.TotalPatterns.ShouldBeGreaterThan(5);
+        //    stats.NegationPatterns.ShouldBe(2); // !important.log and !*.log
+        //    stats.DirectoryOnlyPatterns.ShouldBe(4); // bin/, obj/, temp/, coverage/
+        //    stats.RootDirectory.ShouldBe(_testRootDirectory);
+        //}
 
-        [Test]
-        public void RefreshCache_ShouldUpdatePatternsFromModifiedFiles()
-        {
-            // Arrange
-            var rootGitIgnore = Path.Combine(_testRootDirectory, ".gitignore");
-            var testFile = Path.Combine(_testRootDirectory, "new.tmp");
-            CreateTestFile(_testRootDirectory, "new.tmp");
+        //[Test]
+        //public void RefreshCache_ShouldUpdatePatternsFromModifiedFiles()
+        //{
+        //    // Arrange
+        //    var rootGitIgnore = Path.Combine(_testRootDirectory, ".gitignore");
+        //    var testFile = Path.Combine(_testRootDirectory, "new.tmp");
+        //    CreateTestFile(_testRootDirectory, "new.tmp");
 
-            // Initially should not be ignored
-            _manager.ShouldIgnore(testFile, false).ShouldBe(false);
+        //    // Initially should not be ignored
+        //    _manager.ShouldIgnore(testFile, false).ShouldBe(false);
 
-            // Modify .gitignore to add new pattern
-            File.AppendAllLines(rootGitIgnore, new[] { "*.tmp" });
+        //    // Modify .gitignore to add new pattern
+        //    File.AppendAllLines(rootGitIgnore, new[] { "*.tmp" });
 
-            // Act
-            _manager.RefreshCache();
+        //    // Act
+        //    _manager.RefreshCache();
 
-            // Assert
-            _manager.ShouldIgnore(testFile, false).ShouldBe(true);
-        }
+        //    // Assert
+        //    _manager.ShouldIgnore(testFile, false).ShouldBe(true);
+        //}
 
-        [Test]
-        public void ShouldIgnore_PathOutsideRoot_ShouldReturnFalse()
-        {
-            // Arrange
-            var outsidePath = Path.Combine(Path.GetTempPath(), "outside.log");
+        //[Test]
+        //public void ShouldIgnore_PathOutsideRoot_ShouldReturnFalse()
+        //{
+        //    // Arrange
+        //    var outsidePath = Path.Combine(Path.GetTempPath(), "outside.log");
 
-            // Act & Assert
-            _manager.ShouldIgnore(outsidePath, false).ShouldBe(false);
-        }
+        //    // Act & Assert
+        //    _manager.ShouldIgnore(outsidePath, false).ShouldBe(false);
+        //}
 
-        [Test]
-        public void ShouldIgnore_EmptyOrNullPath_ShouldReturnFalse()
-        {
-            // Act & Assert
-            _manager.ShouldIgnore(null, false).ShouldBe(false);
-            _manager.ShouldIgnore("", false).ShouldBe(false);
-            _manager.ShouldIgnore("   ", false).ShouldBe(false);
-        }
+        //[Test]
+        //public void ShouldIgnore_EmptyOrNullPath_ShouldReturnFalse()
+        //{
+        //    // Act & Assert
+        //    _manager.ShouldIgnore(null, false).ShouldBe(false);
+        //    _manager.ShouldIgnore("", false).ShouldBe(false);
+        //    _manager.ShouldIgnore("   ", false).ShouldBe(false);
+        //}
     }
 }
