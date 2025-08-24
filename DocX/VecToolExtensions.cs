@@ -13,10 +13,11 @@ namespace DocXHandler
         {
             // 1. Find all ignore files from root to `directoryPath`
             var ignoreFiles = config.FolderPaths
-                .SelectMany(root => TraverseUp(directoryPath, root))
-                .Where(f => Path.GetFileName(f) is ".gitignore" or ".vtignore")
-                .OrderBy(f => f.Length)  // root first, child later
-                .ToList();
+                   .Where(root => directoryPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                   .SelectMany(root => TraverseUp(directoryPath, root))
+                   .Where(f => Path.GetFileName(f) is ".gitignore" or ".vtignore")
+                    .OrderBy(f => f.Length)  // root first, child later
+                    .ToList();
 
             // 2. Initialize allowed list with all files under `directoryPath`
             var allFiles = Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories).ToList();
