@@ -105,13 +105,13 @@ namespace UnitTests.GitIgnore
             CreateFile("src/ignore.tmp");
 
             var files = _testRoot
-                .EnumerateFilesRespectingGitIgnore(_config)
+                .EnumerateFilesRespectingGitIgnore2(_config)
                 .Where(path => path.StartsWith(Path.Combine(_testRoot, "src")))
-                .Select(Path.GetFileName)
+                .Select(f => FileHandlerBase.RelativePath(_testRoot,f))
                 .ToList();
 
-            files.ShouldContain("keep.tmp");
-            files.ShouldNotContain("ignore.tmp");
+            files.ShouldContain("src/keep.tmp");
+            files.ShouldNotContain("src/ignore.tmp");
         }
     }
 }

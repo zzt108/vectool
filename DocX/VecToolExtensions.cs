@@ -47,6 +47,57 @@ namespace DocXHandler
             return allowed;
         }
 
+        public static IEnumerable<string> EnumerateFilesRespectingGitIgnore2(
+    this string directoryPath,
+    VectorStoreConfig config)
+        {
+            var allFiles = Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories);
+            var result = new List<string>();
+
+            foreach (var file in allFiles)
+            {
+                bool shouldIgnore = false;
+
+                // Check against all applicable ignore files
+                var applicableIgnoreFiles = GetApplicableIgnoreFiles(file, config);
+
+                foreach (var ignoreFile in applicableIgnoreFiles.OrderBy(f => f.Length))
+                {
+                    var ignore = new GitignoreParser(File.ReadAllText(ignoreFile));
+                    var relativePath = Path.GetRelativePath(Path.GetDirectoryName(ignoreFile)!, file);
+
+                    if (ignore.Accepts(relativePath))
+                    {
+                        shouldIgnore = false; // Negation rule
+                    }
+                    else if (ignore.Denies(relativePath))
+                    {
+                        shouldIgnore = true;
+                    }
+                }
+
+                if (!shouldIgnore)
+                {
+                    result.Add(file);
+                }
+            }
+
+            return result;
+        }
+
+        private static IEnumerable<string> GetApplicableIgnoreFiles(string file, VectorStoreConfig config)
+        {
+            var folders = config.FolderPaths
+                   .Where(root => file.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                   .ToList();
+            var ignoreFiles = folders
+                .SelectMany(f => Directory.GetFiles(f, "*.*ignore", SearchOption.AllDirectories))
+                   .OrderBy(f => f.Length)  // root first, child later
+                   .ToList();
+            return ignoreFiles;
+        }
+
+
         /// <summary>
         /// Enumerates each directory from <paramref name="startDirectory"/> up to (and including)
         /// <paramref name="rootDirectory"/>, stopping when <paramref name="rootDirectory"/> is reached
