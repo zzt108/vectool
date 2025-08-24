@@ -74,6 +74,7 @@ namespace UnitTests.GitIgnore
             // Create some test files
             CreateTestFile(_testRootDirectory, "app.log");
             CreateTestFile(_testRootDirectory, "readme.txt");
+            CreateTestFile(_testRootDirectory, "config.secret");
             CreateTestFile(configDir, "important.log");
             CreateTestFile(configDir, "config.secret");
             CreateTestFile(testsDir, "test.log");
@@ -192,19 +193,19 @@ namespace UnitTests.GitIgnore
         public void ShouldIgnore_LocalPatterns_ShouldApplyLocally()
         {
             // Arrange
-            var secretFile = Path.Combine(_testRootDirectory, "config", "app.secret");
-            var rootSecretFile = Path.Combine(_testRootDirectory, "app.secret");
+            var secretFile = Path.Combine(_testRootDirectory, "config", "config.secret");
+            var rootSecretFile = Path.Combine(_testRootDirectory, "config.secret");
 
             // Act & Assert
             var files = _testRootDirectory
-    .EnumerateFilesRespectingGitIgnore(_config)
-    .Select(Path.GetFileName)
-    .ToList();
+                .EnumerateFilesRespectingGitIgnore(_config)
+                .Select(file => FileHandlerBase.RelativePath(_testRootDirectory, file))
+                .ToList();
 
             //ignored (true)
-            files.ShouldNotContain(Path.GetFileName(secretFile));
+            files.ShouldNotContain(FileHandlerBase.RelativePath(_testRootDirectory, secretFile));
             // not ignored (false)
-            files.ShouldContain(Path.GetFileName(rootSecretFile));
+            files.ShouldContain(FileHandlerBase.RelativePath(_testRootDirectory, rootSecretFile));
             //_manager.ShouldIgnore(secretFile, false).ShouldBe(true);     // *.secret in config
             //_manager.ShouldIgnore(rootSecretFile, false).ShouldBe(false); // Not ignored at root
         }
@@ -234,12 +235,11 @@ namespace UnitTests.GitIgnore
         [Test]
         public void GetNonIgnoredPaths_ShouldReturnCorrectPaths()
         {
-            // Act
             // Act & Assert
             var files = _testRootDirectory
-    .EnumerateFilesRespectingGitIgnore(_config)
-    .Select(Path.GetFileName)
-    .ToList();
+                .EnumerateFilesRespectingGitIgnore(_config)
+                .Select(Path.GetFileName)
+                .ToList();
 
             //ignored (true)
             files.ShouldNotContain(Path.GetFileName("app.log"));

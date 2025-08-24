@@ -12,12 +12,14 @@ namespace DocXHandler
             VectorStoreConfig config)
         {
             // 1. Find all ignore files from root to `directoryPath`
-            var ignoreFiles = config.FolderPaths
+            var folders = config.FolderPaths
                    .Where(root => directoryPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-                   .SelectMany(root => TraverseUp(directoryPath, root))
-                   .Where(f => Path.GetFileName(f) is ".gitignore" or ".vtignore")
-                    .OrderBy(f => f.Length)  // root first, child later
-                    .ToList();
+                   .ToList();
+            var ignoreFiles = folders
+                .SelectMany(f => Directory.GetFiles(f, "*.*ignore", SearchOption.AllDirectories))
+                   //.Where(f => Path.GetFileName(f) == ".gitignore" || Path.GetFileName(f) == ".vtignore")
+                   .OrderBy(f => f.Length)  // root first, child later
+                   .ToList();
 
             // 2. Initialize allowed list with all files under `directoryPath`
             var allFiles = Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories).ToList();
@@ -27,9 +29,19 @@ namespace DocXHandler
             foreach (var ignoreFile in ignoreFiles)
             {
                 (var accept, var deny) = GitignoreParser.Parse(ignoreFile, Encoding.UTF8);
-                // Remove denied, then re-add any accepted (negations)
-                foreach (var d in deny) allowed.Remove(d);
-                foreach (var a in accept) allowed.Add(a);
+                string baseDir = Path.GetDirectoryName(ignoreFile)!;
+                // Remove denied patterns, normalizing to absolute paths
+                foreach (var d in deny)
+                {
+                    string deniedPath = Path.IsPathRooted(d) ? d : Path.GetFullPath(Path.Combine(baseDir, d));
+                    allowed.RemoveWhere(f => string.Equals(f, deniedPath, StringComparison.OrdinalIgnoreCase));
+                }
+                // Re-add accepted (negations)
+                foreach (var a in accept)
+                {
+                    string acceptedPath = Path.IsPathRooted(a) ? a : Path.GetFullPath(Path.Combine(baseDir, a));
+                    allowed.Add(acceptedPath);
+                }
             }
 
             return allowed;
