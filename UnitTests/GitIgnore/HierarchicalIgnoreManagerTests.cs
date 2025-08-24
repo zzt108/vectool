@@ -121,7 +121,7 @@ namespace UnitTests.GitIgnore
             var binDir = Path.Combine(_testRootDirectory, "bin");
 
             var files = _testRootDirectory
-    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .EnumerateFilesRespectingGitIgnore(_config)
     .Select(Path.GetFileName)
     .ToList();
 
@@ -147,7 +147,7 @@ namespace UnitTests.GitIgnore
 
             // Act & Assert
             var files = _testRootDirectory
-    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .EnumerateFilesRespectingGitIgnore(_config)
     .Select(Path.GetFileName)
     .ToList();
 
@@ -172,7 +172,7 @@ namespace UnitTests.GitIgnore
 
             // Act & Assert
             var files = _testRootDirectory
-    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .EnumerateFilesRespectingGitIgnore(_config)
     .Select(Path.GetFileName)
     .ToList();
 
@@ -197,7 +197,7 @@ namespace UnitTests.GitIgnore
 
             // Act & Assert
             var files = _testRootDirectory
-    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .EnumerateFilesRespectingGitIgnore(_config)
     .Select(Path.GetFileName)
     .ToList();
 
@@ -219,7 +219,7 @@ namespace UnitTests.GitIgnore
 
             // Act & Assert
             var files = _testRootDirectory
-    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .EnumerateFilesRespectingGitIgnore(_config)
     .Select(Path.GetFileName)
     .ToList();
 
@@ -237,7 +237,7 @@ namespace UnitTests.GitIgnore
             // Act
             // Act & Assert
             var files = _testRootDirectory
-    .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+    .EnumerateFilesRespectingGitIgnore(_config)
     .Select(Path.GetFileName)
     .ToList();
 

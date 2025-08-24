@@ -59,7 +59,7 @@ namespace UnitTests.GitIgnore
 
             // Act
             var files = _testRootDirectory
-                .EnumerateFilesRespectingGitIgnore(_config, "*.*")
+                .EnumerateFilesRespectingGitIgnore(_config)
                 .Select(Path.GetFileName)
                 .ToList();
 

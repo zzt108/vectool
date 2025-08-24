@@ -28,13 +28,8 @@ namespace DocXHandler
                                    .Replace('\\', '/');
         }
 
-        protected bool IsFileValid(string filePath, string? outputPath)
+        protected bool IsFileValid(string filePath)
         {
-            // Skip output file itself
-            if (outputPath != null && filePath == outputPath)
-            {
-                return false;
-            }
 
             try
             {
@@ -80,7 +75,7 @@ namespace DocXHandler
         {
             // OLD: return Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-            return directory.EnumerateFilesRespectingGitIgnore(_vectorStoreConfig, "*.*");
+            return directory.EnumerateFilesRespectingGitIgnore(_vectorStoreConfig).Where(f => IsFileValid(f));
         }
 
         /// <summary>
