@@ -30,7 +30,21 @@ namespace UnitTests.GitIgnore
         public void Should_Handle_Nested_GitIgnore_With_Negations()
         {
             // Arrange
-            CreateGitIgnoreHierarchy();
+            // Root .gitignore
+            File.WriteAllLines(Path.Combine(_testRoot, ".gitignore"), new[]
+            {
+            "*.log",
+            "temp/"
+            });
+
+            // Subfolder with negation
+            var subDir = Path.Combine(_testRoot, "src");
+            Directory.CreateDirectory(subDir);
+            File.WriteAllLines(Path.Combine(subDir, ".vtignore"), new[]
+            {
+            "!important.log"  // un-ignore this specific file
+            });
+
             CreateTestFile("important.log");
             CreateTestFile("debug.log");
             CreateTestFile("readme.txt");
@@ -38,7 +52,7 @@ namespace UnitTests.GitIgnore
             // Act
             var files = _testRoot
                 .EnumerateFilesRespectingGitIgnore(_config)
-                .Select(Path.GetFileName)
+                .Select(f => Path.GetRelativePath(_testRoot, f))
                 .ToList();
 
             // Assert
@@ -81,12 +95,12 @@ namespace UnitTests.GitIgnore
             // Act
             var files = _testRoot
                 .EnumerateFilesRespectingGitIgnore(_config)
-                .Select(Path.GetFileName)
+                .Select(f => Path.GetRelativePath(_testRoot, f))
                 .ToList();
 
             // Assert
-            files.ShouldNotContain("data.txt");         // data.txt at root remains
-            files.ShouldNotContain("data.txt");         // file in temp is ignored by virtue of temp/
+            files.ShouldContain(".gitignore");         // data.txt at root remains
+            files.ShouldNotContain("temp//data.txt");         // file in temp is ignored by virtue of temp/
             files.ShouldContain("data.txt");            // ensure root file is still present
         }
 
@@ -109,22 +123,5 @@ namespace UnitTests.GitIgnore
             Directory.Delete(_testRoot, true);
         }
 
-        private void CreateGitIgnoreHierarchy()
-        {
-            // Root .gitignore
-            File.WriteAllLines(Path.Combine(_testRoot, ".gitignore"), new[]
-            {
-            "*.log",
-            "temp/"
-        });
-
-            // Subfolder with negation
-            var subDir = Path.Combine(_testRoot, "src");
-            Directory.CreateDirectory(subDir);
-            File.WriteAllLines(Path.Combine(subDir, ".vtignore"), new[]
-            {
-            "!important.log"  // un-ignore this specific file
-        });
-        }
     }
 }

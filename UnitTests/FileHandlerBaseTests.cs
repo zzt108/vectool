@@ -1,6 +1,8 @@
 ﻿using DocXHandler;
 using Shouldly;
 
+namespace UnitTests;
+
 [TestFixture]
 public class FileHandlerBaseTests
 {
