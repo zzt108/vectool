@@ -45,7 +45,7 @@ namespace UnitTests.GitIgnore
             "!important.log"  // un-ignore this specific file
             });
 
-            CreateTestFile("important.log");
+            CreateTestFile("src/important.log");
             CreateTestFile("debug.log");
             CreateTestFile("readme.txt");
 
@@ -56,7 +56,7 @@ namespace UnitTests.GitIgnore
                 .ToList();
 
             // Assert
-            files.ShouldContain("important.log");    // negated in subfolder
+            files.ShouldContain("src\\important.log");    // negated in subfolder
             files.ShouldNotContain("debug.log");     // ignored by root
             files.ShouldContain("readme.txt");       // not ignored
         }

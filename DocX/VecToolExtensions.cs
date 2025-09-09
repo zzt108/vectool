@@ -39,6 +39,10 @@ namespace DocXHandler
                 // Re-add accepted (negations)
                 foreach (var a in accept)
                 {
+                    if (Path.EndsInDirectorySeparator(a)) //
+                    {
+                        continue;
+                    }
                     string acceptedPath = Path.IsPathRooted(a) ? a : Path.GetFullPath(Path.Combine(baseDir, a));
                     allowed.Add(acceptedPath);
                 }
