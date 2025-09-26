@@ -11,7 +11,7 @@
     <ApplicationIcon>..\Media\icon.ico</ApplicationIcon>
 
     <!-- Version number properties -->
-    <zztMVersion>1</zztMVersion>
+    <zztMVersion>3</zztMVersion>
     <BuildVersion>$([System.DateTime]::UtcNow.ToString("Hmm"))</BuildVersion>
     <zztPVersion>$([System.DateTime]::UtcNow.ToString("MMdd"))</zztPVersion>
     <zztMinVersion>$([System.DateTime]::UtcNow.ToString("yy"))</zztMinVersion>
@@ -23,7 +23,7 @@
 
   <Target Name="IncrementVersion" BeforeTargets="Build">
     <PropertyGroup>
-      <ApplicationVersion>1</ApplicationVersion>
+      <ApplicationVersion>0</ApplicationVersion>
     </PropertyGroup>
   </Target>
 
