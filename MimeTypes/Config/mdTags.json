@@ -23,6 +23,7 @@
   ".stamp": "application/binary",
   ".png": "application/binary",
   ".jpg": "application/binary",
+  ".jpeg": "application/binary",
   ".svg": "application/binary",
   ".ico": "application/binary",
   ".xcf": "application/binary",
