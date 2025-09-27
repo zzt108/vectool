@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using static System.Reflection.Metadata.BlobBuilder;
+using NLogS = NLogShared;
 
 namespace Core
 {
@@ -10,6 +12,7 @@ namespace Core
     public sealed class GitRunner
     {
         private readonly string _workingDirectory;
+        private static readonly NLogS.CtxLogger _log = new();
 
         public GitRunner(string workingDirectory)
         {
@@ -71,8 +74,24 @@ namespace Core
 
         public async Task<string> GetStatusAsync()
         {
-            return await RunGitCommandAsync("status --porcelain");
+            try
+            {
+                return await RunGitCommandAsync("status --porcelain");
+            }
+            catch (Exception ex) when (ex.Message.Contains("dubious ownership"))
+            {
+                var safeDirectoryCommand = $"git config --global --add safe.directory \"{_workingDirectory}\"";
+                _log.Warn($"Dubious ownership detected in {_workingDirectory}. Solution: {safeDirectoryCommand}");
+
+                return $"Error: Dubious ownership in {_workingDirectory}. " +
+                       $"Fix with: {safeDirectoryCommand}";
+            }
+            catch (Exception ex)
+            {
+                return $"Error: {ex.Message}";
+            }
         }
+
 
         public async Task<string> GetDiffAsync()
         {

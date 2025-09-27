@@ -13,7 +13,7 @@ namespace DocXHandler
     public class GitChangesHandler : FileHandlerBase
     {
         private static NLogS.CtxLogger log = new();
-        private string aiPrompt = "";
+        private string aiPrompt;
 
         public GitChangesHandler(IUserInterface? ui) : base(ui)
         {
@@ -21,155 +21,136 @@ namespace DocXHandler
 
         public async Task<string> GetGitChangesAsync(List<string> folderPaths, string outputPath)
         {
-            // Get the AI prompt from app.config
-            aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"] ??
-                       "Analyze the following Git changes and provide a concise, descriptive commit message.";
+            aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"] ?? "Analyze the following Git changes and provide a concise, descriptive commit message."; // [attached_file:1]
 
-            StringBuilder allChanges = new StringBuilder();
-
-            // Add the AI prompt at the beginning of the document
-            allChanges.AppendLine("# AI Prompt for Commit Message");
+            var allChanges = new StringBuilder();
+            allChanges.AppendLine("AI Prompt for Commit Message");
             allChanges.AppendLine();
             allChanges.AppendLine(aiPrompt);
             allChanges.AppendLine();
             allChanges.AppendLine("---");
-            allChanges.AppendLine();
+            allChanges.AppendLine(); // [attached_file:1]
 
-            // Track processed repositories to avoid duplicates
-            HashSet<string> processedRepos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
+            var processedRepos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var folderPath in folderPaths)
             {
                 if (GitRunner.IsGitRepository(folderPath))
                 {
-                    await ProcessGitRepositoryAsync(folderPath, outputPath, allChanges, processedRepos);
+                    await ProcessGitRepositoryAsync(folderPath, outputPath, allChanges, processedRepos); // [attached_file:1]
                 }
                 else
                 {
-                    // Check subdirectories for Git repositories
-                    await FindGitRepositoriesRecursivelyAsync(folderPath, outputPath, allChanges, processedRepos);
+                    await FindGitRepositoriesRecursivelyAsync(folderPath, outputPath, allChanges, processedRepos); // [attached_file:1]
                 }
             }
 
-            // Save all changes to the output file
-            await File.WriteAllTextAsync(outputPath, allChanges.ToString());
-            return allChanges.ToString();
+            await File.WriteAllTextAsync(outputPath, allChanges.ToString()); // [attached_file:1]
+            return allChanges.ToString(); // [attached_file:1]
         }
 
-        // Legacy sync method for backwards compatibility
+        // Legacy sync wrapper
         public string GetGitChanges(List<string> folderPaths, string outputPath)
-        {
-            return GetGitChangesAsync(folderPaths, outputPath).GetAwaiter().GetResult();
-        }
+            => GetGitChangesAsync(folderPaths, outputPath).GetAwaiter().GetResult(); // [attached_file:1]
 
         private async Task ProcessGitRepositoryAsync(string repoPath, string outputPath, StringBuilder mainChanges, HashSet<string> processedRepos)
         {
-            // Skip if already processed
-            if (!processedRepos.Add(Path.GetFullPath(repoPath))) return;
+            if (!processedRepos.Add(Path.GetFullPath(repoPath)))
+                return; // [attached_file:1]
 
-            // Process the main repository
-            mainChanges.AppendLine($"## Git Changes for {repoPath}");
-            mainChanges.AppendLine();
+            mainChanges.AppendLine($"Git Changes for {repoPath}");
+            mainChanges.AppendLine(); // [attached_file:1]
 
             var gitRunner = new GitRunner(repoPath);
-
             try
             {
-                // Get status changes
-                string statusChanges = await gitRunner.GetStatusAsync();
-                mainChanges.AppendLine("### Status Changes");
+                // Status
+                var statusChanges = await gitRunner.GetStatusAsync();
+                mainChanges.AppendLine("Status Changes");
                 mainChanges.AppendLine();
                 mainChanges.AppendLine(statusChanges);
-                mainChanges.AppendLine();
+                mainChanges.AppendLine(); // [attached_file:1]
 
-                // Get diff changes
-                string diffChanges = await gitRunner.GetDiffAsync();
-                mainChanges.AppendLine("### Diff Changes");
+                // Diff
+                var diffChanges = await gitRunner.GetDiffAsync();
+                mainChanges.AppendLine("Diff Changes");
                 mainChanges.AppendLine();
                 mainChanges.AppendLine(diffChanges);
-                mainChanges.AppendLine();
+                mainChanges.AppendLine(); // [attached_file:1]
 
-                // Check for submodules
-                string submodulesOutput = await gitRunner.GetSubmodulesAsync();
+                // Submodules
+                var submodulesOutput = await gitRunner.GetSubmodulesAsync();
                 if (!string.IsNullOrWhiteSpace(submodulesOutput))
                 {
-                    mainChanges.AppendLine("### Submodules");
-                    mainChanges.AppendLine();
+                    mainChanges.AppendLine("Submodules");
+                    mainChanges.AppendLine(); // [attached_file:1]
 
-                    // Parse submodule paths
-                    var submoduleLines = submodulesOutput.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                    var submoduleLines = submodulesOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var line in submoduleLines)
                     {
-                        // Submodule format is typically "sha1 path (description)"
-                        string[] parts = line.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        // Typical: "<sha> <path> (desc)" or with prefix markers
+                        var parts = line.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                         if (parts.Length >= 2)
                         {
-                            string submodulePath = parts[1];
-                            string fullSubmodulePath = Path.Combine(repoPath, submodulePath);
-
+                            var submodulePath = parts[1];
+                            var fullSubmodulePath = Path.Combine(repoPath, submodulePath);
                             if (Directory.Exists(fullSubmodulePath))
                             {
-                                mainChanges.AppendLine($"- {submodulePath}");
+                                mainChanges.AppendLine($"- {submodulePath}"); // [attached_file:1]
 
-                                // Check if the submodule has changes
-                                var submoduleRunner = new GitRunner(fullSubmodulePath);
-                                string submoduleStatus = await submoduleRunner.GetStatusAsync();
-
-                                if (!string.IsNullOrWhiteSpace(submoduleStatus) &&
-                                    !submoduleStatus.Contains("nothing to commit, working tree clean"))
+                                // GUARD: if the submodule is not an actual git repository, skip gracefully
+                                if (!GitRunner.IsGitRepository(fullSubmodulePath))
                                 {
-                                    // Create a separate file for the submodule changes
-                                    string submoduleFileName = $"{Path.GetFileNameWithoutExtension(outputPath)}-{Path.GetFileName(repoPath)}-{submodulePath.Replace(Path.DirectorySeparatorChar, '-')}-git-changes.md";
-                                    string submoduleFilePath = Path.Combine(Path.GetDirectoryName(outputPath)!, submoduleFileName);
+                                    mainChanges.AppendLine($"  - Skipped: submodule not initialized. Run `git submodule update --init --recursive` in `{repoPath}`."); // [attached_file:1][web:11][web:7]
+                                    continue;
+                                }
 
-                                    StringBuilder submoduleChanges = new StringBuilder();
+                                var submoduleRunner = new GitRunner(fullSubmodulePath);
+                                var submoduleStatus = await submoduleRunner.GetStatusAsync();
+                                if (!string.IsNullOrWhiteSpace(submoduleStatus) && !submoduleStatus.Contains("nothing to commit"))
+                                {
+                                    // Save submodule changes to a separate file
+                                    var submoduleFileName =
+                                        $"{Path.GetFileNameWithoutExtension(outputPath)}-{Path.GetFileName(repoPath)}-{submodulePath.Replace(Path.DirectorySeparatorChar, '-')}-git-changes.md";
+                                    var submoduleFilePath = Path.Combine(Path.GetDirectoryName(outputPath)!, submoduleFileName); // [attached_file:1]
 
-                                    // Add the AI prompt at the beginning of the document
-                                    submoduleChanges.AppendLine("# AI Prompt for Commit Message");
+                                    var submoduleChanges = new StringBuilder();
+                                    submoduleChanges.AppendLine("AI Prompt for Commit Message");
                                     submoduleChanges.AppendLine();
                                     submoduleChanges.AppendLine(aiPrompt);
                                     submoduleChanges.AppendLine();
                                     submoduleChanges.AppendLine("---");
                                     submoduleChanges.AppendLine();
+                                    submoduleChanges.AppendLine($"Git Changes for Submodule {submodulePath} in {repoPath}");
+                                    submoduleChanges.AppendLine(); // [attached_file:1]
 
-                                    submoduleChanges.AppendLine($"## Git Changes for Submodule {submodulePath} in {repoPath}");
-                                    submoduleChanges.AppendLine();
-
-                                    // Get status changes for submodule
-                                    submoduleChanges.AppendLine("### Status Changes");
+                                    submoduleChanges.AppendLine("Status Changes");
                                     submoduleChanges.AppendLine();
                                     submoduleChanges.AppendLine(submoduleStatus);
-                                    submoduleChanges.AppendLine();
+                                    submoduleChanges.AppendLine(); // [attached_file:1]
 
-                                    // Get diff changes for submodule
-                                    string submoduleDiff = await submoduleRunner.GetDiffAsync();
-                                    submoduleChanges.AppendLine("### Diff Changes");
+                                    var submoduleDiff = await submoduleRunner.GetDiffAsync();
+                                    submoduleChanges.AppendLine("Diff Changes");
                                     submoduleChanges.AppendLine();
                                     submoduleChanges.AppendLine(submoduleDiff);
-                                    submoduleChanges.AppendLine();
+                                    submoduleChanges.AppendLine(); // [attached_file:1]
 
-                                    // Save the submodule changes to a separate file
                                     await File.WriteAllTextAsync(submoduleFilePath, submoduleChanges.ToString());
-
-                                    // Add a reference to the submodule file in the main changes
-                                    mainChanges.AppendLine($"  - Changes saved to {submoduleFileName}");
+                                    mainChanges.AppendLine($"  - Changes saved to {submoduleFileName}"); // [attached_file:1]
                                 }
                                 else
                                 {
-                                    mainChanges.AppendLine("  - No changes");
+                                    mainChanges.AppendLine("  - No changes"); // [attached_file:1]
                                 }
                             }
                         }
                     }
-
-                    mainChanges.AppendLine();
                 }
             }
             catch (Exception ex)
             {
                 log.Error(ex, $"Error processing git repository {repoPath}");
-                mainChanges.AppendLine($"Error processing repository: {ex.Message}");
-                mainChanges.AppendLine();
+                mainChanges.AppendLine($"Error processing repository: {ex.Message}"); // [attached_file:1]
+                mainChanges.AppendLine(); // [attached_file:1]
             }
         }
 
@@ -179,25 +160,23 @@ namespace DocXHandler
             {
                 foreach (var subDir in Directory.GetDirectories(folderPath))
                 {
-                    // Skip excluded folders like .git, node_modules, etc.
-                    string dirName = Path.GetFileName(subDir);
+                    var dirName = Path.GetFileName(subDir);
                     if (dirName.StartsWith(".") || dirName == "node_modules" || dirName == "bin" || dirName == "obj")
-                        continue;
+                        continue; // [attached_file:1]
 
                     if (GitRunner.IsGitRepository(subDir))
                     {
-                        await ProcessGitRepositoryAsync(subDir, outputPath, allChanges, processedRepos);
+                        await ProcessGitRepositoryAsync(subDir, outputPath, allChanges, processedRepos); // [attached_file:1]
                     }
                     else
                     {
-                        // Continue searching in subdirectories
-                        await FindGitRepositoriesRecursivelyAsync(subDir, outputPath, allChanges, processedRepos);
+                        await FindGitRepositoriesRecursivelyAsync(subDir, outputPath, allChanges, processedRepos); // [attached_file:1]
                     }
                 }
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Error searching for Git repositories in {folderPath}");
+                log.Error(ex, $"Error searching for Git repositories in {folderPath}"); // [attached_file:1]
             }
         }
     }
