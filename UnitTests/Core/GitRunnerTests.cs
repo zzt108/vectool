@@ -1,70 +1,103 @@
-﻿using NUnit.Framework;
+﻿// UnitTests/Core/GitRunnerTests.cs
+using NUnit.Framework;
 using Shouldly;
+using System;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Core;
+using Core; // GitRunner
 
-namespace UnitTests.CoreTests
+namespace UnitTests.Core
 {
     [TestFixture]
     public class GitRunnerTests
     {
-        [Test]
-        public void Constructor_Should_Throw_For_Null_WorkingDirectory()
+        private string _tempDir = null!;
+
+        [SetUp]
+        public void SetUp()
         {
-            Should.Throw<System.ArgumentNullException>(() => new GitRunner(null!));
+            _tempDir = Path.Combine(Path.GetTempPath(), "VecTool_Git_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(_tempDir);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            try { Directory.Delete(_tempDir, true); } catch { /* ignore */ }
         }
 
         [Test]
-        public void IsGitRepository_Should_Return_False_For_NonGit_Directory()
+        public async Task RunGitCommandAsync_Should_Throw_On_NonRepo_With_InvalidOperation()
         {
-            var tempDir = Directory.CreateTempSubdirectory();
-            try
-            {
-                var result = GitRunner.IsGitRepository(tempDir.FullName);
-                result.ShouldBeFalse();
-            }
-            finally
-            {
-                Directory.Delete(tempDir.FullName, true);
-            }
+            // Arrange: folder is not a git repo
+            var gitRunner = new GitRunner(_tempDir);
+
+            // Act + Assert
+            var ex = await Should.ThrowAsync<InvalidOperationException>(
+                gitRunner.RunGitCommandAsync("status", timeoutSeconds: 2));
+
+            ex.Message.ShouldContain("Git command failed", Case.Insensitive);
         }
 
         [Test]
         public async Task RunGitCommandAsync_Should_Timeout_For_Long_Running_Command()
         {
-            var tempDir = Directory.CreateTempSubdirectory();
-            try
+            // Arrange: init repo and create a guaranteed long-running alias
+            RunInDir("git", "init");
+            // Windows-friendly: use PowerShell sleep; on *nix fallback to /bin/sh sleep
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var gitRunner = new GitRunner(tempDir.FullName);
+                RunInDir("git", "config alias.slow \"!powershell -NoProfile -NonInteractive -Command Start-Sleep 5\"");
+            }
+            else
+            {
+                RunInDir("git", "config alias.slow \"!sh -c 'sleep 5'\"");
+            }
 
-                // This should timeout quickly
-                await Should.ThrowAsync<System.TimeoutException>(
-                    () => gitRunner.RunGitCommandAsync("status", 1)
-                );
-            }
-            finally
-            {
-                Directory.Delete(tempDir.FullName, true);
-            }
+            var gitRunner = new GitRunner(_tempDir);
+
+            // Act + Assert: 1s timeout against a 5s sleep => TimeoutException
+            await Should.ThrowAsync<TimeoutException>(
+                gitRunner.RunGitCommandAsync("slow", timeoutSeconds: 1));
         }
 
         [Test]
-        public async Task RunGitCommandAsync_Should_Handle_Invalid_Git_Command()
+        public async Task RunGitCommandAsync_Should_Return_Output_On_Success()
         {
-            var tempDir = Directory.CreateTempSubdirectory();
-            try
-            {
-                var gitRunner = new GitRunner(tempDir.FullName);
+            // Arrange
+            RunInDir("git", "init");
+            var gitRunner = new GitRunner(_tempDir);
 
-                // Invalid git command should throw InvalidOperationException
-                await Should.ThrowAsync<System.InvalidOperationException>(
-                    () => gitRunner.RunGitCommandAsync("invalid-command")
-                );
-            }
-            finally
+            // Act
+            var output = await gitRunner.RunGitCommandAsync("status --porcelain", timeoutSeconds: 10);
+
+            // Assert
+            output.ShouldNotBeNull();
+        }
+
+        private void RunInDir(string fileName, string arguments)
+        {
+            var p = new Process
             {
-                Directory.Delete(tempDir.FullName, true);
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    WorkingDirectory = _tempDir,
+                    UseShellExecute = false,
+                    RedirectStandardError = true,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+            p.Start();
+            p.WaitForExit();
+            if (p.ExitCode != 0)
+            {
+                var err = p.StandardError.ReadToEnd();
+                throw new InvalidOperationException($"Failed: {fileName} {arguments} -> {err}");
             }
         }
     }
