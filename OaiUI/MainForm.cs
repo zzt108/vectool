@@ -16,6 +16,7 @@ namespace oaiUI
         private IUserInterface _userInterface;
         private List<string> selectedFolders = new List<string>();
         private readonly ILastSelectionService _lastSelectionService = new LastSelectionService();
+        private bool _isRebinding = false;
 
         // Designer controls with null-forgiving operator to suppress CS8618
         private ComboBox comboBoxVectorStores = null!;
@@ -80,11 +81,11 @@ namespace oaiUI
 
             _userInterface = new WinFormsUserInterface(toolStripStatusLabelInfo, progressBar1);
 
+            comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged; // moved earlier
             _vectorStoreManager = new VectorStoreManager(ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json", _userInterface);
             LoadVectorStores();
             _vectorStoreManager.LoadVectorStoreFolderData(); // Load saved folder data on startup
 
-            comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStores_SelectedIndexChanged;
             Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
         }
 
@@ -108,34 +109,45 @@ namespace oaiUI
         {
             // Load vector store folder data first
             _vectorStoreManager.LoadVectorStoreFolderData();
-
-            // Try to load vector stores from OpenAI if the API key is available
+            _isRebinding = true;
             try
             {
-                using var api = new OpenAIClient();
+                _vectorStoreManager.LoadVectorStoreFolderData();
                 try
                 {
-                    var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
+                    using var api = new OpenAIClient();
+                    try
+                    {
+                        var vectorStores = await _vectorStoreManager.GetAllVectorStoresAsync(api);
+                        var combinedStores = vectorStores.Values
+                            .Where(v => !_vectorStoreManager.Folders.ContainsKey(v))
+                            .Union(_vectorStoreManager.Folders.Keys)
+                            .Distinct()
+                            .ToList();
 
-                    // Merge loaded data with existing data, prioritizing data from the file
-                    // and removing any entries from OpenAI that are in the file.
-                    var combinedStores = vectorStores.Values
-                        .Where(v => !_vectorStoreManager.Folders.ContainsKey(v))
-                        .Union(_vectorStoreManager.Folders.Keys)
-                        .Distinct()
-                        .ToList();
-
-                    comboBoxVectorStores.DataSource = combinedStores;
+                        comboBoxVectorStores.DataSource = combinedStores;
+                        RestoreLastSelectedVectorStore();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error loading vector stores from OpenAI: {ex.Message}. Using local data.", "OpenAI Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        var localStores = _vectorStoreManager.Folders.Keys.Distinct().ToList();
+                        comboBoxVectorStores.DataSource = localStores;
+                        RestoreLastSelectedVectorStore();
+                    }
+                }
+                catch
+                {
+                    MessageBox.Show("OpenAI API key is not configured. Cannot upload files.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    var localStores = _vectorStoreManager.Folders.Keys.Distinct().ToList();
+                    comboBoxVectorStores.DataSource = localStores;
                     RestoreLastSelectedVectorStore();
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error loading vector stores from OpenAI: {ex.Message}. Using local data.", "OpenAI Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
             }
-            catch
+            finally
             {
-                MessageBox.Show("OpenAI API key is not configured. Cannot upload files.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _isRebinding = false;
+                PersistLastSelectedVectorStore(); // ensure file reflects the actual selected after restore
             }
         }
 
@@ -154,10 +166,12 @@ namespace oaiUI
                 comboBoxVectorStores.DataSource = null; // Temporarily detach the data source
                 comboBoxVectorStores.DataSource = currentDataSource; // Reattach the updated data source
                 comboBoxVectorStores.SelectedItem = newVectorStoreName; // Select the new item
+                SelectVectorStoreAndPersist(newVectorStoreName);
             }
             else if (!string.IsNullOrEmpty(selectedVectorStore))
             {
                 comboBoxVectorStores.SelectedItem = selectedVectorStore;
+                SelectVectorStoreAndPersist(selectedVectorStore);
             }
 
             // Clear the new vector store name textbox if a new name was used
@@ -254,6 +268,9 @@ namespace oaiUI
 
                     // Select the vector store in the combo box
                     comboBoxVectorStores.SelectedItem = vectorStoreName;
+                    
+                    if (!string.IsNullOrWhiteSpace(vectorStoreName))
+                        SelectVectorStoreAndPersist(vectorStoreName);
 
                     // Clear the new vector store name textbox
                     txtNewVectorStoreName.Text = "";
@@ -608,7 +625,8 @@ namespace oaiUI
                 if (!string.IsNullOrEmpty(selectedVectorStoreName))
                 {
                     LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
-                    _lastSelectionService.SetLastSelectedVectorStore(selectedVectorStoreName);
+                    if (!_isRebinding)
+                        _lastSelectionService.SetLastSelectedVectorStore(selectedVectorStoreName);
                 }
             }
         }
@@ -641,6 +659,23 @@ namespace oaiUI
                 if (comboBoxVectorStores.Items.Count > 0)
                     comboBoxVectorStores.SelectedIndex = 0;
             }
+        }
+
+        private void PersistLastSelectedVectorStore()
+        {
+            var name = comboBoxVectorStores.SelectedItem?.ToString();
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                _lastSelectionService.SetLastSelectedVectorStore(name);
+            }
+        }
+
+        private void SelectVectorStoreAndPersist(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return;
+            comboBoxVectorStores.SelectedItem = name;
+            if (!_isRebinding)
+                PersistLastSelectedVectorStore();
         }
 
         private void LoadSelectedFoldersForVectorStore(string? vectorStoreName)
