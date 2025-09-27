@@ -139,7 +139,7 @@ namespace DocXHandler
         #region AI-Optimized Context and Metadata
 
         /// <summary>
-        /// Adds project summary and AI guidance to the beginning of processed output
+        /// Adds project summary, AI guidance, and a generated table of contents to the beginning of output.
         /// </summary>
         protected void AddAIOptimizedContext<T>(List<string> folderPaths, T context, Action<T, string> writeContent)
         {
@@ -150,6 +150,129 @@ namespace DocXHandler
             // Generate project context
             string projectContext = GenerateProjectContext(folderPaths);
             writeContent(context, projectContext);
+
+            // Generate table of contents (grouped by top-level folder)
+            string toc = GenerateTableOfContents(folderPaths);
+            writeContent(context, toc);
+        }
+
+        /// <summary>
+        /// Generates a table-of-contents from the selected folders, honoring exclusion rules and skipping binaries.
+        /// </summary>
+        protected string GenerateTableOfContents(List<string> folderPaths)
+        {
+            var vectorStoreConfig = VectorStoreConfig.FromAppConfig();
+
+            var allEntries = new List<(string RootName, string FilePath)>();
+            foreach (var root in folderPaths)
+            {
+                var rootName = new DirectoryInfo(root).Name;
+                foreach (var file in EnumerateFilesRespectingExclusions(root, vectorStoreConfig))
+                {
+                    allEntries.Add((rootName, file));
+                }
+            }
+
+            // Group by top-level section (selected root folder name)
+            var grouped = allEntries
+                .GroupBy(e => e.RootName, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("<table_of_contents>");
+            foreach (var group in grouped)
+            {
+                var files = group
+                    .Select(e => e.FilePath)
+                    .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var firstPath = files.FirstOrDefault() ?? string.Empty;
+                var rootPath = folderPaths.FirstOrDefault(fp => new DirectoryInfo(fp).Name.Equals(group.Key, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+
+                sb.AppendLine($"  <section name=\"{Escape(group.Key)}\" files=\"{files.Count}\" path=\"{Escape(rootPath)}\">");
+
+                foreach (var filePath in files)
+                {
+                    var ext = Path.GetExtension(filePath);
+                    var name = Path.GetFileName(filePath);
+                    var rel = MakeRelativeSafe(rootPath, filePath);
+                    sb.AppendLine($"    <file name=\"{Escape(name)}\" path=\"{Escape(rel)}\" ext=\"{Escape(ext)}\" />");
+                }
+
+                sb.AppendLine("  </section>");
+            }
+            sb.AppendLine("</table_of_contents>");
+            return sb.ToString();
+        }
+
+        private static string MakeRelativeSafe(string? root, string full)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(root) && Directory.Exists(root))
+                    return Path.GetRelativePath(root, full);
+            }
+            catch { /* ignore */ }
+            return full;
+        }
+
+        /// <summary>
+        /// Enumerates files, skipping excluded folders, excluded files, invalid/binary files.
+        /// </summary>
+        private IEnumerable<string> EnumerateFilesRespectingExclusions(string root, VectorStoreConfig config)
+        {
+            var stack = new Stack<string>();
+            stack.Push(root);
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                var folderName = new DirectoryInfo(current).Name;
+
+                if (IsFolderExcluded(folderName, config))
+                    continue;
+
+                string[] files = Array.Empty<string>();
+                string[] dirs = Array.Empty<string>();
+
+                try
+                {
+                    files = Directory.GetFiles(current);
+                }
+                catch { /* ignore */ }
+
+                foreach (var f in files)
+                {
+                    var fileName = Path.GetFileName(f);
+                    if (IsFileExcluded(fileName, config))
+                        continue;
+
+                    if (!IsFileValid(f, null))
+                        continue;
+
+                    yield return f;
+                }
+
+                try
+                {
+                    dirs = Directory.GetDirectories(current);
+                }
+                catch { /* ignore */ }
+
+                foreach (var d in dirs)
+                    stack.Push(d);
+            }
+        }
+
+        private static string Escape(string s)
+        {
+            return s
+                .Replace("&", "&amp;", StringComparison.Ordinal)
+                .Replace("\"", "&quot;", StringComparison.Ordinal)
+                .Replace("<", "&lt;", StringComparison.Ordinal)
+                .Replace(">", "&gt;", StringComparison.Ordinal);
         }
 
         // DocX/FileHandlerBase.cs
