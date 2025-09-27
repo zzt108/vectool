@@ -20,7 +20,7 @@ namespace DocXHandler.RecentFiles
         public int RetentionDays { get; }
         public string OutputPath { get; }
 
-        private RecentFilesConfig(int maxCount, int retentionDays, string outputPath)
+        public RecentFilesConfig(int maxCount, int retentionDays, string outputPath)
         {
             MaxCount = maxCount;
             RetentionDays = retentionDays;
