@@ -54,6 +54,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="App.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\testhost.exe.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>testhost.exe.config</TargetPath>
+    </None>
+    <None Update="Config\testhost.dll.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>testhost.dll.config</TargetPath>
+    </None>
     <None Update="Config\nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
