@@ -380,6 +380,69 @@ namespace oaiUI
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Settings";
             tabPage2.UseVisualStyleBackColor = true;
+
+            // Settings controls (vector-store specific)
+            this.lblVs = new System.Windows.Forms.Label();
+            this.cmbSettingsVectorStore = new System.Windows.Forms.ComboBox();
+            this.chkInheritExcludedFiles = new System.Windows.Forms.CheckBox();
+            this.chkInheritExcludedFolders = new System.Windows.Forms.CheckBox();
+            this.txtExcludedFiles = new System.Windows.Forms.TextBox();
+            this.txtExcludedFolders = new System.Windows.Forms.TextBox();
+            this.btnSaveVsSettings = new System.Windows.Forms.Button();
+            this.btnResetVsSettings = new System.Windows.Forms.Button();
+
+            // lblVs
+            this.lblVs.AutoSize = true;
+            this.lblVs.Text = "Vector store";
+            this.lblVs.Location = new System.Drawing.Point(8, 12);
+
+            // cmbSettingsVectorStore
+            this.cmbSettingsVectorStore.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDown;
+            this.cmbSettingsVectorStore.Location = new System.Drawing.Point(100, 8);
+            this.cmbSettingsVectorStore.Width = 260;
+
+            // chkInheritExcludedFiles
+            this.chkInheritExcludedFiles.AutoSize = true;
+            this.chkInheritExcludedFiles.Text = "Inherit excluded files from global";
+            this.chkInheritExcludedFiles.Location = new System.Drawing.Point(8, 44);
+
+            // txtExcludedFiles
+            this.txtExcludedFiles.Multiline = true;
+            this.txtExcludedFiles.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtExcludedFiles.Location = new System.Drawing.Point(8, 70);
+            this.txtExcludedFiles.Size = new System.Drawing.Size(380, 110);
+
+            // chkInheritExcludedFolders
+            this.chkInheritExcludedFolders.AutoSize = true;
+            this.chkInheritExcludedFolders.Text = "Inherit excluded folders from global";
+            this.chkInheritExcludedFolders.Location = new System.Drawing.Point(8, 190);
+
+            // txtExcludedFolders
+            this.txtExcludedFolders.Multiline = true;
+            this.txtExcludedFolders.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtExcludedFolders.Location = new System.Drawing.Point(8, 216);
+            this.txtExcludedFolders.Size = new System.Drawing.Size(380, 110);
+
+            // btnSaveVsSettings
+            this.btnSaveVsSettings.Text = "Save Settings";
+            this.btnSaveVsSettings.Location = new System.Drawing.Point(8, 336);
+            this.btnSaveVsSettings.Click += new System.EventHandler(this.btnSaveVsSettings_Click);
+
+            // btnResetVsSettings
+            this.btnResetVsSettings.Text = "Reset to Global";
+            this.btnResetVsSettings.Location = new System.Drawing.Point(120, 336);
+            this.btnResetVsSettings.Click += new System.EventHandler(this.btnResetVsSettings_Click);
+
+            // Add to tabPage2
+            this.tabPage2.Controls.Add(this.lblVs);
+            this.tabPage2.Controls.Add(this.cmbSettingsVectorStore);
+            this.tabPage2.Controls.Add(this.chkInheritExcludedFiles);
+            this.tabPage2.Controls.Add(this.txtExcludedFiles);
+            this.tabPage2.Controls.Add(this.chkInheritExcludedFolders);
+            this.tabPage2.Controls.Add(this.txtExcludedFolders);
+            this.tabPage2.Controls.Add(this.btnSaveVsSettings);
+            this.tabPage2.Controls.Add(this.btnResetVsSettings);
+
             // 
             // MainForm
             // 
@@ -431,8 +494,15 @@ namespace oaiUI
         private TabPage tabPage2;
         private Panel panel1;
         private SplitContainer splitContainer1;
-        // private ListBox listBoxSelectedFolders;
         private Panel panel2;
         private Label label1;
+
+        private System.Windows.Forms.Label lblVs;
+        private System.Windows.Forms.CheckBox chkInheritExcludedFiles;
+        private System.Windows.Forms.CheckBox chkInheritExcludedFolders;
+        private System.Windows.Forms.TextBox txtExcludedFiles;
+        private System.Windows.Forms.TextBox txtExcludedFolders;
+        private System.Windows.Forms.Button btnSaveVsSettings;
+        private System.Windows.Forms.Button btnResetVsSettings;
     }
 }
