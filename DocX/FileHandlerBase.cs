@@ -1,9 +1,10 @@
+using DocXHandler.RecentFiles;
 using oaiVectorStore;
-using NLogS = NLogShared;
-using System.IO;
-using System.Text.RegularExpressions;
 using System;
+using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
+using NLogS = NLogShared;
 
 namespace DocXHandler
 {
@@ -11,10 +12,12 @@ namespace DocXHandler
     {
         protected static NLogS.CtxLogger _log = new();
         protected readonly IUserInterface? _ui;
+        protected readonly IRecentFilesManager? _recentFilesManager;
 
-        protected FileHandlerBase(IUserInterface? ui)
+        protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
         {
             _ui = ui;
+            _recentFilesManager = recentFilesManager;
         }
 
         protected bool IsFolderExcluded(string name, VectorStoreConfig vectorStoreConfig)

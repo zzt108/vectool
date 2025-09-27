@@ -1,11 +1,12 @@
 using System.Text.RegularExpressions;
+using DocXHandler.RecentFiles;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 namespace DocXHandler
 {
-    public class PdfHandler(IUserInterface? ui) : FileHandlerBase(ui)
+    public class PdfHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager) : FileHandlerBase(ui, recentFilesManager)
     {
         static PdfHandler()
         {
@@ -51,6 +52,16 @@ namespace DocXHandler
                         ImageRasterDpi = 72
                     });
                 d.GeneratePdf(outputPath);
+                if (_recentFilesManager != null && File.Exists(outputPath))
+                {
+                    var fileInfo = new FileInfo(outputPath);
+                    _recentFilesManager.RegisterGeneratedFile(
+                        outputPath,
+                        RecentFileType.Docx,
+                        folderPaths,
+                        fileInfo.Length
+                    );
+                }
             }
             finally
             {

@@ -1,10 +1,16 @@
 ﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocXHandler.RecentFiles;
 
 namespace DocXHandler
 {
-    public class DocXHandler(IUserInterface ui) : FileHandlerBase(ui)
+    public class DocXHandler : FileHandlerBase
     {
+        public DocXHandler(IUserInterface ui, IRecentFilesManager recentFilesManager):base(ui, recentFilesManager)
+        {
+            
+        }
+
         public void ConvertFilesToDocx(string folderPath, string outputPath, VectorStoreConfig vectorStoreConfig)
         {
             using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
@@ -123,6 +129,17 @@ namespace DocXHandler
                                 WriteFolderEnd);
                         }
                     }
+                    if (_recentFilesManager != null && File.Exists(outputPath))
+                    {
+                        var fileInfo = new FileInfo(outputPath);
+                        _recentFilesManager.RegisterGeneratedFile(
+                            outputPath,
+                            RecentFileType.Docx,
+                            folderPaths,
+                            fileInfo.Length
+                        );
+                    }
+
                 }
                 catch (Exception ex)
                 {

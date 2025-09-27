@@ -230,7 +230,7 @@ namespace oaiVectorStore
 
                     try
                     {
-                        var docXHandler = new DocXHandler.DocXHandler(null); // UI not needed, handled outside
+                        var docXHandler = new DocXHandler.DocXHandler(null, null); // UI not needed, handled outside, no uploaded files are registered
                         docXHandler.ConvertFilesToDocx(folder, outputDocxPath, _vectorStoreConfig);
                         string[] files = Directory.GetFiles(folder);
 

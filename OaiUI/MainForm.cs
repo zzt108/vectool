@@ -1,12 +1,13 @@
 ﻿using DocumentFormat.OpenXml.Drawing.Charts;
 using DocXHandler;
+using DocXHandler.RecentFiles;
 using NLogShared;
+using oaiUI.Config;
+using oaiUI.Services;
 ﻿using oaiVectorStore;
 using OpenAI;
 using System.Configuration;
 using System.Reflection;
-using oaiUI.Services;
-using oaiUI.Config;
 
 namespace oaiUI
 {
@@ -75,6 +76,8 @@ namespace oaiUI
         // private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
         // private string _vectorStoreFoldersFilePath; // Path to save the mapping
         // private VectorStoreConfig _vectorStoreConfig;
+        
+        private IRecentFilesManager _recentFilesManager;
 
         public MainForm()
         {
@@ -90,6 +93,11 @@ namespace oaiUI
             _vectorStoreManager.LoadVectorStoreFolderData(); // Load saved folder data on startup
 
             Text = $"VecTool v{Assembly.GetExecutingAssembly().GetName().Version}";
+
+            var recentFilesConfig = RecentFilesConfig.FromAppConfig();
+            var recentFilesStore = new FileRecentFilesStore(recentFilesConfig);
+            _recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
+
         }
 
 
@@ -439,7 +447,7 @@ namespace oaiUI
                         _userInterface.WorkStart("Converting to DOCX", selectedFolders);
 
                         btnConvertToDocx.Enabled = false;
-                        var docXHandler = new DocXHandler.DocXHandler(_userInterface);
+                        var docXHandler = new DocXHandler.DocXHandler(_userInterface, _recentFilesManager);
                         docXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -507,7 +515,7 @@ namespace oaiUI
                     try
                     {
                         btnConvertToMd.Enabled = false;
-                        var mdHandler = new DocXHandler.MDHandler(_userInterface);
+                        var mdHandler = new DocXHandler.MDHandler(_userInterface, _recentFilesManager);
                         mdHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -560,7 +568,7 @@ namespace oaiUI
                     try
                     {
                         WorkStart("Converting to PDF...", selectedFolders);
-                        var pdfHandler = new DocXHandler.PdfHandler(null);
+                        var pdfHandler = new DocXHandler.PdfHandler(_userInterface, _recentFilesManager);
                         pdfHandler.ConvertSelectedFoldersToPdf(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to PDF.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -603,7 +611,7 @@ namespace oaiUI
                 {
                     btnGetGitChanges.Enabled = false;
                     WorkStart("Getting Git changes...", selectedFolders);
-                    var gitChangesHandler = new DocXHandler.GitChangesHandler(_userInterface);
+                    var gitChangesHandler = new DocXHandler.GitChangesHandler(_userInterface, _recentFilesManager);
 
                     // Use the async method
                     string changes = await gitChangesHandler.GetGitChangesAsync(selectedFolders, saveFileDialog.FileName);
@@ -714,7 +722,7 @@ namespace oaiUI
                     {
                         btnFileSizeSummary.Enabled = false;
                         _userInterface.WorkStart("Generating file size summary...", selectedFolders);
-                        var sizeHandler = new FileSizeSummaryHandler(_userInterface);
+                        var sizeHandler = new FileSizeSummaryHandler(_userInterface, _recentFilesManager);
                         sizeHandler.GenerateFileSizeSummary(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
 
                         MessageBox.Show("File size summary generated successfully.",

@@ -2,10 +2,11 @@
 using NLogS = NLogShared;
 using System.IO;
 using System.Collections.Generic;
+using DocXHandler.RecentFiles;
 
 namespace DocXHandler
 {
-    public class MDHandler(IUserInterface? ui) : FileHandlerBase(ui)
+    public class MDHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager) : FileHandlerBase(ui, recentFilesManager)
     {
 
         public void ExportSelectedFolders(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
@@ -27,6 +28,17 @@ namespace DocXHandler
                             WriteFolderName);
                     }
                 }
+                if (_recentFilesManager != null && File.Exists(outputPath))
+                {
+                    var fileInfo = new FileInfo(outputPath);
+                    _recentFilesManager.RegisterGeneratedFile(
+                        outputPath,
+                        RecentFileType.Md,
+                        folderPaths ,
+                        fileInfo.Length
+                    );
+                }
+
             }
             finally
             {

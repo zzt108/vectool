@@ -7,6 +7,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Reflection.Metadata.BlobBuilder;
+using DocXHandler.RecentFiles;
 
 namespace DocXHandler
 {
@@ -15,7 +16,7 @@ namespace DocXHandler
         private static NLogS.CtxLogger log = new();
         private string aiPrompt;
 
-        public GitChangesHandler(IUserInterface? ui) : base(ui)
+        public GitChangesHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager) : base(ui, recentFilesManager)
         {
         }
 
@@ -45,6 +46,19 @@ namespace DocXHandler
             }
 
             await File.WriteAllTextAsync(outputPath, allChanges.ToString()); // [attached_file:1]
+
+            // Register generated file - legitimate
+            if (_recentFilesManager != null && File.Exists(outputPath))
+            {
+                var fileInfo = new FileInfo(outputPath);
+                _recentFilesManager.RegisterGeneratedFile(
+                    outputPath,
+                    RecentFileType.Md,
+                    folderPaths,
+                    fileInfo.Length
+                );
+            }
+
             return allChanges.ToString(); // [attached_file:1]
         }
 
@@ -145,6 +159,7 @@ namespace DocXHandler
                         }
                     }
                 }
+
             }
             catch (Exception ex)
             {
@@ -173,6 +188,18 @@ namespace DocXHandler
                         await FindGitRepositoriesRecursivelyAsync(subDir, outputPath, allChanges, processedRepos); // [attached_file:1]
                     }
                 }
+                // Register generated file - maybe not legit? No file writes here
+                if (_recentFilesManager != null && File.Exists(outputPath))
+                {
+                    var fileInfo = new FileInfo(outputPath);
+                    _recentFilesManager.RegisterGeneratedFile(
+                        outputPath,
+                        RecentFileType.Md,
+                        new List<string> { folderPath },
+                        fileInfo.Length
+                    );
+                }
+
             }
             catch (Exception ex)
             {

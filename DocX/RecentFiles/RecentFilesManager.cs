@@ -30,7 +30,7 @@ namespace DocXHandler.RecentFiles
         public void Write(string json) => _json = json;
     }
 
-    public sealed class RecentFilesManager
+    public sealed class RecentFilesManager: IRecentFilesManager
     {
         private readonly object _gate = new();
         private readonly List<RecentFileInfo> _items = new();

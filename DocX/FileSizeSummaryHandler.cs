@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocXHandler.RecentFiles;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace DocXHandler
     {
         private readonly NLogS.CtxLogger _log = new();
 
-        public FileSizeSummaryHandler(IUserInterface? ui) : base(ui)
+        public FileSizeSummaryHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager) : base(ui, recentFilesManager)
         {
         }
 
