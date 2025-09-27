@@ -1,5 +1,4 @@
 ﻿// Path: DocX/RecentFiles/RecentFilesConfig.cs
-using System;
 using System.Configuration;
 
 namespace DocXHandler.RecentFiles

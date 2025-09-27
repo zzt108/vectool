@@ -1,8 +1,5 @@
 ﻿// File: Tests/RecentFiles/RecentFilesOutputManagerTests.cs
-using NUnit.Framework;
 using Shouldly;
-using System;
-using System.IO;
 using DocXHandler.RecentFiles;
 
 namespace Tests.RecentFiles

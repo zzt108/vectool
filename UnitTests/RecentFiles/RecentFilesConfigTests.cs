@@ -1,7 +1,5 @@
 ﻿// Path: UnitTests/RecentFiles/RecentFilesConfigTests.cs
-using NUnit.Framework;
 using Shouldly;
-using System;
 using DocXHandler.RecentFiles;
 using System.Configuration;
 

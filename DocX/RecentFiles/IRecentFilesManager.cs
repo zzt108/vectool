@@ -1,7 +1,4 @@
 ﻿// File: DocX/IRecentFilesManager.cs
-using System;
-using System.Collections.Generic;
-
 namespace DocXHandler.RecentFiles
 {
     public interface IRecentFilesManager

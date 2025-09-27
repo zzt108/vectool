@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace oaiUI.Progress
+﻿namespace oaiUI.Progress
 {
     // Time abstraction for testability
     public interface IClock

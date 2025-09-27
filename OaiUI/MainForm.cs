@@ -1,10 +1,8 @@
-﻿using DocumentFormat.OpenXml.Drawing.Charts;
-using DocXHandler;
+﻿using DocXHandler;
 using DocXHandler.RecentFiles;
 using NLogShared;
-using oaiUI.Config;
 using oaiUI.Services;
-﻿using oaiVectorStore;
+using oaiVectorStore;
 using OpenAI;
 using System.Configuration;
 using System.Reflection;

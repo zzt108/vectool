@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using static System.Reflection.Metadata.BlobBuilder;
+﻿using System.Diagnostics;
 using NLogS = NLogShared;
 
 namespace Core

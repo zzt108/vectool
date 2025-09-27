@@ -1,7 +1,5 @@
 ﻿// File: DocXHandler/RecentFiles/RecentFilesOutputManager.cs
-using System;
 using System.Globalization;
-using System.IO;
 
 namespace DocXHandler.RecentFiles
 {

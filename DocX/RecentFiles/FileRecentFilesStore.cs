@@ -1,7 +1,4 @@
 ﻿// File: DocXHandler/RecentFiles/FileRecentFilesStore.cs
-using System;
-using System.IO;
-
 namespace DocXHandler.RecentFiles
 {
     // Stores JSON snapshot of recent files list in a single file under OutputPath.

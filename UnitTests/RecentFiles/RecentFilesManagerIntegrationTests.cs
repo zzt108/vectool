@@ -1,10 +1,5 @@
 ﻿// File: UnitTests/RecentFiles/RecentFilesManagerIntegrationTests.cs
-using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using DocXHandler;
 using DocXHandler.RecentFiles;
 
 namespace UnitTests.RecentFiles

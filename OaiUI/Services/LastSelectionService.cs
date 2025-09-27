@@ -1,6 +1,4 @@
 ﻿// OaiUI/Services/LastSelectionService.cs
-using System;
-using System.IO;
 using System.Text.Json;
 
 namespace oaiUI.Services

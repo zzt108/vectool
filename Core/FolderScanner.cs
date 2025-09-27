@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
-namespace VecTool.Core
+﻿namespace VecTool.Core
 {
     /// <summary>
     /// Pure logic to enumerate files and summarize sizes; no Windows-specific APIs.

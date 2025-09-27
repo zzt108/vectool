@@ -1,7 +1,6 @@
 ﻿// File: DocXHandler/RecentFiles/RecentFilesJson.cs
 // Purpose: JSON round-trip helpers for collections of RecentFileInfo (no IO in Step 2).
 
-using System.Collections.Generic;
 using System.Text.Json;
 
 namespace DocXHandler.RecentFiles

@@ -1,9 +1,4 @@
 ﻿using DocXHandler.RecentFiles;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using NLogS = NLogShared;
 
 namespace DocXHandler

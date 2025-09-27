@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace VecTool.Core
+﻿namespace VecTool.Core
 {
     /// <summary>
     /// Pure business logic - sums file sizes safely.

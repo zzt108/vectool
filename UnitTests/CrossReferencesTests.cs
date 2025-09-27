@@ -1,10 +1,5 @@
 ﻿// UnitTests/DocX/CrossReferencesTests.cs
-using NUnit.Framework;
 using Shouldly;
-using System;
-using System.IO;
-using System.Linq;
-using System.Collections.Generic;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace DocXHandlerTests

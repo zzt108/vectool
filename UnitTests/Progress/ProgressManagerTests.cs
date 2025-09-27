@@ -1,6 +1,4 @@
-﻿using NUnit.Framework;
-using Shouldly;
-using System;
+﻿using Shouldly;
 using oaiUI.Progress;
 
 namespace UnitTests.Progress

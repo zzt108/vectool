@@ -1,9 +1,5 @@
 ﻿// File: OaiUI/Config/PerVectorStoreSettings.cs
 using DocXHandler;
-using oaiVectorStore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace oaiUI.Config
 {

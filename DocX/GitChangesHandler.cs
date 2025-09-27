@@ -1,12 +1,7 @@
 ﻿using Core;
 using NLogS = NLogShared;
-using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
-using static System.Reflection.Metadata.BlobBuilder;
 using DocXHandler.RecentFiles;
 
 namespace DocXHandler

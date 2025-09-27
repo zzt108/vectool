@@ -1,9 +1,4 @@
 // File: OaiUI/MainForm.SettingsTab.cs
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
-using oaiVectorStore;
 using oaiUI.Config;
 using DocXHandler;
 

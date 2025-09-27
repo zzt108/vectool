@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace oaiUI.Progress
+﻿namespace oaiUI.Progress
 {
     public sealed class ProgressUpdatedEventArgs : EventArgs
     {

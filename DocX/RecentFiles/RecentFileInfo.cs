@@ -1,10 +1,6 @@
 ﻿// File: DocXHandler/RecentFiles/RecentFileInfo.cs
 // Purpose: Data model for tracking metadata of a generated "recent file" (Step 2).
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace DocXHandler.RecentFiles

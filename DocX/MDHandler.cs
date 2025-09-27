@@ -1,8 +1,4 @@
-﻿﻿using oaiVectorStore;
-using NLogS = NLogShared;
-using System.IO;
-using System.Collections.Generic;
-using DocXHandler.RecentFiles;
+﻿using DocXHandler.RecentFiles;
 
 namespace DocXHandler
 {
