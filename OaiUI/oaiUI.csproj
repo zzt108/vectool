@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\DocX\DocXHandler.csproj" />
     <ProjectReference Include="..\Log\Log.csproj" />
     <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />

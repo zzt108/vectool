@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
     <!-- Version number properties -->
-    <zztMVersion>0</zztMVersion>
+    <zztMVersion>3</zztMVersion>
     <BuildVersion>$([System.DateTime]::UtcNow.ToString("Hmm"))</BuildVersion>
     <zztPVersion>$([System.DateTime]::UtcNow.ToString("MMdd"))</zztPVersion>
     <zztMinVersion>$([System.DateTime]::UtcNow.ToString("yy"))</zztMinVersion>
@@ -21,7 +21,7 @@
 
   <Target Name="IncrementVersion" BeforeTargets="Build">
     <PropertyGroup>
-      <ApplicationVersion>1</ApplicationVersion>
+      <ApplicationVersion>0</ApplicationVersion>
     </PropertyGroup>
   </Target>
 
@@ -43,7 +43,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\DocX\DocXHandler.csproj" />
+    <ProjectReference Include="..\OaiUI\oaiUI.csproj" />
     <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
   </ItemGroup>
 

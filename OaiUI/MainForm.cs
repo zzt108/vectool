@@ -1,9 +1,10 @@
-﻿﻿using oaiVectorStore;
-using OpenAI;
+﻿using DocumentFormat.OpenXml.Drawing.Charts;
+using DocXHandler;
 using NLogShared;
+﻿using oaiVectorStore;
+using OpenAI;
 using System.Configuration;
 using System.Reflection;
-using DocXHandler;
 
 namespace oaiUI
 {
@@ -13,14 +14,17 @@ namespace oaiUI
         private VectorStoreManager _vectorStoreManager;
         private IUserInterface _userInterface;
         private List<string> selectedFolders = new List<string>();
-        private ComboBox comboBoxVectorStores = null!;
-        private TextBox txtNewVectorStoreName;
-        private Button btnSelectFolders;
-        private ListBox listBoxSelectedFolders;
-        private Button btnUploadFiles;
-        private Button btnDeleteVectorStoreAssoc = null!; // Declaration for the new button
-        private Button btnFileSizeSummary;
 
+        // Designer controls with null-forgiving operator to suppress CS8618
+        private ComboBox comboBoxVectorStores = null!;
+        private TextBox txtNewVectorStoreName = null!;
+        private Button btnSelectFolders = null!;
+        private ListBox listBoxSelectedFolders = null!;
+        private Button btnUploadFiles = null!;
+        private Button btnFileSizeSummary = null!;
+        // private Button btnGetGitChanges = null!;
+
+        private int processedFolders = 0; // Initialize to suppress CS0649
         private void btnDeleteVectorStoreAssoc_Click(object sender, EventArgs e)
         {
             string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
@@ -58,7 +62,7 @@ namespace oaiUI
                 MessageBox.Show($"No folder associations found for vector store '{selectedVectorStore}'.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
-        private int processedFolders;
+
         private CtxLogger _log = new CtxLogger();
 
         // Store the mapping between vector store and selected folders
@@ -436,7 +440,7 @@ namespace oaiUI
             }
         }
 
-        private void btnGetGitChanges_Click(object sender, EventArgs e)
+        private async void btnGetGitChanges_Click(object sender, EventArgs e)
         {
             if (selectedFolders.Count == 0)
             {
@@ -444,54 +448,50 @@ namespace oaiUI
                 return;
             }
 
-            using (var saveFileDialog = new SaveFileDialog())
+            using var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Markdown Document(*.md)|*.md";
+            saveFileDialog.Title = "Save Git Changes File";
+            saveFileDialog.DefaultExt = "md";
+
+            const string gitChangesFileNameSuffix = "-git-changes";
+
+            if (txtNewVectorStoreName.Text.Trim().Length > 0)
+                saveFileDialog.FileName = txtNewVectorStoreName.Text.Trim() + gitChangesFileNameSuffix;
+            else
+                saveFileDialog.FileName = comboBoxVectorStores.SelectedItem?.ToString() + gitChangesFileNameSuffix;
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                saveFileDialog.Filter = "Markdown Document|*.md";
-                saveFileDialog.Title = "Save Git Changes File";
-                saveFileDialog.DefaultExt = "md";
-                const string gitChangesFileNameSuffix = "-git-changes";
-                saveFileDialog.Filter = "Markdown Document|*.md";
-
-                if (txtNewVectorStoreName.Text.Trim().Length > 0)
+                try
                 {
-                    saveFileDialog.FileName = $"{txtNewVectorStoreName.Text.Trim()}{gitChangesFileNameSuffix}";
+                    btnGetGitChanges.Enabled = false;
+                    WorkStart("Getting Git changes...", selectedFolders);
+                    var gitChangesHandler = new DocXHandler.GitChangesHandler(_userInterface);
+
+                    // Use the async method
+                    string changes = await gitChangesHandler.GetGitChangesAsync(selectedFolders, saveFileDialog.FileName);
+
+                    if (string.IsNullOrWhiteSpace(changes))
+                    {
+                        MessageBox.Show("No Git changes found in the selected folders.", "No Changes", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Git changes successfully saved to file.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    saveFileDialog.FileName = $"{comboBoxVectorStores.SelectedItem?.ToString()}{gitChangesFileNameSuffix}";
+                    MessageBox.Show($"Error getting Git changes: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                finally
                 {
-                    try
-                    {
-                        btnGetGitChanges.Enabled = false;
-                        WorkStart("Getting Git changes...", selectedFolders);
-
-                        var gitChangesHandler = new DocXHandler.GitChangesHandler(_userInterface);
-                        string changes = gitChangesHandler.GetGitChanges(selectedFolders, saveFileDialog.FileName);
-
-                        if (string.IsNullOrWhiteSpace(changes))
-                        {
-                            MessageBox.Show("No Git changes found in the selected folders.", "No Changes", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        else
-                        {
-                            MessageBox.Show("Git changes successfully saved to file.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Error getting Git changes: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    finally
-                    {
-                        WorkFinish();
-                        btnGetGitChanges.Enabled = true;
-                    }
+                    WorkFinish();
+                    btnGetGitChanges.Enabled = true;
                 }
             }
         }
+
 
         private void UpdateProgress()
         {

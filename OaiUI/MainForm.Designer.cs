@@ -424,6 +424,7 @@ namespace oaiUI
         private Button btnConvertToPdf;
         private Button btnConvertToMd;
         private Button btnGetGitChanges;
+        private Button btnDeleteVectorStoreAssoc;
 
         private TabControl tabControl1;
         private TabPage tabPage1;
