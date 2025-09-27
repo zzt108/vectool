@@ -5,6 +5,7 @@ using NLogShared;
 using OpenAI;
 using System.Configuration;
 using System.Reflection;
+using oaiUI.Services;
 
 namespace oaiUI
 {
@@ -14,6 +15,7 @@ namespace oaiUI
         private VectorStoreManager _vectorStoreManager;
         private IUserInterface _userInterface;
         private List<string> selectedFolders = new List<string>();
+        private readonly ILastSelectionService _lastSelectionService = new LastSelectionService();
 
         // Designer controls with null-forgiving operator to suppress CS8618
         private ComboBox comboBoxVectorStores = null!;
@@ -124,6 +126,7 @@ namespace oaiUI
                         .ToList();
 
                     comboBoxVectorStores.DataSource = combinedStores;
+                    RestoreLastSelectedVectorStore();
                 }
                 catch (Exception ex)
                 {
@@ -605,7 +608,38 @@ namespace oaiUI
                 if (!string.IsNullOrEmpty(selectedVectorStoreName))
                 {
                     LoadSelectedFoldersForVectorStore(selectedVectorStoreName);
+                    _lastSelectionService.SetLastSelectedVectorStore(selectedVectorStoreName);
                 }
+            }
+        }
+
+        private void RestoreLastSelectedVectorStore()
+        {
+            try
+            {
+                var last = _lastSelectionService.GetLastSelectedVectorStore();
+                if (string.IsNullOrWhiteSpace(last))
+                {
+                    // Fallback: select first if available
+                    if (comboBoxVectorStores.Items.Count > 0)
+                        comboBoxVectorStores.SelectedIndex = 0;
+                    return;
+                }
+
+                // Try exact match; if not found, fallback to first item
+                if (comboBoxVectorStores.Items.Contains(last))
+                {
+                    comboBoxVectorStores.SelectedItem = last;
+                }
+                else if (comboBoxVectorStores.Items.Count > 0)
+                {
+                    comboBoxVectorStores.SelectedIndex = 0;
+                }
+            }
+            catch
+            {
+                if (comboBoxVectorStores.Items.Count > 0)
+                    comboBoxVectorStores.SelectedIndex = 0;
             }
         }
 
