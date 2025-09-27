@@ -35,7 +35,7 @@ namespace UnitTests
             CreateTestFile(Path.Combine(subDir, "test2.txt"), 250);
 
             _outputPath = Path.Combine(_testDir, "size_summary.md");
-            _handler = new FileSizeSummaryHandler(null);
+            _handler = new FileSizeSummaryHandler(null, null);
             _config = new VectorStoreConfig();
         }
 

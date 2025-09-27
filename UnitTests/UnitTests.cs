@@ -1,6 +1,7 @@
-﻿﻿﻿﻿using FluentAssertions;
+﻿using DocXHandler;
+using DocXHandler.RecentFiles;
+﻿﻿﻿using FluentAssertions;
 using oaiVectorStore;
-using DocXHandler;
 
 namespace UnitTests
 {
@@ -82,7 +83,7 @@ namespace UnitTests
         }
     }
 
-    public class TestFileHandler(IUserInterface ui) : FileHandlerBase(ui)
+    public class TestFileHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager = null) : FileHandlerBase(ui, recentFilesManager)
     {
         public static bool TestIsFileExcluded(string fileName, List<string> excludedFiles)
         {

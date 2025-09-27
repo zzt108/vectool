@@ -6,7 +6,7 @@ namespace DocXHandler
 {
     public class DocXHandler : FileHandlerBase
     {
-        public DocXHandler(IUserInterface ui, IRecentFilesManager recentFilesManager):base(ui, recentFilesManager)
+        public DocXHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager):base(ui, recentFilesManager)
         {
             
         }

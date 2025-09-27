@@ -31,7 +31,7 @@ namespace DocXHandlerTests
 
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
-            var docXHandler = new DocXHandler.DocXHandler(null);
+            var docXHandler = new DocXHandler.DocXHandler(null, null);
             docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
             
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -57,7 +57,7 @@ namespace DocXHandlerTests
 
             List<string> folderPaths = new List<string> { emptyFolder };
 
-            var docXHandler = new DocXHandler.DocXHandler(null);
+            var docXHandler = new DocXHandler.DocXHandler(null, null);
             docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
             
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -81,7 +81,7 @@ namespace DocXHandlerTests
 
             List<string> folderPaths = new List<string> { folder };
 
-            var docXHandler = new DocXHandler.DocXHandler(null);
+            var docXHandler = new DocXHandler.DocXHandler(null, null);
             docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
             
             File.Exists(outputDocxPath).Should().BeTrue();
@@ -112,7 +112,7 @@ namespace DocXHandlerTests
 
             List<string> folderPaths = new List<string> { mainFolder };
 
-            var docXHandler = new DocXHandler.DocXHandler(null);
+            var docXHandler = new DocXHandler.DocXHandler(null, null);
             docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
             
             File.Exists(outputDocxPath).Should().BeTrue();
