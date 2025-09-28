@@ -1,21 +1,20 @@
-﻿// File: VecTool.Constants/TagBuilder.cs
-// Path: VecTool.Constants/TagBuilder.cs
-
-using Constants;
+﻿// Path: Constants/TagBuilder.cs
+using System;
+using System.Text;
 
 namespace Constants
 {
     /// <summary>
-    /// Helper class for building formatted XML tags with proper escaping.
-    /// Provides type-safe tag construction and reduces formatting errors.
+    /// Helper for building formatted tags with proper XML-attribute escaping.
     /// </summary>
     public static class TagBuilder
     {
         /// <summary>
-        /// Builds a file path tag with proper formatting
+        /// Builds a path attribute fragment with correct XML escaping.
         /// </summary>
-        /// <param name="path">File path to include</param>
-        /// <returns>Formatted file path tag</returns>
+        /// <param name="path">File or directory path.</param>
+        /// <returns>Formatted attribute fragment, e.g., path="...".</returns>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is null or empty.</exception>
         public static string BuildFilePathTag(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -25,10 +24,11 @@ namespace Constants
         }
 
         /// <summary>
-        /// Builds a file name tag with proper formatting
+        /// Builds a file name attribute fragment with correct XML escaping.
         /// </summary>
-        /// <param name="fileName">File name to include</param>
-        /// <returns>Formatted file name tag</returns>
+        /// <param name="fileName">File name without path.</param>
+        /// <returns>Formatted attribute fragment, e.g., file name="...".</returns>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="fileName"/> is null or empty.</exception>
         public static string BuildFileNameTag(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName))
@@ -38,10 +38,11 @@ namespace Constants
         }
 
         /// <summary>
-        /// Builds a section name tag with proper formatting
+        /// Builds a section name attribute fragment with correct XML escaping.
         /// </summary>
-        /// <param name="sectionName">Section name to include</param>
-        /// <returns>Formatted section name tag</returns>
+        /// <param name="sectionName">Logical section name.</param>
+        /// <returns>Formatted attribute fragment, e.g., section name="...".</returns>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="sectionName"/> is null or empty.</exception>
         public static string BuildSectionNameTag(string sectionName)
         {
             if (string.IsNullOrWhiteSpace(sectionName))
@@ -51,18 +52,76 @@ namespace Constants
         }
 
         /// <summary>
-        /// Escapes XML attribute values to prevent malformed XML
+        /// Builds an extension attribute fragment with correct XML escaping.
         /// </summary>
-        /// <param name="value">Value to escape</param>
-        /// <returns>Escaped XML attribute value</returns>
-        private static string EscapeXmlAttribute(string value)
+        public static string BuildExtensionTag(string extension)
+            => string.Format(Tags.FileExtension, EscapeXmlAttribute(extension ?? string.Empty));
+
+        /// <summary>
+        /// Builds a depends-on CSV attribute fragment with correct XML escaping.
+        /// </summary>
+        public static string BuildDependsOnTag(string csvList)
+            => string.Format(Tags.DependsOn, EscapeXmlAttribute(csvList ?? string.Empty));
+
+        /// <summary>
+        /// Builds a used-by CSV attribute fragment with correct XML escaping.
+        /// </summary>
+        public static string BuildUsedByTag(string csvList)
+            => string.Format(Tags.UsedBy, EscapeXmlAttribute(csvList ?? string.Empty));
+
+        /// <summary>
+        /// Builds a language attribute fragment with correct XML escaping.
+        /// </summary>
+        public static string BuildLanguageTag(string language)
+            => string.Format(Tags.Language, EscapeXmlAttribute(language ?? string.Empty));
+
+        /// <summary>
+        /// Builds a size-in-bytes attribute fragment.
+        /// </summary>
+        public static string BuildSizeBytesTag(long sizeBytes)
+            => string.Format(Tags.SizeBytes, sizeBytes);
+
+        /// <summary>
+        /// Builds a last-modified attribute fragment in ISO 8601 (UTC).
+        /// </summary>
+        public static string BuildLastModifiedTag(DateTime dtUtc)
+            => string.Format(Tags.LastModified, dtUtc.ToUniversalTime());
+
+        /// <summary>Builds a lines-of-code metric attribute fragment.</summary>
+        public static string BuildLinesOfCodeTag(int value) => string.Format(Tags.LinesOfCode, value);
+
+        /// <summary>Builds a code-lines metric attribute fragment.</summary>
+        public static string BuildCodeLinesTag(int value) => string.Format(Tags.CodeLines, value);
+
+        /// <summary>Builds a classes-count metric attribute fragment.</summary>
+        public static string BuildClassesTag(int value) => string.Format(Tags.Classes, value);
+
+        /// <summary>Builds a methods-count metric attribute fragment.</summary>
+        public static string BuildMethodsTag(int value) => string.Format(Tags.Methods, value);
+
+        /// <summary>
+        /// Escapes a string for safe inclusion in XML attribute values.
+        /// </summary>
+        /// <param name="value">Raw value.</param>
+        /// <returns>Escaped value with &amp;, &lt;, &gt;, &quot;, &apos; replaced.</returns>
+        public static string EscapeXmlAttribute(string value)
         {
-            return value
-                .Replace("&", "&amp;")
-                .Replace("<", "&lt;")
-                .Replace(">", "&gt;")
-                .Replace("\"", "&quot;")
-                .Replace("'", "&apos;");
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+
+            var sb = new StringBuilder(value.Length + 16);
+            foreach (var ch in value)
+            {
+                switch (ch)
+                {
+                    case '&': sb.Append("&amp;"); break;
+                    case '<': sb.Append("&lt;"); break;
+                    case '>': sb.Append("&gt;"); break;
+                    case '"': sb.Append("&quot;"); break;
+                    case '\'': sb.Append("&apos;"); break;
+                    default: sb.Append(ch); break;
+                }
+            }
+            return sb.ToString();
         }
     }
 }

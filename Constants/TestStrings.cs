@@ -1,39 +1,38 @@
-﻿// File: VecTool.Constants/TestStrings.cs
-// Path: VecTool.Constants/TestStrings.cs
+﻿// Path: Constants/TestStrings.cs
+using System;
 
 namespace Constants
 {
     /// <summary>
-    /// Constants specifically for unit tests to eliminate magic strings in test code.
-    /// These should NEVER be used in production code.
+    /// Test-only strings for unit and integration tests to avoid inlined literals.
     /// </summary>
     public static class TestStrings
     {
-        #region Test File Paths
-        /// <summary>Common test file path pattern</summary>
-        public const string TestFilePath = "C:\\TestPath\\TestFile.cs";
+        /// <summary>Sample absolute folder path used in tests.</summary>
+        public const string SampleFolder = @"C:\Projects\VecTool\src";
 
-        /// <summary>Test folder path pattern</summary>
-        public const string TestFolderPath = "C:\\TestFolder";
+        /// <summary>Sample file name used in tests.</summary>
+        public const string SampleFileName = "Program.cs";
 
-        /// <summary>Test only XML tag for unit testing</summary>
-        public const string TestOnlyTag = "testonlytag";
-        #endregion
+        /// <summary>Sample relative path used in tests.</summary>
+        public const string SampleRelativePath = @"src\Core\Program.cs";
 
-        #region Mock Data
-        /// <summary>Sample test content for file processing</summary>
-        public const string TestFileContent = "using System;\nclass TestClass {\n    void TestMethod() { }\n}";
+        /// <summary>Sample file extension used in tests.</summary>
+        public const string SampleExtension = ".cs";
 
-        /// <summary>Test project name</summary>
-        public const string TestProjectName = "VecTool.TestProject";
-        #endregion
+        /// <summary>Sample section name used in tests.</summary>
+        public const string SampleSection = "Core";
 
-        #region Test Assertions
-        /// <summary>Expected generated content marker</summary>
-        public const string ExpectedContentMarker = "<!-- Generated Test Content -->";
+        /// <summary>Intentionally dangerous value for escaping tests.</summary>
+        public const string DangerousValue = "a&b<\"c\">'d";
 
-        /// <summary>Test validation marker</summary> 
-        public const string TestValidationMarker = "TEST_VALIDATION_PASSED";
-        #endregion
+        /// <summary>Expected escaped form of <see cref="DangerousValue"/>.</summary>
+        public const string EscapedDangerousValue = "a&amp;b&lt;&quot;c&quot;&gt;&apos;d";
+
+        /// <summary>Sample CSV dependency list.</summary>
+        public const string DependsList = @"A.cs,B.cs";
+
+        /// <summary>Sample CSV reverse dependency list.</summary>
+        public const string UsedByList = @"Main.cs,App.cs";
     }
 }
