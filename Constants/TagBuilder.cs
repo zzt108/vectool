@@ -75,6 +75,14 @@ namespace Constants
         public static string BuildLanguageTag(string language)
             => string.Format(Tags.Language, EscapeXmlAttribute(language ?? string.Empty));
 
+        // Element helpers for XML-like rendering
+        public static string Open(string tag) => $"<{tag}>";
+        public static string Close(string tag) => $"</{tag}>";
+        public static string OpenWith(string tag, params string[] attributes)
+            => attributes is { Length: > 0 } ? $"<{tag} {string.Join(" ", attributes)}>" : $"<{tag}>";
+        public static string SelfClosing(string tag, params string[] attributes)
+            => attributes is { Length: > 0 } ? $"<{tag} {string.Join(" ", attributes)}/>" : $"<{tag}/>";
+
         /// <summary>
         /// Builds a size-in-bytes attribute fragment.
         /// </summary>
