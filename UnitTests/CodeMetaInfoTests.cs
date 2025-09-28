@@ -60,8 +60,8 @@ public class FooTests { [Test] public void A() { /* TODO */ } }");
             using var doc = WordprocessingDocument.Open(_outDocx, false);
             var text = doc.MainDocumentPart!.Document!.Body!.InnerText;
 
-            text.ShouldContain("<code_meta_info>");
-            text.ShouldContain("</code_meta_info>");
+            text.ShouldContain("<codemetainfo>");
+            text.ShouldContain("</codemetainfo>");
             text.ShouldContain("Foo.cs");
             text.ShouldContain("metrics sizebytes=");
             text.ShouldContain("analysis complexity=");
