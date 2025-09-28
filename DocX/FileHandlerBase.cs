@@ -1,11 +1,10 @@
 // File: DocX/FileHandlerBase.cs
-// Purpose: Shared generation utilities for DocX handlers (TOC, CrossReferences, CodeMetaInfo)
+// Purpose: Shared generation utilities for DocX handlers (TOC, CrossReferences, CodeMetaInfo) and common IO helpers
 // Notes:
-// - All XML-like tags via Constants.TagBuilder + Constants.Tags.
+// - Implements Step 4 refactor: all XML-like tags via Constants.TagBuilder + Constants.Tags.
 // - Provides 6-arg ProcessFolder<T>(...) to match DocXHandler/PdfHandler calls.
-// - Adds _ui/_recentFilesManager/_log compatibility fields used by derived handlers.
+// - Exposes _ui/_recentFilesManager/_log compatibility fields used by derived handlers.
 // - Avoids CustomExcluded* fields; uses VectorStoreConfig API instead.
-// - Adds AddAIOptimizedContext and GetEnhancedFileContent used by DocXHandler.
 
 using System;
 using System.Collections.Generic;
@@ -13,27 +12,20 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-
-// Centralized tag/attribute constants and builders
 using Constants;
-
-// Recent files contracts
 using DocXHandler.RecentFiles;
-
-// Logging alias as used in the repo
 using NLogS = NLogShared;
 
 namespace DocXHandler
 {
     public abstract class FileHandlerBase
     {
-        // Compatibility fields (derived handlers reference these names)
         protected static NLogS.CtxLogger _log = new();
 
         protected readonly IUserInterface? _ui;
         protected readonly IRecentFilesManager? _recentFilesManager;
 
-        // Also keep non-underscore variants if other codepaths reference them
+        // Keep non-underscore variants if other codepaths reference them
         protected readonly IUserInterface? ui;
         protected readonly IRecentFilesManager? recentFilesManager;
 
@@ -247,7 +239,7 @@ namespace DocXHandler
             {
                 var text = SafeReadAllText(f);
                 var ext = Path.GetExtension(f);
-                var lang = ext.TrimStart('.'); // keep local, no external dep
+                var lang = ext.TrimStart('.'); // local mapping to avoid external deps
                 var root = FindOwningRoot(folderPaths, f);
                 var rel = MakeRelativeSafe(root, f);
                 var name = Path.GetFileName(f);
@@ -391,12 +383,22 @@ namespace DocXHandler
             return SafeReadAllText(file);
         }
 
+        // ... existing code ...
+        // NEW CODE GOES HERE
+        //
+        // Provide the legacy method name expected by MDHandler/PdfHandler:
+        protected virtual string GetFileContent(string filePath)
+        {
+            // Keep behavior simple and predictable; MD/PDF handlers expect raw text
+            return SafeReadAllText(filePath);
+        }
+        // ... existing code ...
+
         protected void AddAIOptimizedContext<T>(
             List<string> folderPaths,
             T context,
             Action<T, string> writeContent)
         {
-            // Keep it simple: just emit TOC, XRefs, Meta as preface blocks
             var toc = GenerateTableOfContentsList(folderPaths);
             if (!string.IsNullOrWhiteSpace(toc))
                 writeContent(context, toc);
@@ -473,7 +475,6 @@ namespace DocXHandler
                 if (!fi.Exists) return false;
                 if (fi.Length == 0) return false;
 
-                // Quick binary-ish extension screening without external deps
                 var ext = Path.GetExtension(path);
                 var binExt = new[]
                 {
