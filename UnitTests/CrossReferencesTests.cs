@@ -52,12 +52,12 @@ namespace DemoB { public class Bar { private Foo _f = new Foo(); } }");
             using var doc = WordprocessingDocument.Open(_outDocx, false);
             var text = doc.MainDocumentPart!.Document!.Body!.InnerText;
 
-            text.ShouldContain("<cross_references>");
-            text.ShouldContain("</cross_references>");
+            text.ShouldContain("<crossreferences>");
+            text.ShouldContain("</crossreferences>");
             text.ShouldContain("Foo.cs");
             text.ShouldContain("Bar.cs");
             // Expect that Bar depends on Foo
-            text.ShouldContain("depends_on=");
+            text.ShouldContain("dependson=");
             text.ShouldContain("Foo.cs");
         }
     }

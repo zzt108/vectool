@@ -50,8 +50,8 @@ namespace DocXHandlerTests
             using var doc = WordprocessingDocument.Open(_outDocx, false);
             var text = doc.MainDocumentPart!.Document!.Body!.InnerText;
 
-            text.ShouldContain("<table_of_contents>");
-            text.ShouldContain("</table_of_contents>");
+            text.ShouldContain("<tableofcontents>");
+            text.ShouldContain("</tableofcontents>");
             text.ShouldContain("SectionA");
             text.ShouldContain("SectionB");
             text.ShouldContain("a1.cs");
