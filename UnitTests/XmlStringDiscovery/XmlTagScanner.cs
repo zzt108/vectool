@@ -120,12 +120,20 @@ namespace XmlStringDiscovery
         {
             var t = token.ToLowerInvariant();
 
+            // Priority 1: Specific header-like patterns for Metadata
+            if (t.Contains("name=") || t.Contains("path=") || t.Contains("ext=") ||
+                t.Contains("size=") || t.Contains("timestamp=") || t.Contains("language="))
+                return TagContextCategory.Metadata;
+
+            // Priority 2: Content hints (most specific)
             if (ContentHints.Any(h => t.Contains(h)))
                 return TagContextCategory.Content;
 
+            // Priority 3: Structure hints (only if no metadata markers)
             if (StructureHints.Any(h => t.StartsWith(h, StringComparison.OrdinalIgnoreCase) || t.Equals(h, StringComparison.OrdinalIgnoreCase)))
                 return TagContextCategory.Structure;
 
+            // Priority 4: General metadata hints (fallback)
             if (MetadataHints.Any(h => t.Contains(h)))
                 return TagContextCategory.Metadata;
 
