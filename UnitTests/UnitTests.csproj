@@ -43,6 +43,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Constants\Constants.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\DocX\DocXHandler.csproj" />
     <ProjectReference Include="..\OaiUI\oaiUI.csproj" />
