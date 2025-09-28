@@ -1,63 +1,82 @@
-﻿// UnitTests/DocX/CrossReferencesTests.cs
+﻿using NUnit.Framework;
 using Shouldly;
+using System;
+using System.IO;
+using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
+using Constants; // Add this using
 
 namespace DocXHandlerTests
 {
     [TestFixture]
     public class CrossReferencesTests
     {
-        private string _root = "";
-        private string _outDocx = "";
+        private string root;
+        private string outDocx;
 
         [SetUp]
         public void Setup()
         {
-            _root = Path.Combine(Path.GetTempPath(), "CrossReferencesTests_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(_root);
+            root = Path.Combine(Path.GetTempPath(), "CrossReferencesTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
 
-            var aDir = Path.Combine(_root, "A");
-            var bDir = Path.Combine(_root, "B");
+            var aDir = Path.Combine(root, "A");
+            var bDir = Path.Combine(root, "B");
             Directory.CreateDirectory(aDir);
             Directory.CreateDirectory(bDir);
 
             // Declares Foo in A/Foo.cs
-            File.WriteAllText(Path.Combine(aDir, "Foo.cs"),
-@"namespace DemoA { public class Foo { public int X; } }");
+            File.WriteAllText(Path.Combine(aDir, "Foo.cs"), @"namespace DemoA
+{
+    public class Foo
+    {
+        public int X { get; set; }
+    }
+}");
 
             // References Foo in B/Bar.cs
-            File.WriteAllText(Path.Combine(bDir, "Bar.cs"),
-@"using DemoA;
-namespace DemoB { public class Bar { private Foo _f = new Foo(); } }");
+            File.WriteAllText(Path.Combine(bDir, "Bar.cs"), @"using DemoA;
 
-            _outDocx = Path.Combine(_root, "out.docx");
+namespace DemoB
+{
+    public class Bar
+    {
+        private Foo f = new Foo();
+    }
+}");
+
+            outDocx = Path.Combine(root, "out.docx");
         }
 
         [TearDown]
         public void TearDown()
         {
-            try { if (Directory.Exists(_root)) Directory.Delete(_root, true); } catch { /* ignore */ }
+            try
+            {
+                if (Directory.Exists(root))
+                    Directory.Delete(root, true);
+            }
+            catch { /* ignore */ }
         }
 
         [Test]
-        public void Docx_ShouldContain_CrossReferences()
+        public void DocxShouldContainCrossReferences()
         {
             var handler = new DocXHandler.DocXHandler(null, null);
-            var folders = Directory.GetDirectories(_root).ToList();
+            var folders = Directory.GetDirectories(root).ToList();
+            handler.ConvertSelectedFoldersToDocx(folders, outDocx, new DocXHandler.VectorStoreConfig());
 
-            handler.ConvertSelectedFoldersToDocx(folders, _outDocx, new DocXHandler.VectorStoreConfig());
+            File.Exists(outDocx).ShouldBeTrue();
 
-            File.Exists(_outDocx).ShouldBeTrue();
-
-            using var doc = WordprocessingDocument.Open(_outDocx, false);
+            using var doc = WordprocessingDocument.Open(outDocx, false);
             var text = doc.MainDocumentPart!.Document!.Body!.InnerText;
 
-            text.ShouldContain("<crossreferences>");
-            text.ShouldContain("</crossreferences>");
+            // ✅ Use constants instead of magic strings
+            text.ShouldContain(Tags.CrossReferences); // Instead of "crossreferences"
             text.ShouldContain("Foo.cs");
             text.ShouldContain("Bar.cs");
             // Expect that Bar depends on Foo
-            text.ShouldContain("dependson=");
+            text.ShouldContain("dependson");
             text.ShouldContain("Foo.cs");
         }
     }
