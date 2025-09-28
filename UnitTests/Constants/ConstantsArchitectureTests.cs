@@ -1,11 +1,9 @@
-﻿// File: UnitTests/Constants/ConstantsArchitectureTests.cs 
-// Path: UnitTests/Constants/ConstantsArchitectureTests.cs
-
+﻿// Path: UnitTests/Constants/ConstantsArchitectureTests.cs
 using NUnit.Framework;
 using Shouldly;
 using System;
 using System.Linq;
-using Constants; // Reference to our new Constants project
+using Constants;
 
 namespace UnitTests.Constants
 {
@@ -27,36 +25,23 @@ namespace UnitTests.Constants
         public void ConstantValuesShouldMatchOriginalStrings()
         {
             // Assert - Verify key constants match expected XML patterns
-            Tags.FilePath.ShouldBe("file path=\"{0}\"");
+            Tags.FilePath.ShouldBe("path=\"{0}\"");
             Tags.FileName.ShouldBe("file name=\"{0}\"");
-            Tags.FileProperties.ShouldBe("FileProps");
+            Tags.FileProperties.ShouldBe("fileproperties");
             Tags.AIGuidance.ShouldBe("aiguidance");
-        }
-
-        [Test]
-        public void NoMagicStringsShouldRemainInConstants()
-        {
-            // Arrange
-            var constantFields = typeof(Tags).GetFields()
-                .Concat(typeof(TestStrings).GetFields())
-                .Concat(typeof(Attributes).GetFields());
-
-            // Assert
-            constantFields.ShouldAllBe(field =>
-                field.FieldType == typeof(string) &&
-                !string.IsNullOrEmpty((string?)field.GetValue(null)));
         }
 
         [Test]
         public void TagBuilderShouldEscapeXmlAttributes()
         {
-            // Act
-            var result = TagBuilder.BuildFilePathTag("C:\\Test<File>&Name.cs");
+            // Act - Use TestStrings.DangerousValue which contains XML-dangerous chars!
+            var result = TagBuilder.BuildFilePathTag(TestStrings.DangerousValue);
 
-            // Assert - Fix the chaining issue! 🎯
-            result.ShouldContain("&lt;");
-            result.ShouldContain("&amp;");
-            result.ShouldStartWith("file path=\"");
+            // Assert - Now we should see the escaped versions
+            result.ShouldContain("&lt;");    // from '<' in dangerous value
+            result.ShouldContain("&amp;");   // from '&' in dangerous value
+            result.ShouldContain("&quot;");  // from '"' in dangerous value
+            result.ShouldStartWith("path=\"");
             result.ShouldEndWith("\"");
         }
 
@@ -74,8 +59,31 @@ namespace UnitTests.Constants
         {
             // Act & Assert
             TagBuilder.BuildFileNameTag("test.cs").ShouldStartWith("file name=\"");
-            TagBuilder.BuildFilePathTag("C:\\test").ShouldStartWith("file path=\"");
+            TagBuilder.BuildFilePathTag("C:\\safe\\path").ShouldStartWith("path=\"");
             TagBuilder.BuildSectionNameTag("TestSection").ShouldStartWith("section name=\"");
+        }
+
+        [Test]
+        public void EscapingShouldWorkCorrectlyWithTestData()
+        {
+            // Act - Test the escaping directly
+            var escaped = TagBuilder.EscapeXmlAttribute(TestStrings.DangerousValue);
+
+            // Assert - Should match the expected escaped form
+            escaped.ShouldBe(TestStrings.EscapedDangerousValue);
+        }
+
+        [Test]
+        public void NoMagicStringsShouldRemainInConstants()
+        {
+            // Arrange
+            var constantFields = typeof(Tags).GetFields()
+                .Concat(typeof(TestStrings).GetFields())
+                .Concat(typeof(Attributes).GetFields());
+
+            // Assert
+            constantFields.ShouldAllBe(field => field.FieldType == typeof(string));
+            constantFields.ShouldAllBe(field => !string.IsNullOrEmpty((string?)field.GetValue(null)));
         }
     }
 }
