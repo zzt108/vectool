@@ -127,6 +127,11 @@ namespace oaiUI.RecentFiles
                     item.ForeColor = Color.Gray;
                     item.Font = new Font(item.Font, FontStyle.Italic);
                 }
+                //else
+                //{
+                //    item.ForeColor = Color.Black;
+                //    item.Font = new Font(item.Font, FontStyle.Regular);
+                //}
 
                 lvRecentFiles.Items.Add(item);
             }

@@ -150,10 +150,16 @@ namespace UnitTests.UI.RecentFiles
 
         private class MockRecentFileInfo : RecentFileInfo
         {
+            private readonly bool mockExists;
+
             public MockRecentFileInfo(MockFileInfo info)
                 : base(info.Path, DateTimeOffset.UtcNow, info.Type, new List<string>(), info.Size)
             {
+                mockExists = info.Exists;
             }
+
+            // Override the Exists property to return our mock value
+            public override bool Exists => mockExists;
         }
     }
 }

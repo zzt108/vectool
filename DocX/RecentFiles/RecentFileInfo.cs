@@ -25,7 +25,7 @@ namespace DocXHandler.RecentFiles
 
         // Derived, non-persisted
         [JsonIgnore]
-        public bool Exists => SafeExists(FilePath);
+        public virtual bool Exists => SafeExists(FilePath);
 
         [JsonIgnore]
         public string FileName => Path.GetFileName(FilePath);
