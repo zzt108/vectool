@@ -18,7 +18,8 @@ namespace DocXHandler
             var ignoreFiles = folders
                 .SelectMany(f => Directory.GetFiles(f, "*.*ignore", SearchOption.AllDirectories))
                    //.Where(f => Path.GetFileName(f) == ".gitignore" || Path.GetFileName(f) == ".vtignore")
-                   .OrderBy(f => f.Length)  // root first, child later
+                   .OrderBy(f => Path.GetFileName(f))
+                   .OrderBy(f => Path.GetDirectoryName(f).Length)  // root first, child later
                    .ToList();
 
             // 2. Initialize allowed list with all files under `directoryPath`
@@ -37,15 +38,15 @@ namespace DocXHandler
                     allowed.RemoveWhere(f => string.Equals(f, deniedPath, StringComparison.OrdinalIgnoreCase));
                 }
                 // Re-add accepted (negations)
-                foreach (var a in accept)
-                {
-                    if (Path.EndsInDirectorySeparator(a)) //
-                    {
-                        continue;
-                    }
-                    string acceptedPath = Path.IsPathRooted(a) ? a : Path.GetFullPath(Path.Combine(baseDir, a));
-                    allowed.Add(acceptedPath);
-                }
+                //foreach (var a in accept)
+                //{
+                //    if (Path.EndsInDirectorySeparator(a)) //
+                //    {
+                //        continue;
+                //    }
+                //    string acceptedPath = Path.IsPathRooted(a) ? a : Path.GetFullPath(Path.Combine(baseDir, a));
+                //    allowed.Add(acceptedPath);
+                //}
             }
 
             return allowed;

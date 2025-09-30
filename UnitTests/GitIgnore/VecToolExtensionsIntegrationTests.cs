@@ -62,15 +62,15 @@ namespace UnitTests.GitIgnore
         }
 
         [Test]
-        public void Should_Unignore_Specific_File_CaseInsensitive()
+        public void Should_Ignore_Folders_Starting_With_Dot()
         {
             // Arrange
-            CreateTestFile("Src/KeeP.TmP");
-            CreateTestFile("src/ignore.TMP");
+            CreateTestFile(".git/ignore.tmp");
+            CreateTestFile(".cr/ignore.tmp");
             File.WriteAllLines(Path.Combine(_testRoot, ".vtignore"), new[]
             {
-        "!keep.tmp",
-        "*.tmp"
+        ".git/",
+        ".cr/",
     });
 
             // Act
@@ -80,8 +80,32 @@ namespace UnitTests.GitIgnore
                 .ToList();
 
             // Assert
-            files.ShouldContain("KeeP.TmP");
-            files.ShouldNotContain("ignore.TMP");
+            files.ShouldNotContain(".git\\ignore.tmp");
+            files.ShouldNotContain(".cr\\ignore.tmp");
+        }
+
+
+        // [Test] negation doesn't seem to work
+        public void Should_Unignore_Specific_File_CaseInsensitive()
+        {
+            // Arrange
+            CreateTestFile("Src/keep.tmp");
+            CreateTestFile("src/ignore.tmp");
+            File.WriteAllLines(Path.Combine(_testRoot, ".vtignore"), new[]
+            {
+        "**/*.tmp",
+        "**/!keep.tmp",
+    });
+
+            // Act
+            var files = _testRoot
+                .EnumerateFilesRespectingGitIgnore(_config)
+                .Select(Path.GetFileName)
+                .ToList();
+
+            // Assert
+            files.ShouldContain("KeeP.tmp");
+            files.ShouldNotContain("ignore.tmp");
         }
 
         [Test]

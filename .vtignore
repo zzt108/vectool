@@ -15,7 +15,7 @@ package-lock.json
 **/[Tt]mp/
 .gradle/
 translations/
-.git/
+**/.git/
 .vs/
 .cr/
 .idea/
