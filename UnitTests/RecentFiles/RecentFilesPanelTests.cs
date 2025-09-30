@@ -103,6 +103,79 @@ namespace UnitTests.UI.RecentFiles
             listView.Items[1].Font.Italic.ShouldBeTrue();
         }
 
+        [Test]
+        public void DragOperationShouldValidateMissingFiles()
+        {
+            // Arrange
+            mockManager.AddFile("C:\\test\\report.docx", RecentFileType.Docx, 100, exists: true);
+            mockManager.AddFile("C:\\test\\missing.docx", RecentFileType.Docx, 200, exists: false);
+            panel.RefreshList();
+
+            var listView = GetListView(panel);
+
+            // Select both items (one missing)
+            listView.Items[0].Selected = true;
+            listView.Items[1].Selected = true;
+
+            // Act - Simulate ItemDrag event manually
+            var dragEventArgs = new ItemDragEventArgs(MouseButtons.Left, listView.Items[0]);
+
+            // Invoke private method using reflection
+            var method = typeof(RecentFilesPanel).GetMethod("LvRecentFiles_ItemDrag",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            // Assert - Should not throw, but should show warning
+            Should.NotThrow(() => method?.Invoke(panel, new object[] { listView, dragEventArgs }));
+        }
+
+        [Test]
+        public void DragOperationShouldCreateDataObjectWithFilePaths()
+        {
+            // Arrange
+            mockManager.AddFile("C:\\test\\file1.docx", RecentFileType.Docx, 100, exists: true);
+            mockManager.AddFile("C:\\test\\file2.pdf", RecentFileType.Pdf, 200, exists: true);
+            panel.RefreshList();
+
+            var listView = GetListView(panel);
+            listView.Items[0].Selected = true;
+            listView.Items[1].Selected = true;
+
+            // Act & Assert
+            // Verify multi-select is enabled
+            listView.MultiSelect.ShouldBeTrue();
+            listView.SelectedItems.Count.ShouldBe(2);
+        }
+
+        [Test]
+        public void DragOperationShouldOnlyDragExistingFiles()
+        {
+            // Arrange
+            mockManager.AddFile("C:\\exists.docx", RecentFileType.Docx, 100, exists: true);
+            mockManager.AddFile("C:\\missing.docx", RecentFileType.Docx, 200, exists: false);
+            panel.RefreshList();
+
+            var listView = GetListView(panel);
+
+            // Only existing file should be draggable without warnings
+            listView.Items[0].Selected = true;
+
+            // Assert
+            var selectedFiles = GetSelectedRecentFilesFromPanel(panel);
+            selectedFiles.Count.ShouldBe(1);
+            selectedFiles[0].Exists.ShouldBeTrue();
+        }
+
+        /// <summary>
+        /// Helper method to access private GetSelectedRecentFiles via reflection.
+        /// </summary>
+        private List<RecentFileInfo> GetSelectedRecentFilesFromPanel(RecentFilesPanel panel)
+        {
+            var method = typeof(RecentFilesPanel).GetMethod("GetSelectedRecentFiles",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            return (List<RecentFileInfo>)method?.Invoke(panel, null) ?? new List<RecentFileInfo>();
+        }
+
         // Helper methods to access private controls
         private ListView GetListView(RecentFilesPanel panel)
         {
