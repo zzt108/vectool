@@ -97,6 +97,7 @@ namespace oaiUI
             var recentFilesConfig = RecentFilesConfig.FromAppConfig();
             var recentFilesStore = new FileRecentFilesStore(recentFilesConfig);
             _recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
+            _recentFilesManager.Load();
             _recentFilesPanel = new oaiUI.RecentFiles.RecentFilesPanel(_recentFilesManager);
 
             tabPage3.Controls.Clear();

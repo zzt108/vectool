@@ -146,6 +146,16 @@ namespace UnitTests
             }
 
             public int CleanupExpiredFiles(DateTime? nowUtc = null) => 0;
+
+            public void Save()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Load()
+            {
+                throw new NotImplementedException();
+            }
         }
         private void CreateTestFile(string path, int sizeInBytes)
         {

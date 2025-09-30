@@ -274,6 +274,16 @@ namespace UnitTests.UI.RecentFiles
             }
 
             public int CleanupExpiredFiles(DateTime? nowUtc = null) => 0;
+
+            public void Save()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Load()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private record MockFileInfo(string Path, RecentFileType Type, long Size, bool Exists);

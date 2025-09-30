@@ -80,7 +80,7 @@ namespace DocXHandler.RecentFiles
                     );
                     _items.Add(info);
                 }
-
+                Save();
                 // NOTE: Only enforce MaxCount here to keep retention removal deterministic in tests.
                 EnforcePolicies_NoLock();
             }
