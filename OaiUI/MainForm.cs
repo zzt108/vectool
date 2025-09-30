@@ -1,6 +1,8 @@
 ﻿using DocXHandler;
 using DocXHandler.RecentFiles;
+using Microsoft.VisualBasic.Logging;
 using NLogShared;
+using oaiUI.RecentFiles;
 using oaiUI.Services;
 using oaiVectorStore;
 using OpenAI;
@@ -95,7 +97,31 @@ namespace oaiUI
             var recentFilesConfig = RecentFilesConfig.FromAppConfig();
             var recentFilesStore = new FileRecentFilesStore(recentFilesConfig);
             _recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
+            _recentFilesPanel = new oaiUI.RecentFiles.RecentFilesPanel(_recentFilesManager);
 
+            tabPage3.Controls.Clear();
+            tabPage3.Controls.Add(_recentFilesPanel);
+            _recentFilesPanel.Dock = DockStyle.Fill;
+
+            // NEW: Wire up tab selection event
+            tabControl1.SelectedIndexChanged += TabControl1_SelectedIndexChanged;
+
+        }
+        private void TabControl1_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            try
+            {
+                // Check if Recent Files tab is selected (index 2)
+                if (tabControl1.SelectedIndex == 2)
+                {
+                    _log.Info("Recent Files tab selected, refreshing panel.");
+                    _recentFilesPanel?.RefreshList();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to refresh Recent Files panel on tab selection.");
+            }
         }
 
 

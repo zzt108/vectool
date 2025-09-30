@@ -1,9 +1,12 @@
-﻿using System.Reflection;
+﻿using oaiUI.RecentFiles;
+using System.Reflection;
+using System.Windows.Forms;
 
 namespace oaiUI
 {
     partial class MainForm
     {
+        private oaiUI.RecentFiles.RecentFilesPanel _recentFilesPanel;
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -18,6 +21,7 @@ namespace oaiUI
             if (disposing && (components != null))
             {
                 components.Dispose();
+                _recentFilesPanel?.Dispose();  // NEW LINE
             }
             base.Dispose(disposing);
         }
@@ -58,6 +62,8 @@ namespace oaiUI
             btnDeleteVectorStoreAssoc = new Button();
             btnGetGitChanges = new Button();
             tabPage2 = new TabPage();
+            tabPage3 = new TabPage();
+
             statusStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -211,6 +217,7 @@ namespace oaiUI
             // 
             tabControl1.Controls.Add(tabPage1);
             tabControl1.Controls.Add(tabPage2);
+            tabControl1.Controls.Add(tabPage3);
             tabControl1.Dock = DockStyle.Fill;
             tabControl1.Location = new Point(0, 23);
             tabControl1.Margin = new Padding(3, 2, 3, 2);
@@ -381,6 +388,28 @@ namespace oaiUI
             tabPage2.Text = "Settings";
             tabPage2.UseVisualStyleBackColor = true;
 
+            // 
+            // tabPage3
+            // 
+            _recentFilesPanel = new oaiUI.RecentFiles.RecentFilesPanel(null);  // We'll set manager later
+            tabPage3.Controls.Add(_recentFilesPanel);
+            tabPage3.Location = new Point(4, 24);
+            tabPage3.Margin = new Padding(3, 2, 3, 2);
+            tabPage3.Name = "tabPage3";
+            tabPage3.Padding = new Padding(3, 2, 3, 2);
+            tabPage3.Size = new Size(792, 377);
+            tabPage3.TabIndex = 2;
+            tabPage3.Text = "Recent Files";
+            tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // recentFilesPanel
+            // 
+            _recentFilesPanel.Dock = DockStyle.Fill;
+            _recentFilesPanel.Location = new Point(3, 2);
+            _recentFilesPanel.Name = "recentFilesPanel";
+            _recentFilesPanel.Size = new Size(786, 373);
+            _recentFilesPanel.TabIndex = 0;
+
             // Settings controls (vector-store specific)
             this.lblVs = new System.Windows.Forms.Label();
             this.cmbSettingsVectorStore = new System.Windows.Forms.ComboBox();
@@ -496,6 +525,8 @@ namespace oaiUI
         private SplitContainer splitContainer1;
         private Panel panel2;
         private Label label1;
+        private TabPage tabPage3;
+        //private oaiUI.RecentFiles.RecentFilesPanel _recentFilesPanel;
 
         private System.Windows.Forms.Label lblVs;
         private System.Windows.Forms.CheckBox chkInheritExcludedFiles;
