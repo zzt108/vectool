@@ -11,7 +11,7 @@ namespace UnitTests.UI.RecentFiles
 {
     [TestFixture]
     [Apartment(ApartmentState.STA)] // Required for WinForms controls
-    public class RecentFilesPanelTests
+    public partial class RecentFilesPanelTests
     {
         private MockRecentFilesManager mockManager = null!;
         private RecentFilesPanel panel = null!;
@@ -155,7 +155,11 @@ namespace UnitTests.UI.RecentFiles
             var missingFile = new RecentFileInfo("C:\\missing.docx", DateTimeOffset.UtcNow,
                 RecentFileType.Docx, new List<string>(), 200);
 
-            var selectedFiles = new List<RecentFileInfo> { existingFile, missingFile };
+            // Create a custom mock to control Exists behavior
+            var mockExistingFile = new MockRecentFileInfo("C:\\exists.docx", RecentFileType.Docx, 100, exists: true);
+            var mockMissingFile = new MockRecentFileInfo("C:\\missing.docx", RecentFileType.Docx, 200, exists: false);
+
+            var selectedFiles = new List<RecentFileInfo> { mockExistingFile, mockMissingFile };
 
             // Act - Filter out missing files (simulates drag validation)
             var validFiles = selectedFiles.Where(f => f.Exists).ToList();
@@ -273,19 +277,5 @@ namespace UnitTests.UI.RecentFiles
         }
 
         private record MockFileInfo(string Path, RecentFileType Type, long Size, bool Exists);
-
-        private class MockRecentFileInfo : RecentFileInfo
-        {
-            private readonly bool mockExists;
-
-            public MockRecentFileInfo(MockFileInfo info)
-                : base(info.Path, DateTimeOffset.UtcNow, info.Type, new List<string>(), info.Size)
-            {
-                mockExists = info.Exists;
-            }
-
-            // Override the Exists property to return our mock value
-            public override bool Exists => mockExists;
-        }
     }
 }
