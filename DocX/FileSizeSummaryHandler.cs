@@ -42,6 +42,17 @@ namespace DocXHandler
             {
                 _ui?.WorkFinish();
             }
+            
+            if (recentFilesManager != null && File.Exists(outputPath))
+            {
+                var fileInfo = new FileInfo(outputPath);
+                recentFilesManager.RegisterGeneratedFile(
+                    outputPath,
+                    RecentFileType.Md,
+                    folderPaths,
+                    fileInfo.Length
+                );
+            }
         }
 
         private void CalculateFolderSizes(string folderPath, VectorStoreConfig config,

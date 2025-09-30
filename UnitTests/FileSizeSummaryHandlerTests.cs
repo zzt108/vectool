@@ -1,4 +1,5 @@
 ﻿using DocXHandler;
+using DocXHandler.RecentFiles;
 using Shouldly;
 
 namespace UnitTests
@@ -82,6 +83,70 @@ namespace UnitTests
             content.ShouldContain("400"); // Total size of .txt files
         }
 
+        [Test]
+        public void GenerateFileSizeSummaryShouldRegisterWithRecentFilesManager()
+        {
+            // Arrange
+            var mockRecentFilesManager = new MockRecentFilesManager();
+            var handlerWithManager = new FileSizeSummaryHandler(null, mockRecentFilesManager);
+            var folders = new List<string> { _testDir };
+
+            // Act
+            handlerWithManager.GenerateFileSizeSummary(folders, _outputPath, _config);
+
+            // Assert
+            File.Exists(_outputPath).ShouldBeTrue();
+            mockRecentFilesManager.RegisteredFiles.Count.ShouldBe(1);
+
+            var registered = mockRecentFilesManager.RegisteredFiles[0];
+            registered.FilePath.ShouldBe(_outputPath);
+            registered.FileType.ShouldBe(RecentFileType.Md);
+            registered.SourceFolders.ShouldBe(folders);
+            registered.FileSizeBytes.ShouldBeGreaterThan(0);
+        }
+
+        [Test]
+        public void GenerateFileSizeSummaryShouldNotRegisterIfWriteFails()
+        {
+            // Arrange
+            var mockRecentFilesManager = new MockRecentFilesManager();
+            var handlerWithManager = new FileSizeSummaryHandler(null, mockRecentFilesManager);
+            var invalidOutputPath = Path.Combine(_testDir, "invalid\\path\\\\\\file.md");
+
+            // Act & Assert
+            Should.Throw<Exception>(() =>
+                handlerWithManager.GenerateFileSizeSummary(
+                    new List<string> { _testDir },
+                    invalidOutputPath,
+                    _config
+                )
+            );
+
+            // Verify no registration happened
+            mockRecentFilesManager.RegisteredFiles.Count.ShouldBe(0);
+        }
+
+        // Helper mock class
+        private class MockRecentFilesManager : IRecentFilesManager
+        {
+            public List<(string FilePath, RecentFileType FileType, IReadOnlyList<string> SourceFolders, long FileSizeBytes)>
+                RegisteredFiles{ get; } = new();
+
+            public IReadOnlyList<RecentFileInfo> GetRecentFiles() =>
+                Array.Empty<RecentFileInfo>();
+
+            public void RegisterGeneratedFile(
+                string filePath,
+                RecentFileType fileType,
+                IReadOnlyList<string> sourceFolders,
+                long fileSizeBytes = 0,
+                DateTime? generatedAtUtc = null)
+            {
+                RegisteredFiles.Add((filePath, fileType, sourceFolders, fileSizeBytes));
+            }
+
+            public int CleanupExpiredFiles(DateTime? nowUtc = null) => 0;
+        }
         private void CreateTestFile(string path, int sizeInBytes)
         {
             using (var stream = File.Create(path))
