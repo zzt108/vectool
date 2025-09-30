@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace DocXHandler.RecentFiles
 {
-    public sealed class RecentFileInfo
+    public class RecentFileInfo
     {
         // JSON-contract properties
         [JsonPropertyName("filePath")]
