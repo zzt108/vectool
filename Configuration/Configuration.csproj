@@ -1,17 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>VecTool.Constants</RootNamespace>
+    <RootNamespace>VecTool.Configuration</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="README.md">
-      <Pack>true</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <PackageReference Include="NLog" Version="5.3.2" />
   </ItemGroup>
 
 </Project>
