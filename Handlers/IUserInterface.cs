@@ -1,22 +1,18 @@
 namespace VecTool.Handlers;
 
-/// <summary>
-/// Interface for UI feedback during handler operations.
-/// </summary>
+public enum MessageType
+{
+    Information,
+    Warning,
+    Error
+}
+
 public interface IUserInterface
 {
-    /// <summary>
-    /// Updates the status message displayed to the user.
-    /// </summary>
-    void UpdateStatus(string message);
-
-    /// <summary>
-    /// Reports progress (0.0 to 1.0).
-    /// </summary>
-    void UpdateProgress(double progress);
-
-    /// <summary>
-    /// Shows an error message to the user.
-    /// </summary>
-    void ShowError(string message);
+    int TotalWork { get; set; }
+    void ShowMessage(string message, string title = "Information", MessageType type = MessageType.Information);
+    void UpdateProgress(int current);
+    void UpdateStatus(string statusText);
+    void WorkStart(string workText, List<string> selectedFolders);
+    void WorkFinish();
 }

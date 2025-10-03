@@ -6,6 +6,7 @@ using System.Configuration;
 using System.Text.Json;
 using VecTool.Configuration;
 using VecTool.Handlers;
+using VecTool.Utils;
 
 namespace oaiVectorStore
 {
@@ -61,7 +62,7 @@ namespace oaiVectorStore
 
         public async Task AddFileToVectorStoreAsync(OpenAIClient api, string vectorStoreId, string fileId)
         {
-            var file = await api.VectorStoresEndpoint.CreateVectorStoreFileAsync(vectorStoreId, fileId, new ChunkingStrategy(ChunkingStrategyType.Static));
+            var file = await api.VectorStoresEndpoint.CreateVectorStoreFileAsync(vectorStoreId, fileId);
         }
 
         public async Task AddFileToVectorStoreFromPathAsync(OpenAIClient api, string vectorStoreId, string filePath)
