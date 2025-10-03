@@ -1,58 +1,60 @@
-﻿using OpenAI.VectorStores;
+﻿using NLogShared;
 using OpenAI;
-using LogCtxShared;
-using NLogShared;
-using System.Configuration;
+using OpenAI.VectorStores;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
 using VecTool.Configuration;
 using VecTool.Handlers;
+using VecTool.Handlers.Traversal; // Added for FileValidator
+using VecTool.RecentFiles;
 using VecTool.Utils;
 
 namespace oaiVectorStore
 {
-
     public class VectorStoreManager
     {
-        private string _vectorStoreFoldersFilePath;
-        private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new (); // not readonly
-        private readonly VectorStoreConfig _vectorStoreConfig;
+        private readonly string _vectorStoreFoldersFilePath;
+        private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new();
+        private readonly VectorStoreConfig _globalConfig;
         private readonly IUserInterface _ui;
+        private readonly IRecentFilesManager _recentFilesManager;
+        private readonly OpenAIClient _api;
 
-        public Dictionary<string, VectorStoreConfig>  Folders => _vectorStoreFolders;
-        public VectorStoreConfig Config => _vectorStoreConfig;
-        public VectorStoreManager(string vectorStoreFoldersFilePath, IUserInterface ui)
+        public Dictionary<string, VectorStoreConfig> Folders => _vectorStoreFolders;
+
+        public VectorStoreManager(
+            OpenAIClient api,
+            string vectorStoreFoldersFilePath,
+            VectorStoreConfig globalConfig,
+            IUserInterface ui,
+            IRecentFilesManager recentFilesManager)
         {
-            _vectorStoreConfig = VectorStoreConfig.FromAppConfig();
-            _vectorStoreFoldersFilePath = vectorStoreFoldersFilePath;
+            _api = api ?? throw new ArgumentNullException(nameof(api));
+            _vectorStoreFoldersFilePath = vectorStoreFoldersFilePath ?? throw new ArgumentNullException(nameof(vectorStoreFoldersFilePath));
+            _globalConfig = globalConfig ?? throw new ArgumentNullException(nameof(globalConfig));
             _ui = ui ?? throw new ArgumentNullException(nameof(ui));
+            _recentFilesManager = recentFilesManager ?? throw new ArgumentNullException(nameof(recentFilesManager));
         }
 
-        public async Task<string> CreateVectorStoreAsync(OpenAIClient api, string name, List<string> fileIds)
+        public async Task<string> CreateVectorStoreAsync(string name)
         {
-            var createVectorStoreRequest = new CreateVectorStoreRequest(name);
-            return await api.VectorStoresEndpoint.CreateVectorStoreAsync(createVectorStoreRequest);
+            var request = new CreateVectorStoreRequest(name);
+            var vectorStore = await _api.VectorStoresEndpoint.CreateVectorStoreAsync(request);
+            return vectorStore.Id;
         }
 
         public async Task<bool> DeleteVectorStoreAsync(string vectorStoreId)
         {
-            using var api = new OpenAIClient();
-            var isDeleted = await api.VectorStoresEndpoint.DeleteVectorStoreAsync(vectorStoreId);
-            return isDeleted;
+            return await _api.VectorStoresEndpoint.DeleteVectorStoreAsync(vectorStoreId);
         }
 
-        public async Task<Dictionary<string, string>> GetAllVectorStoresAsync(OpenAIClient api)
+        public async Task<Dictionary<string, string>> GetAllVectorStoresAsync()
         {
             try
             {
-                var vectorStores = await api.VectorStoresEndpoint.ListVectorStoresAsync();
-                if (vectorStores?.Items != null)
-                {
-                    return vectorStores.Items.ToDictionary(vs => vs.Id, vs => vs.Name);
-                }
-                else
-                {
-                    return new Dictionary<string, string>();
-                }
+                var vectorStores = await _api.VectorStoresEndpoint.ListVectorStoresAsync();
+                return vectorStores?.Items?.ToDictionary(vs => vs.Id, vs => vs.Name) ?? new Dictionary<string, string>();
             }
             catch (Exception)
             {
@@ -60,133 +62,75 @@ namespace oaiVectorStore
             }
         }
 
-        public async Task AddFileToVectorStoreAsync(OpenAIClient api, string vectorStoreId, string fileId)
+        public async Task AddFileToVectorStoreAsync(string vectorStoreId, string fileId)
         {
-            var file = await api.VectorStoresEndpoint.CreateVectorStoreFileAsync(vectorStoreId, fileId);
+            await _api.VectorStoresEndpoint.CreateVectorStoreFileAsync(vectorStoreId, fileId);
         }
 
-        public async Task AddFileToVectorStoreFromPathAsync(OpenAIClient api, string vectorStoreId, string filePath)
+        public async Task<string> AddFileToVectorStoreFromPathAsync(string vectorStoreId, string filePath)
         {
-            var fileId = await new FileStoreManager().UploadFileAsync(api, filePath);
-            await AddFileToVectorStoreAsync(api, vectorStoreId, fileId);
+            var fileId = await new FileStoreManager().UploadFileAsync(_api, filePath);
+            await AddFileToVectorStoreAsync(vectorStoreId, fileId);
+            return fileId;
         }
 
-        public async Task<string> RetrieveFileFromFileStoreAsync(string vectorStoreId, string fileId)
+        public async Task<bool> DeleteFileFromAllStoresAsync(string vectorStoreId, string fileId)
         {
-            using var api = new OpenAIClient();
-            var file = await api.VectorStoresEndpoint.GetVectorStoreFileAsync(vectorStoreId, fileId);
-            return file;
+            var isDeletedInVs = await _api.VectorStoresEndpoint.DeleteVectorStoreFileAsync(vectorStoreId, fileId);
+            var isDeletedInFs = await new FileStoreManager().DeleteFileFromFileStoreAsync(_api, fileId);
+            return isDeletedInVs && isDeletedInFs;
         }
 
-        public async Task<bool> DeleteFileFromVectorStoreAsync(string vectorStoreId, string fileId)
+        public async Task<List<string>> ListAllFilesAsync(string vectorStoreId)
         {
-            using var api = new OpenAIClient();
-            var isDeleted = await api.VectorStoresEndpoint.DeleteVectorStoreFileAsync(vectorStoreId, fileId);
-            return isDeleted;
-        }
-
-        public async Task<bool> DeleteFileFromAllStoreAsync(OpenAIClient api, string vectorStoreId, string fileId)
-        {
-            try
-            {
-                var isDeleted = await api.VectorStoresEndpoint.DeleteVectorStoreFileAsync(vectorStoreId, fileId);
-                if (isDeleted)
-                {
-                    isDeleted = await new FileStoreManager().DeleteFileFromFileStoreAsync(api, fileId);
-                }
-                return isDeleted;
-            }
-            catch (Exception ex)
-            {
-                if (ex.Message.ToLower().Contains("notfound"))
-                {
-                    return false;
-                }
-                else
-                {
-                    throw;
-                }
-            }
-        }
-
-        private async Task<List<string>> ListAllFiles(string vectorStoreId)
-        {
-            using var api = new OpenAIClient();
-            return await ListAllFiles(api, vectorStoreId);
-        }
-
-        public async Task<List<string>> ListAllFiles(OpenAIClient api, string vectorStoreId)
-        {
-            ListResponse<VectorStoreFileResponse> files = await api.VectorStoresEndpoint.ListVectorStoreFilesAsync(vectorStoreId);
+            var files = await _api.VectorStoresEndpoint.ListVectorStoreFilesAsync(vectorStoreId);
             return files.Items.Select(vs => vs.Id).ToList();
-
         }
 
-        public async Task<string> RecreateVectorStore(string? vectorStoreName)
+        public async Task<string> RecreateVectorStoreAsync(string vectorStoreName)
         {
-            using var api = new OpenAIClient();
-
-            var existingStores = await GetAllVectorStoresAsync(api);
+            var existingStores = await GetAllVectorStoresAsync();
             string vectorStoreId;
 
-            if (existingStores.Values.Contains(vectorStoreName))
+            if (existingStores.ContainsValue(vectorStoreName))
             {
-                // If it exists, delete all files
                 vectorStoreId = existingStores.First(s => s.Value == vectorStoreName).Key;
-                await DeleteAllVSFiles(api, vectorStoreId);
+                await DeleteAllVSFilesAsync(vectorStoreId);
             }
             else
             {
                 if (string.IsNullOrEmpty(vectorStoreName))
-                {
-                    throw new ArgumentException(_vectorStoreFoldersFilePath, nameof(vectorStoreName));
-                }
-                // Create the vector store
-                vectorStoreId = await CreateVectorStoreAsync(api, vectorStoreName, new List<string>());
-                // When a new vector store is created, ensure it exists in the folder mapping
-                if (!_vectorStoreFolders.ContainsKey(vectorStoreName))
-                {
-                    _vectorStoreFolders[vectorStoreName] = new VectorStoreConfig
-                    {
-                        ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles), // Copy from global settings
-                        ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
-                    };
-                    SaveVectorStoreFolderData();
-                }
+                    throw new ArgumentException("Vector store name is required.", nameof(vectorStoreName));
+                vectorStoreId = await CreateVectorStoreAsync(vectorStoreName);
             }
 
+            if (!_vectorStoreFolders.ContainsKey(vectorStoreName))
+            {
+                // Correct way to initialize config with read-only properties
+                var newConfig = new VectorStoreConfig();
+                newConfig.ExcludedFileNameParts.AddRange(_globalConfig.ExcludedFileNameParts);
+                newConfig.ExcludedFolderNames.AddRange(_globalConfig.ExcludedFolderNames);
+                newConfig.ExcludedExtensions.AddRange(_globalConfig.ExcludedExtensions);
+
+                _vectorStoreFolders[vectorStoreName] = newConfig;
+                SaveVectorStoreFolderData();
+            }
             return vectorStoreId;
         }
 
-        public async Task DeleteAllVSFiles(OpenAIClient api, string vectorStoreId)
+        public async Task DeleteAllVSFilesAsync(string vectorStoreId)
         {
             try
             {
-                var fileIds = await ListAllFiles(api, vectorStoreId); // List file IDs to delete
-                _ui.WorkStart($"Deleting from VS {vectorStoreId}", fileIds);
-                while (fileIds.Count > 0)
+                var fileIds = await ListAllFilesAsync(vectorStoreId);
+                _ui.WorkStart($"Deleting files from VS {vectorStoreId}", fileIds.Select(f => "").ToList());
+                int processedFiles = 0;
+
+                foreach (var fileId in fileIds)
                 {
-                    _ui.TotalWork = fileIds.Count;
-
-                    int processedFiles = 0;
+                    await DeleteFileFromAllStoresAsync(vectorStoreId, fileId);
+                    processedFiles++;
                     _ui.UpdateProgress(processedFiles);
-
-                    using var log = new CtxLogger();
-                    log.ConfigureXml("Config/LogConfig.xml");
-                    var p = log.Ctx.Set(new Props()
-                        .Add("vectorStoreId", vectorStoreId)
-                        .Add("totalFiles", _ui.TotalWork)
-                    );
-
-                    log.Info($"Deleting from VS {vectorStoreId}");
-                    foreach (var fileId in fileIds)
-                    {
-                        log.Info($"Deleting file {fileId}");
-                        await DeleteFileFromAllStoreAsync(api, vectorStoreId, fileId);
-                        processedFiles++;
-                        _ui.UpdateProgress(processedFiles);
-                    }
-                    fileIds = await ListAllFiles(api, vectorStoreId); // List file IDs to delete
                 }
             }
             finally
@@ -195,117 +139,71 @@ namespace oaiVectorStore
             }
         }
 
-        public async Task UploadFiles(string vectorStoreId, List<string> selectedFolders)
+        public async Task UploadFilesAsync(string vectorStoreId, string folderPath, VectorStoreConfig config)
         {
-
             int processedFolders = 0;
             _ui.UpdateProgress(0);
 
+            var folders = Directory.GetDirectories(folderPath, "*", SearchOption.AllDirectories)
+                .Concat(new[] { folderPath });
 
-            using var api = new OpenAIClient();
-            using var log = new CtxLogger();
-            log.ConfigureXml("Config/LogConfig.xml");
-            var p = log.Ctx.Set(new Props()
-                .Add("vectorStoreId", vectorStoreId)
-                .Add("totalFolders", _ui.TotalWork)
-                .Add("selectedFolders", string.Join(", ", selectedFolders)) // Replacing AsJson with a simple join
-            );
-
-            foreach (var rootFolder in selectedFolders)
+            foreach (var folder in folders)
             {
-                var folders = Directory.GetDirectories(rootFolder, "*", SearchOption.AllDirectories);
-                foreach (var folder in folders)
-                {
-                    processedFolders++;
-                    _ui.UpdateProgress(processedFolders);
-                    log.Debug(folder);
+                processedFolders++;
+                _ui.UpdateProgress(processedFolders);
 
-                    if (folder.Contains("\\.") || folder.Contains("\\obj") || folder.Contains("\\bin") || folder.Contains("\\packages"))
+                if (config.IsFolderExcluded(Path.GetFileName(folder))) continue;
+
+                _ui.UpdateStatus(folder);
+
+                string[] files;
+                try
+                {
+                    files = Directory.GetFiles(folder);
+                }
+                catch { continue; }
+
+                foreach (string file in files)
+                {
+                    if (config.IsFileExcluded(Path.GetFileName(file))) continue;
+
+                    var mimeProvider = new MimeTypeProvider();
+                    var fileExtension = Path.GetExtension(file);
+
+                    // Corrected binary check
+                    if (mimeProvider.GetMimeType(fileExtension) == "application/octet-stream" || FileValidator.IsBinaryExtension(fileExtension))
                     {
                         continue;
                     }
-
-                    _ui.UpdateStatus(folder);
-
-                    string relativePath = Path.GetRelativePath(rootFolder, folder).Replace('\\', '_');
-                    string outputDocxPath = Path.Combine(folder, relativePath + ".docx");
-
-                    try
-                    {
-                        var docXHandler = new DocXHandler.DocXHandler(null, null); // UI not needed, handled outside, no uploaded files are registered
-                        docXHandler.ConvertFilesToDocx(folder, outputDocxPath, _vectorStoreConfig);
-                        string[] files = Directory.GetFiles(folder);
-
-                        foreach (string file in files)
-                        {
-                            string fileName = Path.GetFileName(file);
-                            if (_vectorStoreConfig.ExcludedFiles.Any(excludedFile => string.Equals(excludedFile, fileName, StringComparison.OrdinalIgnoreCase))) continue;
-                            // Check MIME type and upload
-                            string extension = Path.GetExtension(file);
-                            if (MimeTypeProvider.GetMimeType(extension) == "application/octet-stream") // Skip unknown types
-                            {
-                                continue;
-                            }
-
-                            if (MimeTypeProvider.IsBinary(extension)) // non text types should be uploaded separately
-                            {
-                                log.Info($"Uploading {file}");
-                                await AddFileToVectorStoreFromPathAsync(api, vectorStoreId, file);
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        new FileInfo(outputDocxPath).Delete();
-                    }
+                    await AddFileToVectorStoreFromPathAsync(vectorStoreId, file);
                 }
             }
-            _ui.ShowMessage("Files uploaded successfully.");
+            _ui.ShowMessage("Files uploaded successfully.", "Upload", MessageType.Information);
         }
 
         public void SaveVectorStoreFolderData()
         {
-            string vectorStoreFoldersPath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
             try
             {
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 string json = JsonSerializer.Serialize(_vectorStoreFolders, options);
-                File.WriteAllText(vectorStoreFoldersPath, json);
+                File.WriteAllText(_vectorStoreFoldersFilePath, json);
             }
             catch (Exception ex)
             {
                 _ui.ShowMessage($"Error saving vector store folder data: {ex.Message}", "Saving Error", MessageType.Error);
             }
         }
+
         public void LoadVectorStoreFolderData()
         {
-            string vectorStoreFoldersPath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? @"..\..\vectorStoreFolders.json";
-            if (File.Exists(vectorStoreFoldersPath))
+            if (File.Exists(_vectorStoreFoldersFilePath))
             {
                 try
                 {
-                    string json = File.ReadAllText(vectorStoreFoldersPath);
-                    _vectorStoreFolders = JsonSerializer.Deserialize<Dictionary<string, VectorStoreConfig>>(json)
-                                          ?? new Dictionary<string, VectorStoreConfig>();
-
-                    // Handle migration from old format (if needed)
-                    if (_vectorStoreFolders.Count == 0)
-                    {
-                        var oldFormat = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json);
-                        if (oldFormat != null)
-                        {
-                            foreach (var kvp in oldFormat)
-                            {
-                                _vectorStoreFolders[kvp.Key] = new VectorStoreConfig
-                                {
-                                    FolderPaths = kvp.Value,
-                                    ExcludedFiles = new List<string>(_vectorStoreConfig.ExcludedFiles),
-                                    ExcludedFolders = new List<string>(_vectorStoreConfig.ExcludedFolders)
-                                };
-                            }
-                            SaveVectorStoreFolderData(); // Save in new format
-                        }
-                    }
+                    string json = File.ReadAllText(_vectorStoreFoldersFilePath);
+                    var loadedData = JsonSerializer.Deserialize<Dictionary<string, VectorStoreConfig>>(json);
+                    _vectorStoreFolders = loadedData ?? new Dictionary<string, VectorStoreConfig>();
                 }
                 catch (Exception ex)
                 {
@@ -318,6 +216,5 @@ namespace oaiVectorStore
                 _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
             }
         }
-
     }
 }
