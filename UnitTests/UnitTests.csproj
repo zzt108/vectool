@@ -9,12 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OaiUI\oaiUI.csproj" />
-    <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
-    <ProjectReference Include="..\Configuration\Configuration.csproj" />
-    <ProjectReference Include="..\Handlers\Handlers.csproj" />
-    <ProjectReference Include="..\Utils\Utils.csproj" />
-    <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
+	  <ProjectReference Include="..\OaiUI\oaiUI.csproj" />
+	  <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
+	  <ProjectReference Include="..\Configuration\Configuration.csproj" />
+	  <ProjectReference Include="..\Handlers\Handlers.csproj" />
+	  <ProjectReference Include="..\Utils\Utils.csproj" />
+	  <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
+
   </ItemGroup>
 
   <ItemGroup>

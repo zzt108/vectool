@@ -35,7 +35,7 @@ namespace DocXHandlerTests
             var docXHandler = new DocXHandler.DocXHandler(null, null);
             docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
 
-            File.Exists(outputDocxPath).ShouldBeTrue().BeTrue();
+            File.Exists(outputDocxPath).ShouldBeTrue();
 
             using var doc = WordprocessingDocument.Open(outputDocxPath, false);
             var body = doc?.MainDocumentPart?.Document.Body;
