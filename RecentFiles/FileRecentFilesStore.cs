@@ -1,74 +1,49 @@
-﻿namespace VecTool.RecentFiles;
-
+﻿// Path: RecentFiles/FileRecentFilesStore.cs
 using System;
 using System.IO;
 using VecTool.Configuration;
 
-/// <summary>
-/// Pure text persistence interface for recent files data.
-/// </summary>
-public interface IRecentFilesStore
+namespace VecTool.RecentFiles
 {
     /// <summary>
-    /// Reads JSON data from storage.
+    /// File-based implementation of recent files storage.
     /// </summary>
-    string? Read();
-
-    /// <summary>
-    /// Writes JSON data to storage.
-    /// </summary>
-    void Write(string json);
-}
-
-/// <summary>
-/// File-based implementation of recent files storage.
-/// </summary>
-public sealed class FileRecentFilesStore : IRecentFilesStore
-{
-    private readonly string _jsonPath;
-
-    public FileRecentFilesStore(RecentFilesConfig config)
+    public sealed class FileRecentFilesStore : IRecentFilesStore
     {
-        if (config == null)
-            throw new ArgumentNullException(nameof(config));
+        private readonly string _jsonPath;
 
-        _jsonPath = config.StorageFilePath;
-    }
-
-    public string? Read()
-    {
-        try
+        public FileRecentFilesStore(RecentFilesConfig config)
         {
-            if (!File.Exists(_jsonPath))
-                return null;
-
-            return File.ReadAllText(_jsonPath);
+            _jsonPath = config?.StorageFilePath ?? throw new ArgumentNullException(nameof(config));
         }
-        catch (Exception ex)
-        {
-            throw new IOException($"Failed to read recent files JSON from {_jsonPath}.", ex);
-        }
-    }
 
-    public void Write(string json)
-    {
-        if (json is null)
-            throw new ArgumentNullException(nameof(json));
-
-        try
+        public string? Read()
         {
-            // Ensure directory exists
-            var directory = Path.GetDirectoryName(_jsonPath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            try
             {
-                Directory.CreateDirectory(directory);
+                return File.Exists(_jsonPath) ? File.ReadAllText(_jsonPath) : null;
             }
-
-            File.WriteAllText(_jsonPath, json);
+            catch (Exception ex)
+            {
+                throw new IOException($"Failed to read recent files JSON from {_jsonPath}.", ex);
+            }
         }
-        catch (Exception ex)
+
+        public void Write(string json)
         {
-            throw new IOException($"Failed to write recent files JSON to {_jsonPath}.", ex);
+            try
+            {
+                var directory = Path.GetDirectoryName(_jsonPath);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+                File.WriteAllText(_jsonPath, json);
+            }
+            catch (Exception ex)
+            {
+                throw new IOException($"Failed to write recent files JSON to {_jsonPath}.", ex);
+            }
         }
     }
 }

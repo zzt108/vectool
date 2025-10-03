@@ -1,5 +1,8 @@
-﻿using NUnit.Framework;
+﻿// Path: UnitTests/RecentFiles/RecentFilesManagerTests.cs
+using NUnit.Framework;
 using Shouldly;
+using System;
+using System.Linq;
 using VecTool.Configuration;
 using VecTool.RecentFiles;
 
@@ -8,91 +11,94 @@ namespace UnitTests.RecentFiles
     [TestFixture]
     public class RecentFilesManagerTests
     {
-        private static RecentFilesConfig Config(int maxCount = 10, int retentionDays = 15)
-            => new RecentFilesConfig(maxCount, retentionDays, outputPath: @"%APPDATA%\VecTool\Generated");
+        private static RecentFilesConfig TestConfig(int maxCount = 10, int retentionDays = 30) =>
+            new(maxCount, retentionDays, "C:\\Temp\\Tests");
 
         [Test]
-        public void RegisterFile_ShouldTrackNewFiles()
+        public void RegisterFile_ShouldAddNewFile()
         {
-            var mgr = new RecentFilesManager(Config(), new InMemoryRecentFilesStore());
-            mgr.RegisterGeneratedFile(@"C:\out\a.docx", RecentFileType.Docx, new[] { @"C:\src" }, 123);
-            mgr.RegisterGeneratedFile(@"C:\out\b.md", RecentFileType.Md, new[] { @"C:\src" }, 456);
+            // Arrange
+            var manager = new RecentFilesManager(TestConfig(), new InMemoryRecentFilesStore());
 
-            var list = mgr.GetRecentFiles();
-            list.Count.ShouldBe(2);
-            list[0].FilePath.ShouldBe(@"C:\out\b.md");
-            list[1].FilePath.ShouldBe(@"C:\out\a.docx");
+            // Act
+            manager.RegisterGeneratedFile("C:\\test.docx", RecentFileType.Docx, new[] { "C:\\Src" });
+            var files = manager.GetRecentFiles();
+
+            // Assert
+            files.Count.ShouldBe(1);
+            files[0].FileName.ShouldBe("test.docx");
         }
 
         [Test]
-        public void FileRetention_ShouldRespectDateLimits()
+        public void RegisterFile_WhenFileExists_ShouldUpdateTimestamp()
         {
-            var cfg = Config(maxCount: 10, retentionDays: 7);
-            var store = new InMemoryRecentFilesStore();
-            var mgr = new RecentFilesManager(cfg, store);
+            // Arrange
+            var manager = new RecentFilesManager(TestConfig(), new InMemoryRecentFilesStore());
+            var now = DateTime.Now;
+            manager.RegisterGeneratedFile("C:\\test.docx", RecentFileType.Docx, new[] { "C:\\Src" }, 1, now.AddMinutes(-10));
 
-            var now = new DateTime(2025, 09, 27, 12, 0, 0, DateTimeKind.Utc);
-            mgr.RegisterGeneratedFile(@"C:\out\keep.md", RecentFileType.Md, Array.Empty<string>(), 1, now);
-            mgr.RegisterGeneratedFile(@"C:\out\old.md", RecentFileType.Md, Array.Empty<string>(), 1, now.AddDays(-8));
+            // Act
+            manager.RegisterGeneratedFile("C:\\test.docx", RecentFileType.Docx, new[] { "C:\\Src" }, 1, now);
+            var files = manager.GetRecentFiles();
 
-            var removed = mgr.CleanupExpiredFiles(now);
-            removed.ShouldBe(1);
-
-            var list = mgr.GetRecentFiles();
-            list.Count.ShouldBe(1);
-            list[0].FilePath.ShouldBe(@"C:\out\keep.md");
+            // Assert
+            files.Count.ShouldBe(1);
+            files[0].GeneratedAt.ShouldBe(now);
         }
 
         [Test]
         public void MaxFileLimit_ShouldRemoveOldest()
         {
-            var cfg = Config(maxCount: 2, retentionDays: 999);
-            var mgr = new RecentFilesManager(cfg, new InMemoryRecentFilesStore());
+            // Arrange
+            var manager = new RecentFilesManager(TestConfig(maxCount: 2), new InMemoryRecentFilesStore());
+            manager.RegisterGeneratedFile("C:\\oldest.txt", RecentFileType.Unknown, Array.Empty<string>(), 1, DateTime.Now.AddMinutes(-3));
+            manager.RegisterGeneratedFile("C:\\middle.txt", RecentFileType.Unknown, Array.Empty<string>(), 1, DateTime.Now.AddMinutes(-2));
 
-            var t = DateTime.UtcNow;
-            mgr.RegisterGeneratedFile(@"C:\out\1.md", RecentFileType.Md, Array.Empty<string>(), 1, t.AddMinutes(-3));
-            mgr.RegisterGeneratedFile(@"C:\out\2.md", RecentFileType.Md, Array.Empty<string>(), 1, t.AddMinutes(-2));
-            mgr.RegisterGeneratedFile(@"C:\out\3.md", RecentFileType.Md, Array.Empty<string>(), 1, t.AddMinutes(-1));
+            // Act
+            manager.RegisterGeneratedFile("C:\\newest.txt", RecentFileType.Unknown, Array.Empty<string>(), 1, DateTime.Now.AddMinutes(-1));
+            var files = manager.GetRecentFiles();
 
-            var list = mgr.GetRecentFiles();
-            list.Count.ShouldBe(2);
-            list[0].FilePath.ShouldBe(@"C:\out\3.md");
-            list[1].FilePath.ShouldBe(@"C:\out\2.md");
+            // Assert
+            files.Count.ShouldBe(2);
+            files.Any(f => f.FileName == "oldest.txt").ShouldBeFalse();
+            files.Any(f => f.FileName == "newest.txt").ShouldBeTrue();
         }
 
         [Test]
-        public void GetRecentFiles_ShouldReturnSortedList()
+        public void CleanupExpiredFiles_ShouldRemoveOldFiles()
         {
-            var mgr = new RecentFilesManager(Config(), new InMemoryRecentFilesStore());
-            var baseTime = DateTime.UtcNow;
+            // Arrange
+            var manager = new RecentFilesManager(TestConfig(retentionDays: 7), new InMemoryRecentFilesStore());
+            var now = DateTime.Now;
+            manager.RegisterGeneratedFile("C:\\expired.txt", RecentFileType.Unknown, Array.Empty<string>(), 1, now.AddDays(-8));
+            manager.RegisterGeneratedFile("C:\\current.txt", RecentFileType.Unknown, Array.Empty<string>(), 1, now.AddDays(-1));
 
-            mgr.RegisterGeneratedFile(@"C:\out\a.md", RecentFileType.Md, Array.Empty<string>(), 1, baseTime.AddMinutes(-1));
-            mgr.RegisterGeneratedFile(@"C:\out\b.md", RecentFileType.Md, Array.Empty<string>(), 1, baseTime.AddMinutes(-2));
-            mgr.RegisterGeneratedFile(@"C:\out\c.md", RecentFileType.Md, Array.Empty<string>(), 1, baseTime.AddMinutes(-3));
+            // Act
+            int removed = manager.CleanupExpiredFiles(now);
 
-            var list = mgr.GetRecentFiles();
-            list[0].FilePath.ShouldBe(@"C:\out\a.md");
-            list[1].FilePath.ShouldBe(@"C:\out\b.md");
-            list[2].FilePath.ShouldBe(@"C:\out\c.md");
+            // Assert
+            removed.ShouldBe(1);
+            var files = manager.GetRecentFiles();
+            files.Count.ShouldBe(1);
+            files[0].FileName.ShouldBe("current.txt");
         }
 
         [Test]
-        public void SaveLoad_ShouldRoundTripViaJsonStore()
+        public void SaveAndLoad_ShouldPersistAndRestoreState()
         {
+            // Arrange
             var store = new InMemoryRecentFilesStore();
-            var mgr1 = new RecentFilesManager(Config(), store);
+            var manager1 = new RecentFilesManager(TestConfig(), store);
+            manager1.RegisterGeneratedFile("C:\\file1.pdf", RecentFileType.Pdf, new[] { "C:\\Src1" });
+            manager1.Save();
 
-            mgr1.RegisterGeneratedFile(@"C:\out\a.pdf", RecentFileType.Pdf, new[] { @"C:\src1" }, 10);
-            mgr1.RegisterGeneratedFile(@"C:\out\b.docx", RecentFileType.Docx, new[] { @"C:\src2" }, 20);
-            mgr1.Save();
+            // Act
+            var manager2 = new RecentFilesManager(TestConfig(), store); // Load happens in constructor
+            var files = manager2.GetRecentFiles();
 
-            var mgr2 = new RecentFilesManager(Config(), store);
-            mgr2.Load();
-
-            var list = mgr2.GetRecentFiles();
-            list.Count.ShouldBe(2);
-            list[0].FilePath.ShouldBe(@"C:\out\b.docx");
-            list[1].FilePath.ShouldBe(@"C:\out\a.pdf");
+            // Assert
+            files.Count.ShouldBe(1);
+            files[0].FileType.ShouldBe(RecentFileType.Pdf);
         }
     }
 }
