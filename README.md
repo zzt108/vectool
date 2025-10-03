@@ -2,6 +2,23 @@
 
 VecTool is a C# based desktop application designed to streamline the process of managing and exporting code projects for use with Large Language Models (LLMs). While it originally focused on OpenAI vector stores, its most valuable features now are the ability to export entire projects to single files digestable efficiently by AI and generate AI-ready output of git changes for generating commit comments with AI.
 
+### Planned Features (TODO)
+
+- Done: Add recent generated files list with drag n drop functionality
+- Done: Review/Edit configuration settings on the Settings tab.
+- Done: Store configured values with each project (exclusions, etc.).
+- Utilize perplexity API to get git commit message
+- Add ability to drag to the recent documents grid docs from the file system
+- Add console commands (git log, build, dotnet test, etc) with redirection to a text file, and addint to the recent file list
+- Link recent files entries to the active vector store on creation
+- Add ability to filter the recent documents grid docs by vector store, sort by coluns, etc.
+- Git repo branch should be part of the vector store linking key.
+- **Progress Bar Enhancements** - **Need VS Code styling**
+
+1. **Error Handling UI System**
+2. **VS Code Theme System**
+3. there should be a menu system to access get git changes, docx, md, pdf, filesize button functionality, etc. (they are important for the recent file list tab also )
+
 ### Key Features
 
 #### Single File Project Export (Recommended)
@@ -59,22 +76,6 @@ The most useful features of VecTool (single file export and Git changes) **do no
 2. **Export to Single File:** Use the "Convert to single file" section to generate DOCX, MD, or PDF files from selected folders.
 3. **Retrieve Git Changes:** Click the "Get Git Changes" button to analyze and save Git changes from selected folders.
 4. **Upload to LLM:** Take the generated single file and upload it to your preferred LLM chat interface for analysis, questions, or code review.
-
-### Planned Features (TODO)
-
-- Done: Add recent generated files list with drag n drop functionality
-- Done: Review/Edit configuration settings on the Settings tab.
-- Done: Store configured values with each project (exclusions, etc.).
-- Utilize perplexity API to get git commit message
-- Add ability to drag to the recent documents grid docs from the file system
-- Add console commands (git log, build, dotnet test, etc) with redirection to a text file, and addint to the recent file list
-- Link recent files entries to the active vector store on creation
-- Add ability to filter the recent documents grid docs by vector store, sort by coluns, etc.
-- Git repo branch should be part of the vector store linking key.
-- **Progress Bar Enhancements** - **Need VS Code styling**
-
-1. **Error Handling UI System**
-2. **VS Code Theme System**
 
 ### Contributing
 

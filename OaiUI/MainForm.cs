@@ -8,6 +8,7 @@ using oaiVectorStore;
 using OpenAI;
 using System.Configuration;
 using System.Reflection;
+using VecTool.Configuration;
 
 namespace oaiUI
 {

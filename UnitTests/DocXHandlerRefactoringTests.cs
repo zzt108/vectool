@@ -8,7 +8,7 @@ using System.IO;
 using Constants;
 using DocXHandler;
 using DocXHandler.RecentFiles;
-using oaiVectorStore;
+using VecTool.Configuration;
 
 namespace UnitTests.DocX
 {

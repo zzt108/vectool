@@ -1,129 +1,92 @@
-namespace VecTool.Configuration;
+// Path: oaiVectorStore/VectorStoreConfig.cs
 
-using NLogShared;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
-//using NLogS;
 
-/// <summary>
-/// Configuration for vector store operations, including file exclusions.
-/// </summary>
-public class VectorStoreConfig
+namespace VecTool.Configuration
 {
-    private static readonly CtxLogger _log = new();
-    
-    private readonly HashSet<string> _excludedExtensions;
-    private readonly HashSet<string> _excludedFolderNames;
-    private readonly HashSet<string> _excludedFileNameParts;
-
-    /// <summary>
-    /// Gets the list of file extensions to exclude from processing.
-    /// </summary>
-    public List<string> ExcludedExtensions { get; }
-
-    /// <summary>
-    /// Gets the list of folder names to exclude from processing.
-    /// </summary>
-    public List<string> ExcludedFolderNames { get; }
-
-    /// <summary>
-    /// Gets the list of file name parts to exclude from processing.
-    /// </summary>
-    public List<string> ExcludedFileNameParts { get; }
-
-    /// <summary>
-    /// Gets or sets the root path for vector store operations.
-    /// </summary>
-    public string? VectorStoreRootPath { get; set; }
-
-    public VectorStoreConfig()
+    public class VectorStoreConfig
     {
-        ExcludedExtensions = new List<string>();
-        ExcludedFolderNames = new List<string>();
-        ExcludedFileNameParts = new List<string>();
-        
-        _excludedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        _excludedFolderNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        _excludedFileNameParts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    }
+        private static string? _defaultPath;
 
-    /// <summary>
-    /// Initializes the configuration and builds internal HashSets for fast lookups.
-    /// </summary>
-    public void Initialize()
-    {
-        _excludedExtensions.Clear();
-        _excludedFolderNames.Clear();
-        _excludedFileNameParts.Clear();
+        public List<string> FolderPaths { get; set; } = new List<string>();
+        public List<string> ExcludedFiles { get; set; } = new List<string>();
+        public List<string> ExcludedFolders { get; set; } = new List<string>();
 
-        foreach (var ext in ExcludedExtensions)
+        public VectorStoreConfig Clone()
         {
-            _excludedExtensions.Add(ext);
+            return new VectorStoreConfig
+            {
+                FolderPaths = new List<string>(FolderPaths),
+                ExcludedFiles = new List<string>(ExcludedFiles),
+                ExcludedFolders = new List<string>(ExcludedFolders)
+            };
         }
 
-        foreach (var folder in ExcludedFolderNames)
+        public static VectorStoreConfig FromAppConfig()
         {
-            _excludedFolderNames.Add(folder);
+            var config = new VectorStoreConfig();
+            var excludedFiles = ConfigurationManager.AppSettings["excludedFiles"] ?? "";
+            var excludedFolders = ConfigurationManager.AppSettings["excludedFolders"] ?? "";
+
+            config.ExcludedFiles.AddRange(excludedFiles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
+            config.ExcludedFolders.AddRange(excludedFolders.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
+
+            return config;
         }
 
-        foreach (var part in ExcludedFileNameParts)
+        private static string GetDefaultPath()
         {
-            _excludedFileNameParts.Add(part);
+            if (_defaultPath != null) return _defaultPath;
+
+            _defaultPath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"];
+            if (string.IsNullOrWhiteSpace(_defaultPath))
+            {
+                _defaultPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "VecTool",
+                    "vectorStoreFolders.json");
+            }
+            return _defaultPath;
         }
 
-        _log.Info($"VectorStoreConfig initialized: {ExcludedExtensions.Count} extensions, {ExcludedFolderNames.Count} folders, {ExcludedFileNameParts.Count} file parts excluded");
-    }
-
-    /// <summary>
-    /// Determines if a file should be excluded based on configuration.
-    /// </summary>
-    /// <param name="filePath">Full path to the file</param>
-    /// <returns>True if file should be excluded, false otherwise</returns>
-    public bool IsFileExcluded(string filePath)
-    {
-        if (string.IsNullOrWhiteSpace(filePath))
-            return true;
-
-        var fileName = Path.GetFileName(filePath);
-        var fileExtension = Path.GetExtension(filePath);
-
-        // Check extension
-        if (!string.IsNullOrEmpty(fileExtension) && _excludedExtensions.Contains(fileExtension))
+        public static Dictionary<string, VectorStoreConfig> LoadAll(string? path = null)
         {
-            _log.Trace($"File excluded by extension: {filePath}");
-            return true;
+            var filePath = path ?? GetDefaultPath();
+            if (!File.Exists(filePath))
+            {
+                return new Dictionary<string, VectorStoreConfig>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            var json = File.ReadAllText(filePath);
+            var settings = new JsonSerializerSettings
+            {
+                // This is needed to make the dictionary key comparer work correctly
+                // It's a bit of a hack, but it works for this case
+                // In a real-world scenario, you might want a custom converter
+                // but for now, this is fine.
+            };
+
+            var deserialized = JsonConvert.DeserializeObject<Dictionary<string, VectorStoreConfig>>(json, settings);
+
+            return new Dictionary<string, VectorStoreConfig>(deserialized ?? new Dictionary<string, VectorStoreConfig>(), StringComparer.OrdinalIgnoreCase);
         }
 
-        // Check filename parts
-        if (_excludedFileNameParts.Any(part => fileName.Contains(part, StringComparison.OrdinalIgnoreCase)))
+        public static void SaveAll(Dictionary<string, VectorStoreConfig> configs, string? path = null)
         {
-            _log.Trace($"File excluded by filename part: {filePath}");
-            return true;
+            var filePath = path ?? GetDefaultPath();
+            var directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var json = JsonConvert.SerializeObject(configs, Formatting.Indented);
+            File.WriteAllText(filePath, json);
         }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Determines if a folder should be excluded based on configuration.
-    /// </summary>
-    /// <param name="folderPath">Full path to the folder</param>
-    /// <returns>True if folder should be excluded, false otherwise</returns>
-    public bool IsFolderExcluded(string folderPath)
-    {
-        if (string.IsNullOrWhiteSpace(folderPath))
-            return true;
-
-        var folderName = new DirectoryInfo(folderPath).Name;
-
-        if (_excludedFolderNames.Contains(folderName))
-        {
-            _log.Trace($"Folder excluded: {folderPath}");
-            return true;
-        }
-
-        return false;
     }
 }

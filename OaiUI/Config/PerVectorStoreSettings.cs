@@ -1,5 +1,4 @@
 ﻿// File: OaiUI/Config/PerVectorStoreSettings.cs
-using DocXHandler;
 
 namespace oaiUI.Config
 {
