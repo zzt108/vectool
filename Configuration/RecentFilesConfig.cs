@@ -5,16 +5,6 @@ using System;
 using System.Configuration;
 using System.IO;
 
-public interface IAppSettingsReader
-{
-    string? Get(string key);
-}
-
-public sealed class ConfigurationManagerAppSettingsReader : IAppSettingsReader
-{
-    public string? Get(string key) => ConfigurationManager.AppSettings[key];
-}
-
 /// <summary>
 /// Configuration for recent files feature.
 /// </summary>
