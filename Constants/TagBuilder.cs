@@ -22,6 +22,12 @@ namespace VecTool.Constants
 
             return string.Format(Tags.FilePath, EscapeXmlAttribute(path));
         }
+        public static string BuildFolderNameTag(string folderName)
+        {
+            if (string.IsNullOrWhiteSpace(folderName))
+                throw new ArgumentException("Folder name cannot be null or empty.", nameof(folderName));
+            return string.Format(Tags.FolderName, EscapeXmlAttribute(folderName));
+        }
 
         /// <summary>
         /// Builds a file name attribute fragment with correct XML escaping.

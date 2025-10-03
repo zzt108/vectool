@@ -204,7 +204,7 @@ public sealed class PdfHandler : FileHandlerBase
         }
         catch (Exception ex)
         {
-            _log.Warn(ex, $"Error processing file: {file}");
+            _log.Error(ex, $"Error processing file: {file}");
         }
     }
 }

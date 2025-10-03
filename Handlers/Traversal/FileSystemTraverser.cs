@@ -1,10 +1,10 @@
 namespace VecTool.Handlers.Traversal;
 
+using NLogShared;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using VecTool.Configuration;
-using NLogS;
 
 /// <summary>
 /// Handles folder traversal and file enumeration with exclusion support.
@@ -51,7 +51,7 @@ public sealed class FileSystemTraverser
         try { files = Directory.GetFiles(folderPath); } 
         catch (Exception ex) 
         { 
-            _log.Warn(ex, $"Failed to enumerate files in: {folderPath}");
+            _log.Error(ex, $"Failed to enumerate files in: {folderPath}");
         }
 
         foreach (var file in files)
@@ -72,7 +72,7 @@ public sealed class FileSystemTraverser
         try { subfolders = Directory.GetDirectories(folderPath); } 
         catch (Exception ex) 
         { 
-            _log.Warn(ex, $"Failed to enumerate subdirectories in: {folderPath}");
+            _log.Error(ex, $"Failed to enumerate subdirectories in: {folderPath}");
         }
 
         foreach (var sub in subfolders)
@@ -112,7 +112,7 @@ public sealed class FileSystemTraverser
             }
             catch (Exception ex)
             {
-                _log.Warn(ex, $"Failed to enumerate files in: {current}");
+                _log.Error(ex, $"Failed to enumerate files in: {current}");
                 continue;
             }
 
@@ -136,7 +136,7 @@ public sealed class FileSystemTraverser
             }
             catch (Exception ex)
             {
-                _log.Warn(ex, $"Failed to enumerate subdirectories in: {current}");
+                _log.Error(ex, $"Failed to enumerate subdirectories in: {current}");
                 continue;
             }
 

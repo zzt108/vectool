@@ -23,13 +23,14 @@ namespace VecTool.Constants
         /// <summary>Marker for code meta-information block.</summary>
         public const string CodeMetaInfo = "codemetainfo";
 
-        // --- NEW CODE GOES HERE (Step 3 additions) ---
         /// <summary>Marker for file properties/metadata block.</summary>
         public const string FileProperties = "fileproperties";
 
         /// <summary>Marker for AI guidance/instructions block.</summary>
         public const string AIGuidance = "aiguidance";
-        // --- END NEW CODE ---
+        
+        /// <summary>Marker for AI context block containing table of contents, cross-references, and code metadata.</summary>
+        public const string AiContext = "aicontext";
 
         /// <summary>Attribute fragment for section name. Usage: string.Format(SectionName, value)</summary>
         public const string SectionName = "section name=\"{0}\"";
@@ -42,6 +43,9 @@ namespace VecTool.Constants
 
         /// <summary>Attribute fragment for file extension. Usage: string.Format(FileExtension, value)</summary>
         public const string FileExtension = "ext=\"{0}\"";
+        // (Folder element + attribute)
+        public const string Folder = "folder";
+        public const string FolderName = "folder name=\"{0}\"";
 
         /// <summary>Attribute fragment for dependencies (CSV).</summary>
         public const string DependsOn = "dependson=\"{0}\"";

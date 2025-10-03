@@ -1,10 +1,11 @@
 ﻿using OpenAI.VectorStores;
 using OpenAI;
-using DocXHandler;
 using LogCtxShared;
 using NLogShared;
 using System.Configuration;
 using System.Text.Json;
+using VecTool.Configuration;
+using VecTool.Handlers;
 
 namespace oaiVectorStore
 {
