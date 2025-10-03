@@ -1,7 +1,7 @@
-﻿using DocXHandler;
-using DocXHandler.RecentFiles;
-﻿﻿﻿using FluentAssertions;
+﻿using NUnit.Framework;
 using oaiVectorStore;
+using Shouldly;
+using VecTool.Utils;
 
 namespace UnitTests
 {
@@ -17,7 +17,7 @@ namespace UnitTests
         {
             var result = MimeTypeProvider.GetMimeType(extension);
 
-            result.Should().Be(expectedMimeType);
+            result.ShouldBe(expectedMimeType);
         }
 
         [TestCase(".cs", ".cs.md")]

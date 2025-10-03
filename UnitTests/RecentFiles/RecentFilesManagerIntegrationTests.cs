@@ -1,6 +1,8 @@
 ﻿// File: UnitTests/RecentFiles/RecentFilesManagerIntegrationTests.cs
 using Shouldly;
 using DocXHandler.RecentFiles;
+using NUnit.Framework;
+using VecTool.RecentFiles;
 
 namespace UnitTests.RecentFiles
 {

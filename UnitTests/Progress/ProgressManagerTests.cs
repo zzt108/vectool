@@ -1,5 +1,6 @@
 ﻿using Shouldly;
 using oaiUI.Progress;
+using NUnit.Framework;
 
 namespace UnitTests.Progress
 {

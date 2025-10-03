@@ -1,7 +1,8 @@
 ﻿// File: UnitTests/Config/PerVectorStoreSettingsTests.cs
-using DocXHandler;
+using NUnit.Framework;
 using oaiUI.Config;
 using Shouldly;
+using VecTool.Configuration;
 
 namespace UnitTests.Config
 {

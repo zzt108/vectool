@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Shouldly;
 using System;
 using System.Linq;
-using Constants;
+using VecTool.Constants;
 
 namespace UnitTests.Constants
 {

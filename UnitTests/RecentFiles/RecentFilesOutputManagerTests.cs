@@ -1,6 +1,9 @@
 ﻿// File: Tests/RecentFiles/RecentFilesOutputManagerTests.cs
 using Shouldly;
 using DocXHandler.RecentFiles;
+using NUnit.Framework;
+using VecTool.Configuration;
+using VecTool.RecentFiles;
 
 namespace Tests.RecentFiles
 {

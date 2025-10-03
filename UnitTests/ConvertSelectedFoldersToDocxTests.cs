@@ -1,7 +1,8 @@
 ﻿using NUnit.Framework;
-using FluentAssertions;
 using DocumentFormat.OpenXml.Packaging;
-using Constants; // Add this using
+using Shouldly;
+using VecTool.Handlers;
+using VecTool.Constants;
 
 namespace DocXHandlerTests
 {
@@ -34,7 +35,7 @@ namespace DocXHandlerTests
             var docXHandler = new DocXHandler.DocXHandler(null, null);
             docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
 
-            File.Exists(outputDocxPath).Should().BeTrue();
+            File.Exists(outputDocxPath).ShouldBeTrue().BeTrue();
 
             using var doc = WordprocessingDocument.Open(outputDocxPath, false);
             var body = doc?.MainDocumentPart?.Document.Body;

@@ -2,8 +2,9 @@
 // Framework: NUnit + Shouldly (as required)
 // Validates: JSON round-trip, missing/corrupt props, file existence.
 
+using NUnit.Framework;
 using Shouldly;
-using DocXHandler.RecentFiles;
+using VecTool.RecentFiles;
 
 namespace UnitTests.RecentFiles
 {

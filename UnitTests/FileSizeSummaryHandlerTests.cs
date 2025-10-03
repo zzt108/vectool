@@ -1,6 +1,6 @@
-﻿using DocXHandler;
-using DocXHandler.RecentFiles;
+﻿using NUnit.Framework;
 using Shouldly;
+using VecTool.Configuration;
 
 namespace UnitTests
 {

@@ -1,5 +1,4 @@
-﻿using DocXHandler.RecentFiles;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using oaiUI;
 using oaiUI.RecentFiles;
 using Shouldly;

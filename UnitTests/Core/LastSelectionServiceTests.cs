@@ -1,5 +1,6 @@
 ﻿using Shouldly;
 using oaiUI.Services;
+using NUnit.Framework;
 
 namespace UnitTests
 {
