@@ -62,8 +62,19 @@ The most useful features of VecTool (single file export and Git changes) **do no
 
 ### Planned Features (TODO)
 
-- Review/Edit configuration settings on the Settings tab.
-- Store configured values with each project (exclusions, etc.).
+- Done: Add recent generated files list with drag n drop functionality
+- Done: Review/Edit configuration settings on the Settings tab.
+- Done: Store configured values with each project (exclusions, etc.).
+- Utilize perplexity API to get git commit message
+- Add ability to drag to the recent documents grid docs from the file system
+- Add console commands (git log, build, dotnet test, etc) with redirection to a text file, and addint to the recent file list
+- Link recent files entries to the active vector store on creation
+- Add ability to filter the recent documents grid docs by vector store, sort by coluns, etc.
+- Git repo branch should be part of the vector store linking key.
+- **Progress Bar Enhancements** - **Need VS Code styling**
+
+1. **Error Handling UI System**
+2. **VS Code Theme System**
 
 ### Contributing
 
