@@ -32,7 +32,6 @@ public sealed class AiContextGenerator
             return string.Empty;
 
         var config = new VectorStoreConfig();
-        config.Initialize();
 
         var entries = new List<(string RootName, string FilePath)>();
         var traverser = new FileSystemTraverser(null);
@@ -90,7 +89,6 @@ public sealed class AiContextGenerator
             return string.Empty;
 
         var config = new VectorStoreConfig();
-        config.Initialize();
 
         var csFiles = new List<string>();
         var traverser = new FileSystemTraverser(null);
@@ -153,7 +151,6 @@ public sealed class AiContextGenerator
             return string.Empty;
 
         var config = new VectorStoreConfig();
-        config.Initialize();
 
         var files = new List<string>();
         var traverser = new FileSystemTraverser(null);

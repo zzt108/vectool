@@ -1,6 +1,7 @@
 // File: OaiUI/MainForm.SettingsTab.cs
 using oaiUI.Config;
-using DocXHandler;
+using VecTool.Configuration;
+using VecTool.Handlers;
 
 namespace oaiUI
 {
