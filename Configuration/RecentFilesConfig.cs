@@ -1,71 +1,72 @@
-﻿namespace VecTool.Configuration;
-
-using NLogShared;
+﻿// Path: Configuration/RecentFilesConfig.cs
 using System;
 using System.Configuration;
 using System.IO;
 
-/// <summary>
-/// Configuration for recent files feature.
-/// </summary>
-public sealed class RecentFilesConfig
+namespace VecTool.Configuration
 {
-    public int MaxCount { get; }
-    public int RetentionDays { get; }
-    public string OutputPath { get; }
-    public string? StorageFilePath { get => Path.Combine(OutputPath, "recentFiles.json"); }
-
-    public RecentFilesConfig(int maxCount, int retentionDays, string outputPath)
+    /// <summary>
+    /// Configuration for the Recent Files feature with validation and defaults.
+    /// </summary>
+    public sealed class RecentFilesConfig
     {
-        MaxCount = maxCount;
-        RetentionDays = retentionDays;
-        OutputPath = outputPath;
-    }
+        private const string CONFIG_KEY_MAX_COUNT = "recentFilesMaxCount";
+        private const string CONFIG_KEY_RETENTION_DAYS = "recentFilesRetentionDays";
+        private const string CONFIG_KEY_OUTPUT_PATH = "recentFilesOutputPath";
 
-    public static RecentFilesConfig FromAppConfig()
-        => FromReader(new ConfigurationManagerAppSettingsReader());
+        public const int DefaultMaxCount = 200;
+        public const int DefaultRetentionDays = 30;
+        public const string DefaultOutputPath = "Generated";
 
-    public static RecentFilesConfig FromReader(IAppSettingsReader reader)
-    {
-        string? maxCountStr = reader.Get("recentFilesMaxCount");
-        string? retentionStr = reader.Get("recentFilesRetentionDays");
-        string? outputPath = reader.Get("recentFilesOutputPath");
+        public int MaxCount { get; }
+        public int RetentionDays { get; }
+        public string OutputPath { get; }
+        public string StorageFilePath { get; }
 
-        int maxCount = ParsePositiveIntOrDefault(maxCountStr, 10, nameof(maxCount));
-        int retentionDays = ParsePositiveIntOrDefault(retentionStr, 15, nameof(retentionDays));
+        /// <summary>
+        /// Construct with explicit values; validates ranges and path.
+        /// </summary>
+        public RecentFilesConfig(int maxCount, int retentionDays, string outputPath)
+        {
+            if (maxCount <= 0 || maxCount > 10000)
+                throw new ArgumentOutOfRangeException(nameof(maxCount), "MaxCount must be between 1 and 10,000.");
 
-        string defaultOutput = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "VecTool",
-            "Generated");
+            if (retentionDays < 0 || retentionDays > 3650) // 10 years
+                throw new ArgumentOutOfRangeException(nameof(retentionDays), "RetentionDays must be between 0 and 3650.");
 
-        string finalOutput = string.IsNullOrWhiteSpace(outputPath) ? defaultOutput : Expand(outputPath);
+            if (string.IsNullOrWhiteSpace(outputPath))
+                throw new ArgumentException("OutputPath is required and cannot be empty.", nameof(outputPath));
 
-        if (maxCount <= 0)
-            throw new ArgumentOutOfRangeException(nameof(maxCount), "recentFilesMaxCount must be > 0");
-        if (retentionDays <= 0)
-            throw new ArgumentOutOfRangeException(nameof(retentionDays), "recentFilesRetentionDays must be > 0");
-        if (string.IsNullOrWhiteSpace(finalOutput))
-            throw new ArgumentException("recentFilesOutputPath must not be empty after expansion.", nameof(outputPath));
+            if (outputPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+                throw new ArgumentException("OutputPath contains invalid path characters.", nameof(outputPath));
 
-        return new RecentFilesConfig(maxCount, retentionDays, finalOutput);
-    }
+            MaxCount = maxCount;
+            RetentionDays = retentionDays;
+            OutputPath = outputPath;
+            StorageFilePath = Path.Combine(OutputPath, "recentFiles.json");
+        }
 
-    private static string Expand(string path)
-    {
-        var expanded = Environment.ExpandEnvironmentVariables(path ?? string.Empty);
-        return expanded.Replace('/', System.IO.Path.DirectorySeparatorChar)
-                       .Replace('\\', System.IO.Path.DirectorySeparatorChar);
-    }
+        /// <summary>
+        /// Factory method to load configuration from appSettings with defaults and validation.
+        /// </summary>
+        public static RecentFilesConfig FromAppConfig(IAppSettingsReader? reader = null)
+        {
+            reader ??= new ConfigurationManagerAppSettingsReader();
 
-    private static int ParsePositiveIntOrDefault(string? value, int @default, string name)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return @default;
+            int maxCount = ParseIntOrDefault(reader.Get(CONFIG_KEY_MAX_COUNT), DefaultMaxCount);
+            int retention = ParseIntOrDefault(reader.Get(CONFIG_KEY_RETENTION_DAYS), DefaultRetentionDays);
+            string output = reader.Get(CONFIG_KEY_OUTPUT_PATH) ?? DefaultOutputPath;
+            if (string.IsNullOrWhiteSpace(output))
+            {
+                output = DefaultOutputPath;
+            }
 
-        if (!int.TryParse(value, out var parsed) || parsed <= 0)
-            throw new ArgumentOutOfRangeException(name, $"{name} must be a positive integer");
+            return new RecentFilesConfig(maxCount, retention, output);
+        }
 
-        return parsed;
+        private static int ParseIntOrDefault(string? value, int defaultValue)
+        {
+            return int.TryParse(value, out int parsed) ? parsed : defaultValue;
+        }
     }
 }

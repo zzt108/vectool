@@ -1,73 +1,94 @@
 ﻿// Path: UnitTests/RecentFiles/RecentFilesConfigTests.cs
 using NUnit.Framework;
 using Shouldly;
-using System.Configuration;
+using System;
+using System.Collections.Generic;
 using VecTool.Configuration;
 
 namespace UnitTests.RecentFiles
 {
-    internal sealed class FakeReader : IAppSettingsReader
-    {
-        private readonly Func<string, string?> _get;
-        public FakeReader(Func<string, string?> get) => _get = get;
-        public string? Get(string key) => _get(key);
-    }
-
     [TestFixture]
     public class RecentFilesConfigTests
     {
-
-        [Test]
-        public void ConfigShouldLoadFromAppConfig()
+        // Mock reader for predictable test inputs
+        private sealed class FakeReader : IAppSettingsReader
         {
-            // DEBUG: check what files exist and what ConfigurationManager reads
-            var assemblyLoc = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            var dir = Path.GetDirectoryName(assemblyLoc) ?? "";
-            Console.WriteLine($"Assembly location: {assemblyLoc}");
-            Console.WriteLine($"Directory: {dir}");
-
-            var exeConfig = Path.Combine(dir, "testhost.exe.config");
-            var dllConfig = Path.Combine(dir, "testhost.dll.config");
-            var appConfig = Path.Combine(dir, "UnitTests.dll.config");
-
-            Console.WriteLine($"testhost.exe.config exists: {File.Exists(exeConfig)}");
-            Console.WriteLine($"testhost.dll.config exists: {File.Exists(dllConfig)}");
-            Console.WriteLine($"UnitTests.dll.config exists: {File.Exists(appConfig)}");
-
-            // What values does ConfigurationManager actually read?
-            var maxCount = ConfigurationManager.AppSettings["recentFilesMaxCount"];
-            var retentionDays = ConfigurationManager.AppSettings["recentFilesRetentionDays"];
-            var outputPath = ConfigurationManager.AppSettings["recentFilesOutputPath"];
-
-            Console.WriteLine($"ConfigurationManager reads: maxCount='{maxCount}', retentionDays='{retentionDays}', outputPath='{outputPath}'");
-
-            var cfg = RecentFilesConfig.FromAppConfig();
-            cfg.MaxCount.ShouldBe(7);
-            cfg.RetentionDays.ShouldBe(30);
-            cfg.OutputPath.ShouldContain("VecTool");
+            private readonly Dictionary<string, string?> _values;
+            public FakeReader(Dictionary<string, string?> values) => _values = values;
+            public string? Get(string key) => _values.TryGetValue(key, out var v) ? v : null;
         }
 
         [Test]
-        public void DefaultsShouldBeReasonable()
+        public void FromAppConfig_WhenKeysArePresent_ShouldLoadValues()
         {
-            var cfg = RecentFilesConfig.FromReader(new FakeReader(_ => null));
-            cfg.MaxCount.ShouldBe(10);
-            cfg.RetentionDays.ShouldBe(15);
-            cfg.OutputPath.ShouldNotBeNullOrWhiteSpace();
+            // Arrange
+            var reader = new FakeReader(new Dictionary<string, string?>
+            {
+                { "recentFilesMaxCount", "50" },
+                { "recentFilesRetentionDays", "15" },
+                { "recentFilesOutputPath", "TestOutput" }
+            });
+
+            // Act
+            var config = RecentFilesConfig.FromAppConfig(reader);
+
+            // Assert
+            config.MaxCount.ShouldBe(50);
+            config.RetentionDays.ShouldBe(15);
+            config.OutputPath.ShouldBe("TestOutput");
+            config.StorageFilePath.ShouldBe("TestOutput\\recentFiles.json");
         }
 
-        [TestCase("0")]
-        [TestCase("-5")]
-        [TestCase("not-a-number")]
-        public void InvalidValuesShouldBeRejected(string badValue)
+        [Test]
+        public void FromAppConfig_WhenKeysAreMissing_ShouldUseDefaults()
         {
-            var reader = new FakeReader(key =>
-                key == "recentFilesMaxCount" ? badValue :
-                key == "recentFilesRetentionDays" ? "15" :
-                key == "recentFilesOutputPath" ? "%APPDATA%\\VecTool\\Generated" :
-                null);
+            // Arrange
+            var reader = new FakeReader(new Dictionary<string, string?>());
 
-            Should.Throw<ArgumentOutOfRangeException>(() => RecentFilesConfig.FromReader(reader));
+            // Act
+            var config = RecentFilesConfig.FromAppConfig(reader);
+
+            // Assert
+            config.MaxCount.ShouldBe(RecentFilesConfig.DefaultMaxCount);
+            config.RetentionDays.ShouldBe(RecentFilesConfig.DefaultRetentionDays);
+            config.OutputPath.ShouldBe(RecentFilesConfig.DefaultOutputPath);
+        }
+
+        [Test]
+        public void FromAppConfig_WhenValuesAreInvalidFormat_ShouldUseDefaults()
+        {
+            // Arrange
+            var reader = new FakeReader(new Dictionary<string, string?>
+            {
+                { "recentFilesMaxCount", "not-a-number" },
+                { "recentFilesRetentionDays", "invalid" }
+            });
+
+            // Act
+            var config = RecentFilesConfig.FromAppConfig(reader);
+
+            // Assert
+            config.MaxCount.ShouldBe(RecentFilesConfig.DefaultMaxCount);
+            config.RetentionDays.ShouldBe(RecentFilesConfig.DefaultRetentionDays);
+        }
+
+        [Test]
+        public void Constructor_WithInvalidRanges_ShouldThrowArgumentOutOfRangeException()
+        {
+            // Assert
+            Should.Throw<ArgumentOutOfRangeException>(() => new RecentFilesConfig(0, 30, "path"));
+            Should.Throw<ArgumentOutOfRangeException>(() => new RecentFilesConfig(10001, 30, "path"));
+            Should.Throw<ArgumentOutOfRangeException>(() => new RecentFilesConfig(100, -1, "path"));
+            Should.Throw<ArgumentOutOfRangeException>(() => new RecentFilesConfig(100, 3651, "path"));
+        }
+
+        [Test]
+        public void Constructor_WithInvalidPath_ShouldThrowArgumentException()
+        {
+            // Assert
+            Should.Throw<ArgumentException>(() => new RecentFilesConfig(100, 30, ""));
+            Should.Throw<ArgumentException>(() => new RecentFilesConfig(100, 30, "   "));
+            Should.Throw<ArgumentException>(() => new RecentFilesConfig(100, 30, "C:\\inv|lid\\path"));
         }
     }
 }
