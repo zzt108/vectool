@@ -40,18 +40,18 @@ namespace DocXHandlerTests
 
             using var doc = WordprocessingDocument.Open(outputDocxPath, false);
             var body = doc?.MainDocumentPart?.Document.Body;
-            body?.ChildElements.Count.Should().BeGreaterThan(5);
+            body?.ChildElements.Count.ShouldBeGreaterThan(5);
 
             // ✅ Assert for simple folder names, not full paths
-            body?.InnerText.Should().Contain("src1");  // Folder name in XML
-            body?.InnerText.Should().Contain("src2");  // Folder name in XML
-            body?.InnerText.Should().Contain(ContentOfFile1);
-            body?.InnerText.Should().Contain(ContentOfFile2);
+            body?.InnerText.ShouldContain("src1");  // Folder name in XML
+            body?.InnerText.ShouldContain("src2");  // Folder name in XML
+            body?.InnerText.ShouldContain(ContentOfFile1);
+            body?.InnerText.ShouldContain(ContentOfFile2);
 
             // ✅ Also check for constants usage in XML structure
-            body?.InnerText.Should().Contain(Tags.TableOfContents);  // Instead of magic "tableofcontents"
-            body?.InnerText.Should().Contain(Tags.CrossReferences);   // Instead of magic "crossreferences"  
-            body?.InnerText.Should().Contain(Tags.CodeMetaInfo);      // Instead of magic "codemetainfo"
+            body?.InnerText.ShouldContain(Tags.TableOfContents);  // Instead of magic "tableofcontents"
+            body?.InnerText.ShouldContain(Tags.CrossReferences);   // Instead of magic "crossreferences"  
+            body?.InnerText.ShouldContain(Tags.CodeMetaInfo);      // Instead of magic "codemetainfo"
         }
 
         [TearDown]
