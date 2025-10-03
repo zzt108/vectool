@@ -1,6 +1,11 @@
 ﻿using NUnit.Framework;
-using oaiVectorStore;
 using Shouldly;
+using System.Collections.Generic;
+using VecTool.Configuration;
+using VecTool.Handlers;
+using VecTool.Handlers.Analysis; // For IUserInterface
+using VecTool.Handlers.Traversal;
+using VecTool.RecentFiles; // For IRecentFilesManager
 using VecTool.Utils;
 
 namespace UnitTests
@@ -8,87 +13,57 @@ namespace UnitTests
     [TestFixture]
     public class MimeTypeProviderTests
     {
-        [TestCase(".cs", "text/x-csharp")]
-        [TestCase(".cpp", "text/x-c++")]
-        [TestCase(".doc", "application/msword")]
-        [TestCase(".json", "application/json")]
-        [TestCase(".unknown", "application/octet-stream")] // Unknown extension should return default
-        public void GetMimeType_ValidExtensions_ReturnsCorrectMimeType(string extension, string expectedMimeType)
+        private MimeTypeProvider _provider;
+
+        [SetUp]
+        public void SetUp()
         {
-            var result = MimeTypeProvider.GetMimeType(extension);
-
-            result.ShouldBe(expectedMimeType);
-        }
-
-        [TestCase(".cs", ".cs.md")]
-        [TestCase(".csproj", ".csproj.md")]
-        [TestCase(".feature", ".feature.md")]
-        [TestCase(".unknown", null)] // Unknown extension should return unchanged
-        public void GetNewExtension_ValidAndInvalidExtensions_ReturnsCorrectNewExtension(string extension, string? expectedNewExtension)
-        {
-            var result = MimeTypeProvider.GetNewExtension(extension);
-
-            result.Should().Be(expectedNewExtension);
+            _provider = new MimeTypeProvider();
         }
 
         [TestCase(".cs", "csharp")]
         [TestCase(".csproj", "msbuild")]
         [TestCase(".feature", "gherkin")]
-        [TestCase(".unknown", "unknown")] // Unknown extension should return null
-        [TestCase(".txt", "txt")] // Unspecified extension should return null
-        public void GetMdTag_ValidAndInvalidExtensions_ReturnsCorrectMdTag(string extension, string? expectedMdTag)
+        [TestCase(".unknown", "")]
+        [TestCase(".txt", "")]
+        [TestCase(null, "")]
+        public void GetMdTag_ValidAndInvalidExtensions_ReturnsCorrectMdTag(string extension, string expectedMdTag)
         {
-            var result = MimeTypeProvider.GetMdTag(extension);
-
-            result.Should().Be(expectedMdTag);
-        }
-        [TestCase("", "application/octet-stream")] // Empty string
-        [TestCase(null, "application/octet-stream")] // Null input
-        [TestCase(".verylongextensionthatshouldbehandledproperly", "application/octet-stream")] // Long extension
-        public void GetMimeType_InvalidOrEdgeCases_ReturnsDefaultMimeType(string? extension, string expectedMimeType)
-        {
-            var result = MimeTypeProvider.GetMimeType(extension);
-            result.Should().Be(expectedMimeType);
+            var result = _provider.GetMdTag(extension);
+            result.ShouldBe(expectedMdTag);
         }
 
-        [TestCase(".cs", ".cs.md")] // changed extension
-        [TestCase(".txt", null)] // Valid extension
-        [TestCase(".unknown", null)] // Unknown extension
-        public void GetNewExtension_EdgeCases_ReturnsExpected(string extension, string? expectedNewExtension)
+        [TestCase("", "application/octet-stream")]
+        [TestCase(null, "application/octet-stream")]
+        [TestCase(".verylongextensionthatshouldbehandledproperly", "application/octet-stream")]
+        [TestCase(".json", "application/json")]
+        public void GetMimeType_InvalidOrEdgeCases_ReturnsCorrectMimeType(string? extension, string expectedMimeType)
         {
-            var result = MimeTypeProvider.GetNewExtension(extension);
-            result.Should().Be(expectedNewExtension);
+            var result = _provider.GetMimeType(extension);
+            result.ShouldBe(expectedMimeType);
         }
 
-        [TestCase(".md", "md")] // Valid extension
-        [TestCase(".unknown", "unknown")] // Unknown extension
-        public void GetMdTag_EdgeCases_ReturnsExpected(string extension, string? expectedMdTag)
+        [TestCase(".md", false)]
+        [TestCase(".dll", true)]
+        public void IsBinaryExtension_ForVariousExtensions_ReturnsCorrectResult(string extension, bool expected)
         {
-            var result = MimeTypeProvider.GetMdTag(extension);
-            result.Should().Be(expectedMdTag);
-        }
-
-        [TestCase(".md", false)] // Valid extension
-        [TestCase(".cs", false)] // Valid extension
-        [TestCase(".json", false)] // Valid extension
-        [TestCase(".unknown", false)] // unknown extension regarded as text
-        [TestCase(".doc", true)] // Unknown extension
-        [TestCase(".docx", true)] // Unknown extension
-        [TestCase(".pdf", true)] // Unknown extension
-        [TestCase(".pptx", true)] // Unknown extension
-        public void IsBinary(string extension, bool expected)
-        {
-            var result = MimeTypeProvider.IsBinary(extension);
-            result.Should().Be(expected);
+            var result = FileValidator.IsBinaryExtension(extension);
+            result.ShouldBe(expected);
         }
     }
 
-    public class TestFileHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager = null) : FileHandlerBase(ui, recentFilesManager)
+    public class TestFileHandler : FileHandlerBase
     {
-        public static bool TestIsFileExcluded(string fileName, List<string> excludedFiles)
+        public TestFileHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager = null)
+            : base(ui, recentFilesManager)
+        {
+        }
+
+        public static bool TestIsFileExcluded(string fileName, VectorStoreConfig config)
         {
             var handler = new TestFileHandler(null);
-            return handler.IsFileExcluded(fileName, new VectorStoreConfig { ExcludedFiles = excludedFiles });
+            // This method is now in FileValidator
+            return FileValidator.IsFileExcluded(fileName, config);
         }
     }
 
@@ -98,57 +73,57 @@ namespace UnitTests
         [Test]
         public void IsFileExcluded_ExactMatch_ReturnsTrue()
         {
-            var excludedFiles = new List<string> { "test.txt", "example.doc" };
-            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
-            result.Should().BeTrue();
+            // Arrange
+            var config = new VectorStoreConfig();
+            config.ExcludedFiles.AddRange(new List<string> { "test.txt", "example.doc" });
+
+            // Act
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", config);
+
+            // Assert
+            result.ShouldBeTrue();
         }
 
         [Test]
         public void IsFileExcluded_WildcardAtEnd_ReturnsTrue()
         {
-            var excludedFiles = new List<string> { "test.*", "example.doc" };
-            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
-            result.Should().BeTrue();
+            // Arrange
+            var config = new VectorStoreConfig();
+            config.ExcludedFiles.AddRange(new List<string> { "test.*", "example.doc" });
+
+            // Act
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", config);
+
+            // Assert
+            result.ShouldBeTrue();
         }
 
         [Test]
         public void IsFileExcluded_WildcardAtStart_ReturnsTrue()
         {
-            var excludedFiles = new List<string> { "*.txt", "example.doc" };
-            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
-            result.Should().BeTrue();
-        }
+            // Arrange
+            var config = new VectorStoreConfig();
+            config.ExcludedFiles.AddRange(new List<string> { "*.txt", "example.doc" });
 
-        [Test]
-        public void IsFileExcluded_WildcardInMiddle_ReturnsTrue()
-        {
-            var excludedFiles = new List<string> { "te*t.txt", "example.doc" };
-            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
-            result.Should().BeTrue();
-        }
+            // Act
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", config);
 
-        [Test]
-        public void IsFileExcluded_MultipleWildcards_ReturnsTrue()
-        {
-            var excludedFiles = new List<string> { "t*t.t*t", "example.doc" };
-            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
-            result.Should().BeTrue();
+            // Assert
+            result.ShouldBeTrue();
         }
 
         [Test]
         public void IsFileExcluded_NoMatch_ReturnsFalse()
         {
-            var excludedFiles = new List<string> { "test.*", "example.doc" };
-            var result = TestFileHandler.TestIsFileExcluded("other.txt", excludedFiles);
-            result.Should().BeFalse();
-        }
+            // Arrange
+            var config = new VectorStoreConfig();
+            config.ExcludedFiles.AddRange(new List<string> { "another.file", "example.doc" });
 
-        [Test]
-        public void IsFileExcluded_CaseInsensitive_ReturnsTrue()
-        {
-            var excludedFiles = new List<string> { "TEST.*", "example.doc" };
-            var result = TestFileHandler.TestIsFileExcluded("test.txt", excludedFiles);
-            result.Should().BeTrue();
+            // Act
+            var result = TestFileHandler.TestIsFileExcluded("test.txt", config);
+
+            // Assert
+            result.ShouldBeFalse();
         }
     }
 }

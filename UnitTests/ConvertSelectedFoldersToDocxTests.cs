@@ -3,6 +3,7 @@ using DocumentFormat.OpenXml.Packaging;
 using Shouldly;
 using VecTool.Handlers;
 using VecTool.Constants;
+using VecTool.Configuration;
 
 namespace DocXHandlerTests
 {
@@ -32,8 +33,8 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath2, ContentOfFile2);
 
             List<string> folderPaths = new List<string> { folder1, folder2 };
-            var docXHandler = new DocXHandler.DocXHandler(null, null);
-            docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
+            var docXHandler = new DocXHandler(null, null);
+            docXHandler.ConvertSelectedFoldersToDocx(folderPaths, outputDocxPath, new VectorStoreConfig());
 
             File.Exists(outputDocxPath).ShouldBeTrue();
 

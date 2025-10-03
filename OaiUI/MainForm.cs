@@ -1,6 +1,4 @@
-﻿using DocXHandler;
-using DocXHandler.RecentFiles;
-using Microsoft.VisualBasic.Logging;
+﻿using Microsoft.VisualBasic.Logging;
 using NLogShared;
 using oaiUI.RecentFiles;
 using oaiUI.Services;
@@ -9,6 +7,8 @@ using OpenAI;
 using System.Configuration;
 using System.Reflection;
 using VecTool.Configuration;
+using VecTool.Handlers;
+using VecTool.RecentFiles;
 
 namespace oaiUI
 {
@@ -473,7 +473,7 @@ namespace oaiUI
                         _userInterface.WorkStart("Converting to DOCX", selectedFolders);
 
                         btnConvertToDocx.Enabled = false;
-                        var docXHandler = new DocXHandler.DocXHandler(_userInterface, _recentFilesManager);
+                        var docXHandler = new DocXHandler(_userInterface, _recentFilesManager);
                         docXHandler.ConvertSelectedFoldersToDocx(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to DOCX.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -541,7 +541,7 @@ namespace oaiUI
                     try
                     {
                         btnConvertToMd.Enabled = false;
-                        var mdHandler = new DocXHandler.MDHandler(_userInterface, _recentFilesManager);
+                        var mdHandler = new MDHandler(_userInterface, _recentFilesManager);
                         mdHandler.ExportSelectedFolders(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to MD.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -594,7 +594,7 @@ namespace oaiUI
                     try
                     {
                         WorkStart("Converting to PDF...", selectedFolders);
-                        var pdfHandler = new DocXHandler.PdfHandler(_userInterface, _recentFilesManager);
+                        var pdfHandler = new PdfHandler(_userInterface, _recentFilesManager);
                         pdfHandler.ConvertSelectedFoldersToPdf(selectedFolders, saveFileDialog.FileName, vectorStoreConfig);
                         MessageBox.Show("Folders successfully converted to PDF.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -637,7 +637,7 @@ namespace oaiUI
                 {
                     btnGetGitChanges.Enabled = false;
                     WorkStart("Getting Git changes...", selectedFolders);
-                    var gitChangesHandler = new DocXHandler.GitChangesHandler(_userInterface, _recentFilesManager);
+                    var gitChangesHandler = new GitChangesHandler(_userInterface, _recentFilesManager);
 
                     // Use the async method
                     string changes = await gitChangesHandler.GetGitChangesAsync(selectedFolders, saveFileDialog.FileName);

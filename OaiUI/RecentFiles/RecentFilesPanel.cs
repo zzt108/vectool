@@ -6,7 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using DocXHandler.RecentFiles;
+using VecTool.RecentFiles;
 using NLogS = NLogShared;
 
 namespace oaiUI.RecentFiles

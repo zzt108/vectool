@@ -1,5 +1,7 @@
 ﻿// File: OaiUI/Config/PerVectorStoreSettings.cs
 
+using VecTool.Configuration;
+
 namespace oaiUI.Config
 {
     /// <summary>

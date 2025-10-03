@@ -1,8 +1,9 @@
 ﻿// File: UnitTests/RecentFiles/RecentFilesManagerIntegrationTests.cs
 using Shouldly;
-using DocXHandler.RecentFiles;
 using NUnit.Framework;
 using VecTool.RecentFiles;
+using VecTool.Configuration;
+using VecTool.Handlers;
 
 namespace UnitTests.RecentFiles
 {
@@ -35,7 +36,7 @@ namespace UnitTests.RecentFiles
         public void RegisterGeneratedFile_DocxHandler_ShouldTrackFile()
         {
             // Arrange
-            var handler = new DocXHandler.DocXHandler(null, manager);
+            var handler = new DocXHandler(null, manager);
             var testFile = Path.Combine(testDirectory, "test.docx");
             File.WriteAllText(testFile, "test content");
 
