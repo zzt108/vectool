@@ -1,72 +1,99 @@
-﻿using System.Diagnostics;
-using NLogS = NLogShared;
+﻿using NLogShared;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace VecTool.Core
 {
     /// <summary>
-    /// Async git command runner to avoid StandardOutput deadlocks.
+    /// Executes Git commands and returns the output.
     /// </summary>
     public sealed class GitRunner
     {
+        private static readonly CtxLogger _log = new();
         private readonly string _workingDirectory;
-        private static readonly NLogS.CtxLogger _log = new();
 
         public GitRunner(string workingDirectory)
         {
             _workingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
         }
 
-        public async Task<string> RunGitCommandAsync(string arguments, int timeoutSeconds = 60)
+        public async Task<string> RunGitCommandAsync(string command, int timeoutSeconds = 60)
         {
             var process = new Process
             {
-                StartInfo =
+                StartInfo = new ProcessStartInfo
                 {
                     FileName = "git",
-                    Arguments = arguments,
+                    Arguments = command,
                     WorkingDirectory = _workingDirectory,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8,
                 }
             };
 
-            try
+            var outputBuilder = new StringBuilder();
+            var errorBuilder = new StringBuilder();
+            using var outputWaitHandle = new AutoResetEvent(false);
+            using var errorWaitHandle = new AutoResetEvent(false);
+
+            process.OutputDataReceived += (sender, e) =>
             {
-                process.Start();
-
-                // Read both streams in parallel to avoid deadlock
-                var outputTask = process.StandardOutput.ReadToEndAsync();
-                var errorTask = process.StandardError.ReadToEndAsync();
-
-                // Wait for process to complete with timeout
-                if (!process.WaitForExit(timeoutSeconds * 1000))
+                if (e.Data == null)
                 {
-                    process.Kill();
-                    throw new TimeoutException($"Git command timed out after {timeoutSeconds} seconds: git {arguments}");
+                    outputWaitHandle.Set();
+                }
+                else
+                {
+                    outputBuilder.AppendLine(e.Data);
+                }
+            };
+            process.ErrorDataReceived += (sender, e) =>
+            {
+                if (e.Data == null)
+                {
+                    errorWaitHandle.Set();
+                }
+                else
+                {
+                    errorBuilder.AppendLine(e.Data);
+                }
+            };
+
+            _log.Info($"Running git command: 'git {command}' in '{_workingDirectory}'");
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+            if (process.WaitForExit((int)timeout.TotalMilliseconds) &&
+                outputWaitHandle.WaitOne(timeout) &&
+                errorWaitHandle.WaitOne(timeout))
+            {
+                if (process.ExitCode == 0)
+                {
+                    _log.Info("Git command finished successfully.");
+                    return outputBuilder.ToString().Trim();
                 }
 
-                // Get results from both streams
-                string output = await outputTask;
-                string error = await errorTask;
+                var errorOutput = errorBuilder.ToString().Trim();
+                _log.Warn($"Git command failed with exit code {process.ExitCode}. Error: {errorOutput}");
+                throw new InvalidOperationException($"Git command failed: {errorOutput}");
+            }
 
-                if (process.ExitCode != 0)
-                {
-                    throw new InvalidOperationException(
-                        $"Git command failed (exit code {process.ExitCode}): {error}");
-                }
-
-                return output.Trim();
-            }
-            catch (Exception ex) when (!(ex is TimeoutException || ex is InvalidOperationException))
+            _log.Warn("Git command timed out.");
+            if (!process.HasExited)
             {
-                throw new InvalidOperationException($"Error executing git command: {ex.Message}", ex);
+                process.Kill();
             }
-            finally
-            {
-                process?.Dispose();
-            }
+            throw new TimeoutException("Git command timed out.");
         }
 
         public async Task<string> GetStatusAsync()
@@ -77,18 +104,15 @@ namespace VecTool.Core
             }
             catch (Exception ex) when (ex.Message.Contains("dubious ownership"))
             {
-                var safeDirectoryCommand = $"git config --global --add safe.directory \"{_workingDirectory}\"";
+                var safeDirectoryCommand = $"git config --global --add safe.directory {_workingDirectory}";
                 _log.Warn($"Dubious ownership detected in {_workingDirectory}. Solution: {safeDirectoryCommand}");
-
-                return $"Error: Dubious ownership in {_workingDirectory}. " +
-                       $"Fix with: {safeDirectoryCommand}";
+                return $"Error: Dubious ownership in {_workingDirectory}. Fix with: {safeDirectoryCommand}";
             }
             catch (Exception ex)
             {
                 return $"Error: {ex.Message}";
             }
         }
-
 
         public async Task<string> GetDiffAsync()
         {
@@ -100,17 +124,18 @@ namespace VecTool.Core
                 return "No diff changes.";
             }
 
-            var result = "";
+            var result = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(unstaged))
             {
-                result += "Unstaged Changes:\n" + unstaged + "\n\n";
+                result.AppendLine("## Unstaged Changes");
+                result.AppendLine(unstaged);
             }
             if (!string.IsNullOrWhiteSpace(staged))
             {
-                result += "Staged Changes:\n" + staged + "\n\n";
+                result.AppendLine("## Staged Changes");
+                result.AppendLine(staged);
             }
-
-            return result.Trim();
+            return result.ToString().Trim();
         }
 
         public async Task<string> GetSubmodulesAsync()
@@ -118,10 +143,32 @@ namespace VecTool.Core
             return await RunGitCommandAsync("submodule status");
         }
 
+        /// <summary>
+        /// Gets the current Git branch name from the repository.
+        /// </summary>
+        /// <returns>Current branch name, or "unknown" if not in a Git repository.</returns>
+        public async Task<string> GetCurrentBranchAsync()
+        {
+            try
+            {
+                var result = await RunGitCommandAsync("branch --show-current", timeoutSeconds: 5);
+                return string.IsNullOrWhiteSpace(result) ? "unknown" : result.Trim();
+            }
+            catch
+            {
+                return "unknown";
+            }
+        }
+
         public static bool IsGitRepository(string folderPath)
         {
-            string gitPath = System.IO.Path.Combine(folderPath, ".git");
-            return System.IO.Directory.Exists(gitPath) || System.IO.File.Exists(gitPath);
+            if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
+            {
+                return false;
+            }
+
+            string gitPath = Path.Combine(folderPath, ".git");
+            return Directory.Exists(gitPath) || File.Exists(gitPath);
         }
     }
 }
