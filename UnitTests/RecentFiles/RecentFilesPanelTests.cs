@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using DocXHandler.RecentFiles;
 using oaiUI.RecentFiles;
+using VecTool.RecentFiles;
 
 namespace UnitTests.UI.RecentFiles
 {

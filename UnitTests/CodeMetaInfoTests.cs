@@ -6,6 +6,7 @@ using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using VecTool.Handlers;
 using VecTool.Constants;
+using VecTool.Configuration;
 
 namespace DocXHandlerTests
 {
@@ -75,9 +76,9 @@ public class FooTests
         [Test]
         public void DocxShouldContainCodeMetaInfo()
         {
-            var handler = new DocXHandler.DocXHandler(null, null);
+            var handler = new DocXHandler(null, null);
             var folders = Directory.GetDirectories(root).ToList();
-            handler.ConvertSelectedFoldersToDocx(folders, outDocx, new DocXHandler.VectorStoreConfig());
+            handler.ConvertSelectedFoldersToDocx(folders, outDocx, new VectorStoreConfig());
 
             File.Exists(outDocx).ShouldBeTrue();
 

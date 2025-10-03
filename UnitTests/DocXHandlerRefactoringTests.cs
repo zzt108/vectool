@@ -5,10 +5,10 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Constants;
-using DocXHandler;
-using DocXHandler.RecentFiles;
 using VecTool.Configuration;
+using VecTool.Constants;
+using VecTool.Handlers;
+using VecTool.RecentFiles;
 
 namespace UnitTests.DocX
 {
@@ -41,7 +41,7 @@ namespace UnitTests.DocX
         [Test]
         public void GeneratedDocxShouldMatchOriginalFormat()
         {
-            var handler = new DocXHandler.DocXHandler(null, null);
+            var handler = new DocXHandler(null, null);
             handler.ConvertSelectedFoldersToDocx(new List<string> { root }, outDocx, config);
 
             File.Exists(outDocx).ShouldBeTrue();

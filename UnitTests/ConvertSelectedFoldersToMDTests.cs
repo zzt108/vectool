@@ -1,4 +1,7 @@
-using FluentAssertions;
+using Shouldly;
+using NUnit.Framework;
+using VecTool.Handlers;
+using VecTool.Configuration;
 
 namespace DocXHandlerTests
 {
@@ -30,18 +33,18 @@ namespace DocXHandlerTests
             string outputMarkdownPath = Path.Combine(testRootPath, "output.md");
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
-            var mdHandler = new DocXHandler.MDHandler(null, null);
-            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new DocXHandler.VectorStoreConfig());
+            var mdHandler = new MDHandler(null, null);
+            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new VectorStoreConfig());
             
-            File.Exists(outputMarkdownPath).Should().BeTrue();
+            File.Exists(outputMarkdownPath).ShouldBeTrue();
 
             string markdownContent = File.ReadAllText(outputMarkdownPath);
-            markdownContent.Should().Contain($"# Folder: {MarkdownFolder1Name}");
-            markdownContent.Should().Contain($"## File: {Markdown1FileName}");
-            markdownContent.Should().Contain(ContentOfMarkdownFile1);
-            markdownContent.Should().Contain($"# Folder: {MarkdownFolder2Name}");
-            markdownContent.Should().Contain($"## File: {Markdown2FileName}");
-            markdownContent.Should().Contain(ContentOfMarkdownFile2);
+            markdownContent.ShouldContain($"# Folder: {MarkdownFolder1Name}");
+            markdownContent.ShouldContain($"## File: {Markdown1FileName}");
+            markdownContent.ShouldContain(ContentOfMarkdownFile1);
+            markdownContent.ShouldContain($"# Folder: {MarkdownFolder2Name}");
+            markdownContent.ShouldContain($"## File: {Markdown2FileName}");
+                markdownContent.ShouldContain(ContentOfMarkdownFile2);
         }
 
         [Test]
@@ -60,17 +63,17 @@ namespace DocXHandlerTests
             string outputMarkdownPath = Path.Combine(testRootPath, "output_recursive.md");
             List<string> folderPaths = new List<string> { mainFolder };
 
-            var mdHandler = new DocXHandler.MDHandler(null, null);
-            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new DocXHandler.VectorStoreConfig());
+            var mdHandler = new MDHandler(null, null);
+            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new VectorStoreConfig());
             
-            File.Exists(outputMarkdownPath).Should().BeTrue();
+            File.Exists(outputMarkdownPath).ShouldBeTrue();
             string markdownContent = File.ReadAllText(outputMarkdownPath);
-            markdownContent.Should().Contain($"# Folder: {MarkdownMainFolderName}");
-            markdownContent.Should().Contain($"## File: {MainFileName}");
-            markdownContent.Should().Contain(ContentOfMainFile);
-            markdownContent.Should().Contain($"# Folder: {MarkdownSubFolderName}");
-            markdownContent.Should().Contain($"## File: {SubFileName}");
-            markdownContent.Should().Contain(ContentOfSubFile);
+            markdownContent.ShouldContain($"# Folder: {MarkdownMainFolderName}");
+            markdownContent.ShouldContain($"## File: {MainFileName}");
+                markdownContent.ShouldContain(ContentOfMainFile);
+            markdownContent.ShouldContain($"# Folder: {MarkdownSubFolderName}");
+            markdownContent.ShouldContain($"## File: {SubFileName}");
+            markdownContent.ShouldContain(ContentOfSubFile);
         }
 
         [TearDown]

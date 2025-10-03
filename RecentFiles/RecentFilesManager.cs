@@ -5,6 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using VecTool.Configuration;
 
+public sealed class InMemoryRecentFilesStore : IRecentFilesStore
+{
+    private string? _json;
+    public string? Read() => _json;
+    public void Write(string json) => _json = json;
+}
+
 /// <summary>
 /// Manages the recent files list with persistence and retention policies.
 /// </summary>

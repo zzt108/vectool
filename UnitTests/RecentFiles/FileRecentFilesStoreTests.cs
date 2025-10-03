@@ -1,6 +1,8 @@
 ﻿// File: Tests/RecentFiles/FileRecentFilesStoreTests.cs
+using NUnit.Framework;
 using Shouldly;
-using DocXHandler.RecentFiles;
+using VecTool.Configuration;
+using VecTool.RecentFiles;
 
 namespace Tests.RecentFiles
 {

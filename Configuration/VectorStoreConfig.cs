@@ -1,117 +1,168 @@
 // Path: Configuration/VectorStoreConfig.cs
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using static System.Reflection.Metadata.BlobBuilder;
+using NLogS = NLogShared;
 
 namespace VecTool.Configuration
 {
     public class VectorStoreConfig
     {
-        private static string? _defaultPath;
+        private static readonly NLogS.CtxLogger _log = new();
 
-        public List<string> FolderPaths { get; set; } = new();
-        public List<string> ExcludedFileNameParts { get; set; } = new();
-        public List<string> ExcludedFolderNames { get; set; } = new();
-        public List<string> ExcludedExtensions { get; set; } = new();
+        public List<string> FolderPaths { get; set; } = new List<string>();
+        public List<string> ExcludedFiles { get; set; } = new List<string>();
+        public List<string> ExcludedFolders { get; set; } = new List<string>();
 
-        /// <summary>
-        /// Determines if a folder should be excluded based on its name.
-        /// </summary>
-        public bool IsFolderExcluded(string folderName)
+        // Create a VectorStoreConfig from app.config settings
+        public static VectorStoreConfig FromAppConfig()
         {
-            if (string.IsNullOrWhiteSpace(folderName))
-                return true;
-
-            return ExcludedFolderNames.Any(excluded => folderName.Equals(excluded, StringComparison.OrdinalIgnoreCase));
+            var config = new VectorStoreConfig();
+            config.LoadExcludedFilesConfig();
+            config.LoadExcludedFoldersConfig();
+            return config;
         }
 
-        /// <summary>
-        /// Determines if a file should be excluded based on its name or extension.
-        /// </summary>
+        // Load excluded files from app.config
+        public void LoadExcludedFilesConfig()
+        {
+            string? excludedFilesConfig = ConfigurationManager.AppSettings["excludedFiles"];
+            if (!string.IsNullOrEmpty(excludedFilesConfig))
+            {
+                ExcludedFiles = excludedFilesConfig.Split(',')
+                    .Select(f => f.Trim())
+                    .ToList();
+            }
+        }
+
+        // Load excluded folders from app.config
+        public void LoadExcludedFoldersConfig()
+        {
+            string? excludedFoldersConfig = ConfigurationManager.AppSettings["excludedFolders"];
+            if (!string.IsNullOrEmpty(excludedFoldersConfig))
+            {
+                ExcludedFolders = excludedFoldersConfig.Split(',')
+                    .Select(f => f.Trim())
+                    .ToList();
+            }
+        }
+
+        // Check if a file should be excluded
         public bool IsFileExcluded(string fileName)
         {
-            if (string.IsNullOrWhiteSpace(fileName))
-                return true;
-
-            var extension = Path.GetExtension(fileName);
-
-            // Check against excluded extensions
-            if (!string.IsNullOrEmpty(extension) && ExcludedExtensions.Any(ext => extension.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+            foreach (var pattern in ExcludedFiles)
             {
-                return true;
+                string regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*") + "$";
+                if (Regex.IsMatch(fileName, regexPattern, RegexOptions.IgnoreCase))
+                {
+                    _log.Trace($"File '{fileName}' excluded by pattern '{pattern}'");
+                    return true;
+                }
             }
-
-            // Check against excluded file name parts
-            return ExcludedFileNameParts.Any(part => fileName.Contains(part, StringComparison.OrdinalIgnoreCase));
+            return false;
         }
 
+        // Check if a folder should be excluded
+        public bool IsFolderExcluded(string folderName)
+        {
+            bool isExcluded = ExcludedFolders.Contains(folderName);
+            if (isExcluded)
+            {
+                _log.Trace($"Folder '{folderName}' is in excluded list");
+            }
+            return isExcluded;
+        }
+
+        // Add a folder path if it doesn't exist
+        public bool AddFolderPath(string folderPath)
+        {
+            if (!FolderPaths.Contains(folderPath))
+            {
+                FolderPaths.Add(folderPath);
+                return true;
+            }
+            return false;
+        }
+
+        // Remove a folder path
+        public bool RemoveFolderPath(string folderPath)
+        {
+            return FolderPaths.Remove(folderPath);
+        }
+
+        // Clear all folder paths
+        public void ClearFolderPaths()
+        {
+            FolderPaths.Clear();
+        }
+
+        // Create a deep copy of this configuration
         public VectorStoreConfig Clone()
         {
             return new VectorStoreConfig
             {
                 FolderPaths = new List<string>(FolderPaths),
-                ExcludedFileNameParts = new List<string>(ExcludedFileNameParts),
-                ExcludedFolderNames = new List<string>(ExcludedFolderNames),
-                ExcludedExtensions = new List<string>(ExcludedExtensions)
+                ExcludedFiles = new List<string>(ExcludedFiles),
+                ExcludedFolders = new List<string>(ExcludedFolders)
             };
         }
 
-        public static VectorStoreConfig FromAppConfig()
+        // Load all vector store configurations
+        public static Dictionary<string, VectorStoreConfig> LoadAll(string? configPath = null)
         {
-            var config = new VectorStoreConfig();
-            var excludedFiles = ConfigurationManager.AppSettings["excludedFiles"] ?? "";
-            var excludedFolders = ConfigurationManager.AppSettings["excludedFolders"] ?? "";
-            var excludedExtensions = ConfigurationManager.AppSettings["excludedExtensions"] ?? "";
+            string vectorStoreFoldersPath = configPath ??
+                ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ??
+                @"..\..\vectorStoreFolders.json";
 
-            config.ExcludedFileNameParts.AddRange(excludedFiles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
-            config.ExcludedFolderNames.AddRange(excludedFolders.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
-            config.ExcludedExtensions.AddRange(excludedExtensions.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
+            Dictionary<string, VectorStoreConfig> configs = new();
 
-            return config;
-        }
-
-        private static string GetDefaultPath()
-        {
-            if (_defaultPath != null)
-                return _defaultPath;
-
-            _defaultPath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"];
-            if (string.IsNullOrWhiteSpace(_defaultPath))
+            if (File.Exists(vectorStoreFoldersPath))
             {
-                _defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VecTool", "vectorStoreFolders.json");
-            }
-            return _defaultPath;
-        }
+                try
+                {
+                    string json = File.ReadAllText(vectorStoreFoldersPath);
+                    var deserializedConfigs = JsonSerializer.Deserialize<Dictionary<string, VectorStoreConfig>>(json);
+                    if (deserializedConfigs != null)
+                    {
+                        configs = deserializedConfigs;
+                    }
 
-        public static Dictionary<string, VectorStoreConfig> LoadAll(string? path = null)
-        {
-            var filePath = path ?? GetDefaultPath();
-            if (!File.Exists(filePath))
-            {
-                return new Dictionary<string, VectorStoreConfig>(StringComparer.OrdinalIgnoreCase);
+                    _log.Debug($"Loaded {configs.Count} vector store configurations");
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, $"Error loading vector store configurations from {vectorStoreFoldersPath}");
+                }
             }
 
-            var json = File.ReadAllText(filePath);
-            var settings = new JsonSerializerSettings();
-            var deserialized = JsonConvert.DeserializeObject<Dictionary<string, VectorStoreConfig>>(json, settings);
-            return new Dictionary<string, VectorStoreConfig>(deserialized ?? new Dictionary<string, VectorStoreConfig>(), StringComparer.OrdinalIgnoreCase);
+            return configs;
         }
 
-        public static void SaveAll(Dictionary<string, VectorStoreConfig> configs, string? path = null)
+        // Save all vector store configurations
+        public static void SaveAll(Dictionary<string, VectorStoreConfig> configs, string? configPath = null)
         {
-            var filePath = path ?? GetDefaultPath();
-            var directory = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
+            string vectorStoreFoldersPath = configPath ??
+                ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ??
+                @"..\..\vectorStoreFolders.json";
 
-            var json = JsonConvert.SerializeObject(configs, Formatting.Indented);
-            File.WriteAllText(filePath, json);
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string json = JsonSerializer.Serialize(configs, options);
+                File.WriteAllText(vectorStoreFoldersPath, json);
+
+                _log.Debug($"Saved {configs.Count} vector store configurations to {vectorStoreFoldersPath}");
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, $"Error saving vector store configurations to {vectorStoreFoldersPath}");
+            }
         }
     }
 }

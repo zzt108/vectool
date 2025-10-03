@@ -13,13 +13,6 @@ namespace UnitTests
     [TestFixture]
     public class MimeTypeProviderTests
     {
-        private MimeTypeProvider _provider;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _provider = new MimeTypeProvider();
-        }
 
         [TestCase(".cs", "csharp")]
         [TestCase(".csproj", "msbuild")]
@@ -29,7 +22,7 @@ namespace UnitTests
         [TestCase(null, "")]
         public void GetMdTag_ValidAndInvalidExtensions_ReturnsCorrectMdTag(string extension, string expectedMdTag)
         {
-            var result = _provider.GetMdTag(extension);
+            var result = MimeTypeProvider.GetMdTag(extension);
             result.ShouldBe(expectedMdTag);
         }
 
@@ -39,7 +32,7 @@ namespace UnitTests
         [TestCase(".json", "application/json")]
         public void GetMimeType_InvalidOrEdgeCases_ReturnsCorrectMimeType(string? extension, string expectedMimeType)
         {
-            var result = _provider.GetMimeType(extension);
+            var result = MimeTypeProvider.GetMimeType(extension);
             result.ShouldBe(expectedMimeType);
         }
 

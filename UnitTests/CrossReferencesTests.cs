@@ -4,7 +4,9 @@ using System;
 using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
-using Constants; // Add this using
+using VecTool.Handlers;
+using VecTool.Configuration;
+using VecTool.Constants;
 
 namespace DocXHandlerTests
 {
@@ -62,9 +64,9 @@ namespace DemoB
         [Test]
         public void DocxShouldContainCrossReferences()
         {
-            var handler = new DocXHandler.DocXHandler(null, null);
+            var handler = new DocXHandler(null, null);
             var folders = Directory.GetDirectories(root).ToList();
-            handler.ConvertSelectedFoldersToDocx(folders, outDocx, new DocXHandler.VectorStoreConfig());
+            handler.ConvertSelectedFoldersToDocx(folders, outDocx, new VectorStoreConfig());
 
             File.Exists(outDocx).ShouldBeTrue();
 

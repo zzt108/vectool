@@ -1,6 +1,9 @@
 // ConvertSelectedFoldersToPdfTests.cs
-using FluentAssertions;
+using Shouldly;
 using QuestPDF.Infrastructure;
+using NUnit.Framework;
+using VecTool.Handlers;
+using VecTool.Configuration;
 
 namespace DocXHandlerTests
 {
@@ -31,17 +34,17 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath2, ContentOfFile2);
 
             List<string> folderPaths = new List<string> { folder1, folder2 };
-            var pdfHandler = new DocXHandler.PdfHandler(null, null);
+            var pdfHandler = new PdfHandler(null, null);
 
             // Act
-            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
+            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new VectorStoreConfig());
 
             // Assert
-            File.Exists(outputDocxPath).Should().BeTrue();
+            File.Exists(outputDocxPath).ShouldBeTrue();
 
             // Basic PDF validation (check if it's a valid PDF, not empty)
             // For more robust validation, consider a dedicated PDF parsing library
-            new FileInfo(outputDocxPath).Length.Should().BeGreaterThan(0);
+            new FileInfo(outputDocxPath).Length.ShouldBeGreaterThan(0);
         }
      
         [Test]
@@ -51,12 +54,12 @@ namespace DocXHandlerTests
             Directory.CreateDirectory(emptyFolder);
 
             List<string> folderPaths = new List<string> { emptyFolder };
-            var pdfHandler = new DocXHandler.PdfHandler(null, null);
+            var pdfHandler = new PdfHandler(null, null);
 
-            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
+            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new VectorStoreConfig());
 
-            File.Exists(outputDocxPath).Should().BeTrue();
-            new FileInfo(outputDocxPath).Length.Should().BeGreaterThan(0);
+            File.Exists(outputDocxPath).ShouldBeTrue();
+            new FileInfo(outputDocxPath).Length.ShouldBeGreaterThan(0);
         }
 
         [Test]
@@ -69,12 +72,12 @@ namespace DocXHandlerTests
             File.WriteAllBytes(nonTextFilePath, new byte[] { 0, 1, 2 }); // Create a dummy image file
 
             List<string> folderPaths = new List<string> { folder };
-            var pdfHandler = new DocXHandler.PdfHandler(null, null);
+            var pdfHandler = new PdfHandler(null, null);
 
-            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
+            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new VectorStoreConfig());
 
-            File.Exists(outputDocxPath).Should().BeTrue();
-            new FileInfo(outputDocxPath).Length.Should().BeGreaterThan(0);
+            File.Exists(outputDocxPath).ShouldBeTrue();
+            new FileInfo(outputDocxPath).Length.ShouldBeGreaterThan(0);
         }
 
         [Test]
@@ -95,12 +98,12 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath3, ContentOfMarkdownFile1);
 
             List<string> folderPaths = new List<string> { mainFolder };
-            var pdfHandler = new DocXHandler.PdfHandler(null, null);
+            var pdfHandler = new PdfHandler(null, null);
 
-            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
+            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new VectorStoreConfig());
 
-            File.Exists(outputDocxPath).Should().BeTrue();
-            new FileInfo(outputDocxPath).Length.Should().BeGreaterThan(0);
+            File.Exists(outputDocxPath).ShouldBeTrue();
+            new FileInfo(outputDocxPath).Length.ShouldBeGreaterThan(0);
         }
 
         [Test]
@@ -113,14 +116,14 @@ namespace DocXHandlerTests
             File.WriteAllText(textFilePath, "Hello, World!");
 
             List<string> folderPaths = new List<string> { folder };
-            var pdfHandler = new DocXHandler.PdfHandler(null, null);
+            var pdfHandler = new PdfHandler(null, null);
 
             // Act
-            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
+            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new VectorStoreConfig());
 
             // Assert
-            File.Exists(outputDocxPath).Should().BeTrue();
-            new FileInfo(outputDocxPath).Length.Should().BeGreaterThan(0); //Non empty
+            File.Exists(outputDocxPath).ShouldBeTrue();
+            new FileInfo(outputDocxPath).Length.ShouldBeGreaterThan(0); //Non empty
         }
 
         [Test]
@@ -133,13 +136,13 @@ namespace DocXHandlerTests
             File.WriteAllText(emptyFilePath, ""); // Create an empty file
 
             List<string> folderPaths = new List<string> { folder };
-            var pdfHandler = new DocXHandler.PdfHandler(null, null);
+            var pdfHandler = new PdfHandler(null, null);
             // Act
-            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new DocXHandler.VectorStoreConfig());
+            pdfHandler.ConvertSelectedFoldersToPdf(folderPaths, outputDocxPath, new VectorStoreConfig());
 
             // Assert
-            File.Exists(outputDocxPath).Should().BeTrue();
-            new FileInfo(outputDocxPath).Length.Should().BeGreaterThan(0); //Non empty
+            File.Exists(outputDocxPath).ShouldBeTrue();
+            new FileInfo(outputDocxPath).Length.ShouldBeGreaterThan(0); //Non empty
 
         }
 

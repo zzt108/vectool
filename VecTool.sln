@@ -100,6 +100,9 @@ Global
 		LogCtx\LogCtxShared\LogCtxShared.projitems*{7ec4223b-6d17-4608-816e-cd1e6a5411d9}*SharedItemsImports = 13
 		LogCtx\LogCtxShared\LogCtxShared.projitems*{db75f003-df91-4b72-a3da-fcc869ee9b42}*SharedItemsImports = 5
 		LogCtx\NLogShared\NLogShared.projitems*{db75f003-df91-4b72-a3da-fcc869ee9b42}*SharedItemsImports = 5
+		LogCtx\LogCtxShared\LogCtxShared.projitems*{e0724151-fea3-4332-87a9-bc75974a5ad8}*SharedItemsImports = 5
+		LogCtx\NLogShared\NLogShared.projitems*{e0724151-fea3-4332-87a9-bc75974a5ad8}*SharedItemsImports = 5
+		LogCtx\SeriLogShared\SeriLogShared.projitems*{e0724151-fea3-4332-87a9-bc75974a5ad8}*SharedItemsImports = 5
 		LogCtx\NLogShared\NLogShared.projitems*{ebbb11c7-70a0-41d7-a255-5f47e6f30091}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

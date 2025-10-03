@@ -1,7 +1,8 @@
 ﻿// Path: UnitTests/RecentFiles/RecentFilesConfigTests.cs
+using NUnit.Framework;
 using Shouldly;
-using DocXHandler.RecentFiles;
 using System.Configuration;
+using VecTool.Configuration;
 
 namespace UnitTests.RecentFiles
 {

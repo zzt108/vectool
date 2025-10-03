@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic.Logging;
-using NLogShared;
+﻿using NLogShared;
 using oaiUI.RecentFiles;
 using oaiUI.Services;
 using oaiVectorStore;
@@ -77,7 +76,7 @@ namespace oaiUI
         // private Dictionary<string, VectorStoreConfig> _vectorStoreFolders = new Dictionary<string, VectorStoreConfig>();
         // private string _vectorStoreFoldersFilePath; // Path to save the mapping
         // private VectorStoreConfig _vectorStoreConfig;
-        
+
         private IRecentFilesManager _recentFilesManager;
 
         public MainForm()
@@ -419,7 +418,7 @@ namespace oaiUI
 
                     // Select the vector store in the combo box
                     comboBoxVectorStores.SelectedItem = vectorStoreName;
-                    
+
                     if (!string.IsNullOrWhiteSpace(vectorStoreName))
                         SelectVectorStoreAndPersist(vectorStoreName);
 
@@ -452,7 +451,7 @@ namespace oaiUI
             {
 
                 string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
-                VectorStoreConfig? vectorStoreConfig= GetVectorStore(selectedVectorStore);
+                VectorStoreConfig? vectorStoreConfig = GetVectorStore(selectedVectorStore);
                 if (vectorStoreConfig == null)
                 {
                     return;
@@ -567,9 +566,9 @@ namespace oaiUI
 
             string? selectedVectorStore = comboBoxVectorStores.SelectedItem?.ToString();
             VectorStoreConfig? vectorStoreConfig = GetVectorStore(selectedVectorStore);
-            if (vectorStoreConfig == null)  
-            {   
-                return; 
+            if (vectorStoreConfig == null)
+            {
+                return;
             }
 
             using (var saveFileDialog = new SaveFileDialog())

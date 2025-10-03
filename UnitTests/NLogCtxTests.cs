@@ -1,5 +1,6 @@
-﻿using FluentAssertions;
+﻿using Shouldly;
 using NLogShared;
+using NUnit.Framework;
 
 namespace NLogAdapter.Tests
 {
@@ -25,7 +26,7 @@ namespace NLogAdapter.Tests
             var result = nLogCtx.ConfigureXml(ConfigPath);
 
             // Assert
-            result.Should().BeTrue();
+            result.ShouldBeTrue();
         }
 
         [Test]

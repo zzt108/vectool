@@ -1,152 +1,157 @@
-namespace VecTool.Handlers;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using VecTool.Configuration;
-using VecTool.Constants;
-using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
 
-/// <summary>
-/// Handler for converting folder structures to DOCX format with AI-optimized metadata.
-/// </summary>
-public sealed class DocXHandler : FileHandlerBase
+namespace VecTool.Handlers
 {
-    public DocXHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
-        : base(ui, recentFilesManager)
+    public class DocXHandler : FileHandlerBase
     {
-    }
-
-    /// <summary>
-    /// Converts selected folders to a single DOCX file with AI context.
-    /// </summary>
-    public void ConvertSelectedFoldersToDocx(
-        List<string> folderPaths,
-        string outputDocxPath,
-        VectorStoreConfig vectorStoreConfig)
-    {
-        if (folderPaths == null || folderPaths.Count == 0)
-            throw new ArgumentException("No folders provided", nameof(folderPaths));
-
-        if (string.IsNullOrWhiteSpace(outputDocxPath))
-            throw new ArgumentException("Output path required", nameof(outputDocxPath));
-
-        try
+        public DocXHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager) : base(ui, recentFilesManager)
         {
-            _ui?.UpdateStatus("Creating DOCX document...");
-            _log.Info($"Starting DOCX conversion: {folderPaths.Count} folders -> {outputDocxPath}");
 
-            using (var doc = WordprocessingDocument.Create(outputDocxPath, WordprocessingDocumentType.Document))
+        }
+
+        public void ConvertFilesToDocx(string folderPath, string outputPath, VectorStoreConfig vectorStoreConfig)
+        {
+            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
             {
-                var mainPart = doc.AddMainDocumentPart();
-                mainPart.Document = new Document(new Body());
-                var body = mainPart.Document.Body!;
+                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+                mainPart.Document = new Document();
+                Body body = new Body();
+                mainPart.Document.Append(body);
 
-                // Add AI-optimized context at the beginning
-                AddAIOptimizedContext(folderPaths, body, (b, content) =>
-                {
-                    AppendFormattedXmlBlock(b, content);
-                });
+                ProcessFolder(
+                    folderPath,
+                    body,
+                    vectorStoreConfig,
+                    ProcessFile,
+                    WriteFolderName,
+                    WriteFolderEnd);
+            }
+        }
 
-                // Process each folder
-                foreach (var folder in folderPaths)
+        private void ProcessFile(string file, Body body, VectorStoreConfig vectorStoreConfig)
+        {
+            string fileName = Path.GetFileName(file);
+            if (IsFileExcluded(fileName, vectorStoreConfig) || !IsFileValid(file, null))
+            {
+                _log.Trace($"Skipping excluded file: {file}");
+                return;
+            }
+
+            try
+            {
+                string enhancedContent = GetEnhancedFileContent(file);
+
+                var validator = new OpenXmlContentValidator();
+
+                if (!validator.IsValid(enhancedContent))
                 {
-                    ProcessFolder(
-                        folder,
-                        body,
-                        vectorStoreConfig,
-                        ProcessFileToDocx,
-                        WriteFolderNameToDocx,
-                        WriteFolderEndToDocx);
+                    var violations = validator.FindInvalidCharacters(enhancedContent);
+                    var invalidChars = string.Join(", ", violations.Select(c => $"'{(short)c:X}'"));
+                    var ex = new InvalidDataException($"{file} contains invalid characters: {invalidChars}. These are not allowed in DocX.");
+                    _log.Error(ex, $"File contains invalid characters: {file}. These are not allowed in DocX.");
+                    return;
                 }
 
-                mainPart.Document.Save();
-            }
+                string relativePath = Path.GetRelativePath(Path.GetDirectoryName(file), file).Replace('\\', '_');
+                DateTime lastModified = File.GetLastWriteTime(file);
 
-            // Register in recent files
-            if (_recentFilesManager != null)
+                ParagraphProperties fileParagraphProperties = new ParagraphProperties(new ParagraphStyleId() { Val = "Heading 2" });
+                Paragraph fileParagraph = new Paragraph(fileParagraphProperties,
+                    new Run(new Text($"<FileProps path=\"{relativePath}\" last_modified=\"{lastModified}\">")));
+                body.Append(fileParagraph);
+
+                // Paragraph para = new Paragraph(new Run(new Text(content)));
+                // body.Append(para);
+                foreach (var line in enhancedContent.Split(Environment.NewLine))
+                {
+                    Paragraph para = new Paragraph(new Run(new Text(line)));
+                    body.Append(para);
+                }
+
+                body.Append(new Paragraph(new Run(new Text($"</FileProps>"))));
+            }
+            catch (Exception ex)
             {
-                var fi = new FileInfo(outputDocxPath);
-                _recentFilesManager.RegisterGeneratedFile(
-                    outputDocxPath,
-                    RecentFileType.Docx,
-                    folderPaths,
-                    fi.Exists ? fi.Length : 0);
+                throw new Exception($"Error processing file: {file}", ex);
             }
-
-            _ui?.UpdateStatus($"DOCX created: {outputDocxPath}");
-            _log.Info($"DOCX conversion completed: {outputDocxPath}");
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, $"Failed to convert folders to DOCX: {outputDocxPath}");
-            throw;
-        }
-    }
-
-    private void ProcessFileToDocx(string file, Body body, VectorStoreConfig config)
-    {
-        var fileName = Path.GetFileName(file);
-        
-        if (IsFileExcluded(fileName, config))
-        {
-            _log.Trace($"File excluded: {file}");
-            return;
         }
 
-        if (!IsFileValid(file, null))
+        private void WriteFolderName(Body body, string folderName)
         {
-            _log.Trace($"File invalid: {file}");
-            return;
+            ParagraphProperties folderParagraphProperties = new ParagraphProperties(new ParagraphStyleId() { Val = "Heading 1" });
+            Paragraph folderParagraph = new Paragraph(folderParagraphProperties, new Run(new Text(folderName)));
+            body.Append(folderParagraph);
         }
 
-        try
+        private void WriteFolderEnd(Body body)
         {
-            var content = PathHelpers.SafeReadAllText(file);
-            var ext = Path.GetExtension(file);
-
-            // File name tag
-            body.Append(new Paragraph(new Run(new Text(
-                TagBuilder.SelfClosing(
-                    Tags.File,
-                    TagBuilder.BuildFileNameTag(fileName),
-                    TagBuilder.BuildExtensionTag(ext))))));
-
-            // File content
-            body.Append(new Paragraph(new Run(new Text(content))));
-
-            _log.Trace($"Processed file: {fileName}");
+            body.Append(new Paragraph(new Run(new Text($"</Folder>"))));
         }
-        catch (Exception ex)
+
+        public void ConvertSelectedFoldersToDocx(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
         {
-            _log.Error(ex, $"Error processing file: {file}");
-        }
-    }
+            try
+            {
+                _ui?.WorkStart("To Docx", folderPaths);
+                int work = 0;
+                try
+                {
+                    using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(outputPath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
+                    {
+                        MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+                        mainPart.Document = new Document();
+                        Body body = new Body();
+                        mainPart.Document.Append(body);
 
-    private void WriteFolderNameToDocx(Body body, string folderName)
-    {
-        body.Append(new Paragraph(new Run(new Text(
-            TagBuilder.OpenWith(Tags.Folder, TagBuilder.BuildFolderNameTag(folderName))))));
-    }
+                        // Add AI-optimized context at the beginning
+                        AddAIOptimizedContext(folderPaths, body, (bodyContext, content) => {
+                            foreach (var line in content.Split(Environment.NewLine))
+                            {
+                                Paragraph para = new Paragraph(new Run(new Text(line)));
+                                bodyContext.Append(para);
+                            }
+                        });
 
-    private void WriteFolderEndToDocx(Body body)
-    {
-        body.Append(new Paragraph(new Run(new Text(TagBuilder.Close(Tags.Folder)))));
-    }
+                        foreach (var folderPath in folderPaths)
+                        {
+                            // Update the UI status for the current folder
+                            // _ui?.UpdateStatus($"Processing folder: {folderPath}");
 
-    private void AppendFormattedXmlBlock(Body body, string xmlContent)
-    {
-        if (string.IsNullOrWhiteSpace(xmlContent))
-            return;
+                            _ui?.UpdateProgress(work++);
+                            ProcessFolder(
+                                folderPath,
+                                body,
+                                vectorStoreConfig,
+                                ProcessFile,
+                                WriteFolderName,
+                                WriteFolderEnd);
+                        }
+                    }
+                    if (_recentFilesManager != null && File.Exists(outputPath))
+                    {
+                        var fileInfo = new FileInfo(outputPath);
+                        _recentFilesManager.RegisterGeneratedFile(
+                            outputPath,
+                            RecentFileType.Docx,
+                            folderPaths,
+                            fileInfo.Length
+                        );
+                    }
 
-        foreach (var line in xmlContent.Split('\n'))
-        {
-            body.Append(new Paragraph(new Run(new Text(line.TrimEnd()))));
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error processing folder: {folderPaths}", ex);
+                    // _log.Error(ex, $"Error processing folder: {folderPaths}"); 
+                }
+            }
+            finally
+            {
+                _ui?.WorkFinish();
+            }
         }
     }
 }

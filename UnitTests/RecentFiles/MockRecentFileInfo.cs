@@ -1,4 +1,5 @@
-﻿using DocXHandler.RecentFiles;
+﻿
+using VecTool.RecentFiles;
 
 namespace UnitTests.UI.RecentFiles
 {

@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using Shouldly;
+using LogCtxShared;
+using NUnit.Framework;
 using SeriLogShared;
 
 namespace SeriLogAdapter.Tests
@@ -6,21 +8,21 @@ namespace SeriLogAdapter.Tests
     [TestFixture]
     public class SeriLogCtxTests
     {
-        private const string ConfigPathJson = "Config/SeriLogConfig.json";
-        private const string ConfigPathXml = "Config/SeriLogConfig.xml";
+        private const string ConfigPathJson = "Config/LogConfig.json";
+        private const string ConfigPathXml = "Config/LogConfig.xml";
 
         [SetUp]
         public void Setup()
         {
-            // Setup any required environment configuration for tests
-            // Log.Logger = new LoggerConfiguration()
+            // Setup any required environment configuration for tests, e.g., setting up a logger
+            //Log.Logger = new LoggerConfiguration()
             //    .MinimumLevel.Debug()
             //    .WriteTo.Console()
             //    .CreateLogger();
         }
 
         [Test]
-        public void ConfigureJson_ShouldReadConfigurationFile()
+        public void Configure_ShouldReadConfigurationFile()
         {
             // Arrange
             var seriLogCtx = new CtxLogger();
@@ -29,53 +31,27 @@ namespace SeriLogAdapter.Tests
             var result = seriLogCtx.ConfigureJson(ConfigPathJson);
 
             // Assert
-            result.Should().BeTrue();
+            result.ShouldBeTrue();
         }
 
         [Test]
-        public void ConfigureXml_ShouldReadConfigurationFile()
+        public void CanDoStructuredLog()
         {
-            // Arrange
-            var seriLogCtx = new CtxLogger();
-
-            // Act
-            var result = seriLogCtx.ConfigureXml(ConfigPathXml);
-
-            // Assert
-            result.Should().BeTrue();
-        }
-
-        [Test]
-        public void CanDoStructuredLog_ShouldLogMessagesCorrectly()
-        {
-            // Arrange
             Serilog.Debugging.SelfLog.Enable(msg => Console.Error.WriteLine(msg));
-            using var log = new CtxLogger();
-            log.ConfigureXml(ConfigPathXml);
-            var props = new LogCtxShared.Props("first", log);
-
-            // Act
-            log.Ctx.Set(props);
-            log.Debug("Debug message");
-            log.Fatal(new ArgumentException("Test Fatal Argument Exception", "Param name"), "Fatal message");
-            log.Error(new ArgumentException("Test Argument Exception", "Param name"), "Error message");
-
-            // Assert
-            // Here you could verify the log output if you had a way to capture it
-        }
-
-        [Test]
-        public void Dispose_ShouldFlushLogs()
-        {
             // Arrange
             using var log = new CtxLogger();
-            log.ConfigureJson(ConfigPathJson);
+            var result = log.ConfigureXml(ConfigPathXml);
 
             // Act
-            log.Dispose();
+            log.Ctx.Set(new Props("first", result, log));
+            log.Debug("Debug");
+            log.Fatal(new ArgumentException("Test Fatal Argument Exception", "Param name"), "Fatal");
+            log.Error(new ArgumentException("Test Argument Exception", "Param name"), "Error");
 
             // Assert
-            // Check if logs are flushed, could be done by checking log output if possible
+            // Log.CloseAndFlush();
         }
+
+        // Additional tests can be written to cover more functionality as needed.
     }
 }

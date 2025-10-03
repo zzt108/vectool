@@ -3,8 +3,9 @@ using Shouldly;
 using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
-using DocXHandler;
-using Constants; // Add this using
+using VecTool.Configuration;
+using VecTool.Handlers;
+using VecTool.Constants;
 
 namespace DocXHandlerTests
 {
@@ -13,7 +14,7 @@ namespace DocXHandlerTests
     {
         private string root;
         private string outDocx;
-        private VectorStoreConfig config = new VectorStoreConfig();
+        private VectorStoreConfig config = new();
 
         [SetUp]
         public void Setup()
@@ -50,7 +51,7 @@ namespace DocXHandlerTests
         [Test]
         public void DocxShouldContainTableOfContents()
         {
-            var handler = new DocXHandler.DocXHandler(null, null);
+            var handler = new DocXHandler(null, null);
             var folders = Directory.GetDirectories(root).ToList();
             handler.ConvertSelectedFoldersToDocx(folders, outDocx, config);
 

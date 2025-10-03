@@ -1,5 +1,7 @@
-﻿using Shouldly;
-using DocXHandler.RecentFiles;
+﻿using NUnit.Framework;
+using Shouldly;
+using VecTool.Configuration;
+using VecTool.RecentFiles;
 
 namespace UnitTests.RecentFiles
 {

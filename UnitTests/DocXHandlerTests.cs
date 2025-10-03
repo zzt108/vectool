@@ -1,6 +1,8 @@
-﻿﻿using FluentAssertions;
+﻿using Shouldly;
 using DocumentFormat.OpenXml.Packaging;
-using DocXHandler;
+using NUnit.Framework;
+using VecTool.Configuration;
+using VecTool.Handlers;
 
 namespace DocXHandlerTests
 {
@@ -10,9 +12,9 @@ namespace DocXHandlerTests
         private string testFolderPath = "";
         private string outputDocxPath = "";
 
-        private VectorStoreConfig vectorStoreConfig = new VectorStoreConfig();
+        private VectorStoreConfig vectorStoreConfig = new();
 
-        private DocXHandler.DocXHandler docXHandler;
+        private VecTool.Handlers.DocXHandler docXHandler;
 
         [SetUp]
         public void Setup()
@@ -25,7 +27,7 @@ namespace DocXHandlerTests
             outputDocxPath = Path.Combine(testFolderPath, "output.docx");
             
             // Initialize DocXHandler instance
-            docXHandler = new DocXHandler.DocXHandler(null, null);
+            docXHandler = new DocXHandler(null, null);
         }
 
         [Test]
@@ -43,17 +45,17 @@ namespace DocXHandlerTests
             docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
-            File.Exists(outputDocxPath).Should().BeTrue();
+            File.Exists(outputDocxPath).ShouldBeTrue();
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
-                body?.ChildElements.Count.Should().BeGreaterThan(5); // Expecting at least one element
-                body?.FirstChild?.InnerText.Should().Be("DocXHandlerTests"); // Check if the folder name is correct
-                body?.LastChild?.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
-                body?.InnerText.Should().Contain("Content of file 1"); // Check if the content is included
-                body?.InnerText.Should().Contain("Content of file 2"); // Check if the content is included
-                body?.InnerText.Should().Contain("Content of file 3"); // Check if the content is included
+                body?.ChildElements.Count.ShouldBeGreaterThan(5); // Expecting at least one element
+                body?.FirstChild?.InnerText.ShouldBeGreaterThan("DocXHandlerTests"); // Check if the folder name is correct
+                body?.LastChild?.InnerText.ShouldContain("</Folder>"); // Check if the folder tag is included
+                body?.InnerText.ShouldContain("Content of file 1"); // Check if the content is included
+                body?.InnerText.ShouldContain("Content of file 2"); // Check if the content is included
+                body?.InnerText.ShouldContain("Content of file 3"); // Check if the content is included
             }
         }
 
@@ -74,13 +76,13 @@ namespace DocXHandlerTests
             docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
-            File.Exists(outputDocxPath).Should().BeTrue();
+            File.Exists(outputDocxPath).ShouldBeTrue();
 
             // Check if the document is empty
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
-                body?.ChildElements.Count.Should().Be(2); // Folder tags added
+                body?.ChildElements.Count.ShouldBe(2); // Folder tags added
             }
         }
 
@@ -95,15 +97,15 @@ namespace DocXHandlerTests
             docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
-            File.Exists(outputDocxPath).Should().BeTrue();
+            File.Exists(outputDocxPath).ShouldBeTrue();
 
             // Check if the document is empty
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
-                body?.ChildElements.Count.Should().Be(2); // Expecting an empty document, folder tags added
-                body?.FirstChild?.InnerText.Should().Be("DocXHandlerTests"); // Check if the folder name is correct
-                body?.LastChild?.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
+                body?.ChildElements.Count.ShouldBe(2); // Expecting an empty document, folder tags added
+                body?.FirstChild?.InnerText.ShouldBe("DocXHandlerTests"); // Check if the folder name is correct
+                body?.LastChild?.InnerText.ShouldContain("</Folder>"); // Check if the folder tag is included
             }
             /*
             The reason why the test case ConvertFilesToDocx_EmptyFolder_ShouldCreateEmptyDocx expects body.ChildElements.Count.Should().Be(2); 
@@ -126,15 +128,15 @@ namespace DocXHandlerTests
             docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
-            File.Exists(outputDocxPath).Should().BeTrue();
+            File.Exists(outputDocxPath).ShouldBeTrue();
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
-                body?.ChildElements.Count.Should().BeGreaterThan(3); // Expecting at least one element
-                body?.FirstChild?.InnerText.Should().Be("DocXHandlerTests"); // Check if the folder name is correct
-                body?.LastChild?.InnerText.Should().Contain("</Folder>"); // Check if the folder tag is included
-                body?.InnerText.Should().Contain("Hello, World!"); // Check if the content is included
+                body?.ChildElements.Count.ShouldBeGreaterThan(3); // Expecting at least one element
+                body?.FirstChild?.InnerText.ShouldBe("DocXHandlerTests"); // Check if the folder name is correct
+                body?.LastChild?.InnerText.ShouldContain("</Folder>"); // Check if the folder tag is included
+                body?.InnerText.ShouldContain("Hello, World!"); // Check if the content is included
             }
         }
 
@@ -149,12 +151,12 @@ namespace DocXHandlerTests
             docXHandler.ConvertFilesToDocx(testFolderPath, outputDocxPath, vectorStoreConfig);
 
             // Assert
-            File.Exists(outputDocxPath).Should().BeTrue();
+            File.Exists(outputDocxPath).ShouldBeTrue();
 
             using (var doc = WordprocessingDocument.Open(outputDocxPath, false))
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
-                body?.ChildElements.Count.Should().Be(2); // Expecting an empty document
+                body?.ChildElements.Count.ShouldBe(2); // Expecting an empty document
             }
         }
     }

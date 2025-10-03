@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using Constants;
+using VecTool.Constants;
 
 namespace DocXHandlerTests
 {
