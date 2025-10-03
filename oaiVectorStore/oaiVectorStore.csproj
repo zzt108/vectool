@@ -4,6 +4,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenAI" Version="2.5.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Constants\Constants.csproj" />
@@ -12,5 +15,7 @@
     <ProjectReference Include="..\Handlers\Handlers.csproj" />
     <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
     <ProjectReference Include="..\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\Utils\Utils.csproj" />
   </ItemGroup>
+
 </Project>
