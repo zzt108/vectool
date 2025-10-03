@@ -31,11 +31,15 @@ namespace VecTool.UnitTests
             @"..\RecentFiles\RecentFiles.csproj",
             @"..\Configuration\Configuration.csproj",
         })]
+
+        // Todo: Utilize mocking in tests more efficiently
+        // TODO: Constants project should be utilized in unit tests
         [TestCase("UnitTests\\UnitTests.csproj", new[]
         {
             @"..\Constants\Constants.csproj",
-            @"..\Core\Core.csproj",
-            @"..\Log\Log.csproj",
+//            @"LogCtxShared.csproj",
+//            @"NlogShared.csproj",
+//            @"SerilogShared.csproj",
             @"..\Handlers\Handlers.csproj",
             @"..\RecentFiles\RecentFiles.csproj",
             @"..\Configuration\Configuration.csproj",

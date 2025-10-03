@@ -15,6 +15,7 @@
   <Import Project="..\LogCtx\NLogShared\NLogShared.projitems" Label="Shared" />
 
   <ItemGroup>
+	  <ProjectReference Include="..\Constants\Constants.csproj" />
 	  <ProjectReference Include="..\OaiUI\oaiUI.csproj" />
 	  <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
 	  <ProjectReference Include="..\Configuration\Configuration.csproj" />
