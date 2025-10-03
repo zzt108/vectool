@@ -2,6 +2,8 @@ using oaiUI;
 
 namespace oai
 {
+    // TODO: refactoring: Reimplement version numbering system from last Vectool version before refactor
+    // TODO: Convert to  single file could do get git changes automatically paralell.
     internal static class Program
     {
         /// <summary>

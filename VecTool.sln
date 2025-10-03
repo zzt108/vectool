@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "oaiUI", "OaiUI\oaiUI.csproj", "{AB47A1CC-420B-431A-B6AB-A156D39DA7CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vectool.UI", "OaiUI\Vectool.UI.csproj", "{AB47A1CC-420B-431A-B6AB-A156D39DA7CA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "oaiVectorStore", "oaiVectorStore\oaiVectorStore.csproj", "{FA85A0C7-AAF3-4D73-960A-FEAD95812ED3}"
 EndProject

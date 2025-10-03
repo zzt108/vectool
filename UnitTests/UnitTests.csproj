@@ -16,7 +16,7 @@
 
   <ItemGroup>
 	  <ProjectReference Include="..\Constants\Constants.csproj" />
-	  <ProjectReference Include="..\OaiUI\oaiUI.csproj" />
+	  <ProjectReference Include="..\OaiUI\Vectool.UI.csproj" />
 	  <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
 	  <ProjectReference Include="..\Configuration\Configuration.csproj" />
 	  <ProjectReference Include="..\Handlers\Handlers.csproj" />
