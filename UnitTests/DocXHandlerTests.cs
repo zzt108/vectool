@@ -51,7 +51,7 @@ namespace DocXHandlerTests
             {
                 var body = doc?.MainDocumentPart?.Document.Body;
                 body?.ChildElements.Count.ShouldBeGreaterThan(5); // Expecting at least one element
-                body?.FirstChild?.InnerText.ShouldBeGreaterThan("DocXHandlerTests"); // Check if the folder name is correct
+                body?.FirstChild?.InnerText.ShouldContain("DocXHandlerTests"); // Check if the folder name is correct
                 body?.LastChild?.InnerText.ShouldContain("</Folder>"); // Check if the folder tag is included
                 body?.InnerText.ShouldContain("Content of file 1"); // Check if the content is included
                 body?.InnerText.ShouldContain("Content of file 2"); // Check if the content is included
