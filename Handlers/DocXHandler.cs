@@ -1,6 +1,7 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using VecTool.Configuration;
+using VecTool.Handlers.Validators;
 using VecTool.RecentFiles;
 
 namespace VecTool.Handlers

@@ -1,4 +1,4 @@
-﻿namespace DocXHandler
+﻿namespace VecTool.Handlers.Validators
 {
     public class OpenXmlContentValidator : IDocumentContentValidator
     {
@@ -28,3 +28,4 @@
         }
     }
 }
+

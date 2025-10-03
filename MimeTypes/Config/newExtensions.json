@@ -1,8 +1,0 @@
-{
-  "Obsolete, files are stored in docx containers": "Obsolete",
-  ".cs": ".cs.md",
-  ".csproj": ".csproj.md",
-  ".feature": ".feature.md",
-  ".xaml": ".xaml.md",
-  ".xml": ".xml.md"
-}
