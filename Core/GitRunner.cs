@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using NLogS = NLogShared;
 
-namespace Core
+namespace VecTool.Core
 {
     /// <summary>
     /// Async git command runner to avoid StandardOutput deadlocks.

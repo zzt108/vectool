@@ -1,7 +1,7 @@
 ﻿// Path: Constants/TestStrings.cs
 using System;
 
-namespace Constants
+namespace VecTool.Constants
 {
     /// <summary>
     /// Test-only strings for unit and integration tests to avoid inlined literals.

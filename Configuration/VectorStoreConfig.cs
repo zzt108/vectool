@@ -1,10 +1,11 @@
 namespace VecTool.Configuration;
 
+using NLogShared;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NLogS;
+//using NLogS;
 
 /// <summary>
 /// Configuration for vector store operations, including file exclusions.

@@ -1,7 +1,7 @@
 ﻿// Path: Constants/Tags.cs
 using System;
 
-namespace Constants
+namespace VecTool.Constants
 {
     /// <summary>
     /// Core XML-like tag and attribute-format constants for document generation and metadata payloads.

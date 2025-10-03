@@ -1,8 +1,8 @@
 ﻿namespace VecTool.Configuration;
 
+using NLogShared;
 using System;
 using System.IO;
-using NLogS;
 
 /// <summary>
 /// Configuration for recent files feature.

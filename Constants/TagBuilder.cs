@@ -2,7 +2,7 @@
 using System;
 using System.Text;
 
-namespace Constants
+namespace VecTool.Constants
 {
     /// <summary>
     /// Helper for building formatted tags with proper XML-attribute escaping.

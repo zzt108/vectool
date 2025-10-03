@@ -1,7 +1,9 @@
 ﻿// Path: Constants/Attributes.cs
+
+// Path: Constants/Attributes.cs
 using System;
 
-namespace Constants
+namespace VecTool.Constants
 {
     /// <summary>
     /// XML-like attribute name constants used throughout the payloads (name-only, not formatted fragments).

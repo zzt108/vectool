@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Configuration\Configuration.csproj" />
-    <ProjectReference Include="..\Utils\Utils.csproj" />
     <ProjectReference Include="..\Constants\Constants.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
+    <ProjectReference Include="..\Utils\Utils.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,7 +19,7 @@
     <PackageReference Include="itext7" Version="8.0.3" />
     <PackageReference Include="itext7.pdfhtml" Version="5.0.3" />
     <PackageReference Include="Markdig" Version="0.37.0" />
-    <PackageReference Include="NLog" Version="5.3.2" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.9" />
   </ItemGroup>
 
 </Project>

@@ -1,10 +1,11 @@
 namespace VecTool.Handlers;
 
+using NLogShared;
 using System;
+using VecTool.Configuration;
 using VecTool.Handlers.Analysis;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
-using NLogS;
 
 /// <summary>
 /// Base class for all file format handlers (DOCX, MD, PDF, Git).

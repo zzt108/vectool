@@ -53,7 +53,7 @@ public sealed class GitChangesHandler : FileHandlerBase
 
             foreach (var folderPath in folderPaths)
             {
-                if (GitRunner.IsGitRepository(folderPath))
+                if (Core.GitRunner.IsGitRepository(folderPath))
                 {
                     await ProcessGitRepositoryAsync(folderPath, outputPath, allChanges, processedRepos);
                 }
@@ -116,7 +116,7 @@ public sealed class GitChangesHandler : FileHandlerBase
             var statusChanges = await gitRunner.GetStatusAsync();
             mainChanges.AppendLine("### Status Changes");
             mainChanges.AppendLine();
-            mainChanges.AppendLine("```
+            mainChanges.AppendLine("```");
             mainChanges.AppendLine(statusChanges);
             mainChanges.AppendLine("```");
             mainChanges.AppendLine();
@@ -125,7 +125,7 @@ public sealed class GitChangesHandler : FileHandlerBase
             var diffChanges = await gitRunner.GetDiffAsync();
             mainChanges.AppendLine("### Diff Changes");
             mainChanges.AppendLine();
-            mainChanges.AppendLine("```
+            mainChanges.AppendLine("```");
             mainChanges.AppendLine(diffChanges);
             mainChanges.AppendLine("```");
             mainChanges.AppendLine();
@@ -180,7 +180,7 @@ public sealed class GitChangesHandler : FileHandlerBase
 
                                 submoduleChanges.AppendLine("### Status Changes");
                                 submoduleChanges.AppendLine();
-                                submoduleChanges.AppendLine("```
+                                submoduleChanges.AppendLine("```");
                                 submoduleChanges.AppendLine(submoduleStatus);
                                 submoduleChanges.AppendLine("```");
                                 submoduleChanges.AppendLine();
@@ -188,7 +188,7 @@ public sealed class GitChangesHandler : FileHandlerBase
                                 var submoduleDiff = await submoduleRunner.GetDiffAsync();
                                 submoduleChanges.AppendLine("### Diff Changes");
                                 submoduleChanges.AppendLine();
-                                submoduleChanges.AppendLine("```
+                                submoduleChanges.AppendLine("```");
                                 submoduleChanges.AppendLine(submoduleDiff);
                                 submoduleChanges.AppendLine("```");
                                 submoduleChanges.AppendLine();
