@@ -1,508 +1,439 @@
-﻿using System;
+﻿// Path: OaiUI/RecentFiles/RecentFilesPanel.cs
+#nullable enable
+
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using VecTool.Configuration;
 using VecTool.RecentFiles;
-using NLogS = NLogShared;
+// Explicit alias to avoid ambiguity with System.Threading.Timer
+using WinFormsTimer = System.Windows.Forms.Timer;
 
 namespace oaiUI.RecentFiles
 {
     /// <summary>
-    /// VS Code-styled panel for displaying and managing recent files.
-    /// Supports drag-and-drop for file operations and context menu for file management.
+    /// Recent Files tab user control with filter, refresh and persisted column widths.
+    /// Also increases row height by 10% for readability and applies a dark theme.
     /// </summary>
     public partial class RecentFilesPanel : UserControl
     {
-        private readonly NLogShared.CtxLogger log = new();
-        private readonly IRecentFilesManager? recentFilesManager;
-        private List<RecentFileInfo> currentFiles = new();
-        private ContextMenuStrip contextMenu = null!;
+        private const double DefaultRowHeightScale = 1.10;
 
-        public RecentFilesPanel(IRecentFilesManager? manager = null)
+        // Not readonly: designer creates the control, MainForm initializes it later if needed.
+        private IRecentFilesManager? recentFilesManager;
+        private readonly string? uiStateDirectory;
+
+        // Debounce saving column widths during resize operations.
+        private readonly WinFormsTimer saveDebounceTimer = new WinFormsTimer { Interval = 300 };
+
+        private ImageList? rowHeightImageList;
+
+        // Parameterless constructor required by Designer and used by MainForm Designer loader.
+        public RecentFilesPanel()
         {
-            recentFilesManager = manager;
             InitializeComponent();
             SetupListView();
-            ApplyVSCodeTheme();
-            SetupDragDrop();
-            SetupContextMenu();
-        }
-        
-        /// <summary>
-        /// Initializes the panel with a recent files manager after construction.
-        /// Required because the panel is created by the Designer.
-        /// </summary>
-        public void Initialize(IRecentFilesManager manager)
-        {
-            if (manager == null)
-                throw new ArgumentNullException(nameof(manager));
+            ApplyRowHeightScale();
+            ApplyThemeDark(); // Dark theme by default
+            WireDragDrop();   // Enable drag-and-drop
+            LoadLayout();
 
-            // Store the manager reference
-            var fieldInfo = this.GetType().GetField("recentFilesManager",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-            if (fieldInfo != null)
+            if (lvRecentFiles != null)
             {
-                fieldInfo.SetValue(this, manager);
+                lvRecentFiles.ColumnWidthChanged += OnColumnWidthChanged;
             }
 
-            // Initial refresh
+            saveDebounceTimer.Tick += (_, __) =>
+            {
+                saveDebounceTimer.Stop();
+                SaveLayout();
+            };
+        }
+
+        // Preferred constructor for DI/tests with optional UI state directory.
+        public RecentFilesPanel(IRecentFilesManager recentFilesManager, string? uiStateDirectory = null)
+        {
+            this.recentFilesManager = recentFilesManager ?? throw new ArgumentNullException(nameof(recentFilesManager));
+            this.uiStateDirectory = uiStateDirectory;
+
+            InitializeComponent();
+            SetupListView();
+            ApplyRowHeightScale();
+            ApplyThemeDark(); // Dark theme by default
+            WireDragDrop();   // Enable drag-and-drop
+            LoadLayout();
+
+            if (lvRecentFiles != null)
+            {
+                lvRecentFiles.ColumnWidthChanged += OnColumnWidthChanged;
+            }
+
+            saveDebounceTimer.Tick += (_, __) =>
+            {
+                saveDebounceTimer.Stop();
+                SaveLayout();
+            };
+        }
+
+        // Public API used by MainForm when the panel is created by the Designer.
+        public void Initialize(IRecentFilesManager manager)
+        {
+            recentFilesManager = manager ?? throw new ArgumentNullException(nameof(manager));
+            LoadLayout();
             RefreshList();
         }
 
-        /// <summary>
-        /// Refreshes the list from the manager.
-        /// </summary>
+        // Public API used by MainForm and tests to reload items.
         public void RefreshList()
         {
+            if (lvRecentFiles is null)
+            {
+                return;
+            }
+
+            lvRecentFiles.BeginUpdate();
             try
             {
-                if (recentFilesManager == null)
+                lvRecentFiles.Items.Clear();
+
+                IEnumerable<RecentFileInfo> items = recentFilesManager?.GetRecentFiles() ?? Array.Empty<RecentFileInfo>();
+                var filter = txtFilter?.Text?.Trim();
+
+                if (!string.IsNullOrWhiteSpace(filter))
                 {
-                    log.Warn("RecentFilesManager is null, cannot refresh.");
-                    return;
+                    items = items
+                        .Where(f => f.FileName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0);
                 }
 
-                currentFiles = recentFilesManager.GetRecentFiles().ToList();
-                ApplyFilterAndPopulateListView();
+                foreach (var f in items)
+                {
+                    var item = new ListViewItem(f.FileName)
+                    {
+                        Tag = f
+                    };
+
+                    // Columns: File, Type, Size (in KB with one decimal), Generated
+                    item.SubItems.Add(f.FileType.ToString());
+                    item.SubItems.Add($"{(f.FileSizeBytes / 1024.0):0.0} KB");
+                    item.SubItems.Add(f.GeneratedAt.ToString("yyyy-MM-dd HH:mm"));
+
+                    if (!f.Exists)
+                    {
+                        item.ForeColor = Color.Gray;
+                        item.Font = new Font(lvRecentFiles.Font, FontStyle.Italic);
+                    }
+
+                    lvRecentFiles.Items.Add(item);
+                }
+
+                lblStatus.Text = $"{lvRecentFiles.Items.Count} files";
             }
-            catch (Exception ex)
+            finally
             {
-                log.Error(ex, "Failed to refresh recent files list.");
-                MessageBox.Show($"Error refreshing list: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lvRecentFiles.EndUpdate();
             }
+        }
+
+        // Designer-wired events
+        private void txtFilterTextChanged(object? sender, EventArgs e)
+        {
+            RefreshList();
+        }
+
+        private void btnRefreshClick(object? sender, EventArgs e)
+        {
+            RefreshList();
+        }
+
+        private void RecentFilesPanelLoad(object? sender, EventArgs e)
+        {
+            RefreshList();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                try
+                {
+                    // Dispose Designer container declared in the partial Designer file.
+                    components?.Dispose();
+
+                    if (lvRecentFiles != null)
+                    {
+                        lvRecentFiles.ColumnWidthChanged -= OnColumnWidthChanged;
+                        lvRecentFiles.DragEnter -= OnListViewDragEnter;
+                        lvRecentFiles.DragDrop -= OnListViewDragDrop;
+                        SaveLayout();
+                    }
+
+                    rowHeightImageList?.Dispose();
+                    saveDebounceTimer.Dispose();
+                }
+                catch
+                {
+                    // Defensive: never crash UI during Dispose
+                }
+            }
+
+            base.Dispose(disposing);
         }
 
         private void SetupListView()
         {
+            if (lvRecentFiles is null) return;
+
             lvRecentFiles.View = View.Details;
             lvRecentFiles.FullRowSelect = true;
             lvRecentFiles.GridLines = true;
             lvRecentFiles.MultiSelect = true;
-            lvRecentFiles.AllowColumnReorder = false;
-            lvRecentFiles.HideSelection = false;
 
-            // Define columns
-            lvRecentFiles.Columns.Add("Name", 250);
-            lvRecentFiles.Columns.Add("Generated", 150);
-            lvRecentFiles.Columns.Add("Size", 80);
-            lvRecentFiles.Columns.Add("Type", 80);
-            lvRecentFiles.Columns.Add("Source Folders", 200);
-        }
-
-        /// <summary>
-        /// Setup drag-and-drop event handlers.
-        /// </summary>
-        private void SetupDragDrop()
-        {
-            lvRecentFiles.ItemDrag += LvRecentFilesItemDrag;
-            lvRecentFiles.MouseDown += LvRecentFilesMouseDown;
-        }
-
-        /// <summary>
-        /// Setup context menu for file operations.
-        /// </summary>
-        private void SetupContextMenu()
-        {
-            contextMenu = new ContextMenuStrip();
-
-            // Open file (NO shortcut key - handled via KeyDown)
-            var openItem = new ToolStripMenuItem("Open (Enter)", null, OpenFile_Click);
-            contextMenu.Items.Add(openItem);
-
-            contextMenu.Items.Add(new ToolStripSeparator());
-
-            // Show in Explorer
-            var explorerItem = new ToolStripMenuItem("Show in File Explorer", null, ShowInExplorer_Click);
-            explorerItem.ShortcutKeys = Keys.Control | Keys.E;
-            contextMenu.Items.Add(explorerItem);
-
-            // Copy path
-            var copyPathItem = new ToolStripMenuItem("Copy Path", null, CopyPath_Click);
-            copyPathItem.ShortcutKeys = Keys.Control | Keys.Shift | Keys.C;
-            contextMenu.Items.Add(copyPathItem);
-
-            contextMenu.Items.Add(new ToolStripSeparator());
-
-            // Delete file (NO shortcut key - handled via KeyDown)
-            var deleteItem = new ToolStripMenuItem("Delete (Del)", null, DeleteFile_Click);
-            deleteItem.ForeColor = Color.Red;
-            contextMenu.Items.Add(deleteItem);
-
-            // Assign to ListView
-            lvRecentFiles.ContextMenuStrip = contextMenu;
-
-            // Handle opening event to enable/disable items
-            contextMenu.Opening += ContextMenu_Opening;
-
-            // Handle keyboard shortcuts for Enter and Delete
-            lvRecentFiles.KeyDown += LvRecentFiles_KeyDown;
-        }
-
-        /// <summary>
-        /// Handle Enter and Delete key presses on ListView.
-        /// </summary>
-        private void LvRecentFiles_KeyDown(object? sender, KeyEventArgs e)
-        {
-            switch (e.KeyCode)
+            // Create columns once if not defined by designer.
+            if (lvRecentFiles.Columns.Count == 0)
             {
-                case Keys.Enter:
-                    OpenFile_Click(this, EventArgs.Empty);
-                    e.Handled = true;
-                    break;
-
-                case Keys.Delete:
-                    DeleteFile_Click(this, EventArgs.Empty);
-                    e.Handled = true;
-                    break;
+                lvRecentFiles.Columns.Add(new ColumnHeader { Text = "File", Width = 400, Name = "colFile" });
+                lvRecentFiles.Columns.Add(new ColumnHeader { Text = "Type", Width = 120, Name = "colType", TextAlign = HorizontalAlignment.Left });
+                lvRecentFiles.Columns.Add(new ColumnHeader { Text = "Size", Width = 120, Name = "colSize", TextAlign = HorizontalAlignment.Right });
+                lvRecentFiles.Columns.Add(new ColumnHeader { Text = "Generated", Width = 220, Name = "colGenerated", TextAlign = HorizontalAlignment.Left });
             }
         }
 
-        /// <summary>
-        /// Enable/disable context menu items based on selection and file existence.
-        /// </summary>
-        private void ContextMenu_Opening(object? sender, CancelEventArgs e)
+        private void ApplyRowHeightScale()
         {
-            var selectedFiles = GetSelectedRecentFiles();
-            bool hasSelection = selectedFiles.Count > 0;
-            bool allExist = selectedFiles.All(f => f.Exists);
+            if (lvRecentFiles is null) return;
 
-            // Enable/disable items based on selection and file existence
-            foreach (ToolStripMenuItem item in contextMenu.Items.OfType<ToolStripMenuItem>())
+            var state = UiStateConfig.Load(uiStateDirectory);
+            var scale = state.RecentFilesRowHeightScale ?? DefaultRowHeightScale;
+
+            var baseHeight = lvRecentFiles.Font.Height + 6;
+            var desired = (int)Math.Ceiling(baseHeight * scale);
+
+            rowHeightImageList?.Dispose();
+            rowHeightImageList = new ImageList
             {
-                if (item.Text.StartsWith("Open") || item.Text.StartsWith("Show in File Explorer"))
+                ImageSize = new Size(1, Math.Max(desired, 18))
+            };
+            lvRecentFiles.SmallImageList = rowHeightImageList;
+        }
+
+        private void OnColumnWidthChanged(object? sender, ColumnWidthChangedEventArgs e)
+        {
+            // Debounce disk writes while resizing.
+            saveDebounceTimer.Stop();
+            saveDebounceTimer.Start();
+        }
+
+        private void LoadLayout()
+        {
+            if (lvRecentFiles is null) return;
+
+            var state = UiStateConfig.Load(uiStateDirectory);
+            var widths = state.RecentFilesColumnWidths;
+
+            if (widths is null || widths.Count == 0)
+            {
+                // No prior state: autosize as a reasonable default for existing content.
+                TryAutoSizeColumns();
+                return;
+            }
+
+            foreach (ColumnHeader col in lvRecentFiles.Columns)
+            {
+                if (widths.TryGetValue(col.Text, out var w) && w > 0)
                 {
-                    item.Enabled = hasSelection && allExist;
-                }
-                else if (item.Text.StartsWith("Copy Path"))
-                {
-                    item.Enabled = hasSelection;
-                }
-                else if (item.Text.StartsWith("Delete"))
-                {
-                    item.Enabled = hasSelection && allExist;
+                    col.Width = w;
                 }
             }
         }
 
-        /// <summary>
-        /// Open selected files with default application.
-        /// </summary>
-        private void OpenFile_Click(object? sender, EventArgs e)
+        private void SaveLayout()
         {
-            var selectedFiles = GetSelectedRecentFiles();
-            foreach (var file in selectedFiles.Where(f => f.Exists))
+            if (lvRecentFiles is null) return;
+
+            var current = UiStateConfig.Load(uiStateDirectory);
+            var map = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (ColumnHeader col in lvRecentFiles.Columns)
             {
-                try
+                map[col.Text] = col.Width;
+            }
+
+            current.RecentFilesColumnWidths = map;
+            current.RecentFilesRowHeightScale = DefaultRowHeightScale;
+            UiStateConfig.Save(current, uiStateDirectory);
+        }
+
+        private void TryAutoSizeColumns()
+        {
+            if (lvRecentFiles is null) return;
+            try
+            {
+                foreach (ColumnHeader col in lvRecentFiles.Columns)
                 {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = file.FilePath,
-                        UseShellExecute = true
-                    });
-                    log.Info($"Opened file: {file.FilePath}");
+                    col.Width = -2; // auto-size to header/content
                 }
-                catch (Exception ex)
-                {
-                    log.Error(ex, $"Failed to open file: {file.FilePath}");
-                    MessageBox.Show($"Could not open file: {file.FileName}\n{ex.Message}",
-                        "Open Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+            }
+            catch
+            {
+                // Nothing fatal, sizing will be adjusted by the user anyway
             }
         }
 
-        /// <summary>
-        /// Show selected files in Windows Explorer.
-        /// </summary>
-        private void ShowInExplorer_Click(object? sender, EventArgs e)
+        // Exposed for tests
+        internal void SaveLayoutForTesting() => SaveLayout();
+
+        // Theming: apply a dark palette to the panel and the ListView without changing logic.
+        private void ApplyThemeDark()
         {
-            var selectedFiles = GetSelectedRecentFiles();
-            foreach (var file in selectedFiles.Where(f => f.Exists))
+            var panelBack = Color.FromArgb(32, 32, 32);
+            var panelFore = Color.Gainsboro;
+
+            this.BackColor = panelBack;
+            this.ForeColor = panelFore;
+
+            if (tableLayoutPanel != null)
             {
-                try
-                {
-                    Process.Start("explorer.exe", $"/select,\"{file.FilePath}\"");
-                    log.Info($"Showed in explorer: {file.FilePath}");
-                }
-                catch (Exception ex)
-                {
-                    log.Error(ex, $"Failed to show in explorer: {file.FilePath}");
-                    MessageBox.Show($"Could not show file in Explorer: {file.FileName}\n{ex.Message}",
-                        "Explorer Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                tableLayoutPanel.BackColor = panelBack;
+                tableLayoutPanel.ForeColor = panelFore;
+            }
+
+            if (lblFilter != null)
+            {
+                lblFilter.BackColor = panelBack;
+                lblFilter.ForeColor = panelFore;
+            }
+
+            if (lblStatus != null)
+            {
+                lblStatus.BackColor = panelBack;
+                lblStatus.ForeColor = Color.Silver;
+            }
+
+            if (txtFilter != null)
+            {
+                txtFilter.BackColor = Color.FromArgb(45, 45, 45);
+                txtFilter.ForeColor = panelFore;
+                txtFilter.BorderStyle = BorderStyle.FixedSingle;
+            }
+
+            if (btnRefresh != null)
+            {
+                btnRefresh.FlatStyle = FlatStyle.System; // keeps native theming
+                btnRefresh.BackColor = panelBack;
+                btnRefresh.ForeColor = panelFore;
+            }
+
+            if (lvRecentFiles != null)
+            {
+                lvRecentFiles.BackColor = Color.FromArgb(24, 24, 24);
+                lvRecentFiles.ForeColor = Color.Gainsboro;
+                lvRecentFiles.BorderStyle = BorderStyle.FixedSingle;
             }
         }
 
-        /// <summary>
-        /// Copy selected file paths to clipboard.
-        /// </summary>
-        private void CopyPath_Click(object? sender, EventArgs e)
+        // --------------- Drag & Drop wiring and handlers ---------------
+
+        private void WireDragDrop()
         {
-            var selectedFiles = GetSelectedRecentFiles();
-            if (selectedFiles.Count == 0) return;
+            if (lvRecentFiles is null) return;
+            lvRecentFiles.AllowDrop = true;
+            lvRecentFiles.DragEnter += OnListViewDragEnter;
+            lvRecentFiles.DragDrop += OnListViewDragDrop;
+        }
+
+        private void OnListViewDragEnter(object? sender, DragEventArgs e)
+        {
+            if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private void OnListViewDragDrop(object? sender, DragEventArgs e)
+        {
+            if (recentFilesManager is null) return;
+            if (e.Data?.GetDataPresent(DataFormats.FileDrop) != true) return;
 
             try
             {
-                string paths = selectedFiles.Count == 1
-                    ? selectedFiles[0].FilePath
-                    : string.Join(Environment.NewLine, selectedFiles.Select(f => f.FilePath));
+                var data = e.Data.GetData(DataFormats.FileDrop) as string[];
+                if (data is null || data.Length == 0) return;
 
-                Clipboard.SetText(paths);
-                log.Info($"Copied {selectedFiles.Count} file paths to clipboard");
+                var sourceFolders = GetCurrentVectorStoreSourceFolders();
+                var added = 0;
 
-                // Show brief confirmation in status
-                lblStatus.Text = $"Copied {selectedFiles.Count} path(s) to clipboard";
-                var timer = new System.Windows.Forms.Timer { Interval = 2000 };
-                timer.Tick += (s, args) =>
+                foreach (var path in data)
                 {
-                    lblStatus.Text = $"{currentFiles.Count} files";
-                    timer.Stop();
-                    timer.Dispose();
-                };
-                timer.Start();
-            }
-            catch (Exception ex)
-            {
-                log.Error(ex, "Failed to copy paths to clipboard");
-                MessageBox.Show($"Could not copy paths to clipboard\n{ex.Message}",
-                    "Clipboard Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+                    if (string.IsNullOrWhiteSpace(path)) continue;
+                    if (!File.Exists(path)) continue;
 
-        /// <summary>
-        /// Delete selected files with confirmation.
-        /// </summary>
-        private void DeleteFile_Click(object? sender, EventArgs e)
-        {
-            var selectedFiles = GetSelectedRecentFiles().Where(f => f.Exists).ToList();
-            if (selectedFiles.Count == 0) return;
+                    var type = MapExtensionToType(Path.GetExtension(path));
+                    long size = 0;
+                    try { size = new FileInfo(path).Length; } catch { size = 0; }
 
-            string message = selectedFiles.Count == 1
-                ? $"Are you sure you want to delete:\n{selectedFiles[0].FileName}?"
-                : $"Are you sure you want to delete {selectedFiles.Count} files?";
+                    // Register and associate with current vector store folders
+                    recentFilesManager.RegisterGeneratedFile(
+                        filePath: path,
+                        fileType: type,
+                        sourceFolders: sourceFolders,
+                        fileSizeBytes: size,
+                        generatedAtUtc: DateTime.UtcNow);
 
-            var result = MessageBox.Show(message, "Confirm Delete",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-            if (result != DialogResult.Yes) return;
-
-            int deletedCount = 0;
-            var errors = new List<string>();
-
-            foreach (var file in selectedFiles)
-            {
-                try
-                {
-                    File.Delete(file.FilePath);
-                    deletedCount++;
-                    log.Info($"Deleted file: {file.FilePath}");
+                    added++;
                 }
-                catch (Exception ex)
+
+                if (added > 0)
                 {
-                    log.Error(ex, $"Failed to delete file: {file.FilePath}");
-                    errors.Add($"{file.FileName}: {ex.Message}");
+                    recentFilesManager.Save();
+                    RefreshList();
                 }
             }
-
-            // Show results
-            if (errors.Any())
+            catch
             {
-                string errorMsg = $"Deleted {deletedCount} files, but {errors.Count} failed:\n\n" +
-                                 string.Join("\n", errors.Take(5));
-                if (errors.Count > 5) errorMsg += $"\n... and {errors.Count - 5} more";
-
-                MessageBox.Show(errorMsg, "Delete Results", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // Be defensive: never crash on bad drops
             }
-
-            // Refresh the list
-            RefreshList();
         }
 
-        /// <summary>
-        /// Handle mouse down to prepare for drag operation.
-        /// </summary>
-        private void LvRecentFilesMouseDown(object? sender, MouseEventArgs e)
+        private static RecentFileType MapExtensionToType(string? ext)
         {
-            // Only handle left button for drag
-            if (e.Button != MouseButtons.Left) return;
-
-            // Check if we're clicking on an actual item
-            var hitTest = lvRecentFiles.HitTest(e.Location);
-            if (hitTest.Item == null) return;
-
-            // If clicked item is not selected, select only that item
-            if (!hitTest.Item.Selected)
+            var e = (ext ?? string.Empty).Trim().ToLowerInvariant();
+            return e switch
             {
-                lvRecentFiles.SelectedItems.Clear();
-                hitTest.Item.Selected = true;
-            }
+                ".docx" => RecentFileType.Docx,
+                ".pdf" => RecentFileType.Pdf,
+                ".md" => RecentFileType.Md,
+                ".markdown" => RecentFileType.Md,
+                _ => RecentFileType.Unknown
+            };
         }
 
-        /// <summary>
-        /// Handle drag operation initiation.
-        /// </summary>
-        private void LvRecentFilesItemDrag(object? sender, ItemDragEventArgs e)
+        private IReadOnlyList<string> GetCurrentVectorStoreSourceFolders()
         {
             try
             {
-                // Get all selected files
-                var selectedFiles = GetSelectedRecentFiles();
-                if (selectedFiles.Count == 0)
+                var state = UiStateConfig.Load(uiStateDirectory);
+                var vsName = state.LastSelectedVectorStore;
+                if (string.IsNullOrWhiteSpace(vsName))
+                    return Array.Empty<string>();
+
+                var all = VectorStoreConfig.LoadAll();
+                if (all.TryGetValue(vsName, out var cfg) && cfg.FolderPaths is { Count: > 0 })
                 {
-                    log.Warn("No files selected for drag operation.");
-                    return;
-                }
-
-                // Validate that all files exist
-                var missingFiles = selectedFiles.Where(f => !f.Exists).ToList();
-                if (missingFiles.Any())
-                {
-                    log.Warn($"Cannot drag missing files: {string.Join(", ", missingFiles.Select(f => f.FileName))}");
-                    MessageBox.Show(
-                        $"Cannot drag missing files:\n{string.Join(", ", missingFiles.Select(f => f.FileName))}\n\nFiles no longer exist.",
-                        "Missing Files", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                // Create file path array for drag operation
-                string[] filePaths = selectedFiles.Select(f => f.FilePath).ToArray();
-
-                // Create DataObject with FileDrop format
-                var dataObject = new DataObject(DataFormats.FileDrop, filePaths);
-
-                // Initiate drag-and-drop operation
-                DoDragDrop(dataObject, DragDropEffects.Copy | DragDropEffects.Move);
-
-                log.Info($"Drag operation initiated for {filePaths.Length} files.");
-            }
-            catch (Exception ex)
-            {
-                log.Error(ex, "Failed to initiate drag operation.");
-                MessageBox.Show($"Error during drag operation: {ex.Message}",
-                    "Drag Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// Get all currently selected RecentFileInfo objects.
-        /// </summary>
-        private List<RecentFileInfo> GetSelectedRecentFiles()
-        {
-            var selected = new List<RecentFileInfo>();
-            foreach (ListViewItem item in lvRecentFiles.SelectedItems)
-            {
-                if (item.Tag is RecentFileInfo fileInfo)
-                {
-                    selected.Add(fileInfo);
+                    // Use configured folders of the active vector store to bind the dropped files
+                    return cfg.FolderPaths.ToList();
                 }
             }
-            return selected;
-        }
-
-        private void ApplyVSCodeTheme()
-        {
-            // VS Code dark theme colors
-            Color bgDark = ColorTranslator.FromHtml("#1E1E1E");
-            Color fgLight = ColorTranslator.FromHtml("#D4D4D4");
-            Color accentBlue = ColorTranslator.FromHtml("#007ACC");
-
-            this.BackColor = bgDark;
-            this.ForeColor = fgLight;
-
-            lvRecentFiles.BackColor = ColorTranslator.FromHtml("#252526");
-            lvRecentFiles.ForeColor = fgLight;
-
-            txtFilter.BackColor = ColorTranslator.FromHtml("#3C3C3C");
-            txtFilter.ForeColor = fgLight;
-            txtFilter.BorderStyle = BorderStyle.FixedSingle;
-
-            btnRefresh.BackColor = accentBlue;
-            btnRefresh.ForeColor = Color.White;
-            btnRefresh.FlatStyle = FlatStyle.Flat;
-            btnRefresh.FlatAppearance.BorderSize = 0;
-
-            lblStatus.BackColor = bgDark;
-            lblStatus.ForeColor = ColorTranslator.FromHtml("#858585");
-        }
-
-        private void ApplyFilterAndPopulateListView()
-        {
-            lvRecentFiles.Items.Clear();
-
-            string filterText = txtFilter.Text.Trim().ToLowerInvariant();
-
-            var filtered = string.IsNullOrWhiteSpace(filterText)
-                ? currentFiles
-                : currentFiles.Where(f =>
-                    f.FileName.ToLowerInvariant().Contains(filterText) ||
-                    f.FileType.ToString().ToLowerInvariant().Contains(filterText) ||
-                    f.SourceFolders.Any(sf => sf.ToLowerInvariant().Contains(filterText))
-                ).ToList();
-
-            foreach (var file in filtered)
+            catch
             {
-                var item = new ListViewItem(file.FileName);
-                item.SubItems.Add(file.GeneratedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm"));
-                item.SubItems.Add(FormatFileSize(file.FileSizeBytes));
-                item.SubItems.Add(file.FileType.ToString());
-                item.SubItems.Add(string.Join(", ", file.SourceFolders.Take(2)));
-
-                // Store reference for drag operation and context menu
-                item.Tag = file;
-
-                // Visual feedback for missing files
-                if (!file.Exists)
-                {
-                    item.ForeColor = Color.Gray;
-                    item.Font = new Font(item.Font, FontStyle.Italic);
-                }
-
-                lvRecentFiles.Items.Add(item);
+                // Ignore and fall back
             }
-
-            UpdateStatusLabel(filtered.Count, currentFiles.Count);
-        }
-
-        private void UpdateStatusLabel(int visibleCount, int totalCount)
-        {
-            lblStatus.Text = visibleCount == totalCount
-                ? $"{totalCount} files"
-                : $"{visibleCount} of {totalCount} files";
-        }
-
-        private static string FormatFileSize(long bytes)
-        {
-            string[] suffixes = { "B", "KB", "MB", "GB" };
-            int counter = 0;
-            decimal number = bytes;
-
-            while (Math.Round(number / 1024) >= 1 && counter < suffixes.Length - 1)
-            {
-                number /= 1024;
-                counter++;
-            }
-
-            return $"{number:n1} {suffixes[counter]}";
-        }
-
-        private void btnRefresh_Click(object sender, EventArgs e)
-        {
-            RefreshList();
-        }
-
-        private void txtFilter_TextChanged(object sender, EventArgs e)
-        {
-            ApplyFilterAndPopulateListView();
-        }
-
-        private void RecentFilesPanel_Load(object sender, EventArgs e)
-        {
-            RefreshList();
+            return Array.Empty<string>();
         }
     }
 }
