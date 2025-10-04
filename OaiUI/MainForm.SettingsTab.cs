@@ -1,28 +1,41 @@
-// File: OaiUI/MainForm.SettingsTab.cs
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
 using oaiUI.Config;
 using VecTool.Configuration;
-using VecTool.Handlers;
 
 namespace Vectool.OaiUI
 {
-    public partial class MainForm:Form
+    /// <summary>
+    /// Main form partial: Settings tab logic for per-vector-store exclusions.
+    /// </summary>
+    public partial class MainForm : Form
     {
-        private void SettingsTab_InitializeData()
+        // Initializes the Settings tab combo items with known vector store names.
+        private void SettingsTabInitializeData()
         {
             try
             {
                 var all = VectorStoreConfig.LoadAll();
-                var names = all.Keys.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+                var names = all?.Keys?
+                    .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+                    .ToList() ?? new List<string>();
+
                 cmbSettingsVectorStore.Items.Clear();
-                cmbSettingsVectorStore.Items.AddRange(names.Cast<object>().ToArray());
+                if (names.Count > 0)
+                {
+                    cmbSettingsVectorStore.Items.AddRange(names.Cast<object>().ToArray());
+                }
             }
             catch
             {
-                // Defensive: ignore load failures to not block UI
+                // Defensive: ignore load failures to avoid blocking the UI.
             }
         }
 
-        private void SettingsTab_LoadSelection(string? name)
+        // Loads the effective settings for a given vector store name into the UI.
+        private void SettingsTabLoadSelection(string? name)
         {
             var global = VectorStoreConfig.FromAppConfig();
             var all = VectorStoreConfig.LoadAll();
@@ -31,16 +44,19 @@ namespace Vectool.OaiUI
             {
                 txtExcludedFiles.Text = string.Empty;
                 txtExcludedFolders.Text = string.Empty;
+
                 chkInheritExcludedFiles.Checked = true;
                 chkInheritExcludedFolders.Checked = true;
+
                 txtExcludedFiles.Enabled = false;
                 txtExcludedFolders.Enabled = false;
                 return;
             }
 
             all.TryGetValue(name, out var per);
-            var vm = PerVectorStoreSettings.From(name!, global, per);
+            var vm = PerVectorStoreSettings.From(name, global, per);
 
+            // Inherit checkboxes are inverse of "use custom".
             chkInheritExcludedFiles.Checked = !vm.UseCustomExcludedFiles;
             chkInheritExcludedFolders.Checked = !vm.UseCustomExcludedFolders;
 
@@ -51,28 +67,33 @@ namespace Vectool.OaiUI
             txtExcludedFolders.Enabled = vm.UseCustomExcludedFolders;
         }
 
-        private void chkInheritExcludedFiles_CheckedChanged(object? sender, EventArgs e)
+        private void chkInheritExcludedFilesCheckedChanged(object? sender, EventArgs e)
         {
             txtExcludedFiles.Enabled = !chkInheritExcludedFiles.Checked;
         }
 
-        private void chkInheritExcludedFolders_CheckedChanged(object? sender, EventArgs e)
+        private void chkInheritExcludedFoldersCheckedChanged(object? sender, EventArgs e)
         {
             txtExcludedFolders.Enabled = !chkInheritExcludedFolders.Checked;
         }
-        private void cmbSettingsVectorStore_SelectedIndexChanged(object? sender, EventArgs e)
+
+        // Implemented: load settings for the selected vector store.
+        private void cmbSettingsVectorStoreSelectedIndexChanged(object? sender, EventArgs e)
         {
-            // This event handler is now defined.
-            // TODO: Implement logic to load settings for the selected vector store if needed.
-            // For now, it just prevents the build error.
+            var selectedName = cmbSettingsVectorStore.SelectedItem?.ToString();
+            SettingsTabLoadSelection(selectedName);
         }
 
-        private void btnSaveVsSettings_Click(object? sender, EventArgs e)
+        private void btnSaveVsSettingsClick(object? sender, EventArgs e)
         {
             var name = (cmbSettingsVectorStore.Text ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(name))
             {
-                MessageBox.Show("Please enter or select a vector store name.", "Settings", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(
+                    "Please enter or select a vector store name.",
+                    "Settings",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
@@ -92,16 +113,31 @@ namespace Vectool.OaiUI
 
             PerVectorStoreSettings.Save(all, vm, global);
             VectorStoreConfig.SaveAll(all);
-            MessageBox.Show("Settings saved.", "Settings", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            MessageBox.Show(
+                "Settings saved.",
+                "Settings",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
 
-        private void btnResetVsSettings_Click(object? sender, EventArgs e)
+        private void btnResetVsSettingsClick(object? sender, EventArgs e)
         {
             chkInheritExcludedFiles.Checked = true;
             chkInheritExcludedFolders.Checked = true;
+
             var global = VectorStoreConfig.FromAppConfig();
-            txtExcludedFiles.Text = string.Join(Environment.NewLine, global.ExcludedFiles ?? new List<string>());
-            txtExcludedFolders.Text = string.Join(Environment.NewLine, global.ExcludedFolders ?? new List<string>());
+
+            txtExcludedFiles.Text = string.Join(
+                Environment.NewLine,
+                global.ExcludedFiles ?? new List<string>());
+
+            txtExcludedFolders.Text = string.Join(
+                Environment.NewLine,
+                global.ExcludedFolders ?? new List<string>());
+
+            txtExcludedFiles.Enabled = false;
+            txtExcludedFolders.Enabled = false;
         }
 
         private static List<string> SplitLines(string text)
@@ -118,11 +154,13 @@ namespace Vectool.OaiUI
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            // Wire up once UI is created
-            SettingsTab_InitializeData();
-            cmbSettingsVectorStore.SelectedIndexChanged += cmbSettingsVectorStore_SelectedIndexChanged;
-            chkInheritExcludedFiles.CheckedChanged += chkInheritExcludedFiles_CheckedChanged;
-            chkInheritExcludedFolders.CheckedChanged += chkInheritExcludedFolders_CheckedChanged;
+
+            // Wire up Settings tab once UI is created.
+            SettingsTabInitializeData();
+
+            cmbSettingsVectorStore.SelectedIndexChanged += cmbSettingsVectorStoreSelectedIndexChanged;
+            chkInheritExcludedFiles.CheckedChanged += chkInheritExcludedFilesCheckedChanged;
+            chkInheritExcludedFolders.CheckedChanged += chkInheritExcludedFoldersCheckedChanged;
         }
     }
 }
