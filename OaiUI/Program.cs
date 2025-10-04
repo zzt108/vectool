@@ -1,4 +1,4 @@
-using oaiUI;
+using Vectool.OaiUI;
 
 namespace oai
 {

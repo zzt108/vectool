@@ -3,9 +3,9 @@ using oaiUI.Config;
 using VecTool.Configuration;
 using VecTool.Handlers;
 
-namespace oaiUI
+namespace Vectool.OaiUI
 {
-    public partial class MainForm
+    public partial class MainForm:Form
     {
         private void SettingsTab_InitializeData()
         {
@@ -49,11 +49,6 @@ namespace oaiUI
 
             txtExcludedFiles.Enabled = vm.UseCustomExcludedFiles;
             txtExcludedFolders.Enabled = vm.UseCustomExcludedFolders;
-        }
-
-        private void cmbSettingsVectorStore_SelectedIndexChanged(object? sender, EventArgs e)
-        {
-            SettingsTab_LoadSelection(cmbSettingsVectorStore.Text?.Trim());
         }
 
         private void chkInheritExcludedFiles_CheckedChanged(object? sender, EventArgs e)

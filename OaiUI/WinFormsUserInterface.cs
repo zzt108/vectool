@@ -6,10 +6,10 @@ namespace oaiUI
     public class WinFormsUserInterface : IUserInterface
     {
         private readonly ToolStripStatusLabel _statusLabel;
-        private readonly ProgressBar _progressBar;
+        private readonly ToolStripProgressBar _progressBar;
         public int TotalWork { get; set; }
 
-        public WinFormsUserInterface(ToolStripStatusLabel statusLabel, ProgressBar progressBar)
+        public WinFormsUserInterface(ToolStripStatusLabel statusLabel, ToolStripProgressBar progressBar)
         {
             _statusLabel = statusLabel;
             _progressBar = progressBar;
@@ -53,9 +53,10 @@ namespace oaiUI
 
         public void UpdateProgress(int current)
         {
-            if (_progressBar.InvokeRequired)
+            // ToolStripProgressBar doesn't have InvokeRequired, but its parent StatusStrip does
+            if (_progressBar.Owner?.InvokeRequired == true)
             {
-                _progressBar.Invoke(new Action(() => UpdateProgressInternal(current, TotalWork)));
+                _progressBar.Owner.Invoke(new Action(() => UpdateProgressInternal(current, TotalWork)));
             }
             else
             {
@@ -67,7 +68,6 @@ namespace oaiUI
         {
             _progressBar.Maximum = maximum;
             _progressBar.Value = current;
-            _progressBar.Update();
             Application.DoEvents();
         }
 

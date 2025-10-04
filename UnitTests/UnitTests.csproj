@@ -8,8 +8,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <Import Project="..\LogCtx\LogCtxShared\LogCtxShared.projitems" Label="Shared" />
-
   <Import Project="..\LogCtx\SeriLogShared\SeriLogShared.projitems" Label="Shared" />
 
   <Import Project="..\LogCtx\NLogShared\NLogShared.projitems" Label="Shared" />
