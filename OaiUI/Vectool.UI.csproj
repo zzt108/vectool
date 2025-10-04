@@ -1,50 +1,75 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<!-- File: src/VecTool.UI/VecTool.UI.csproj -->
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-
-    <AssemblyName>Vectool.UI</AssemblyName>
-    <RootNamespace>Vectool.UI</RootNamespace>
-
-    <!-- Executable and window icon -->
+    <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
+    <ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
     <ApplicationIcon>..\Media\icon.ico</ApplicationIcon>
 
-    <!-- Prefer 64-bit where available -->
-    <Prefer32Bit>false</Prefer32Bit>
+    <!-- Version core -->
+    <MajorVersion>4</MajorVersion>
+    <!-- Product major -->
+    <PlanId>0</PlanId>
+    <!-- Minor = Plan ID -->
+    <PlanPhase>0</PlanPhase>
+    <!-- Single digit phase (1..9 recommended) -->
+
+    <!-- UTC fragments evaluated at project load (MSBuild property functions) -->
+    <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
+    <HHmm>$([System.DateTime]::UtcNow.ToString('HHmm'))</HHmm>
+    <DayOfYear>$([System.DateTime]::UtcNow.DayOfYear)</DayOfYear>
+
+    <!-- Build part: PlanPhase*1000 + DayOfYear (fits Windows numeric field and is human-decodable) -->
+    <BuildPart>$([MSBuild]::Add($([MSBuild]::Multiply($(PlanPhase), 1000)),$(DayOfYear)))</BuildPart>
+
+    <!-- CLR binding-friendly (keep stable across phases) -->
+    <AssemblyVersion>$(MajorVersion).0.0.0</AssemblyVersion>
+
+    <!-- Windows-visible 4 integers: Major.Minor.Build.Revision -->
+    <FileVersion>$(MajorVersion).$(PlanId).$(BuildPart).$(HHmm)</FileVersion>
+
+    <!-- Optional UI/package display (WinForms ignores at runtime; packaging tools may use it) -->
+    <ApplicationDisplayVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)</ApplicationDisplayVersion>
+
+    <!-- Commit SHA from CI if available -->
+    <CommitSha>$([System.Environment]::GetEnvironmentVariable('GITHUB_SHA'))</CommitSha>
+    <CommitSha Condition="'$(CommitSha)'==''">$([System.Environment]::GetEnvironmentVariable('BUILD_SOURCEVERSION'))</CommitSha>
+    <CommitShort Condition="'$(CommitSha)'!=''">$([System.String]::Copy($(CommitSha)))</CommitShort>
+    <CommitShort Condition="'$(CommitShort)'!='' and $([System.Int32]::Parse('$([System.String]::Copy($(CommitShort)).Length)')) &gt; 7">$([System.String]::Copy($(CommitShort)).Substring(0,7))</CommitShort>
+    <InfoSuffix></InfoSuffix>
+    <InfoSuffix Condition="'$(CommitShort)'!=''">.$(CommitShort)</InfoSuffix>
+
+    <!-- Human/diagnostics string (does not affect binding) -->
+    <InformationalVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)+$(YyyyMMdd)$(HHmm)$(InfoSuffix)</InformationalVersion>
+
+    <!-- Source Link and CI-friendly metadata -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
-  <!-- Shared project items (LogCtx) -->
-  <Import Project="..\LogCtx\LogCtx.projitems" Label="Shared" Condition="Exists('..\LogCtx\LogCtx.projitems')" />
+  <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2025.1.2" />
+    <!-- Source Link provider; choose GitHub/Azure DevOps/GitLab variant as needed -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
 
   <ItemGroup>
-    <!-- Project references in the solution -->
     <ProjectReference Include="..\Core\Core.csproj" />
-    <ProjectReference Include="..\Constants\Constants.csproj" />
-    <ProjectReference Include="..\Handlers\Handlers.csproj" />
-    <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
-    <ProjectReference Include="..\Configuration\Configuration.csproj" />
-    <ProjectReference Include="..\Utils\Utils.csproj" />
+    <ProjectReference Include="..\DocX\DocXHandler.csproj" />
     <ProjectReference Include="..\Log\Log.csproj" />
+    <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Assets and configs copied for runtime -->
-    <None Include="..\Media\icon.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-
-    <!-- Keep existing configuration files available at runtime -->
-    <None Update="Config.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="LogConfig.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="app.config">
+    <None Update="Config\LogConfig.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
 </Project>
