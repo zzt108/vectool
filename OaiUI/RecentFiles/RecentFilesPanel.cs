@@ -31,6 +31,28 @@ namespace oaiUI.RecentFiles
             SetupDragDrop();
             SetupContextMenu();
         }
+        
+        /// <summary>
+        /// Initializes the panel with a recent files manager after construction.
+        /// Required because the panel is created by the Designer.
+        /// </summary>
+        public void Initialize(IRecentFilesManager manager)
+        {
+            if (manager == null)
+                throw new ArgumentNullException(nameof(manager));
+
+            // Store the manager reference
+            var fieldInfo = this.GetType().GetField("recentFilesManager",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            if (fieldInfo != null)
+            {
+                fieldInfo.SetValue(this, manager);
+            }
+
+            // Initial refresh
+            RefreshList();
+        }
 
         /// <summary>
         /// Refreshes the list from the manager.

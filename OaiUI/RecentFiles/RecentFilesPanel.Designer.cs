@@ -21,95 +21,107 @@
 
         private void InitializeComponent()
         {
-            this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.lvRecentFiles = new System.Windows.Forms.ListView();
-            this.lblFilter = new System.Windows.Forms.Label();
-            this.txtFilter = new System.Windows.Forms.TextBox();
-            this.btnRefresh = new System.Windows.Forms.Button();
-            this.lblStatus = new System.Windows.Forms.Label();
-            this.tableLayoutPanel.SuspendLayout();
-            this.SuspendLayout();
-
+            tableLayoutPanel = new TableLayoutPanel();
+            lblFilter = new Label();
+            txtFilter = new TextBox();
+            btnRefresh = new Button();
+            lvRecentFiles = new ListView();
+            lblStatus = new Label();
+            tableLayoutPanel.SuspendLayout();
+            SuspendLayout();
+            // 
             // tableLayoutPanel
-            this.tableLayoutPanel.ColumnCount = 3;
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize));
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize));
-            this.tableLayoutPanel.Controls.Add(this.lblFilter, 0, 0);
-            this.tableLayoutPanel.Controls.Add(this.txtFilter, 1, 0);
-            this.tableLayoutPanel.Controls.Add(this.btnRefresh, 2, 0);
-            this.tableLayoutPanel.Controls.Add(this.lvRecentFiles, 0, 1);
-            this.tableLayoutPanel.Controls.Add(this.lblStatus, 0, 2);
-            this.tableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel.Name = "tableLayoutPanel";
-            this.tableLayoutPanel.Padding = new System.Windows.Forms.Padding(8);
-            this.tableLayoutPanel.RowCount = 3;
-            this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-            this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-            this.tableLayoutPanel.Size = new System.Drawing.Size(800, 600);
-            this.tableLayoutPanel.TabIndex = 0;
-
+            // 
+            tableLayoutPanel.ColumnCount = 3;
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle());
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle());
+            tableLayoutPanel.Controls.Add(lblFilter, 0, 0);
+            tableLayoutPanel.Controls.Add(txtFilter, 1, 0);
+            tableLayoutPanel.Controls.Add(btnRefresh, 2, 0);
+            tableLayoutPanel.Controls.Add(lvRecentFiles, 0, 1);
+            tableLayoutPanel.Controls.Add(lblStatus, 0, 2);
+            tableLayoutPanel.Dock = DockStyle.Fill;
+            tableLayoutPanel.Location = new Point(0, 0);
+            tableLayoutPanel.Margin = new Padding(6, 6, 6, 6);
+            tableLayoutPanel.Name = "tableLayoutPanel";
+            tableLayoutPanel.Padding = new Padding(15, 17, 15, 17);
+            tableLayoutPanel.RowCount = 3;
+            tableLayoutPanel.RowStyles.Add(new RowStyle());
+            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel.RowStyles.Add(new RowStyle());
+            tableLayoutPanel.Size = new Size(1486, 1280);
+            tableLayoutPanel.TabIndex = 0;
+            // 
             // lblFilter
-            this.lblFilter.AutoSize = true;
-            this.lblFilter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblFilter.Location = new System.Drawing.Point(11, 11);
-            this.lblFilter.Margin = new System.Windows.Forms.Padding(3, 3, 8, 3);
-            this.lblFilter.Name = "lblFilter";
-            this.lblFilter.Size = new System.Drawing.Size(50, 26);
-            this.lblFilter.TabIndex = 0;
-            this.lblFilter.Text = "Filter:";
-            this.lblFilter.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-
+            // 
+            lblFilter.AutoSize = true;
+            lblFilter.Dock = DockStyle.Fill;
+            lblFilter.Location = new Point(21, 23);
+            lblFilter.Margin = new Padding(6, 6, 15, 6);
+            lblFilter.Name = "lblFilter";
+            lblFilter.Size = new Size(72, 83);
+            lblFilter.TabIndex = 0;
+            lblFilter.Text = "Filter:";
+            lblFilter.TextAlign = ContentAlignment.MiddleLeft;
+            // 
             // txtFilter
-            this.txtFilter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtFilter.Location = new System.Drawing.Point(72, 11);
-            this.txtFilter.Name = "txtFilter";
-            this.txtFilter.Size = new System.Drawing.Size(600, 23);
-            this.txtFilter.TabIndex = 1;
-            this.txtFilter.TextChanged += new System.EventHandler(this.txtFilter_TextChanged);
-
+            // 
+            txtFilter.Dock = DockStyle.Fill;
+            txtFilter.Location = new Point(114, 23);
+            txtFilter.Margin = new Padding(6, 6, 6, 6);
+            txtFilter.Name = "txtFilter";
+            txtFilter.Size = new Size(1135, 39);
+            txtFilter.TabIndex = 1;
+            txtFilter.TextChanged += txtFilter_TextChanged;
+            // 
             // btnRefresh
-            this.btnRefresh.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRefresh.Location = new System.Drawing.Point(680, 11);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(110, 26);
-            this.btnRefresh.TabIndex = 2;
-            this.btnRefresh.Text = "Refresh";
-            this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
-
+            // 
+            btnRefresh.Dock = DockStyle.Fill;
+            btnRefresh.Location = new Point(1261, 23);
+            btnRefresh.Margin = new Padding(6, 6, 6, 6);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new Size(204, 83);
+            btnRefresh.TabIndex = 2;
+            btnRefresh.Text = "Refresh";
+            btnRefresh.UseVisualStyleBackColor = true;
+            btnRefresh.Click += btnRefresh_Click;
+            // 
             // lvRecentFiles
-            this.tableLayoutPanel.SetColumnSpan(this.lvRecentFiles, 3);
-            this.lvRecentFiles.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lvRecentFiles.Location = new System.Drawing.Point(11, 43);
-            this.lvRecentFiles.Name = "lvRecentFiles";
-            this.lvRecentFiles.Size = new System.Drawing.Size(778, 512);
-            this.lvRecentFiles.TabIndex = 3;
-            this.lvRecentFiles.UseCompatibleStateImageBehavior = false;
-
+            // 
+            tableLayoutPanel.SetColumnSpan(lvRecentFiles, 3);
+            lvRecentFiles.Dock = DockStyle.Fill;
+            lvRecentFiles.Location = new Point(21, 118);
+            lvRecentFiles.Margin = new Padding(6, 6, 6, 6);
+            lvRecentFiles.Name = "lvRecentFiles";
+            lvRecentFiles.Size = new Size(1444, 1088);
+            lvRecentFiles.TabIndex = 3;
+            lvRecentFiles.UseCompatibleStateImageBehavior = false;
+            // 
             // lblStatus
-            this.tableLayoutPanel.SetColumnSpan(this.lblStatus, 3);
-            this.lblStatus.AutoSize = true;
-            this.lblStatus.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblStatus.Location = new System.Drawing.Point(11, 561);
-            this.lblStatus.Margin = new System.Windows.Forms.Padding(3, 6, 3, 3);
-            this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(778, 28);
-            this.lblStatus.TabIndex = 4;
-            this.lblStatus.Text = "0 file(s)";
-
+            // 
+            lblStatus.AutoSize = true;
+            tableLayoutPanel.SetColumnSpan(lblStatus, 3);
+            lblStatus.Dock = DockStyle.Fill;
+            lblStatus.Location = new Point(21, 1225);
+            lblStatus.Margin = new Padding(6, 13, 6, 6);
+            lblStatus.Name = "lblStatus";
+            lblStatus.Size = new Size(1444, 32);
+            lblStatus.TabIndex = 4;
+            lblStatus.Text = "0 file(s)";
+            // 
             // RecentFilesPanel
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.tableLayoutPanel);
-            this.Name = "RecentFilesPanel";
-            this.Size = new System.Drawing.Size(800, 600);
-            this.Load += new System.EventHandler(this.RecentFilesPanel_Load);
-            this.tableLayoutPanel.ResumeLayout(false);
-            this.tableLayoutPanel.PerformLayout();
-            this.ResumeLayout(false);
+            // 
+            AutoScaleDimensions = new SizeF(13F, 32F);
+            AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(tableLayoutPanel);
+            Margin = new Padding(6, 6, 6, 6);
+            Name = "RecentFilesPanel";
+            Size = new Size(1486, 1280);
+            Load += RecentFilesPanel_Load;
+            tableLayoutPanel.ResumeLayout(false);
+            tableLayoutPanel.PerformLayout();
+            ResumeLayout(false);
         }
     }
 }
