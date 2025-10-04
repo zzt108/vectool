@@ -1,6 +1,3 @@
-// File: OaiUI/Program.cs
-using System;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using NLog;
@@ -15,26 +12,36 @@ namespace Vectool.UI
         [STAThread]
         private static void Main()
         {
-            // Initialize robust, non-throwing logging from LogCtx; never crash the app on logging issues.
-            // Uses AppContext.BaseDirectory so it works from VS, VS Code, and direct EXE launches.
+            // Initialize robust, non-throwing logging
             LoggingBootstrap.Initialize();
 
-            // Optional: capture unhandled exceptions so they get logged.
             Application.ThreadException += (sender, args) =>
-            {
                 LogManager.GetCurrentClassLogger().Error(args.Exception, "Unhandled UI thread exception.");
-            };
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var ex = args.ExceptionObject as Exception;
                 LogManager.GetCurrentClassLogger().Fatal(ex, "Unhandled domain exception.");
             };
 
-            // Standard WinForms bootstrap (net6+/net8+ templates).
             ApplicationConfiguration.Initialize();
 
-            // Avoid compile-time namespace coupling: discover MainForm at runtime by name.
             var mainForm = CreateMainFormOrFallback();
+
+            // NEW CODE: apply window icon at runtime even if designer didn’t set it
+            try
+            {
+                var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Vectool.ico");
+                if (File.Exists(iconPath))
+                {
+                    using var fs = File.OpenRead(iconPath);
+                    mainForm.Icon = new System.Drawing.Icon(fs);
+                }
+            }
+            catch
+            {
+                // Do not block startup on icon failures
+            }
+
             Application.Run(mainForm);
         }
 
@@ -42,26 +49,17 @@ namespace Vectool.UI
         {
             try
             {
-                // Find any type named "MainForm" that derives from Form in the current assembly.
-                var formType =
-                    typeof(Program).Assembly
-                        .GetTypes()
-                        .FirstOrDefault(t => typeof(Form).IsAssignableFrom(t) && string.Equals(t.Name, "MainForm", StringComparison.Ordinal));
-
+                var formType = typeof(Program).Assembly
+                    .GetTypes()
+                    .FirstOrDefault(t => typeof(Form).IsAssignableFrom(t) && string.Equals(t.Name, "MainForm", StringComparison.Ordinal));
                 if (formType != null)
                 {
                     var instance = Activator.CreateInstance(formType) as Form;
-                    if (instance != null)
-                        return instance;
+                    if (instance != null) return instance;
                 }
 
-                // Fallback lightweight shell if MainForm cannot be located (keeps the app usable).
-                MessageBox.Show(
-                    "MainForm type was not found. Ensure the UI project compiles and the MainForm class exists.",
-                    "VecTool",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-
+                MessageBox.Show("MainForm type was not found. Ensure the UI project compiles and the MainForm class exists.",
+                                "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return new Form
                 {
                     Text = "VecTool - Minimal Shell (MainForm not found)",

@@ -1,24 +1,49 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-	<TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <AssemblyName>Vectool.UI</AssemblyName>
+    <RootNamespace>Vectool.UI</RootNamespace>
+
+    <!-- Executable and window icon -->
+    <ApplicationIcon>..\Media\icon.ico</ApplicationIcon>
+
+    <!-- Prefer 64-bit where available -->
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
+  <!-- Shared project items (LogCtx) -->
+  <Import Project="..\LogCtx\LogCtx.projitems" Label="Shared" Condition="Exists('..\LogCtx\LogCtx.projitems')" />
+
   <ItemGroup>
-    <ProjectReference Include="..\Constants\Constants.csproj" />
+    <!-- Project references in the solution -->
     <ProjectReference Include="..\Core\Core.csproj" />
-    <ProjectReference Include="..\Log\Log.csproj" />
+    <ProjectReference Include="..\Constants\Constants.csproj" />
     <ProjectReference Include="..\Handlers\Handlers.csproj" />
     <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
     <ProjectReference Include="..\Configuration\Configuration.csproj" />
     <ProjectReference Include="..\Utils\Utils.csproj" />
+    <ProjectReference Include="..\Log\Log.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Config\LogConfig.xml">
+    <!-- Assets and configs copied for runtime -->
+    <None Include="..\Media\icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <!-- Keep existing configuration files available at runtime -->
+    <None Update="Config.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="LogConfig.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="app.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
