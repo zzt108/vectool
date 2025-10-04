@@ -1,73 +1,75 @@
-﻿<!-- File: src/VecTool.UI/VecTool.UI.csproj -->
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- High DPI and designer compatibility -->
     <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
     <ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
+
+    <!-- Names and icon -->
+    <AssemblyName>Vectool.UI</AssemblyName>
+    <RootNamespace>Vectool.UI</RootNamespace>
     <ApplicationIcon>..\Media\icon.ico</ApplicationIcon>
 
-    <!-- Version core -->
+    <!-- Versioning (kept from repo pattern) -->
     <MajorVersion>4</MajorVersion>
-    <!-- Product major -->
     <PlanId>0</PlanId>
-    <!-- Minor = Plan ID -->
     <PlanPhase>0</PlanPhase>
-    <!-- Single digit phase (1..9 recommended) -->
-
-    <!-- UTC fragments evaluated at project load (MSBuild property functions) -->
     <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
     <HHmm>$([System.DateTime]::UtcNow.ToString('HHmm'))</HHmm>
     <DayOfYear>$([System.DateTime]::UtcNow.DayOfYear)</DayOfYear>
-
-    <!-- Build part: PlanPhase*1000 + DayOfYear (fits Windows numeric field and is human-decodable) -->
     <BuildPart>$([MSBuild]::Add($([MSBuild]::Multiply($(PlanPhase), 1000)),$(DayOfYear)))</BuildPart>
 
-    <!-- CLR binding-friendly (keep stable across phases) -->
     <AssemblyVersion>$(MajorVersion).0.0.0</AssemblyVersion>
-
-    <!-- Windows-visible 4 integers: Major.Minor.Build.Revision -->
     <FileVersion>$(MajorVersion).$(PlanId).$(BuildPart).$(HHmm)</FileVersion>
-
-    <!-- Optional UI/package display (WinForms ignores at runtime; packaging tools may use it) -->
     <ApplicationDisplayVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)</ApplicationDisplayVersion>
 
-    <!-- Commit SHA from CI if available -->
+    <!-- CI metadata and SourceLink -->
     <CommitSha>$([System.Environment]::GetEnvironmentVariable('GITHUB_SHA'))</CommitSha>
-    <CommitSha Condition="'$(CommitSha)'==''">$([System.Environment]::GetEnvironmentVariable('BUILD_SOURCEVERSION'))</CommitSha>
-    <CommitShort Condition="'$(CommitSha)'!=''">$([System.String]::Copy($(CommitSha)))</CommitShort>
-    <CommitShort Condition="'$(CommitShort)'!='' and $([System.Int32]::Parse('$([System.String]::Copy($(CommitShort)).Length)')) &gt; 7">$([System.String]::Copy($(CommitShort)).Substring(0,7))</CommitShort>
-    <InfoSuffix></InfoSuffix>
-    <InfoSuffix Condition="'$(CommitShort)'!=''">.$(CommitShort)</InfoSuffix>
+    <CommitSha Condition=" '$(CommitSha)' == '' ">$([System.Environment]::GetEnvironmentVariable('BUILD_SOURCEVERSION'))</CommitSha>
+    <CommitShort Condition=" '$(CommitSha)' != '' ">$([System.String]::Copy('$(CommitSha)').Substring(0,7))</CommitShort>
+    <InfoSuffix Condition=" '$(CommitShort)' != '' ">-$(CommitShort)</InfoSuffix>
+    <InformationalVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)-$(YyyyMMdd)$(HHmm)$(InfoSuffix)</InformationalVersion>
 
-    <!-- Human/diagnostics string (does not affect binding) -->
-    <InformationalVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)+$(YyyyMMdd)$(HHmm)$(InfoSuffix)</InformationalVersion>
-
-    <!-- Source Link and CI-friendly metadata -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="QuestPDF" Version="2025.1.2" />
-    <!-- Source Link provider; choose GitHub/Azure DevOps/GitLab variant as needed -->
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <!-- Refactor-aligned project graph -->
+    <ProjectReference Include="..\Constants\Constants.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
-    <ProjectReference Include="..\DocX\DocXHandler.csproj" />
+    <ProjectReference Include="..\Handlers\Handlers.csproj" />
+    <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
+    <ProjectReference Include="..\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\Utils\Utils.csproj" />
     <ProjectReference Include="..\Log\Log.csproj" />
-    <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Keep SourceLink and packages used by UI layer -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Runtime assets used by Program.cs logging bootstrap and window icon -->
+    <None Update="Assets\Vectool.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Config\LogConfig.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\NLog.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
