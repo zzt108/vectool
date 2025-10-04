@@ -60,6 +60,12 @@ namespace Vectool.OaiUI
         {
             txtExcludedFolders.Enabled = !chkInheritExcludedFolders.Checked;
         }
+        private void cmbSettingsVectorStore_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            // This event handler is now defined.
+            // TODO: Implement logic to load settings for the selected vector store if needed.
+            // For now, it just prevents the build error.
+        }
 
         private void btnSaveVsSettings_Click(object? sender, EventArgs e)
         {
