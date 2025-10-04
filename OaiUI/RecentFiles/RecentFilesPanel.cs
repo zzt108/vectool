@@ -1,84 +1,52 @@
-﻿// Path: OaiUI/RecentFiles/RecentFilesPanel.cs
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using oaiUI.Services;
 using VecTool.Configuration;
 using VecTool.RecentFiles;
-// Explicit alias to avoid ambiguity with System.Threading.Timer
-using WinFormsTimer = System.Windows.Forms.Timer;
 
 namespace oaiUI.RecentFiles
 {
-    /// <summary>
-    /// Recent Files tab user control with filter, refresh and persisted column widths.
-    /// Also increases row height by 10% for readability and applies a dark theme.
-    /// </summary>
+    // Recent Files tab user control with filter, refresh and persisted layout.
+    // Note: Designer-generated elements live in RecentFilesPanel.Designer.cs.
     public partial class RecentFilesPanel : UserControl
     {
-        private const double DefaultRowHeightScale = 1.10;
-
-        // Not readonly: designer creates the control, MainForm initializes it later if needed.
+        // Dependencies
         private IRecentFilesManager? recentFilesManager;
         private readonly string? uiStateDirectory;
 
-        // Debounce saving column widths during resize operations.
-        private readonly WinFormsTimer saveDebounceTimer = new WinFormsTimer { Interval = 300 };
+        // Debounced save of column widths
+        private readonly System.Windows.Forms.Timer saveDebounceTimer = new System.Windows.Forms.Timer { Interval = 300 };
 
+        // Trick to control ListView row height
         private ImageList? rowHeightImageList;
 
-        // Parameterless constructor required by Designer and used by MainForm Designer loader.
+        private const double DefaultRowHeightScale = 1.10;
+
+        // Parameterless constructor for Designer
         public RecentFilesPanel()
         {
             InitializeComponent();
-            SetupListView();
-            ApplyRowHeightScale();
-            ApplyThemeDark(); // Dark theme by default
-            WireDragDrop();   // Enable drag-and-drop
-            LoadLayout();
-
-            if (lvRecentFiles != null)
-            {
-                lvRecentFiles.ColumnWidthChanged += OnColumnWidthChanged;
-            }
-
-            saveDebounceTimer.Tick += (_, __) =>
-            {
-                saveDebounceTimer.Stop();
-                SaveLayout();
-            };
+            WireRuntime();
         }
 
-        // Preferred constructor for DI/tests with optional UI state directory.
+        // Preferred constructor for DI/tests
         public RecentFilesPanel(IRecentFilesManager recentFilesManager, string? uiStateDirectory = null)
         {
             this.recentFilesManager = recentFilesManager ?? throw new ArgumentNullException(nameof(recentFilesManager));
             this.uiStateDirectory = uiStateDirectory;
 
             InitializeComponent();
-            SetupListView();
-            ApplyRowHeightScale();
-            ApplyThemeDark(); // Dark theme by default
-            WireDragDrop();   // Enable drag-and-drop
-            LoadLayout();
-
-            if (lvRecentFiles != null)
-            {
-                lvRecentFiles.ColumnWidthChanged += OnColumnWidthChanged;
-            }
-
-            saveDebounceTimer.Tick += (_, __) =>
-            {
-                saveDebounceTimer.Stop();
-                SaveLayout();
-            };
+            WireRuntime();
         }
 
-        // Public API used by MainForm when the panel is created by the Designer.
+        // Allow late initialization when created by Designer and composed in MainForm
         public void Initialize(IRecentFilesManager manager)
         {
             recentFilesManager = manager ?? throw new ArgumentNullException(nameof(manager));
@@ -86,100 +54,42 @@ namespace oaiUI.RecentFiles
             RefreshList();
         }
 
-        // Public API used by MainForm and tests to reload items.
-        public void RefreshList()
-        {
-            if (lvRecentFiles is null)
-            {
-                return;
-            }
+        // Exposed for tests
+        internal void SaveLayoutForTesting() => SaveLayout();
 
-            lvRecentFiles.BeginUpdate();
-            try
-            {
-                lvRecentFiles.Items.Clear();
-
-                IEnumerable<RecentFileInfo> items = recentFilesManager?.GetRecentFiles() ?? Array.Empty<RecentFileInfo>();
-                var filter = txtFilter?.Text?.Trim();
-
-                if (!string.IsNullOrWhiteSpace(filter))
-                {
-                    items = items
-                        .Where(f => f.FileName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0);
-                }
-
-                foreach (var f in items)
-                {
-                    var item = new ListViewItem(f.FileName)
-                    {
-                        Tag = f
-                    };
-
-                    // Columns: File, Type, Size (in KB with one decimal), Generated
-                    item.SubItems.Add(f.FileType.ToString());
-                    item.SubItems.Add($"{(f.FileSizeBytes / 1024.0):0.0} KB");
-                    item.SubItems.Add(f.GeneratedAt.ToString("yyyy-MM-dd HH:mm"));
-
-                    if (!f.Exists)
-                    {
-                        item.ForeColor = Color.Gray;
-                        item.Font = new Font(lvRecentFiles.Font, FontStyle.Italic);
-                    }
-
-                    lvRecentFiles.Items.Add(item);
-                }
-
-                lblStatus.Text = $"{lvRecentFiles.Items.Count} files";
-            }
-            finally
-            {
-                lvRecentFiles.EndUpdate();
-            }
-        }
-
-        // Designer-wired events
-        private void txtFilterTextChanged(object? sender, EventArgs e)
-        {
-            RefreshList();
-        }
-
-        private void btnRefreshClick(object? sender, EventArgs e)
-        {
-            RefreshList();
-        }
-
+        // Designer wires: this.Load += RecentFilesPanelLoad
         private void RecentFilesPanelLoad(object? sender, EventArgs e)
         {
+            // Ensure initial layout and content
+            LoadLayout();
             RefreshList();
         }
 
-        protected override void Dispose(bool disposing)
+        // Designer wires: this.txtFilter.TextChanged += txtFilterTextChanged
+        private void txtFilterTextChanged(object? sender, EventArgs e) => RefreshList();
+
+        // Designer wires: this.btnRefresh.Click += btnRefreshClick
+        private void btnRefreshClick(object? sender, EventArgs e) => RefreshList();
+
+        // --------------- Initialization helpers ---------------
+
+        private void WireRuntime()
         {
-            if (disposing)
+            SetupListView();
+            ApplyRowHeightScale();
+            ApplyThemeDark();
+            WireDragDrop();
+
+            if (lvRecentFiles != null)
             {
-                try
-                {
-                    // Dispose Designer container declared in the partial Designer file.
-                    components?.Dispose();
-
-                    if (lvRecentFiles != null)
-                    {
-                        lvRecentFiles.ColumnWidthChanged -= OnColumnWidthChanged;
-                        lvRecentFiles.DragEnter -= OnListViewDragEnter;
-                        lvRecentFiles.DragDrop -= OnListViewDragDrop;
-                        SaveLayout();
-                    }
-
-                    rowHeightImageList?.Dispose();
-                    saveDebounceTimer.Dispose();
-                }
-                catch
-                {
-                    // Defensive: never crash UI during Dispose
-                }
+                lvRecentFiles.ColumnWidthChanged += OnColumnWidthChanged;
             }
 
-            base.Dispose(disposing);
+            saveDebounceTimer.Tick += (_, __) =>
+            {
+                saveDebounceTimer.Stop();
+                SaveLayout();
+            };
         }
 
         private void SetupListView()
@@ -191,7 +101,6 @@ namespace oaiUI.RecentFiles
             lvRecentFiles.GridLines = true;
             lvRecentFiles.MultiSelect = true;
 
-            // Create columns once if not defined by designer.
             if (lvRecentFiles.Columns.Count == 0)
             {
                 lvRecentFiles.Columns.Add(new ColumnHeader { Text = "File", Width = 400, Name = "colFile" });
@@ -212,86 +121,18 @@ namespace oaiUI.RecentFiles
             var desired = (int)Math.Ceiling(baseHeight * scale);
 
             rowHeightImageList?.Dispose();
-            rowHeightImageList = new ImageList
-            {
-                ImageSize = new Size(1, Math.Max(desired, 18))
-            };
+            rowHeightImageList = new ImageList { ImageSize = new Size(1, Math.Max(desired, 18)) };
             lvRecentFiles.SmallImageList = rowHeightImageList;
         }
 
-        private void OnColumnWidthChanged(object? sender, ColumnWidthChangedEventArgs e)
-        {
-            // Debounce disk writes while resizing.
-            saveDebounceTimer.Stop();
-            saveDebounceTimer.Start();
-        }
-
-        private void LoadLayout()
-        {
-            if (lvRecentFiles is null) return;
-
-            var state = UiStateConfig.Load(uiStateDirectory);
-            var widths = state.RecentFilesColumnWidths;
-
-            if (widths is null || widths.Count == 0)
-            {
-                // No prior state: autosize as a reasonable default for existing content.
-                TryAutoSizeColumns();
-                return;
-            }
-
-            foreach (ColumnHeader col in lvRecentFiles.Columns)
-            {
-                if (widths.TryGetValue(col.Text, out var w) && w > 0)
-                {
-                    col.Width = w;
-                }
-            }
-        }
-
-        private void SaveLayout()
-        {
-            if (lvRecentFiles is null) return;
-
-            var current = UiStateConfig.Load(uiStateDirectory);
-            var map = new Dictionary<string, int>(StringComparer.Ordinal);
-            foreach (ColumnHeader col in lvRecentFiles.Columns)
-            {
-                map[col.Text] = col.Width;
-            }
-
-            current.RecentFilesColumnWidths = map;
-            current.RecentFilesRowHeightScale = DefaultRowHeightScale;
-            UiStateConfig.Save(current, uiStateDirectory);
-        }
-
-        private void TryAutoSizeColumns()
-        {
-            if (lvRecentFiles is null) return;
-            try
-            {
-                foreach (ColumnHeader col in lvRecentFiles.Columns)
-                {
-                    col.Width = -2; // auto-size to header/content
-                }
-            }
-            catch
-            {
-                // Nothing fatal, sizing will be adjusted by the user anyway
-            }
-        }
-
-        // Exposed for tests
-        internal void SaveLayoutForTesting() => SaveLayout();
-
-        // Theming: apply a dark palette to the panel and the ListView without changing logic.
         private void ApplyThemeDark()
         {
+            // Dark-ish theme; safe if overridden elsewhere
             var panelBack = Color.FromArgb(32, 32, 32);
             var panelFore = Color.Gainsboro;
 
-            this.BackColor = panelBack;
-            this.ForeColor = panelFore;
+            BackColor = panelBack;
+            ForeColor = panelFore;
 
             if (tableLayoutPanel != null)
             {
@@ -320,7 +161,7 @@ namespace oaiUI.RecentFiles
 
             if (btnRefresh != null)
             {
-                btnRefresh.FlatStyle = FlatStyle.System; // keeps native theming
+                btnRefresh.FlatStyle = FlatStyle.System;
                 btnRefresh.BackColor = panelBack;
                 btnRefresh.ForeColor = panelFore;
             }
@@ -333,26 +174,120 @@ namespace oaiUI.RecentFiles
             }
         }
 
-        // --------------- Drag & Drop wiring and handlers ---------------
+        // --------------- Layout persistence ---------------
+
+        private void OnColumnWidthChanged(object? sender, ColumnWidthChangedEventArgs e)
+        {
+            saveDebounceTimer.Stop();
+            saveDebounceTimer.Start();
+        }
+
+        private void LoadLayout()
+        {
+            if (lvRecentFiles is null) return;
+
+            var state = UiStateConfig.Load(uiStateDirectory);
+            var widths = state.RecentFilesColumnWidths;
+
+            if (widths is null || widths.Count == 0)
+            {
+                // First run: leave designer-defined widths
+                return;
+            }
+
+            foreach (ColumnHeader col in lvRecentFiles.Columns)
+            {
+                if (widths.TryGetValue(col.Text, out var w) && w > 0)
+                    col.Width = w;
+            }
+        }
+
+        private void SaveLayout()
+        {
+            if (lvRecentFiles is null) return;
+
+            var current = UiStateConfig.Load(uiStateDirectory);
+            var map = new Dictionary<string, int>(StringComparer.Ordinal);
+
+            foreach (ColumnHeader col in lvRecentFiles.Columns)
+            {
+                map[col.Text] = col.Width;
+            }
+
+            current.RecentFilesColumnWidths = map;
+            current.RecentFilesRowHeightScale = DefaultRowHeightScale;
+
+            UiStateConfig.Save(current, uiStateDirectory);
+        }
+
+        // --------------- Data binding ---------------
+
+        public void RefreshList()
+        {
+            if (lvRecentFiles is null) return;
+
+            lvRecentFiles.BeginUpdate();
+            try
+            {
+                lvRecentFiles.Items.Clear();
+
+                IEnumerable<RecentFileInfo> items = recentFilesManager?.GetRecentFiles() ?? Array.Empty<RecentFileInfo>();
+
+                var filter = txtFilter?.Text?.Trim();
+                if (!string.IsNullOrWhiteSpace(filter))
+                {
+                    items = items.Where(f => f.FileName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0);
+                }
+
+                foreach (var f in items)
+                {
+                    var item = new ListViewItem(f.FileName) { Tag = f };
+
+                    // Columns: File, Type, Size in KB, Generated
+                    item.SubItems.Add(f.FileType.ToString());
+                    item.SubItems.Add($"{(f.FileSizeBytes / 1024.0):0.0} KB");
+                    item.SubItems.Add(f.GeneratedAt.ToString("yyyy-MM-dd HH:mm"));
+
+                    if (!f.Exists)
+                    {
+                        item.ForeColor = Color.Gray;
+                        item.Font = new Font(lvRecentFiles.Font, FontStyle.Italic);
+                    }
+
+                    lvRecentFiles.Items.Add(item);
+                }
+
+                if (lblStatus != null)
+                    lblStatus.Text = $"{lvRecentFiles.Items.Count} files";
+            }
+            finally
+            {
+                lvRecentFiles.EndUpdate();
+            }
+        }
+
+        // --------------- Drag & Drop inbound and outbound ---------------
 
         private void WireDragDrop()
         {
             if (lvRecentFiles is null) return;
+
+            // Inbound
             lvRecentFiles.AllowDrop = true;
             lvRecentFiles.DragEnter += OnListViewDragEnter;
             lvRecentFiles.DragDrop += OnListViewDragDrop;
+
+            // Outbound
+            lvRecentFiles.ItemDrag += OnListViewItemDrag;
         }
 
+        // Inbound handlers
         private void OnListViewDragEnter(object? sender, DragEventArgs e)
         {
             if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
-            {
                 e.Effect = DragDropEffects.Copy;
-            }
             else
-            {
                 e.Effect = DragDropEffects.None;
-            }
         }
 
         private void OnListViewDragDrop(object? sender, DragEventArgs e)
@@ -374,6 +309,7 @@ namespace oaiUI.RecentFiles
                     if (!File.Exists(path)) continue;
 
                     var type = MapExtensionToType(Path.GetExtension(path));
+
                     long size = 0;
                     try { size = new FileInfo(path).Length; } catch { size = 0; }
 
@@ -396,8 +332,42 @@ namespace oaiUI.RecentFiles
             }
             catch
             {
-                // Be defensive: never crash on bad drops
+                // Be defensive; never crash on bad drops
             }
+        }
+
+        // Outbound handler
+        private void OnListViewItemDrag(object? sender, ItemDragEventArgs e)
+        {
+            var filePaths = GetSelectedExistingFilePaths();
+            if (filePaths.Length == 0) return;
+
+            var sc = new StringCollection();
+            sc.AddRange(filePaths);
+
+            var data = new DataObject();
+            data.SetFileDropList(sc);
+
+            try { data.SetData("Preferred DropEffect", DragDropEffects.Copy); } catch { /* ignore */ }
+
+            DoDragDrop(data, DragDropEffects.Copy);
+        }
+
+        private string[] GetSelectedExistingFilePaths()
+        {
+            if (lvRecentFiles is null) return Array.Empty<string>();
+
+            var list = new List<string>();
+            foreach (ListViewItem item in lvRecentFiles.SelectedItems)
+            {
+                if (item.Tag is RecentFileInfo info &&
+                    info.Exists &&
+                    !string.IsNullOrWhiteSpace(info.FilePath))
+                {
+                    list.Add(info.FilePath);
+                }
+            }
+            return list.ToArray();
         }
 
         private static RecentFileType MapExtensionToType(string? ext)
@@ -407,33 +377,60 @@ namespace oaiUI.RecentFiles
             {
                 ".docx" => RecentFileType.Docx,
                 ".pdf" => RecentFileType.Pdf,
-                ".md" => RecentFileType.Md,
-                ".markdown" => RecentFileType.Md,
+                ".md" or ".markdown" => RecentFileType.Md,
                 _ => RecentFileType.Unknown
             };
         }
 
+        // Resolve current vector store folders using LastSelectionService (refactor-safe)
         private IReadOnlyList<string> GetCurrentVectorStoreSourceFolders()
         {
             try
             {
-                var state = UiStateConfig.Load(uiStateDirectory);
-                var vsName = state.LastSelectedVectorStore;
+                var vsName = new LastSelectionService(uiStateDirectory).GetLastSelectedVectorStore();
                 if (string.IsNullOrWhiteSpace(vsName))
                     return Array.Empty<string>();
 
                 var all = VectorStoreConfig.LoadAll();
-                if (all.TryGetValue(vsName, out var cfg) && cfg.FolderPaths is { Count: > 0 })
+                if (all.TryGetValue(vsName!, out var cfg) && cfg.FolderPaths is { Count: > 0 })
                 {
-                    // Use configured folders of the active vector store to bind the dropped files
                     return cfg.FolderPaths.ToList();
                 }
+                return Array.Empty<string>();
             }
             catch
             {
-                // Ignore and fall back
+                return Array.Empty<string>();
             }
-            return Array.Empty<string>();
+        }
+
+        // --------------- Disposal ---------------
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                try
+                {
+                    if (lvRecentFiles != null)
+                    {
+                        lvRecentFiles.ColumnWidthChanged -= OnColumnWidthChanged;
+                        lvRecentFiles.DragEnter -= OnListViewDragEnter;
+                        lvRecentFiles.DragDrop -= OnListViewDragDrop;
+                        lvRecentFiles.ItemDrag -= OnListViewItemDrag;
+                    }
+
+                    SaveLayout();
+                    rowHeightImageList?.Dispose();
+                    saveDebounceTimer.Dispose();
+                    components?.Dispose();
+                }
+                catch
+                {
+                    // Defensive: never crash during Dispose
+                }
+            }
+            base.Dispose(disposing);
         }
     }
 }

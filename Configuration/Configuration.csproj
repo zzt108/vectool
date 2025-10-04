@@ -1,5 +1,5 @@
+<!-- Path: Configuration/Configuration.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>VecTool.Configuration</RootNamespace>
@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Log\Log.csproj" />
+    <!-- Ensure Core is referenced so VectorStoreLinkFilter, etc. resolve -->
+    <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
-
 </Project>

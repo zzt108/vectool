@@ -1,140 +1,189 @@
-﻿// File: Configuration/UiStateConfig.cs
+﻿// Path: Configuration/UiStateConfig.cs
+#nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Text.Json;
+using VecTool.Core.RecentFiles;
 
 namespace VecTool.Configuration
 {
     /// <summary>
     /// Persists simple UI state such as the last selected vector store name and Recent Files layout.
-    /// Stored as JSON next to vectorStoreFolders.json if configured, otherwise under the app "Generated" folder. 
+    /// Stored as JSON next to vectorStoreFolders.json if configured, otherwise under the app "Generated" folder.
+    /// Also exposes legacy Recent Files getters/setters backed by an ISettingsStore for tests/in-memory usage.
     /// </summary>
     public sealed class UiStateConfig
     {
-        /// <summary>
-        /// The last selected vector store name.
-        /// </summary>
-        public string? LastSelectedVectorStore { get; set; }
+        // Legacy per-key settings for Recent Files filter/specific store/last selection.
+        private const string KEY_RECENT_FILTER = "ui.recentFiles.filter";
+        private const string KEY_RECENT_STORE = "ui.recentFiles.storeId";
+        private const string KEY_RECENT_LAST = "ui.recentFiles.lastSelection";
+
+        private readonly ISettingsStore _store;
 
         /// <summary>
-        /// Recent Files ListView column widths keyed by column header text.
+        /// Construct with an <see cref="ISettingsStore"/> implementation, typically an app-level or in-memory store.
         /// </summary>
-        public Dictionary<string, int>? RecentFilesColumnWidths { get; set; }
-
-        /// <summary>
-        /// Applied row-height scale for Recent Files ListView; if not set, consumer should use default (e.g., 1.10).
-        /// </summary>
-        public double? RecentFilesRowHeightScale { get; set; }
-
-        /// <summary>
-        /// Load UI state from uiState.json located in a resolved storage directory.
-        /// Returns a new default instance if the file does not exist or cannot be parsed.
-        /// </summary>
-        /// <param name="storageDirectory">Optional explicit directory to load from; if null, a default location is resolved.</param>
-        public static UiStateConfig Load(string? storageDirectory = null)
+        public UiStateConfig(ISettingsStore store)
         {
-            var path = ResolveUiStatePath(storageDirectory);
+            _store = store ?? throw new ArgumentNullException(nameof(store));
+        }
 
-            if (!File.Exists(path))
-            {
-                return new UiStateConfig();
-            }
+        /// <summary>
+        /// Get the persisted Recent Files filter; defaults to <see cref="VectorStoreLinkFilter.All"/>.
+        /// </summary>
+        public VectorStoreLinkFilter GetRecentFilesFilter()
+        {
+            var raw = _store.Get(KEY_RECENT_FILTER);
+            return Enum.TryParse<VectorStoreLinkFilter>(raw, out var parsed) ? parsed : VectorStoreLinkFilter.All;
+        }
 
+        /// <summary>
+        /// Persist the Recent Files filter.
+        /// </summary>
+        public void SetRecentFilesFilter(VectorStoreLinkFilter filter)
+        {
+            _store.Set(KEY_RECENT_FILTER, filter.ToString());
+        }
+
+        /// <summary>
+        /// Get the specific store id used by the Recent Files filter, if any.
+        /// </summary>
+        public string? GetRecentFilesSpecificStoreId()
+        {
+            return _store.Get(KEY_RECENT_STORE);
+        }
+
+        /// <summary>
+        /// Persist the specific store id used by the Recent Files filter, or null/empty to clear.
+        /// </summary>
+        public void SetRecentFilesSpecificStoreId(string? storeId)
+        {
+            _store.Set(KEY_RECENT_STORE, string.IsNullOrWhiteSpace(storeId) ? null : storeId);
+        }
+
+        /// <summary>
+        /// Get the last selected Recent File path, if any.
+        /// </summary>
+        public string? GetLastSelectedRecentFilePath()
+        {
+            return _store.Get(KEY_RECENT_LAST);
+        }
+
+        /// <summary>
+        /// Persist the last selected Recent File path, or null/empty to clear.
+        /// </summary>
+        public void SetLastSelectedRecentFilePath(string? path)
+        {
+            _store.Set(KEY_RECENT_LAST, string.IsNullOrWhiteSpace(path) ? null : path);
+        }
+
+        /// <summary>
+        /// JSON-backed UI state for Recent Files grid layout.
+        /// </summary>
+        public sealed class UiState
+        {
+            /// <summary>
+            /// Map from column header text to width in pixels.
+            /// </summary>
+            public Dictionary<string, int> RecentFilesColumnWidths { get; set; } =
+                new Dictionary<string, int>(StringComparer.Ordinal);
+
+            /// <summary>
+            /// Optional row-height scale to apply on load; null means use default scale.
+            /// </summary>
+            public double? RecentFilesRowHeightScale { get; set; }
+        }
+
+        /// <summary>
+        /// Load UI state from uiState.json in the resolved directory.
+        /// </summary>
+        public static UiState Load(string? directory = null)
+        {
             try
             {
-                var json = File.ReadAllText(path);
-                var state = JsonSerializer.Deserialize<UiStateConfig>(
-                    json,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                var path = ResolveUiStatePath(directory);
+                if (File.Exists(path))
+                {
+                    var json = File.ReadAllText(path);
+                    var state = JsonSerializer.Deserialize<UiState>(json);
+                    return state ?? new UiState();
+                }
 
-                return state ?? new UiStateConfig();
+                return new UiState();
             }
             catch
             {
-                // Defensive: ignore corrupt files to avoid blocking UI startup.
-                return new UiStateConfig();
+                // Defensive: never crash UI on corrupt/missing file, return defaults.
+                return new UiState();
             }
         }
 
         /// <summary>
-        /// Save UI state into uiState.json located in a resolved storage directory.
-        /// Creates the directory if needed and overwrites the file atomically.
+        /// Save UI state to uiState.json in the resolved directory.
         /// </summary>
-        /// <param name="state">The state to persist.</param>
-        /// <param name="storageDirectory">Optional explicit directory to save into; if null, a default location is resolved.</param>
-        public static void Save(UiStateConfig state, string? storageDirectory = null)
+        public static void Save(UiState state, string? directory = null)
         {
             if (state is null) throw new ArgumentNullException(nameof(state));
 
-            var path = ResolveUiStatePath(storageDirectory);
-            var dir = Path.GetDirectoryName(path);
-
-            if (string.IsNullOrWhiteSpace(dir))
+            try
             {
-                throw new InvalidOperationException("Could not resolve directory for uiState.json.");
-            }
+                var path = ResolveUiStatePath(directory);
+                var dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
 
-            Directory.CreateDirectory(dir);
-
-            var json = JsonSerializer.Serialize(
-                state,
-                new JsonSerializerOptions
+                var json = JsonSerializer.Serialize(state, new JsonSerializerOptions
                 {
                     WriteIndented = true
                 });
 
-            // Write atomically to reduce chance of corrupting the file.
-            var tempPath = path + ".tmp";
-            File.WriteAllText(tempPath, json);
-            if (File.Exists(path))
-            {
-                File.Replace(tempPath, path, null);
+                File.WriteAllText(path, json);
             }
-            else
+            catch
             {
-                File.Move(tempPath, path);
+                // Defensive: swallow to avoid UI disruption during resize drags; consider logging via LogCtx if desired.
             }
         }
 
-        /// <summary>
-        /// Resolves the full path to uiState.json based on explicit directory, configured vectorStoreFoldersPath, or the app's Generated folder.
-        /// </summary>
-        private static string ResolveUiStatePath(string? storageDirectory)
+        private static string ResolveUiStatePath(string? directory)
         {
-            string? baseDir = storageDirectory;
+            string baseDir = directory ?? InferConfigDirectory() ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Generated");
 
-            // Prefer the folder of vectorStoreFolders.json if configured
-            if (string.IsNullOrWhiteSpace(baseDir))
+            if (!Directory.Exists(baseDir))
+            {
+                Directory.CreateDirectory(baseDir);
+            }
+
+            return Path.Combine(baseDir, "uiState.json");
+        }
+
+        private static string? InferConfigDirectory()
+        {
+            // If vectorStoreFoldersPath is configured, place uiState.json alongside it.
+            var configured = ConfigurationManager.AppSettings["vectorStoreFoldersPath"];
+            if (!string.IsNullOrWhiteSpace(configured))
             {
                 try
                 {
-                    var vectorStoreFoldersPath = ConfigurationManager.AppSettings["vectorStoreFoldersPath"];
-                    if (!string.IsNullOrWhiteSpace(vectorStoreFoldersPath))
+                    var dir = Path.GetDirectoryName(configured);
+                    if (!string.IsNullOrWhiteSpace(dir))
                     {
-                        var dir = Path.GetDirectoryName(vectorStoreFoldersPath);
-                        if (!string.IsNullOrWhiteSpace(dir))
-                        {
-                            baseDir = dir;
-                        }
+                        return dir!;
                     }
                 }
                 catch
                 {
-                    // ignore config access errors and fall back
+                    // Ignore and use default.
                 }
             }
 
-            // Fallback to "Generated" under the app base directory
-            if (string.IsNullOrWhiteSpace(baseDir))
-            {
-                baseDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Generated");
-            }
-
-            return Path.Combine(baseDir, "uiState.json");
+            return null;
         }
     }
 }
