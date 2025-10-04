@@ -1,3 +1,1 @@
-- we are in the process of full refactoring, but zero functionality change
-- the working functional reference version is attached to the pplx space as vectool.docx.
 - current plan.md contains ongoing work plan.

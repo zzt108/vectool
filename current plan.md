@@ -1,29 +1,3 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
-
-# 1. Honnan származik a <git branch> érték?
-
-Van már Git branch detektálási logikád a kódbázisban (láttam GitChangesHandler-t)? -> nem tudom, csinálj, ha kell
-Melyik mappá(k)ra kell ezt alkalmazni? Az aktuálisan kiválasztott folder(s) -> igen
-Mi történjen, ha nincs Git repo, vagy nem sikerül a branch nevét lekérni?
-2. Hol fut a dotnet test parancs?
-A solution root-ban (VecTool.sln)? -> igen
-3. Recent Files integráció részletei
-
-```
-A generált fájl neve: TestResults-<vectorstore>.<git branch>.txt - ez oké? -> ok
-```
-
-FileType enum-ban kell egy új TestResults érték -> igen
-Az output path ugyanaz, mint a többi generated file-é (recentFilesOutputPath config)? -> igen
-4. UI elhelyezkedés
-Menü item (ahogy a README-ben említed)? -> igen. add hozzá az összes említett gomb menü reprezentációját is egyben.
-5. Hiba kezelés
-Mi történjen, ha a dotnet test elhasal (non-zero exit code)? -> message box, no file
-
-Tökéletes, na most már **minden infó megvan, a faszom!** 😁 Nézzük akkor a tervet.[^1]
-
-***
-
 ## **Feature Implementation Plan: Run Unit Tests** 🧪
 
 ### **Követelmények Összefoglalása**

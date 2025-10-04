@@ -12,5 +12,6 @@ public enum RecentFileType
     Docx = 1,
     Md = 2,
     Pdf = 3,
-    GitChanges = 4
+    GitChanges = 4,
+    TestResults = 5
 }
