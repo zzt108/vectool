@@ -64,6 +64,14 @@ namespace Vectool.OaiUI
             };
         }
 
+        private void UpdateFormTitle()
+        {
+            var selectedName = comboBoxVectorStores.SelectedItem?.ToString();
+            this.Text = string.IsNullOrEmpty(selectedName)
+                ? "VecTool"
+                : $"VecTool - [{selectedName}]";
+        }
+
         private async void getGitChangesToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             if (selectedFolders.Count == 0)
@@ -339,6 +347,8 @@ namespace Vectool.OaiUI
         private void comboBoxVectorStores_SelectedIndexChanged(object? sender, EventArgs e)
         {
             var selectedName = comboBoxVectorStores.SelectedItem?.ToString();
+            UpdateFormTitle();
+
             if (string.IsNullOrEmpty(selectedName) || !allVectorStoreConfigs.ContainsKey(selectedName))
             {
                 selectedFolders.Clear();
@@ -377,6 +387,7 @@ namespace Vectool.OaiUI
             comboBoxVectorStores.SelectedItem = newName;
             txtNewVectorStoreName.Clear();
             userInterface.ShowMessage($"Vector store '{newName}' created.", "Success", MessageType.Information);
+            UpdateFormTitle();
         }
 
         private VectorStoreConfig GetCurrentVectorStoreConfig()
