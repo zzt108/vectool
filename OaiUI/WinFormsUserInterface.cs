@@ -1,5 +1,4 @@
 ﻿using VecTool.Handlers;
-using static VecTool.Handlers.DocXHandler;
 
 namespace oaiUI
 {

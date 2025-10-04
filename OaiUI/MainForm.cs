@@ -1,7 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Drawing.Charts;
 using oaiUI;
 using oaiUI.Config;
-using oaiVectorStore;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +17,6 @@ namespace Vectool.OaiUI
     {
         private readonly IUserInterface _userInterface;
         private readonly IRecentFilesManager _recentFilesManager;
-        private readonly VectorStoreManager _vectorStoreManager;
         private List<string> _selectedFolders = new List<string>();
 
         // This is a placeholder for the status label from your designer
@@ -38,7 +36,6 @@ namespace Vectool.OaiUI
             _recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
 
             string vectorStoreFoldersPath = System.Configuration.ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ?? "vectorStoreFolders.json";
-            _vectorStoreManager = new VectorStoreManager(vectorStoreFoldersPath, _userInterface);
 
             // Wire up UI events
             WireUpEvents();

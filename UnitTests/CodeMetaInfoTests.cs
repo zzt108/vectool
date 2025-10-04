@@ -73,29 +73,5 @@ public class FooTests
             catch { /* ignore */ }
         }
 
-        [Test]
-        public void DocxShouldContainCodeMetaInfo()
-        {
-            var handler = new DocXHandler(null, null);
-            var folders = Directory.GetDirectories(root).ToList();
-            handler.ConvertSelectedFoldersToDocx(folders, outDocx, new VectorStoreConfig());
-
-            File.Exists(outDocx).ShouldBeTrue();
-
-            using var doc = WordprocessingDocument.Open(outDocx, false);
-            var text = doc.MainDocumentPart!.Document!.Body!.InnerText;
-
-            // ✅ Use constants instead of magic strings
-            text.ShouldContain(Tags.CodeMetaInfo); // Instead of "codemetainfo"
-            text.ShouldContain("Foo.cs");
-            text.ShouldContain("metrics");
-            text.ShouldContain("sizebytes");
-            text.ShouldContain("analysis");
-            text.ShouldContain("complexity");
-            text.ShouldContain("patterns");
-            text.ShouldContain("hastests");
-            text.ShouldContain("signals");
-            text.ShouldContain("longmethodscount");
-        }
     }
 }

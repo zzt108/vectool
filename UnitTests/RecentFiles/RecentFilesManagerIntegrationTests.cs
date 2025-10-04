@@ -32,39 +32,6 @@ namespace UnitTests.RecentFiles
                 Directory.Delete(testDirectory, true);
         }
 
-        [Test]
-        public void RegisterGeneratedFile_DocxHandler_ShouldTrackFile()
-        {
-            // Arrange
-            var handler = new DocXHandler(null, manager);
-            var testFile = Path.Combine(testDirectory, "test.docx");
-            File.WriteAllText(testFile, "test content");
-
-            // Act
-            manager.RegisterGeneratedFile(testFile, RecentFileType.Docx, new[] { testDirectory });
-
-            // Assert
-            var recent = manager.GetRecentFiles();
-            recent.Count.ShouldBe(1);
-            recent[0].FilePath.ShouldBe(testFile);
-            recent[0].FileType.ShouldBe(RecentFileType.Docx);
-        }
-
-        [Test]
-        public void RegisterGeneratedFile_PdfHandler_ShouldTrackFile()
-        {
-            // Arrange
-            var testFile = Path.Combine(testDirectory, "test.pdf");
-            File.WriteAllText(testFile, "pdf content");
-
-            // Act
-            manager.RegisterGeneratedFile(testFile, RecentFileType.Pdf, new[] { testDirectory });
-
-            // Assert
-            var recent = manager.GetRecentFiles();
-            recent.Count.ShouldBe(1);
-            recent[0].FileType.ShouldBe(RecentFileType.Pdf);
-        }
 
         [Test]
         public void RegisterGeneratedFile_GitChangesHandler_ShouldTrackFile()

@@ -14,7 +14,6 @@
     <ProjectReference Include="..\Handlers\Handlers.csproj" />
     <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
     <ProjectReference Include="..\Configuration\Configuration.csproj" />
-    <ProjectReference Include="..\oaiVectorStore\oaiVectorStore.csproj" />
     <ProjectReference Include="..\Utils\Utils.csproj" />
   </ItemGroup>
 

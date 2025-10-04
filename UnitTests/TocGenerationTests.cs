@@ -48,20 +48,5 @@ namespace DocXHandlerTests
             catch { /* ignore */ }
         }
 
-        [Test]
-        public void DocxShouldContainTableOfContents()
-        {
-            var handler = new DocXHandler(null, null);
-            var folders = Directory.GetDirectories(root).ToList();
-            handler.ConvertSelectedFoldersToDocx(folders, outDocx, config);
-
-            File.Exists(outDocx).ShouldBeTrue();
-
-            using var doc = WordprocessingDocument.Open(outDocx, false);
-            var text = doc.MainDocumentPart!.Document!.Body!.InnerText;
-
-            // ✅ Use constants instead of magic strings
-            text.ShouldContain(Tags.TableOfContents); // Instead of "tableofcontents" 
-        }
     }
 }

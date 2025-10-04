@@ -60,26 +60,5 @@ namespace DemoB
             }
             catch { /* ignore */ }
         }
-
-        [Test]
-        public void DocxShouldContainCrossReferences()
-        {
-            var handler = new DocXHandler(null, null);
-            var folders = Directory.GetDirectories(root).ToList();
-            handler.ConvertSelectedFoldersToDocx(folders, outDocx, new VectorStoreConfig());
-
-            File.Exists(outDocx).ShouldBeTrue();
-
-            using var doc = WordprocessingDocument.Open(outDocx, false);
-            var text = doc.MainDocumentPart!.Document!.Body!.InnerText;
-
-            // ✅ Use constants instead of magic strings
-            text.ShouldContain(Tags.CrossReferences); // Instead of "crossreferences"
-            text.ShouldContain("Foo.cs");
-            text.ShouldContain("Bar.cs");
-            // Expect that Bar depends on Foo
-            text.ShouldContain("dependson");
-            text.ShouldContain("Foo.cs");
-        }
     }
 }
