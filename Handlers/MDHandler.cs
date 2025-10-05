@@ -10,13 +10,13 @@ namespace VecTool.Handlers
         {
             try
             {
-                _ui?.WorkStart("Exporting to MD", folderPaths);
+                ui?.WorkStart("Exporting to MD", folderPaths);
                 var work = 0;
                 using (StreamWriter writer = new StreamWriter(outputPath))
                 {
                     foreach (string folderPath in folderPaths)
                     {
-                        _ui?.UpdateProgress(work++);
+                        ui?.UpdateProgress(work++);
                         ProcessFolder(
                             folderPath,
                             writer,
@@ -25,10 +25,10 @@ namespace VecTool.Handlers
                             WriteFolderName);
                     }
                 }
-                if (_recentFilesManager != null && File.Exists(outputPath))
+                if (recentFilesManager != null && File.Exists(outputPath))
                 {
                     var fileInfo = new FileInfo(outputPath);
-                    _recentFilesManager.RegisterGeneratedFile(
+                    recentFilesManager.RegisterGeneratedFile(
                         outputPath,
                         RecentFileType.Md,
                         folderPaths,
@@ -39,7 +39,7 @@ namespace VecTool.Handlers
             }
             finally
             {
-                _ui?.WorkFinish();
+                ui?.WorkFinish();
             }
         }
 
@@ -48,7 +48,7 @@ namespace VecTool.Handlers
             string fileName = Path.GetFileName(file);
             if (IsFileExcluded(fileName, vectorStoreConfig) || !IsFileValid(file, null))
             {
-                _log.Trace($"Skipping excluded file: {file}");
+                log.Trace($"Skipping excluded file: {file}");
                 return;
             }
 

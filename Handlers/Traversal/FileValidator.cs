@@ -1,9 +1,9 @@
 namespace VecTool.Handlers.Traversal;
 
+using global::VecTool.Configuration;
 using System;
 using System.IO;
 using System.Linq;
-using VecTool.Configuration;
 
 /// <summary>
 /// Validates files and folders for processing based on exclusion rules.

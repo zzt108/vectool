@@ -1,21 +1,22 @@
-﻿// Path: src/VecTool.UI/OaiUI/MainForm.cs
+﻿// ✅ FULL FILE VERSION
+// File: OaiUI/MainForm.cs
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
 using VecTool.Configuration;
 using VecTool.Core;
+using VecTool.Core.Abstractions; // Inject IGitRunner/IProcessRunner at UI layer
 using VecTool.Handlers;
 using VecTool.RecentFiles;
-
 using oaiUI;
 using oaiUI.Services;
 
 namespace Vectool.OaiUI
 {
+    // Note: Other partials exist for About, Settings Tab, and LastSelection.
     public partial class MainForm : Form
     {
         // UI services and data
@@ -26,7 +27,7 @@ namespace Vectool.OaiUI
         private readonly List<string> selectedFolders = new();
 
         // All known vector stores
-        private Dictionary<string, VectorStoreConfig> allVectorStoreConfigs = new();
+        private Dictionary<string, VectorStoreConfig> allVectorStoreConfigs = new(StringComparer.OrdinalIgnoreCase);
 
         // Persist last vector store selection
         private readonly ILastSelectionService lastSelection = new LastSelectionService();
@@ -66,13 +67,11 @@ namespace Vectool.OaiUI
             comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStoresSelectedIndexChanged;
             btnCreateNewVectorStore.Click += btnCreateNewVectorStoreClick;
 
-            // Tab change refresh (ensure recent files grid stays fresh)
+            // Tab change refresh; ensure recent files grid stays fresh
             tabControl1.SelectedIndexChanged += (sender, args) =>
             {
                 if (tabControl1.SelectedTab == tabPageRecentFiles)
-                {
                     recentFilesPanel.RefreshList();
-                }
             };
         }
 
@@ -82,40 +81,33 @@ namespace Vectool.OaiUI
             this.Text = string.IsNullOrEmpty(selectedName) ? "VecTool" : $"VecTool - {selectedName}";
         }
 
-        private static string SanitizeFileName(string input, string replacement = "_")
+        private static string? SanitizeFileName(string? input, string replacement = "_")
         {
             // Guard: ensure a non-empty replacement character
             var replChar = string.IsNullOrEmpty(replacement) ? '_' : replacement[0];
 
             // Replace invalid filename chars with the replacement char
             if (string.IsNullOrEmpty(input))
-                return "default";
+                return default;
 
             var sanitized = input;
             var invalidChars = Path.GetInvalidFileNameChars();
             foreach (var ch in invalidChars)
-            {
                 sanitized = sanitized.Replace(ch, replChar);
-            }
 
             // Normalize whitespace to replacement char
             foreach (var ch in new[] { ' ', '\t', '\r', '\n' })
-            {
                 sanitized = sanitized.Replace(ch, replChar);
-            }
 
             // Collapse consecutive replacement chars safely (no infinite loop)
             var doubleRepl = new string(replChar, 2);
             var singleRepl = new string(replChar, 1);
             while (sanitized.Contains(doubleRepl, StringComparison.Ordinal))
-            {
                 sanitized = sanitized.Replace(doubleRepl, singleRepl, StringComparison.Ordinal);
-            }
 
             // Trim leading/trailing replacement, dots, and spaces
             sanitized = sanitized.Trim(replChar, '.', ' ');
-
-            return string.IsNullOrWhiteSpace(sanitized) ? "default" : sanitized;
+            return string.IsNullOrWhiteSpace(sanitized) ? default : sanitized;
         }
 
         private async void getGitChangesToolStripMenuItemClick(object? sender, EventArgs e)
@@ -126,8 +118,8 @@ namespace Vectool.OaiUI
                 return;
             }
 
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
-            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? string.Empty) ?? "unknown";
+            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true)) ?? "unknown";
             var defaultFileName = $"{vsName}.{branchName}.changes.md";
 
             using var saveFileDialog = new SaveFileDialog
@@ -144,10 +136,10 @@ namespace Vectool.OaiUI
 
             try
             {
-                userInterface.WorkStart($"Generating Git changes file...", selectedFolders);
+                userInterface.WorkStart("Generating Git changes file...", selectedFolders);
                 var handler = new GitChangesHandler(userInterface, recentFilesManager);
                 await Task.Run(() => handler.GetGitChanges(selectedFolders, outputPath)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
+                userInterface.ShowMessage($"Successfully generated file at {outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
@@ -167,8 +159,8 @@ namespace Vectool.OaiUI
                 return;
             }
 
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
-            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? string.Empty) ?? "unknown";
+            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true)) ?? "unknown";
             var defaultFileName = $"{vsName}.{branchName}.md";
 
             using var saveFileDialog = new SaveFileDialog
@@ -186,10 +178,10 @@ namespace Vectool.OaiUI
 
             try
             {
-                userInterface.WorkStart($"Generating MD file...", selectedFolders);
+                userInterface.WorkStart("Generating MD file...", selectedFolders);
                 var handler = new MDHandler(userInterface, recentFilesManager);
                 await Task.Run(() => handler.ExportSelectedFolders(selectedFolders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
+                userInterface.ShowMessage($"Successfully generated file at {outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
@@ -209,8 +201,8 @@ namespace Vectool.OaiUI
                 return;
             }
 
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
-            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? string.Empty) ?? "unknown";
+            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true)) ?? "unknown";
             var defaultFileName = $"{vsName}.{branchName}.summary.txt";
 
             using var saveFileDialog = new SaveFileDialog
@@ -228,10 +220,10 @@ namespace Vectool.OaiUI
 
             try
             {
-                userInterface.WorkStart($"Generating file size summary...", selectedFolders);
+                userInterface.WorkStart("Generating file size summary...", selectedFolders);
                 var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
                 await Task.Run(() => handler.GenerateFileSizeSummary(selectedFolders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
+                userInterface.ShowMessage("Successfully generated file.", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
@@ -252,13 +244,24 @@ namespace Vectool.OaiUI
                 return;
             }
 
-            var vsName = comboBoxVectorStores.SelectedItem?.ToString() ?? "default";
-            var handler = new TestRunnerHandler(userInterface, recentFilesManager);
+            var vsName = comboBoxVectorStores.SelectedItem?.ToString() ?? string.Empty;
+
+            // Prefer deriving working dir from selected repo; else solution folder
+            var preferredDir = ResolvePreferredWorkingDirectory(selectedFolders);
+            var workingDir = !string.IsNullOrWhiteSpace(preferredDir)
+                ? preferredDir
+                : Path.GetDirectoryName(solutionPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+
+            // Inject dependencies explicitly per handler contract
+            IGitRunner gitRunner = new GitRunner(workingDir);
+            IProcessRunner processRunner = new ProcessRunner();
+            var handler = new TestRunnerHandler(gitRunner, processRunner, userInterface, recentFilesManager);
 
             try
             {
                 userInterface.WorkStart("Running unit tests...", selectedFolders);
                 await handler.RunTestsAsync(solutionPath, vsName, selectedFolders).ConfigureAwait(true);
+                userInterface.ShowMessage("Test execution finished.", "Run Tests", MessageType.Information);
             }
             catch (Exception ex)
             {
@@ -274,7 +277,7 @@ namespace Vectool.OaiUI
         {
             try
             {
-                // Prefer deriving branch from the selected vector store folders' repo, not the app repo.
+                // Prefer deriving branch from the selected vector store folders repo, not the app repo.
                 var preferredWorkingDir = ResolvePreferredWorkingDirectory(selectedFolders);
                 if (!string.IsNullOrWhiteSpace(preferredWorkingDir))
                 {
@@ -283,7 +286,7 @@ namespace Vectool.OaiUI
                     return string.IsNullOrWhiteSpace(branch) ? "unknown" : branch;
                 }
 
-                // Fallback to previous behavior: solution directory
+                // Fallback to solution directory
                 var solutionPath = FindSolutionFile();
                 var solutionDir = solutionPath is null
                     ? AppDomain.CurrentDomain.BaseDirectory
@@ -305,6 +308,7 @@ namespace Vectool.OaiUI
                 return null;
 
             string? firstExisting = null;
+
             foreach (var folder in folders)
             {
                 if (string.IsNullOrWhiteSpace(folder))
@@ -335,6 +339,7 @@ namespace Vectool.OaiUI
 
                 dir = dir.Parent;
             }
+
             return null;
         }
 
@@ -347,22 +352,22 @@ namespace Vectool.OaiUI
                 if (File.Exists(solutionFile))
                     return solutionFile;
 
-                currentDir = currentDir.Parent;
+                currentDir = currentDir.Parent!;
             }
             return null;
         }
 
         private void btnSelectFoldersClick(object? sender, EventArgs e)
         {
-            using var folderBrowserDialog = new FolderBrowserDialog
+            using var dialog = new FolderBrowserDialog
             {
                 Description = "Select a folder to add",
                 ShowNewFolderButton = true
             };
 
-            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            if (dialog.ShowDialog() == DialogResult.OK)
             {
-                var selectedPath = folderBrowserDialog.SelectedPath;
+                var selectedPath = dialog.SelectedPath;
                 if (!selectedFolders.Contains(selectedPath))
                 {
                     selectedFolders.Add(selectedPath);
@@ -387,9 +392,7 @@ namespace Vectool.OaiUI
             try
             {
                 allVectorStoreConfigs = VectorStoreConfig.LoadAll() ?? new Dictionary<string, VectorStoreConfig>(StringComparer.OrdinalIgnoreCase);
-                var names = allVectorStoreConfigs.Keys
-                    .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                var names = allVectorStoreConfigs.Keys.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
 
                 comboBoxVectorStores.Items.Clear();
                 if (names.Any())
@@ -401,10 +404,7 @@ namespace Vectool.OaiUI
                     if (!string.IsNullOrWhiteSpace(last))
                     {
                         var idx = names.FindIndex(n => string.Equals(n, last, StringComparison.Ordinal));
-                        if (idx >= 0)
-                            comboBoxVectorStores.SelectedIndex = idx;
-                        else
-                            comboBoxVectorStores.SelectedIndex = 0;
+                        comboBoxVectorStores.SelectedIndex = idx >= 0 ? idx : 0;
                     }
                     else
                     {
@@ -416,7 +416,6 @@ namespace Vectool.OaiUI
                     comboBoxVectorStores.Items.Clear();
                     selectedFolders.Clear();
                     listBoxSelectedFolders.Items.Clear();
-                    UpdateFormTitle();
                 }
 
                 UpdateFormTitle();
@@ -445,6 +444,7 @@ namespace Vectool.OaiUI
             var config = allVectorStoreConfigs[selectedName];
             selectedFolders.Clear();
             selectedFolders.AddRange(config.FolderPaths ?? Enumerable.Empty<string>());
+
             listBoxSelectedFolders.Items.Clear();
             listBoxSelectedFolders.Items.AddRange(selectedFolders.Cast<object>().ToArray());
 
@@ -463,13 +463,12 @@ namespace Vectool.OaiUI
 
             if (allVectorStoreConfigs.ContainsKey(newName))
             {
-                userInterface.ShowMessage($"A vector store named '{newName}' already exists.", "Duplicate Name", MessageType.Warning);
+                userInterface.ShowMessage($"A vector store named {newName} already exists.", "Duplicate Name", MessageType.Warning);
                 return;
             }
 
             var newConfig = VectorStoreConfig.FromAppConfig();
             newConfig.FolderPaths = new List<string>();
-
             allVectorStoreConfigs[newName] = newConfig;
             VectorStoreConfig.SaveAll(allVectorStoreConfigs);
 
@@ -477,8 +476,7 @@ namespace Vectool.OaiUI
             comboBoxVectorStores.SelectedItem = newName;
             txtNewVectorStoreName.Clear();
 
-            userInterface.ShowMessage($"Vector store '{newName}' created.", "Success", MessageType.Information);
-            UpdateFormTitle();
+            userInterface.ShowMessage($"Vector store {newName} created.", "Success", MessageType.Information);
         }
 
         private VectorStoreConfig GetCurrentVectorStoreConfig()

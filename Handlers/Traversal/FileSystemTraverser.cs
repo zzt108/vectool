@@ -1,10 +1,10 @@
 namespace VecTool.Handlers.Traversal;
 
+using global::VecTool.Configuration;
 using NLogShared;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using VecTool.Configuration;
 
 /// <summary>
 /// Handles folder traversal and file enumeration with exclusion support.

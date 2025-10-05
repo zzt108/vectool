@@ -38,8 +38,8 @@ public sealed class GitChangesHandler : FileHandlerBase
 
         try
         {
-            _ui?.UpdateStatus("Analyzing Git repositories...");
-            _log.Info($"Starting Git changes analysis: {folderPaths.Count} folders");
+            ui?.UpdateStatus("Analyzing Git repositories...");
+            log.Info($"Starting Git changes analysis: {folderPaths.Count} folders");
 
             var allChanges = new StringBuilder();
             allChanges.AppendLine("# AI Prompt for Commit Message");
@@ -66,24 +66,24 @@ public sealed class GitChangesHandler : FileHandlerBase
             await File.WriteAllTextAsync(outputPath, allChanges.ToString());
 
             // Register generated file
-            if (_recentFilesManager != null)
+            if (recentFilesManager != null)
             {
                 var fi = new FileInfo(outputPath);
-                _recentFilesManager.RegisterGeneratedFile(
+                recentFilesManager.RegisterGeneratedFile(
                     outputPath,
                     RecentFileType.GitChanges,
                     folderPaths,
                     fi.Exists ? fi.Length : 0);
             }
 
-            _ui?.UpdateStatus($"Git changes saved: {outputPath}");
-            _log.Info($"Git changes analysis completed: {outputPath}");
+            ui?.UpdateStatus($"Git changes saved: {outputPath}");
+            log.Info($"Git changes analysis completed: {outputPath}");
 
             return allChanges.ToString();
         }
         catch (Exception ex)
         {
-            _log.Error(ex, $"Failed to analyze Git changes: {outputPath}");
+            log.Error(ex, $"Failed to analyze Git changes: {outputPath}");
             throw;
         }
     }
@@ -207,7 +207,7 @@ public sealed class GitChangesHandler : FileHandlerBase
         }
         catch (Exception ex)
         {
-            _log.Error(ex, $"Error processing git repository: {repoPath}");
+            log.Error(ex, $"Error processing git repository: {repoPath}");
             mainChanges.AppendLine($"**Error processing repository:** {ex.Message}");
         }
 
@@ -245,7 +245,7 @@ public sealed class GitChangesHandler : FileHandlerBase
         }
         catch (Exception ex)
         {
-            _log.Error(ex, $"Error searching for Git repositories in: {folderPath}");
+            log.Error(ex, $"Error searching for Git repositories in: {folderPath}");
         }
     }
 }

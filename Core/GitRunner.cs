@@ -1,26 +1,32 @@
-﻿using NLogShared;
+﻿// ✅ FULL FILE VERSION
+using NLogShared;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VecTool.Core.Abstractions;
 
 namespace VecTool.Core
 {
     /// <summary>
-    /// Executes Git commands and returns the output.
+    /// Executes Git commands against a repository and returns outputs or throws on failures.
     /// </summary>
-    public sealed class GitRunner
+    public sealed class GitRunner : IGitRunner
     {
-        private static readonly CtxLogger _log = new();
-        private readonly string _workingDirectory;
+        private static readonly CtxLogger log = new();
+        private readonly string workingDirectory;
 
         public GitRunner(string workingDirectory)
         {
-            _workingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
+            this.workingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
         }
 
+        /// <summary>
+        /// Runs an arbitrary git command in the configured working directory with a timeout.
+        /// Throws TimeoutException on timeout and InvalidOperationException on non-zero exit.
+        /// </summary>
         public async Task<string> RunGitCommandAsync(string command, int timeoutSeconds = 60)
         {
             if (string.IsNullOrWhiteSpace(command))
@@ -30,7 +36,7 @@ namespace VecTool.Core
             {
                 FileName = "git",
                 Arguments = command,
-                WorkingDirectory = _workingDirectory,
+                WorkingDirectory = workingDirectory,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -39,7 +45,12 @@ namespace VecTool.Core
                 StandardErrorEncoding = Encoding.UTF8
             };
 
-            using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = false };
+            using var process = new Process
+            {
+                StartInfo = startInfo,
+                EnableRaisingEvents = false
+            };
+
             var outputBuilder = new StringBuilder();
             var errorBuilder = new StringBuilder();
 
@@ -54,36 +65,39 @@ namespace VecTool.Core
                 if (e.Data != null) errorBuilder.AppendLine(e.Data);
             };
 
-            _log.Info($"Running git command: git {command} in {_workingDirectory}"); // structured logging module wraps NLog [attached_file:1][attached_file:2]
+            log.Info($"Running git command: git {command} in {workingDirectory}");
 
             if (!process.Start())
+            {
                 throw new InvalidOperationException("Failed to start git process.");
+            }
 
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
             try
             {
-#if NET8_0_OR_GREATER
                 await process.WaitForExitAsync(cts.Token).ConfigureAwait(false);
-#else
-                // Fallback if needed; this project is .NET 8, so this is mostly a placeholder.
-                while (!process.HasExited)
-                {
-                    if (cts.IsCancellationRequested)
-                        break;
-                    await Task.Delay(50, cts.Token).ConfigureAwait(false);
-                }
-#endif
             }
             catch (OperationCanceledException)
             {
-                try { if (!process.HasExited) process.Kill(entireProcessTree: true); } catch { /* ignore */ }
-                _log.Warn($"Git command timed out after {timeoutSeconds}s."); // structured warning [attached_file:1][attached_file:2]
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        process.Kill(entireProcessTree: true);
+                    }
+                }
+                catch
+                {
+                    // ignored
+                }
+
+                log.Warn($"Git command timed out after {timeoutSeconds}s.");
                 throw new TimeoutException("Git command timed out.");
             }
 
-            // Ensure all async reads are completed.
+            // Ensure async reads complete
             process.WaitForExit();
 
             var exitCode = process.ExitCode;
@@ -92,25 +106,29 @@ namespace VecTool.Core
 
             if (exitCode == 0)
             {
-                _log.Info("Git command finished successfully."); // info [attached_file:1][attached_file:2]
+                log.Info("Git command finished successfully.");
                 return stdOut;
             }
 
-            _log.Warn($"Git command failed with exit code {exitCode}. Error: {stdErr}"); // warn [attached_file:1][attached_file:2]
+            log.Warn($"Git command failed with exit code {exitCode}. Error: {stdErr}");
             throw new InvalidOperationException($"Git command failed: {stdErr}");
         }
 
+        /// <summary>
+        /// Gets the git status (porcelain) of the repository, returning an error string for
+        /// well-known issues like “dubious ownership” instead of throwing.
+        /// </summary>
         public async Task<string> GetStatusAsync()
         {
             try
             {
-                return await RunGitCommandAsync("status --porcelain");
+                return await RunGitCommandAsync("status --porcelain").ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex.Message.Contains("dubious ownership"))
+            catch (Exception ex) when (ex.Message.Contains("dubious ownership", StringComparison.OrdinalIgnoreCase))
             {
-                var safeDirectoryCommand = $"git config --global --add safe.directory {_workingDirectory}";
-                _log.Warn($"Dubious ownership detected in {_workingDirectory}. Solution: {safeDirectoryCommand}");
-                return $"Error: Dubious ownership in {_workingDirectory}. Fix with: {safeDirectoryCommand}";
+                var safeDirectoryCommand = $"git config --global --add safe.directory \"{workingDirectory}\"";
+                log.Warn($"Dubious ownership detected in {workingDirectory}. Solution: {safeDirectoryCommand}");
+                return $"Error: Dubious ownership in {workingDirectory}. Fix with: {safeDirectoryCommand}";
             }
             catch (Exception ex)
             {
@@ -118,44 +136,58 @@ namespace VecTool.Core
             }
         }
 
+        /// <summary>
+        /// Gets combined diff of unstaged and staged changes with simple headings.
+        /// </summary>
         public async Task<string> GetDiffAsync()
         {
-            var unstaged = await RunGitCommandAsync("diff");
-            var staged = await RunGitCommandAsync("diff --cached");
+            var unstaged = await RunGitCommandAsync("diff").ConfigureAwait(false);
+            var staged = await RunGitCommandAsync("diff --cached").ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(unstaged) && string.IsNullOrWhiteSpace(staged))
-            {
                 return "No diff changes.";
-            }
 
             var result = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(unstaged))
             {
-                result.AppendLine("## Unstaged Changes");
+                result.AppendLine("Unstaged Changes");
                 result.AppendLine(unstaged);
             }
+
             if (!string.IsNullOrWhiteSpace(staged))
             {
-                result.AppendLine("## Staged Changes");
+                result.AppendLine("Staged Changes");
                 result.AppendLine(staged);
             }
+
             return result.ToString().Trim();
         }
 
+        /// <summary>
+        /// Gets the status of Git submodules.
+        /// </summary>
         public async Task<string> GetSubmodulesAsync()
         {
-            return await RunGitCommandAsync("submodule status");
+            return await RunGitCommandAsync("submodule status").ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Gets the current Git branch name from the repository.
+        /// Convenience overload for UI code that doesn’t pass a working directory explicitly.
+        /// Forwards to the interface method using the instance’s configured working directory.
         /// </summary>
-        /// <returns>Current branch name, or "unknown" if not in a Git repository.</returns>
-        public async Task<string> GetCurrentBranchAsync()
+        public Task<string> GetCurrentBranchAsync(CancellationToken cancellationToken = default)
+            => GetCurrentBranchAsync(workingDirectory, cancellationToken);
+
+        /// <summary>
+        /// Returns the current branch name from the repository or "unknown" on errors.
+        /// </summary>
+        public async Task<string> GetCurrentBranchAsync(string workingDirectory, CancellationToken cancellationToken = default)
         {
             try
             {
-                var result = await RunGitCommandAsync("branch --show-current", timeoutSeconds: 5);
+                // Use an explicit runner bound to the provided directory to honor the parameter.
+                var runner = new GitRunner(workingDirectory);
+                var result = await runner.RunGitCommandAsync("branch --show-current").ConfigureAwait(false);
                 return string.IsNullOrWhiteSpace(result) ? "unknown" : result.Trim();
             }
             catch
@@ -164,14 +196,15 @@ namespace VecTool.Core
             }
         }
 
+        /// <summary>
+        /// Checks if the provided folder is a Git repository by looking for a .git marker.
+        /// </summary>
         public static bool IsGitRepository(string folderPath)
         {
             if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
-            {
                 return false;
-            }
 
-            string gitPath = Path.Combine(folderPath, ".git");
+            var gitPath = Path.Combine(folderPath, ".git");
             return Directory.Exists(gitPath) || File.Exists(gitPath);
         }
     }

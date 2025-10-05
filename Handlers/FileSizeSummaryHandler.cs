@@ -23,7 +23,7 @@ namespace VecTool.Handlers
         {
             try
             {
-                _ui?.WorkStart("Generating file size report...", folderPaths);
+                ui?.WorkStart("Generating file size report...", folderPaths);
 
                 var fileSizesByType = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
                 var fileCountByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -31,14 +31,14 @@ namespace VecTool.Handlers
                 int progress = 0;
                 foreach (var folderPath in folderPaths)
                 {
-                    _ui?.UpdateProgress(progress++);
-                    _ui?.UpdateStatus($"Analyzing folder: {folderPath}");
+                    ui?.UpdateProgress(progress++);
+                    ui?.UpdateStatus($"Analyzing folder: {folderPath}");
                     CalculateFolderSizes(folderPath, config, fileSizesByType, fileCountByType);
                 }
 
                 WriteReportToFile(outputPath, folderPaths, fileSizesByType, fileCountByType);
 
-                _ui?.UpdateStatus("File size summary generated successfully.");
+                ui?.UpdateStatus("File size summary generated successfully.");
             }
             catch (Exception ex)
             {
@@ -47,11 +47,11 @@ namespace VecTool.Handlers
             }
             finally
             {
-                _ui?.WorkFinish();
-                if (_recentFilesManager != null && File.Exists(outputPath))
+                ui?.WorkFinish();
+                if (recentFilesManager != null && File.Exists(outputPath))
                 {
                     var fileInfo = new FileInfo(outputPath);
-                    _recentFilesManager.RegisterGeneratedFile(outputPath, RecentFileType.Md, folderPaths, fileInfo.Length);
+                    recentFilesManager.RegisterGeneratedFile(outputPath, RecentFileType.Md, folderPaths, fileInfo.Length);
                 }
             }
         }

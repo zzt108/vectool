@@ -1,78 +1,90 @@
-﻿// File: UnitTests/TestRunnerHandlerTests.cs
-
+﻿// ✅ FULL FILE VERSION
 using NUnit.Framework;
 using Shouldly;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using UnitTests.Fakes;
+using VecTool.Core.Abstractions;
 using VecTool.Handlers;
+using VecTool.RecentFiles;
 
 namespace UnitTests
 {
     [TestFixture]
     public class TestRunnerHandlerTests
     {
-        private string _testDir = default!;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _testDir = Path.Combine(Path.GetTempPath(), "VecToolTestRunner", Guid.NewGuid().ToString());
-            Directory.CreateDirectory(_testDir);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            if (Directory.Exists(_testDir))
-                Directory.Delete(_testDir, true);
-        }
-
         [Test]
-        public async Task RunTestsAsync_ShouldReturnNull_WhenSolutionFileMissing()
+        public async Task RunTestsAsync_returns_null_when_solution_missing()
         {
-            // Arrange
-            var handler = new TestRunnerHandler(null, null);
-            var fakeSolutionPath = Path.Combine(_testDir, "NonExistent.sln");
+            IGitRunner git = new FakeGitRunner("dev");
+            IProcessRunner proc = new FakeProcessRunner(exitCode: 0);
+            var handler = new TestRunnerHandler(git, proc, ui: null, recentFilesManager: null);
 
-            // Act
-            var result = await handler.RunTestsAsync(fakeSolutionPath, "TestStore", new System.Collections.Generic.List<string>());
-
-            // Assert
+            var result = await handler.RunTestsAsync("C:\\definitely-not-here\\VecTool.sln", "Store", Array.Empty<string>(), CancellationToken.None);
             result.ShouldBeNull();
         }
 
         [Test]
-        public async Task RunTestsAsync_ShouldReturnNull_WhenDotnetTestFails()
+        public async Task RunTestsAsync_writes_file_when_exitcode_zero()
         {
-            // Arrange
-            var handler = new TestRunnerHandler(null, null);
+            IGitRunner git = new FakeGitRunner("dev");
+            IProcessRunner proc = new FakeProcessRunner(exitCode: 0, stdout: "ok");
+            IRecentFilesManager recent = new NoopRecentFilesManager();
+            var handler = new TestRunnerHandler(git, proc, ui: null, recentFilesManager: recent);
 
-            // Create empty dummy .sln to satisfy existence check
-            var fakeSolutionPath = Path.Combine(_testDir, "Dummy.sln");
-            await File.WriteAllTextAsync(fakeSolutionPath, string.Empty);
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            var sln = Path.Combine(tempDir, "VecTool.sln");
+            await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
 
-            // Simulate failure: Use invalid command by renaming dotnet executable in PATH
-            // Here we expect an exception internally, resulting in a null return.
-            var originalPath = Environment.GetEnvironmentVariable("PATH");
-            Environment.SetEnvironmentVariable("PATH", "");
-
-            // Act
-            var result = await handler.RunTestsAsync(fakeSolutionPath, "TestStore", new System.Collections.Generic.List<string>());
-
-            // Assert
-            result.ShouldBeNull();
-
-            // Cleanup
-            Environment.SetEnvironmentVariable("PATH", originalPath);
+            try
+            {
+                var result = await handler.RunTestsAsync(sln, "S", Array.Empty<string>(), CancellationToken.None);
+                result.ShouldNotBeNull();
+                File.Exists(result!).ShouldBeTrue();
+            }
+            finally
+            {
+                TryDeleteDir(tempDir);
+            }
         }
 
-        // Integration-like test skipped due to external dependency on git and dotnet
         [Test]
-        public void FindSolutionFile_IsPrivateAndNotTestable()
+        public async Task RunTestsAsync_returns_null_when_exitcode_nonzero()
         {
-            // This method is private; proper unit testing would require visibility change.
-            Assert.Pass("FindSolutionFile is covered in integration tests.");
+            IGitRunner git = new FakeGitRunner("dev");
+            IProcessRunner proc = new FakeProcessRunner(exitCode: 2, stdout: "", stderr: "fail");
+            var handler = new TestRunnerHandler(git, proc, ui: null, recentFilesManager: null);
+
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
+            var sln = Path.Combine(tempDir, "VecTool.sln");
+            await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
+
+            try
+            {
+                var result = await handler.RunTestsAsync(sln, "S", Array.Empty<string>(), CancellationToken.None);
+                result.ShouldBeNull();
+            }
+            finally
+            {
+                TryDeleteDir(tempDir);
+            }
+        }
+
+        private static void TryDeleteDir(string dir)
+        {
+            try
+            {
+                if (Directory.Exists(dir))
+                    Directory.Delete(dir, recursive: true);
+            }
+            catch
+            {
+                // Swallow in tests
+            }
         }
     }
 }

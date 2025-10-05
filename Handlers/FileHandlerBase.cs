@@ -1,11 +1,11 @@
 namespace VecTool.Handlers;
 
+using global::VecTool.Configuration;
+using global::VecTool.Handlers.Analysis;
+using global::VecTool.Handlers.Traversal;
+using global::VecTool.RecentFiles;
 using NLogShared;
 using System;
-using VecTool.Configuration;
-using VecTool.Handlers.Analysis;
-using VecTool.Handlers.Traversal;
-using VecTool.RecentFiles;
 
 /// <summary>
 /// Base class for all file format handlers (DOCX, MD, PDF, Git).
@@ -13,17 +13,17 @@ using VecTool.RecentFiles;
 /// </summary>
 public abstract class FileHandlerBase
 {
-    protected static readonly CtxLogger _log = new();
+    protected static readonly CtxLogger log = new(); // renamed from _log to match AI faulti code generation logic
     
-    protected readonly IUserInterface? _ui;
-    protected readonly IRecentFilesManager? _recentFilesManager;
+    protected readonly IUserInterface? ui; // renamed from _ui to match AI faulti code generation logic
+    protected readonly IRecentFilesManager? recentFilesManager; // renamed from _recentFilesManager to match AI faulti code generation logic
     protected readonly AiContextGenerator _aiContextGenerator;
     protected readonly FileSystemTraverser _fileSystemTraverser;
 
     protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
     {
-        _ui = ui;
-        _recentFilesManager = recentFilesManager;
+        this.ui = ui;
+        this.recentFilesManager = recentFilesManager;
         _aiContextGenerator = new AiContextGenerator();
         _fileSystemTraverser = new FileSystemTraverser(ui);
     }
