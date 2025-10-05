@@ -1,4 +1,6 @@
 ﻿// ✅ FULL FILE VERSION
+// Path: OaiUI/MainForm.cs
+
 using NLog;
 using oaiUI.RecentFiles;
 using System;
@@ -13,26 +15,28 @@ using VecTool.RecentFiles;
 namespace Vectool.OaiUI
 {
     /// <summary>
-    /// Main application form with tabbed interface for Vector Store management
+    /// Main application form with tabbed interface for Vector Store management.
     /// </summary>
     public partial class MainForm : Form
     {
         private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
-        // Designer components container
-        // private System.ComponentModel.IContainer? components = null;
-
         // Dependencies
         private IRecentFilesManager? recentFilesManager;
         private IAppSettingsReader? appSettings;
 
+        /// <summary>
+        /// Parameterless constructor for Designer compatibility and runtime DI.
+        /// </summary>
         public MainForm()
         {
-            // CRITICAL: This MUST be first - initializes all designer controls
+            // ✅ CRITICAL: InitializeComponent MUST be first - initializes all designer controls
             InitializeComponent();
 
-            // ✅ NEW - Validate that designer controls are present
-            ValidateDesignerControls();
+#if DEBUG
+            // ✅ NEW: Non-blocking validation - logs warnings only, doesn't halt startup
+            ValidateDesignerControlsNonBlocking();
+#endif
 
             // Initialize dependencies
             InitializeDependencies();
@@ -46,6 +50,9 @@ namespace Vectool.OaiUI
             Logger.Info("MainForm initialized successfully");
         }
 
+        /// <summary>
+        /// DI-friendly constructor for tests or advanced composition.
+        /// </summary>
         public MainForm(IRecentFilesManager recentFilesManager, IAppSettingsReader appSettings) : this()
         {
             this.recentFilesManager = recentFilesManager ?? throw new ArgumentNullException(nameof(recentFilesManager));
@@ -60,7 +67,7 @@ namespace Vectool.OaiUI
 
         private void InitializeDependencies()
         {
-            // Fallback initialization for runtime
+            // Fallback initialization for runtime if dependencies weren't injected
             if (recentFilesManager == null)
             {
                 var config = RecentFilesConfig.FromAppConfig(appSettings ?? new ConfigurationManagerAppSettingsReader());
@@ -92,8 +99,11 @@ namespace Vectool.OaiUI
             catch (Exception ex)
             {
                 Logger.Error(ex, "Failed to load initial data");
-                MessageBox.Show($"Warning: Some data failed to load: {ex.Message}",
-                               "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(
+                    $"Warning: Some data failed to load: {ex.Message}",
+                    "VecTool",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
             }
         }
 
@@ -101,69 +111,73 @@ namespace Vectool.OaiUI
         {
             try
             {
+                // Tab control
                 if (tabControl1 != null)
                 {
                     tabControl1.SelectedIndexChanged += OnTabSelectedIndexChanged;
                 }
 
+                // Menu items - Actions
                 if (convertToMdToolStripMenuItem != null)
                 {
-                    convertToMdToolStripMenuItem.Click += ConvertToMdToolStripMenuItem_Click;
+                    convertToMdToolStripMenuItem.Click += ConvertToMdToolStripMenuItemClick;
                 }
 
                 if (getGitChangesToolStripMenuItem != null)
                 {
-                    getGitChangesToolStripMenuItem.Click += GetGitChangesToolStripMenuItem_Click;
+                    getGitChangesToolStripMenuItem.Click += GetGitChangesToolStripMenuItemClick;
                 }
 
                 if (fileSizeSummaryToolStripMenuItem != null)
                 {
-                    fileSizeSummaryToolStripMenuItem.Click += FileSizeSummaryToolStripMenuItem_Click;
+                    fileSizeSummaryToolStripMenuItem.Click += FileSizeSummaryToolStripMenuItemClick;
                 }
 
                 if (runTestsToolStripMenuItem != null)
                 {
-                    runTestsToolStripMenuItem.Click += RunTestsToolStripMenuItem_Click;
+                    runTestsToolStripMenuItem.Click += RunTestsToolStripMenuItemClick;
                 }
 
                 if (exitToolStripMenuItem != null)
                 {
-                    exitToolStripMenuItem.Click += ExitToolStripMenuItem_Click;
+                    exitToolStripMenuItem.Click += ExitToolStripMenuItemClick;
                 }
 
+                // Main tab
                 if (btnSelectFolders != null)
                 {
-                    btnSelectFolders.Click += BtnSelectFolders_Click;
+                    btnSelectFolders.Click += BtnSelectFoldersClick;
                 }
 
                 if (btnCreateNewVectorStore != null)
                 {
-                    btnCreateNewVectorStore.Click += BtnCreateNewVectorStore_Click;
+                    btnCreateNewVectorStore.Click += BtnCreateNewVectorStoreClick;
                 }
 
+                // Settings tab
                 if (cmbSettingsVectorStore != null)
                 {
-                    cmbSettingsVectorStore.SelectedIndexChanged += CmbSettingsVectorStore_SelectedIndexChanged;
+                    cmbSettingsVectorStore.SelectedIndexChanged += CmbSettingsVectorStoreSelectedIndexChanged;
                 }
 
                 if (chkInheritExcludedFiles != null)
                 {
-                    chkInheritExcludedFiles.CheckedChanged += ChkInheritExcludedFiles_CheckedChanged;
+                    chkInheritExcludedFiles.CheckedChanged += ChkInheritExcludedFilesCheckedChanged;
                 }
 
                 if (chkInheritExcludedFolders != null)
                 {
-                    chkInheritExcludedFolders.CheckedChanged += ChkInheritExcludedFolders_CheckedChanged;
+                    chkInheritExcludedFolders.CheckedChanged += ChkInheritExcludedFoldersCheckedChanged;
                 }
 
                 if (btnSaveVsSettings != null)
                 {
-                    btnSaveVsSettings.Click += BtnSaveVsSettings_Click;
+                    btnSaveVsSettings.Click += BtnSaveVsSettingsClick;
                 }
 
                 if (btnResetVsSettings != null)
                 {
-                    btnResetVsSettings.Click += BtnResetVsSettings_Click;
+                    btnResetVsSettings.Click += BtnResetVsSettingsClick;
                 }
 
                 Logger.Debug("Events wired successfully");
@@ -176,7 +190,7 @@ namespace Vectool.OaiUI
 
         private void OnTabSelectedIndexChanged(object? sender, EventArgs e)
         {
-            var tabs = sender as TabControl ?? Controls.OfType<TabControl>().FirstOrDefault();
+            var tabs = (sender as TabControl) ?? Controls.OfType<TabControl>().FirstOrDefault();
             if (tabs == null) return;
 
             foreach (TabPage tp in tabs.TabPages)
@@ -191,58 +205,57 @@ namespace Vectool.OaiUI
         }
 
         #region Menu Event Handlers
-        private void ConvertToMdToolStripMenuItem_Click(object? sender, EventArgs e)
+
+        private void ConvertToMdToolStripMenuItemClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("Convert to MD functionality - Coming soon!", "VecTool",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Convert to MD functionality - Coming soon!", "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void GetGitChangesToolStripMenuItem_Click(object? sender, EventArgs e)
+        private void GetGitChangesToolStripMenuItemClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("Get Git Changes functionality - Coming soon!", "VecTool",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Get Git Changes functionality - Coming soon!", "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void FileSizeSummaryToolStripMenuItem_Click(object? sender, EventArgs e)
+        private void FileSizeSummaryToolStripMenuItemClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("File Size Summary functionality - Coming soon!", "VecTool",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("File Size Summary functionality - Coming soon!", "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void RunTestsToolStripMenuItem_Click(object? sender, EventArgs e)
+        private void RunTestsToolStripMenuItemClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("Run Tests functionality - Coming soon!", "VecTool",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Run Tests functionality - Coming soon!", "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void ExitToolStripMenuItem_Click(object? sender, EventArgs e)
+        private void ExitToolStripMenuItemClick(object? sender, EventArgs e)
         {
             Close();
         }
+
         #endregion
 
         #region Main Tab Event Handlers
-        private void BtnSelectFolders_Click(object? sender, EventArgs e)
+
+        private void BtnSelectFoldersClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("Folder selection - Coming soon!", "VecTool",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Folder selection - Coming soon!", "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void BtnCreateNewVectorStore_Click(object? sender, EventArgs e)
+        private void BtnCreateNewVectorStoreClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("Vector store creation - Coming soon!", "VecTool",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Vector store creation - Coming soon!", "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
         #endregion
 
         #region Settings Tab Event Handlers
-        private void CmbSettingsVectorStore_SelectedIndexChanged(object? sender, EventArgs e)
+
+        private void CmbSettingsVectorStoreSelectedIndexChanged(object? sender, EventArgs e)
         {
             var selectedName = cmbSettingsVectorStore?.SelectedItem?.ToString();
             SettingsTabLoadSelection(selectedName);
         }
 
-        private void ChkInheritExcludedFiles_CheckedChanged(object? sender, EventArgs e)
+        private void ChkInheritExcludedFilesCheckedChanged(object? sender, EventArgs e)
         {
             if (txtExcludedFiles != null && chkInheritExcludedFiles != null)
             {
@@ -250,7 +263,7 @@ namespace Vectool.OaiUI
             }
         }
 
-        private void ChkInheritExcludedFolders_CheckedChanged(object? sender, EventArgs e)
+        private void ChkInheritExcludedFoldersCheckedChanged(object? sender, EventArgs e)
         {
             if (txtExcludedFolders != null && chkInheritExcludedFolders != null)
             {
@@ -258,44 +271,56 @@ namespace Vectool.OaiUI
             }
         }
 
-        private void BtnSaveVsSettings_Click(object? sender, EventArgs e)
+        private void BtnSaveVsSettingsClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("Settings saved!", "VecTool",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Settings saved!", "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void BtnResetVsSettings_Click(object? sender, EventArgs e)
+        private void BtnResetVsSettingsClick(object? sender, EventArgs e)
         {
-            MessageBox.Show("Settings reset!", "VecTool",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Settings reset!", "VecTool", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
         #endregion
 
-        // ✅ NEW - Validates designer control presence
-        private void ValidateDesignerControls()
+#if DEBUG
+        /// <summary>
+        /// ✅ NEW: Validates that all designer controls are present.
+        /// Logs warnings instead of blocking UI to prevent startup issues.
+        /// </summary>
+        private void ValidateDesignerControlsNonBlocking()
         {
             var missingControls = new List<string>();
 
-            if (menuStrip1 == null) missingControls.Add("menuStrip1");
-            if (tabControl1 == null) missingControls.Add("tabControl1");
-            if (statusStrip1 == null) missingControls.Add("statusStrip1");
-            if (tabPageMain == null) missingControls.Add("tabPageMain");
-            if (tabPageSettings == null) missingControls.Add("tabPageSettings");
-            if (tabPageRecentFiles == null) missingControls.Add("tabPageRecentFiles");
+            // Check menu
+            if (menuStrip1 == null) missingControls.Add(nameof(menuStrip1));
+            if (fileToolStripMenuItem == null) missingControls.Add(nameof(fileToolStripMenuItem));
+
+            // Check tabs
+            if (tabControl1 == null) missingControls.Add(nameof(tabControl1));
+            if (tabPageMain == null) missingControls.Add(nameof(tabPageMain));
+            if (tabPageSettings == null) missingControls.Add(nameof(tabPageSettings));
+            if (tabPageRecentFiles == null) missingControls.Add(nameof(tabPageRecentFiles));
+
+            // ✅ Check Recent Files panel (the critical control!)
+            if (recentFilesPanel == null) missingControls.Add(nameof(recentFilesPanel));
+
+            // Check status
+            if (statusStrip1 == null) missingControls.Add(nameof(statusStrip1));
+            if (statusLabel == null) missingControls.Add(nameof(statusLabel));
 
             if (missingControls.Count > 0)
             {
-                var message = $"Missing designer controls: {string.Join(", ", missingControls)}\n\n" +
-                              "Try: Build → Clean Solution → Rebuild Solution";
-
-                Logger.Error("Designer controls missing: {MissingControls}", string.Join(", ", missingControls));
-                MessageBox.Show(message, "VecTool - Designer Issue",
-                               MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var message = $"⚠️ Designer controls missing: {string.Join(", ", missingControls)}";
+                Logger.Warn(message);
+                Console.WriteLine(message);
+                // ✅ DO NOT show MessageBox - just log and continue
             }
             else
             {
-                Logger.Debug("All designer controls validated successfully");
+                Logger.Debug("✅ All designer controls validated successfully");
             }
         }
+#endif
     }
 }

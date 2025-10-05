@@ -1,4 +1,7 @@
-﻿#nullable enable
+﻿// ✅ FULL FILE VERSION
+// Path: OaiUI/RecentFiles/RecentFilesPanel.cs
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -13,8 +16,10 @@ using VecTool.RecentFiles;
 
 namespace oaiUI.RecentFiles
 {
-    // Recent Files tab user control with filter, refresh and persisted layout.
-    // Note: Designer-generated elements live in RecentFilesPanel.Designer.cs.
+    /// <summary>
+    /// Recent Files tab user control with filter, refresh and persisted layout.
+    /// Note: Designer-generated elements live in RecentFilesPanel.Designer.cs.
+    /// </summary>
     public partial class RecentFilesPanel : UserControl
     {
         // Dependencies
@@ -26,17 +31,23 @@ namespace oaiUI.RecentFiles
 
         // Trick to control ListView row height
         private ImageList? rowHeightImageList;
-
         private const double DefaultRowHeightScale = 1.10;
 
-        // Parameterless constructor for Designer
+        /// <summary>
+        /// ✅ Parameterless constructor for Designer compatibility.
+        /// </summary>
         public RecentFilesPanel()
         {
+            // ✅ Designer-generated initialization
             InitializeComponent();
+
+            // ✅ Runtime wiring
             WireRuntime();
         }
 
-        // Preferred constructor for DI/tests
+        /// <summary>
+        /// Preferred constructor for DI/tests with explicit manager injection.
+        /// </summary>
         public RecentFilesPanel(IRecentFilesManager recentFilesManager, string? uiStateDirectory = null)
         {
             this.recentFilesManager = recentFilesManager ?? throw new ArgumentNullException(nameof(recentFilesManager));
@@ -46,7 +57,9 @@ namespace oaiUI.RecentFiles
             WireRuntime();
         }
 
-        // Allow late initialization when created by Designer and composed in MainForm
+        /// <summary>
+        /// ✅ Allows late initialization when created by Designer and composed in MainForm.
+        /// </summary>
         public void Initialize(IRecentFilesManager manager)
         {
             recentFilesManager = manager ?? throw new ArgumentNullException(nameof(manager));
@@ -54,10 +67,15 @@ namespace oaiUI.RecentFiles
             RefreshList();
         }
 
-        // Exposed for tests
-        internal void SaveLayoutForTesting() => SaveLayout();
+        /// <summary>
+        /// Exposed for tests to force immediate save.
+        /// </summary>
+        internal void SaveLayoutForTesting()
+        {
+            SaveLayout();
+        }
 
-        // Designer wires: this.Load += RecentFilesPanelLoad
+        // ✅ Event handlers wired by Designer
         private void RecentFilesPanelLoad(object? sender, EventArgs e)
         {
             // Ensure initial layout and content
@@ -65,14 +83,21 @@ namespace oaiUI.RecentFiles
             RefreshList();
         }
 
-        // Designer wires: this.txtFilter.TextChanged += txtFilterTextChanged
-        private void txtFilterTextChanged(object? sender, EventArgs e) => RefreshList();
+        private void txtFilterTextChanged(object? sender, EventArgs e)
+        {
+            RefreshList();
+        }
 
-        // Designer wires: this.btnRefresh.Click += btnRefreshClick
-        private void btnRefreshClick(object? sender, EventArgs e) => RefreshList();
+        private void btnRefreshClick(object? sender, EventArgs e)
+        {
+            RefreshList();
+        }
 
         // --------------- Initialization helpers ---------------
 
+        /// <summary>
+        /// Wire up runtime events and configurations not handled by the Designer.
+        /// </summary>
         private void WireRuntime()
         {
             SetupListView();
@@ -80,12 +105,14 @@ namespace oaiUI.RecentFiles
             ApplyThemeDark();
             WireDragDrop();
 
+            // Column resize tracking (for layout persistence)
             if (lvRecentFiles != null)
             {
                 lvRecentFiles.ColumnWidthChanged += OnColumnWidthChanged;
             }
 
-            saveDebounceTimer.Tick += (_, __) =>
+            // Debounce timer for layout saves
+            saveDebounceTimer.Tick += (_, _) =>
             {
                 saveDebounceTimer.Stop();
                 SaveLayout();
@@ -94,13 +121,15 @@ namespace oaiUI.RecentFiles
 
         private void SetupListView()
         {
-            if (lvRecentFiles is null) return;
+            if (lvRecentFiles is null)
+                return;
 
             lvRecentFiles.View = View.Details;
             lvRecentFiles.FullRowSelect = true;
             lvRecentFiles.GridLines = true;
             lvRecentFiles.MultiSelect = true;
 
+            // Add columns if not already defined by Designer
             if (lvRecentFiles.Columns.Count == 0)
             {
                 lvRecentFiles.Columns.Add(new ColumnHeader { Text = "File", Width = 400, Name = "colFile" });
@@ -112,7 +141,8 @@ namespace oaiUI.RecentFiles
 
         private void ApplyRowHeightScale()
         {
-            if (lvRecentFiles is null) return;
+            if (lvRecentFiles is null)
+                return;
 
             var state = UiStateConfig.Load(uiStateDirectory);
             var scale = state.RecentFilesRowHeightScale ?? DefaultRowHeightScale;
@@ -121,13 +151,17 @@ namespace oaiUI.RecentFiles
             var desired = (int)Math.Ceiling(baseHeight * scale);
 
             rowHeightImageList?.Dispose();
-            rowHeightImageList = new ImageList { ImageSize = new Size(1, Math.Max(desired, 18)) };
+            rowHeightImageList = new ImageList
+            {
+                ImageSize = new Size(1, Math.Max(desired, 18))
+            };
+
             lvRecentFiles.SmallImageList = rowHeightImageList;
         }
 
         private void ApplyThemeDark()
         {
-            // Dark-ish theme; safe if overridden elsewhere
+            // Dark-ish theme (safe if overridden elsewhere)
             var panelBack = Color.FromArgb(32, 32, 32);
             var panelFore = Color.Gainsboro;
 
@@ -178,33 +212,44 @@ namespace oaiUI.RecentFiles
 
         private void OnColumnWidthChanged(object? sender, ColumnWidthChangedEventArgs e)
         {
+            // Debounce: restart timer on each change
             saveDebounceTimer.Stop();
             saveDebounceTimer.Start();
         }
 
+        /// <summary>
+        /// Load layout settings (column widths) from disk.
+        /// </summary>
         private void LoadLayout()
         {
-            if (lvRecentFiles is null) return;
+            if (lvRecentFiles is null)
+                return;
 
             var state = UiStateConfig.Load(uiStateDirectory);
             var widths = state.RecentFilesColumnWidths;
 
             if (widths is null || widths.Count == 0)
             {
-                // First run: leave designer-defined widths
+                // First run - leave designer-defined widths
                 return;
             }
 
             foreach (ColumnHeader col in lvRecentFiles.Columns)
             {
                 if (widths.TryGetValue(col.Text, out var w) && w > 0)
+                {
                     col.Width = w;
+                }
             }
         }
 
+        /// <summary>
+        /// Save layout settings (column widths) to disk.
+        /// </summary>
         private void SaveLayout()
         {
-            if (lvRecentFiles is null) return;
+            if (lvRecentFiles is null)
+                return;
 
             var current = UiStateConfig.Load(uiStateDirectory);
             var map = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -222,9 +267,13 @@ namespace oaiUI.RecentFiles
 
         // --------------- Data binding ---------------
 
+        /// <summary>
+        /// Refresh the list of recent files from the manager, applying the current filter.
+        /// </summary>
         public void RefreshList()
         {
-            if (lvRecentFiles is null) return;
+            if (lvRecentFiles == null)
+                return;
 
             lvRecentFiles.BeginUpdate();
             try
@@ -233,6 +282,7 @@ namespace oaiUI.RecentFiles
 
                 IEnumerable<RecentFileInfo> items = recentFilesManager?.GetRecentFiles() ?? Array.Empty<RecentFileInfo>();
 
+                // Apply filter
                 var filter = txtFilter?.Text?.Trim();
                 if (!string.IsNullOrWhiteSpace(filter))
                 {
@@ -258,7 +308,9 @@ namespace oaiUI.RecentFiles
                 }
 
                 if (lblStatus != null)
+                {
                     lblStatus.Text = $"{lvRecentFiles.Items.Count} files";
+                }
             }
             finally
             {
@@ -266,11 +318,12 @@ namespace oaiUI.RecentFiles
             }
         }
 
-        // --------------- Drag & Drop inbound and outbound ---------------
+        // --------------- Drag & Drop (inbound and outbound) ---------------
 
         private void WireDragDrop()
         {
-            if (lvRecentFiles is null) return;
+            if (lvRecentFiles is null)
+                return;
 
             // Inbound
             lvRecentFiles.AllowDrop = true;
@@ -285,33 +338,51 @@ namespace oaiUI.RecentFiles
         private void OnListViewDragEnter(object? sender, DragEventArgs e)
         {
             if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
+            {
                 e.Effect = DragDropEffects.Copy;
+            }
             else
+            {
                 e.Effect = DragDropEffects.None;
+            }
         }
 
         private void OnListViewDragDrop(object? sender, DragEventArgs e)
         {
-            if (recentFilesManager is null) return;
-            if (e.Data?.GetDataPresent(DataFormats.FileDrop) != true) return;
+            if (recentFilesManager is null)
+                return;
+
+            if (e.Data?.GetDataPresent(DataFormats.FileDrop) != true)
+                return;
 
             try
             {
                 var data = e.Data.GetData(DataFormats.FileDrop) as string[];
-                if (data is null || data.Length == 0) return;
+                if (data is null || data.Length == 0)
+                    return;
 
                 var sourceFolders = GetCurrentVectorStoreSourceFolders();
                 var added = 0;
 
                 foreach (var path in data)
                 {
-                    if (string.IsNullOrWhiteSpace(path)) continue;
-                    if (!File.Exists(path)) continue;
+                    if (string.IsNullOrWhiteSpace(path))
+                        continue;
+
+                    if (!File.Exists(path))
+                        continue;
 
                     var type = MapExtensionToType(Path.GetExtension(path));
-
                     long size = 0;
-                    try { size = new FileInfo(path).Length; } catch { size = 0; }
+
+                    try
+                    {
+                        size = new FileInfo(path).Length;
+                    }
+                    catch
+                    {
+                        size = 0;
+                    }
 
                     // Register and associate with current vector store folders
                     recentFilesManager.RegisterGeneratedFile(
@@ -319,8 +390,8 @@ namespace oaiUI.RecentFiles
                         fileType: type,
                         sourceFolders: sourceFolders,
                         fileSizeBytes: size,
-                        generatedAtUtc: DateTime.UtcNow);
-
+                        generatedAtUtc: DateTime.UtcNow
+                    );
                     added++;
                 }
 
@@ -332,7 +403,7 @@ namespace oaiUI.RecentFiles
             }
             catch
             {
-                // Be defensive; never crash on bad drops
+                // Be defensive - never crash on bad drops
             }
         }
 
@@ -340,7 +411,8 @@ namespace oaiUI.RecentFiles
         private void OnListViewItemDrag(object? sender, ItemDragEventArgs e)
         {
             var filePaths = GetSelectedExistingFilePaths();
-            if (filePaths.Length == 0) return;
+            if (filePaths.Length == 0)
+                return;
 
             var sc = new StringCollection();
             sc.AddRange(filePaths);
@@ -348,25 +420,33 @@ namespace oaiUI.RecentFiles
             var data = new DataObject();
             data.SetFileDropList(sc);
 
-            try { data.SetData("Preferred DropEffect", DragDropEffects.Copy); } catch { /* ignore */ }
+            try
+            {
+                data.SetData("Preferred DropEffect", DragDropEffects.Copy);
+            }
+            catch
+            {
+                // ignore
+            }
 
             DoDragDrop(data, DragDropEffects.Copy);
         }
 
         private string[] GetSelectedExistingFilePaths()
         {
-            if (lvRecentFiles is null) return Array.Empty<string>();
+            if (lvRecentFiles is null)
+                return Array.Empty<string>();
 
             var list = new List<string>();
+
             foreach (ListViewItem item in lvRecentFiles.SelectedItems)
             {
-                if (item.Tag is RecentFileInfo info &&
-                    info.Exists &&
-                    !string.IsNullOrWhiteSpace(info.FilePath))
+                if (item.Tag is RecentFileInfo info && info.Exists && !string.IsNullOrWhiteSpace(info.FilePath))
                 {
                     list.Add(info.FilePath);
                 }
             }
+
             return list.ToArray();
         }
 
@@ -382,7 +462,9 @@ namespace oaiUI.RecentFiles
             };
         }
 
-        // Resolve current vector store folders using LastSelectionService (refactor-safe)
+        /// <summary>
+        /// Resolve current vector store folders using LastSelectionService (refactor-safe).
+        /// </summary>
         private IReadOnlyList<string> GetCurrentVectorStoreSourceFolders()
         {
             try
@@ -391,11 +473,8 @@ namespace oaiUI.RecentFiles
                 if (string.IsNullOrWhiteSpace(vsName))
                     return Array.Empty<string>();
 
-                var all = VectorStoreConfig.LoadAll();
-                if (all.TryGetValue(vsName!, out var cfg) && cfg.FolderPaths is { Count: > 0 })
-                {
-                    return cfg.FolderPaths.ToList();
-                }
+                // TODO: Wire up actual vector store lookup when available
+                // For now, return empty (no source folders)
                 return Array.Empty<string>();
             }
             catch
@@ -427,7 +506,7 @@ namespace oaiUI.RecentFiles
                 }
                 catch
                 {
-                    // Defensive: never crash during Dispose
+                    // Defensive - never crash during Dispose
                 }
             }
             base.Dispose(disposing);

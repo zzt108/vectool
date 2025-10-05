@@ -1,5 +1,5 @@
-﻿// Path: Vectool.UI/OaiUI/MainForm.Designer.cs
-// NOTE: Designer-generated layout for MainForm. Control names match existing partials.
+﻿// ✅ FULL FILE VERSION
+// Path: OaiUI/MainForm.Designer.cs
 
 using System;
 using System.Drawing;
@@ -9,6 +9,7 @@ namespace Vectool.OaiUI
 {
     partial class MainForm
     {
+        // ✅ Designer field declarations - ALL controls must be here
         private System.ComponentModel.IContainer components = null;
 
         // Top menu
@@ -21,8 +22,6 @@ namespace Vectool.OaiUI
         private ToolStripMenuItem getGitChangesToolStripMenuItem;
         private ToolStripMenuItem fileSizeSummaryToolStripMenuItem;
         private ToolStripMenuItem runTestsToolStripMenuItem;
-
-        // New: Help → About
         private ToolStripMenuItem helpToolStripMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
 
@@ -50,7 +49,7 @@ namespace Vectool.OaiUI
         private ComboBox cmbSettingsVectorStore;
         private Label lblSettingsVectorStore;
 
-        // Recent Files tab
+        // ✅ Recent Files tab - CRITICAL: This field MUST be declared here
         private oaiUI.RecentFiles.RecentFilesPanel recentFilesPanel;
 
         // Status
@@ -67,12 +66,13 @@ namespace Vectool.OaiUI
             base.Dispose(disposing);
         }
 
-        // Windows Form Designer generated code
+        #region Windows Form Designer generated code
+
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
 
-            // Instantiate controls
+            // ✅ Instantiate ALL controls BEFORE configuring them
             this.menuStrip1 = new MenuStrip();
             this.fileToolStripMenuItem = new ToolStripMenuItem();
             this.exitToolStripMenuItem = new ToolStripMenuItem();
@@ -84,19 +84,16 @@ namespace Vectool.OaiUI
             this.runTestsToolStripMenuItem = new ToolStripMenuItem();
             this.helpToolStripMenuItem = new ToolStripMenuItem();
             this.aboutToolStripMenuItem = new ToolStripMenuItem();
-
             this.tabControl1 = new TabControl();
             this.tabPageMain = new TabPage();
             this.tabPageSettings = new TabPage();
             this.tabPageRecentFiles = new TabPage();
-
             this.lblVectorStoreManagement = new Label();
             this.comboBoxVectorStores = new ComboBox();
             this.txtNewVectorStoreName = new TextBox();
             this.btnCreateNewVectorStore = new Button();
             this.btnSelectFolders = new Button();
             this.listBoxSelectedFolders = new ListBox();
-
             this.btnResetVsSettings = new Button();
             this.btnSaveVsSettings = new Button();
             this.chkInheritExcludedFolders = new CheckBox();
@@ -106,6 +103,7 @@ namespace Vectool.OaiUI
             this.cmbSettingsVectorStore = new ComboBox();
             this.lblSettingsVectorStore = new Label();
 
+            // ✅ CRITICAL: Instantiate recentFilesPanel BEFORE adding to controls
             this.recentFilesPanel = new oaiUI.RecentFiles.RecentFilesPanel();
 
             this.statusStrip1 = new StatusStrip();
@@ -121,7 +119,9 @@ namespace Vectool.OaiUI
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
 
+            // 
             // menuStrip1
+            // 
             this.menuStrip1.Items.AddRange(new ToolStripItem[] {
                 this.fileToolStripMenuItem,
                 this.actionsToolStripMenuItem,
@@ -133,21 +133,27 @@ namespace Vectool.OaiUI
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
 
+            // 
             // File menu
+            // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] {
                 this.exitToolStripMenuItem
             });
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
+            this.fileToolStripMenuItem.Text = "&File";
 
+            // 
             // Exit
+            // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.ShortcutKeys = ((Keys)((Keys.Alt | Keys.F4)));
-            this.exitToolStripMenuItem.Size = new Size(180, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.ShortcutKeys = Keys.Alt | Keys.F4;
+            this.exitToolStripMenuItem.Size = new Size(150, 22);
+            this.exitToolStripMenuItem.Text = "E&xit";
 
+            // 
             // Actions menu
+            // 
             this.actionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] {
                 this.convertToMdToolStripMenuItem,
                 this.toolStripSeparator1,
@@ -157,50 +163,66 @@ namespace Vectool.OaiUI
             });
             this.actionsToolStripMenuItem.Name = "actionsToolStripMenuItem";
             this.actionsToolStripMenuItem.Size = new Size(59, 20);
-            this.actionsToolStripMenuItem.Text = "Actions";
+            this.actionsToolStripMenuItem.Text = "&Actions";
 
+            // 
             // Convert to MD
+            // 
             this.convertToMdToolStripMenuItem.Name = "convertToMdToolStripMenuItem";
-            this.convertToMdToolStripMenuItem.ShortcutKeys = ((Keys)((Keys.Control | Keys.M)));
+            this.convertToMdToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.M;
             this.convertToMdToolStripMenuItem.Size = new Size(220, 22);
-            this.convertToMdToolStripMenuItem.Text = "Convert to MD";
+            this.convertToMdToolStripMenuItem.Text = "Convert to &MD";
 
-            // Separator
+            // 
+            // toolStripSeparator1
+            // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new Size(217, 6);
 
+            // 
             // Get Git Changes
+            // 
             this.getGitChangesToolStripMenuItem.Name = "getGitChangesToolStripMenuItem";
+            this.getGitChangesToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.G;
             this.getGitChangesToolStripMenuItem.Size = new Size(220, 22);
-            this.getGitChangesToolStripMenuItem.Text = "Get Git Changes";
+            this.getGitChangesToolStripMenuItem.Text = "Get &Git Changes";
 
+            // 
             // File Size Summary
+            // 
             this.fileSizeSummaryToolStripMenuItem.Name = "fileSizeSummaryToolStripMenuItem";
+            this.fileSizeSummaryToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.F;
             this.fileSizeSummaryToolStripMenuItem.Size = new Size(220, 22);
-            this.fileSizeSummaryToolStripMenuItem.Text = "File Size Summary";
+            this.fileSizeSummaryToolStripMenuItem.Text = "&File Size Summary";
 
+            // 
             // Run Tests
+            // 
             this.runTestsToolStripMenuItem.Name = "runTestsToolStripMenuItem";
-            this.runTestsToolStripMenuItem.ShortcutKeys = ((Keys)((Keys.Control | Keys.T)));
+            this.runTestsToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.T;
             this.runTestsToolStripMenuItem.Size = new Size(220, 22);
-            this.runTestsToolStripMenuItem.Text = "Run Tests";
+            this.runTestsToolStripMenuItem.Text = "Run &Tests";
 
+            // 
             // Help menu
+            // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] {
                 this.aboutToolStripMenuItem
             });
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
+            this.helpToolStripMenuItem.Text = "&Help";
 
+            // 
             // About
+            // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new Size(180, 22);
-            this.aboutToolStripMenuItem.Text = "About VecTool...";
-            // Note: other menu handlers are wired in code-behind; About is wired here for convenience
-            this.aboutToolStripMenuItem.Click += new EventHandler(this.aboutToolStripMenuItem_Click);
+            this.aboutToolStripMenuItem.Size = new Size(116, 22);
+            this.aboutToolStripMenuItem.Text = "&About";
 
+            // 
             // tabControl1
+            // 
             this.tabControl1.Controls.Add(this.tabPageMain);
             this.tabControl1.Controls.Add(this.tabPageSettings);
             this.tabControl1.Controls.Add(this.tabPageRecentFiles);
@@ -211,7 +233,9 @@ namespace Vectool.OaiUI
             this.tabControl1.Size = new Size(1200, 626);
             this.tabControl1.TabIndex = 1;
 
+            // 
             // tabPageMain
+            // 
             this.tabPageMain.Controls.Add(this.lblVectorStoreManagement);
             this.tabPageMain.Controls.Add(this.comboBoxVectorStores);
             this.tabPageMain.Controls.Add(this.txtNewVectorStoreName);
@@ -226,7 +250,9 @@ namespace Vectool.OaiUI
             this.tabPageMain.Text = "Main";
             this.tabPageMain.UseVisualStyleBackColor = true;
 
+            // 
             // lblVectorStoreManagement
+            // 
             this.lblVectorStoreManagement.AutoSize = true;
             this.lblVectorStoreManagement.Location = new Point(16, 16);
             this.lblVectorStoreManagement.Name = "lblVectorStoreManagement";
@@ -234,7 +260,9 @@ namespace Vectool.OaiUI
             this.lblVectorStoreManagement.TabIndex = 0;
             this.lblVectorStoreManagement.Text = "Vector Store Management";
 
+            // 
             // comboBoxVectorStores
+            // 
             this.comboBoxVectorStores.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             this.comboBoxVectorStores.DropDownStyle = ComboBoxStyle.DropDownList;
             this.comboBoxVectorStores.FormattingEnabled = true;
@@ -243,7 +271,9 @@ namespace Vectool.OaiUI
             this.comboBoxVectorStores.Size = new Size(700, 23);
             this.comboBoxVectorStores.TabIndex = 1;
 
+            // 
             // txtNewVectorStoreName
+            // 
             this.txtNewVectorStoreName.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             this.txtNewVectorStoreName.Location = new Point(16, 72);
             this.txtNewVectorStoreName.Name = "txtNewVectorStoreName";
@@ -251,7 +281,9 @@ namespace Vectool.OaiUI
             this.txtNewVectorStoreName.Size = new Size(580, 23);
             this.txtNewVectorStoreName.TabIndex = 2;
 
+            // 
             // btnCreateNewVectorStore
+            // 
             this.btnCreateNewVectorStore.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             this.btnCreateNewVectorStore.Location = new Point(604, 72);
             this.btnCreateNewVectorStore.Name = "btnCreateNewVectorStore";
@@ -260,7 +292,9 @@ namespace Vectool.OaiUI
             this.btnCreateNewVectorStore.Text = "Create";
             this.btnCreateNewVectorStore.UseVisualStyleBackColor = true;
 
+            // 
             // btnSelectFolders
+            // 
             this.btnSelectFolders.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             this.btnSelectFolders.Location = new Point(732, 40);
             this.btnSelectFolders.Name = "btnSelectFolders";
@@ -269,7 +303,9 @@ namespace Vectool.OaiUI
             this.btnSelectFolders.Text = "Select Folders...";
             this.btnSelectFolders.UseVisualStyleBackColor = true;
 
+            // 
             // listBoxSelectedFolders
+            // 
             this.listBoxSelectedFolders.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             this.listBoxSelectedFolders.FormattingEnabled = true;
             this.listBoxSelectedFolders.IntegralHeight = false;
@@ -278,7 +314,9 @@ namespace Vectool.OaiUI
             this.listBoxSelectedFolders.Size = new Size(1148, 464);
             this.listBoxSelectedFolders.TabIndex = 5;
 
+            // 
             // tabPageSettings
+            // 
             this.tabPageSettings.Controls.Add(this.btnResetVsSettings);
             this.tabPageSettings.Controls.Add(this.btnSaveVsSettings);
             this.tabPageSettings.Controls.Add(this.chkInheritExcludedFolders);
@@ -295,15 +333,19 @@ namespace Vectool.OaiUI
             this.tabPageSettings.Text = "Settings";
             this.tabPageSettings.UseVisualStyleBackColor = true;
 
+            // 
             // lblSettingsVectorStore
+            // 
             this.lblSettingsVectorStore.AutoSize = true;
             this.lblSettingsVectorStore.Location = new Point(16, 16);
             this.lblSettingsVectorStore.Name = "lblSettingsVectorStore";
             this.lblSettingsVectorStore.Size = new Size(76, 15);
             this.lblSettingsVectorStore.TabIndex = 0;
-            this.lblSettingsVectorStore.Text = "Vector Store";
+            this.lblSettingsVectorStore.Text = "Vector Store:";
 
+            // 
             // cmbSettingsVectorStore
+            // 
             this.cmbSettingsVectorStore.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             this.cmbSettingsVectorStore.DropDownStyle = ComboBoxStyle.DropDownList;
             this.cmbSettingsVectorStore.FormattingEnabled = true;
@@ -312,7 +354,9 @@ namespace Vectool.OaiUI
             this.cmbSettingsVectorStore.Size = new Size(600, 23);
             this.cmbSettingsVectorStore.TabIndex = 1;
 
+            // 
             // chkInheritExcludedFiles
+            // 
             this.chkInheritExcludedFiles.AutoSize = true;
             this.chkInheritExcludedFiles.Location = new Point(16, 80);
             this.chkInheritExcludedFiles.Name = "chkInheritExcludedFiles";
@@ -321,7 +365,9 @@ namespace Vectool.OaiUI
             this.chkInheritExcludedFiles.Text = "Inherit Excluded Files";
             this.chkInheritExcludedFiles.UseVisualStyleBackColor = true;
 
+            // 
             // chkInheritExcludedFolders
+            // 
             this.chkInheritExcludedFolders.AutoSize = true;
             this.chkInheritExcludedFolders.Location = new Point(200, 80);
             this.chkInheritExcludedFolders.Name = "chkInheritExcludedFolders";
@@ -330,7 +376,9 @@ namespace Vectool.OaiUI
             this.chkInheritExcludedFolders.Text = "Inherit Excluded Folders";
             this.chkInheritExcludedFolders.UseVisualStyleBackColor = true;
 
+            // 
             // txtExcludedFiles
+            // 
             this.txtExcludedFiles.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             this.txtExcludedFiles.Location = new Point(16, 112);
             this.txtExcludedFiles.Multiline = true;
@@ -340,7 +388,9 @@ namespace Vectool.OaiUI
             this.txtExcludedFiles.TabIndex = 4;
             this.txtExcludedFiles.PlaceholderText = "One pattern per line (e.g., *.tmp)";
 
+            // 
             // txtExcludedFolders
+            // 
             this.txtExcludedFolders.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
             this.txtExcludedFolders.Location = new Point(16, 288);
             this.txtExcludedFolders.Multiline = true;
@@ -350,7 +400,9 @@ namespace Vectool.OaiUI
             this.txtExcludedFolders.TabIndex = 5;
             this.txtExcludedFolders.PlaceholderText = "One folder name per line";
 
+            // 
             // btnSaveVsSettings
+            // 
             this.btnSaveVsSettings.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             this.btnSaveVsSettings.Location = new Point(988, 528);
             this.btnSaveVsSettings.Name = "btnSaveVsSettings";
@@ -359,7 +411,9 @@ namespace Vectool.OaiUI
             this.btnSaveVsSettings.Text = "Save";
             this.btnSaveVsSettings.UseVisualStyleBackColor = true;
 
+            // 
             // btnResetVsSettings
+            // 
             this.btnResetVsSettings.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             this.btnResetVsSettings.Location = new Point(1088, 528);
             this.btnResetVsSettings.Name = "btnResetVsSettings";
@@ -368,7 +422,10 @@ namespace Vectool.OaiUI
             this.btnResetVsSettings.Text = "Reset";
             this.btnResetVsSettings.UseVisualStyleBackColor = true;
 
+            // 
             // tabPageRecentFiles
+            // 
+            // ✅ CRITICAL: Add recentFilesPanel to Recent Files tab
             this.tabPageRecentFiles.Controls.Add(this.recentFilesPanel);
             this.tabPageRecentFiles.Location = new Point(4, 24);
             this.tabPageRecentFiles.Name = "tabPageRecentFiles";
@@ -378,14 +435,18 @@ namespace Vectool.OaiUI
             this.tabPageRecentFiles.Text = "Recent Files";
             this.tabPageRecentFiles.UseVisualStyleBackColor = true;
 
+            // 
             // recentFilesPanel
+            // 
             this.recentFilesPanel.Dock = DockStyle.Fill;
             this.recentFilesPanel.Location = new Point(8, 8);
             this.recentFilesPanel.Name = "recentFilesPanel";
             this.recentFilesPanel.Size = new Size(1176, 582);
             this.recentFilesPanel.TabIndex = 0;
 
+            // 
             // statusStrip1
+            // 
             this.statusStrip1.Items.AddRange(new ToolStripItem[] {
                 this.statusLabel,
                 this.progressBar
@@ -396,17 +457,24 @@ namespace Vectool.OaiUI
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
 
+            // 
             // statusLabel
+            // 
             this.statusLabel.Name = "statusLabel";
-            this.statusLabel.Size = new Size(39, 17);
+            this.statusLabel.Size = new Size(1085, 17);
+            this.statusLabel.Spring = true;
             this.statusLabel.Text = "Ready";
+            this.statusLabel.TextAlign = ContentAlignment.MiddleLeft;
 
+            // 
             // progressBar
+            // 
             this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new Size(200, 16);
-            this.progressBar.Style = ProgressBarStyle.Continuous;
+            this.progressBar.Size = new Size(100, 16);
 
+            // 
             // MainForm
+            // 
             this.AutoScaleDimensions = new SizeF(7F, 15F);
             this.AutoScaleMode = AutoScaleMode.Font;
             this.ClientSize = new Size(1200, 672);
@@ -417,8 +485,6 @@ namespace Vectool.OaiUI
             this.Name = "MainForm";
             this.StartPosition = FormStartPosition.CenterScreen;
             this.Text = "VecTool";
-
-            // Resume layouts
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.tabControl1.ResumeLayout(false);
@@ -432,5 +498,7 @@ namespace Vectool.OaiUI
             this.ResumeLayout(false);
             this.PerformLayout();
         }
+
+        #endregion
     }
 }

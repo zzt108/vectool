@@ -1,3 +1,6 @@
+﻿// ✅ FULL FILE VERSION
+// Path: OaiUI/MainForm.SettingsTab.cs
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +15,9 @@ namespace Vectool.OaiUI
     /// </summary>
     public partial class MainForm : Form
     {
-        // Initializes the Settings tab combo items with known vector store names.
+        /// <summary>
+        /// Initializes the Settings tab combo items with known vector store names.
+        /// </summary>
         private void SettingsTabInitializeData()
         {
             try
@@ -23,6 +28,7 @@ namespace Vectool.OaiUI
                     .ToList() ?? new List<string>();
 
                 cmbSettingsVectorStore.Items.Clear();
+
                 if (names.Count > 0)
                 {
                     cmbSettingsVectorStore.Items.AddRange(names.Cast<object>().ToArray());
@@ -34,7 +40,9 @@ namespace Vectool.OaiUI
             }
         }
 
-        // Loads the effective settings for a given vector store name into the UI.
+        /// <summary>
+        /// Loads the effective settings for a given vector store name into the UI.
+        /// </summary>
         private void SettingsTabLoadSelection(string? name)
         {
             var global = VectorStoreConfig.FromAppConfig();
@@ -42,12 +50,11 @@ namespace Vectool.OaiUI
 
             if (string.IsNullOrWhiteSpace(name))
             {
+                // Show global defaults
                 txtExcludedFiles.Text = string.Empty;
                 txtExcludedFolders.Text = string.Empty;
-
                 chkInheritExcludedFiles.Checked = true;
                 chkInheritExcludedFolders.Checked = true;
-
                 txtExcludedFiles.Enabled = false;
                 txtExcludedFolders.Enabled = false;
                 return;
@@ -56,7 +63,7 @@ namespace Vectool.OaiUI
             all.TryGetValue(name, out var per);
             var vm = PerVectorStoreSettings.From(name, global, per);
 
-            // Inherit checkboxes are inverse of "use custom".
+            // Inherit checkboxes are inverse of "use custom"
             chkInheritExcludedFiles.Checked = !vm.UseCustomExcludedFiles;
             chkInheritExcludedFolders.Checked = !vm.UseCustomExcludedFolders;
 
@@ -67,100 +74,23 @@ namespace Vectool.OaiUI
             txtExcludedFolders.Enabled = vm.UseCustomExcludedFolders;
         }
 
-        private void chkInheritExcludedFilesCheckedChanged(object? sender, EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
-            txtExcludedFiles.Enabled = !chkInheritExcludedFiles.Checked;
-        }
+            base.OnLoad(e);
 
-        private void chkInheritExcludedFoldersCheckedChanged(object? sender, EventArgs e)
-        {
-            txtExcludedFolders.Enabled = !chkInheritExcludedFolders.Checked;
-        }
-
-        // Implemented: load settings for the selected vector store.
-        private void cmbSettingsVectorStoreSelectedIndexChanged(object? sender, EventArgs e)
-        {
-            var selectedName = cmbSettingsVectorStore.SelectedItem?.ToString();
-            SettingsTabLoadSelection(selectedName);
-        }
-
-        private void btnSaveVsSettingsClick(object? sender, EventArgs e)
-        {
-            var name = (cmbSettingsVectorStore.Text ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                MessageBox.Show(
-                    "Please enter or select a vector store name.",
-                    "Settings",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return;
-            }
-
-            var global = VectorStoreConfig.FromAppConfig();
-            var all = VectorStoreConfig.LoadAll();
-
-            var files = SplitLines(txtExcludedFiles.Text);
-            var folders = SplitLines(txtExcludedFolders.Text);
-
-            var vm = new PerVectorStoreSettings(
-                name,
-                useCustomExcludedFiles: !chkInheritExcludedFiles.Checked,
-                useCustomExcludedFolders: !chkInheritExcludedFolders.Checked,
-                customExcludedFiles: files,
-                customExcludedFolders: folders
-            );
-
-            PerVectorStoreSettings.Save(all, vm, global);
-            VectorStoreConfig.SaveAll(all);
-
-            MessageBox.Show(
-                "Settings saved.",
-                "Settings",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-        }
-
-        private void btnResetVsSettingsClick(object? sender, EventArgs e)
-        {
-            chkInheritExcludedFiles.Checked = true;
-            chkInheritExcludedFolders.Checked = true;
-
-            var global = VectorStoreConfig.FromAppConfig();
-
-            txtExcludedFiles.Text = string.Join(
-                Environment.NewLine,
-                global.ExcludedFiles ?? new List<string>());
-
-            txtExcludedFolders.Text = string.Join(
-                Environment.NewLine,
-                global.ExcludedFolders ?? new List<string>());
-
-            txtExcludedFiles.Enabled = false;
-            txtExcludedFolders.Enabled = false;
+            // Wire up Settings tab once UI is created
+            SettingsTabInitializeData();
         }
 
         private static List<string> SplitLines(string text)
         {
             return (text ?? string.Empty)
-                .Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Replace("\r", "", StringComparison.Ordinal)
                 .Split('\n')
                 .Select(s => s.Trim())
                 .Where(s => s.Length > 0)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
-        }
-
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-
-            // Wire up Settings tab once UI is created.
-            SettingsTabInitializeData();
-
-            cmbSettingsVectorStore.SelectedIndexChanged += cmbSettingsVectorStoreSelectedIndexChanged;
-            chkInheritExcludedFiles.CheckedChanged += chkInheritExcludedFilesCheckedChanged;
-            chkInheritExcludedFolders.CheckedChanged += chkInheritExcludedFoldersCheckedChanged;
         }
     }
 }
