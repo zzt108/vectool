@@ -7,7 +7,7 @@ using System.Linq;
 using System.Windows.Forms;
 using VecTool.Core.RecentFiles;
 
-namespace oaiUI.RecentFiles
+namespace Vectool.UI.RecentFiles
 {
     /// <summary>
     /// Displays and filters recent files in a DataGridView with a right-click context menu.
@@ -46,6 +46,9 @@ namespace oaiUI.RecentFiles
         private readonly ToolStripMenuItem menuCopyPath;
         private readonly ToolStripSeparator menuSeparator;
         private readonly ToolStripMenuItem menuDelete;
+
+        // TODO: implement VectorFilterChanged
+        public Action<VectorStoreLinkFilter, string?> VectorFilterChanged { get; internal set; }
 
         // Public events
         public event Action<VectorStoreLinkFilter, string?>? FilterChanged;

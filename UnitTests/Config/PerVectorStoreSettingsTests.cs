@@ -1,10 +1,10 @@
 ﻿// Path: UnitTests/Config/PerVectorStoreSettingsTests.cs
 using NUnit.Framework;
-using oaiUI.Config;
 using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Vectool.UI.Config;
 using VecTool.Configuration;
 
 namespace UnitTests.Config
