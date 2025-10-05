@@ -6,6 +6,7 @@ using VecTool.Core.RecentFiles;
 
 namespace VecTool.UI.RecentFiles
 {
+    // TODO: BUG: list view context menu is not working
     public sealed class RecentFilesControl : UserControl
     {
         private readonly ComboBox _cbFilter = new() { Dock = DockStyle.Top, DropDownStyle = ComboBoxStyle.DropDownList };
