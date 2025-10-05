@@ -1,0 +1,18 @@
+<!-- ✅ FULL FILE VERSION -->
+<!-- File: ./Directory.Build.props -->
+<Project>
+  <PropertyGroup>
+    <!-- Centralize implicit usings + nullable for all projects -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- Central global usings via MSBuild so no GlobalUsings.cs is required -->
+  <ItemGroup>
+    <Using Include="System" />
+    <Using Include="System.IO" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Threading" />
+    <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+</Project>
