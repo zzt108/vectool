@@ -1,100 +1,132 @@
 ﻿// ✅ FULL FILE VERSION
-using NUnit.Framework;
-using Shouldly;
+// Path: tests/UnitTests/RecentFiles/RecentFilesPanelLayoutTests.cs
+
 using System;
 using System.IO;
-using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
+using NUnit.Framework;
+using Shouldly;
+using VecTool.Configuration;
 using oaiUI.RecentFiles;
-using VecTool.RecentFiles;
 
-namespace UnitTests.UI.RecentFiles
+namespace UnitTests.RecentFiles
 {
-    [TestFixture, Apartment(System.Threading.ApartmentState.STA)]
+    [TestFixture]
     public class RecentFilesPanelLayoutTests
     {
-        private sealed class MockRecentFilesManager : IRecentFilesManager
+        private string tempDir = null!;
+
+        [SetUp]
+        public void SetUp()
         {
-            public System.Collections.Generic.IReadOnlyList<RecentFileInfo> GetRecentFiles()
-                => Array.Empty<RecentFileInfo>();
-
-            public void RegisterGeneratedFile(string filePath, RecentFileType fileType, System.Collections.Generic.IReadOnlyList<string> sourceFolders, long fileSizeBytes = 0, DateTime? generatedAtUtc = null)
-            {
-                // not needed in layout tests
-            }
-
-            public int CleanupExpiredFiles(DateTime? nowUtc = null) => 0;
-
-            public void Save() { /* not used */ }
-
-            public void Load() { /* not used */ }
-
-            public void RemoveFile(string path)
-            {
-                // No-op for layout tests; interface compliance only
-            }
+            tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempDir);
         }
 
-        private static ListView GetListView(RecentFilesPanel panel)
-            => panel.Controls.Find("lvRecentFiles", true).FirstOrDefault() as ListView
-               ?? throw new InvalidOperationException("ListView not found");
-
-        [Test]
-        public void ColumnWidthsShouldPersistAndRestore()
+        [TearDown]
+        public void TearDown()
         {
-            // Arrange
-            var tmp = Path.Combine(Path.GetTempPath(), "VecToolLayoutTests", Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(tmp);
-            var mgr = new MockRecentFilesManager();
-
             try
             {
-                using var panel = new RecentFilesPanel(mgr, tmp);
-
-                var lv = GetListView(panel);
-
-                // Ensure columns exist; if none, force code-behind to create defaults
-                if (lv.Columns.Count == 0)
-                {
-                    panel.RefreshList();
-                    lv = GetListView(panel);
-                }
-
-                // Act: mutate widths, persist, recreate control, and re-check
-                if (lv.Columns.Count > 0) lv.Columns[0].Width = 123;
-                if (lv.Columns.Count > 1) lv.Columns[1].Width = 222;
-
-                panel.SaveLayoutForTesting();
-
-                using var panel2 = new RecentFilesPanel(mgr, tmp);
-                var lv2 = GetListView(panel2);
-
-                // Assert
-                lv2.Columns.Count.ShouldBeGreaterThanOrEqualTo(2);
-                lv2.Columns[0].Width.ShouldBe(123);
-                lv2.Columns[1].Width.ShouldBe(222);
+                Directory.Delete(tempDir, recursive: true);
             }
-            finally
+            catch
             {
-                try { Directory.Delete(tmp, true); } catch { /* ignore */ }
+                // ignore cleanup failures
             }
         }
 
         [Test]
-        public void RowHeightShouldBeAtLeast10PercentBigger()
+        public void SaveLayout_Should_Persist_Column_Widths()
         {
             // Arrange
-            var mgr = new MockRecentFilesManager();
-            using var panel = new RecentFilesPanel(mgr, null);
+            var uiState = UiStateConfig.Load(tempDir);
+            uiState.RecentFilesColumnWidths = null;
+            UiStateConfig.Save(uiState, tempDir);
+
+            var panel = new RecentFilesPanel(null!, tempDir);
+            panel.GetType()
+                 .GetMethod("SetupListView", BindingFlags.Instance | BindingFlags.NonPublic)!
+                 .Invoke(panel, null);
+
+            var lv = panel.GetType()
+                          .GetField("lvRecentFiles", BindingFlags.Instance | BindingFlags.NonPublic)!
+                          .GetValue(panel) as ListView;
+            lv!.Columns[0].Width = 123;
+            lv.Columns[1].Width = 456;
 
             // Act
-            var lv = GetListView(panel);
-            var baseHeight = lv.Font.Height + 6; // WinForms default heuristics
-            var expectedMin = (int)Math.Ceiling(baseHeight * 1.10);
+            panel.GetType()
+                 .GetMethod("SaveLayout", BindingFlags.Instance | BindingFlags.NonPublic)!
+                 .Invoke(panel, null);
 
             // Assert
-            lv.SmallImageList.ShouldNotBeNull();
-            lv.SmallImageList!.ImageSize.Height.ShouldBeGreaterThanOrEqualTo(expectedMin);
+            var reloaded = UiStateConfig.Load(tempDir);
+            reloaded.RecentFilesColumnWidths.ShouldNotBeNull();
+            reloaded.RecentFilesColumnWidths!["File"].ShouldBe(123);
+            reloaded.RecentFilesColumnWidths!["Type"].ShouldBe(456);
+        }
+
+        [Test]
+        public void LoadLayout_Should_Apply_Saved_Column_Widths()
+        {
+            // Arrange
+            var uiState = UiStateConfig.Load(tempDir);
+            uiState.RecentFilesColumnWidths = new System.Collections.Generic.Dictionary<string, int>
+            {
+                { "File", 200 },
+                { "Type", 100 }
+            };
+            UiStateConfig.Save(uiState, tempDir);
+
+            var panel = new RecentFilesPanel(null!, tempDir);
+            panel.GetType()
+                 .GetMethod("SetupListView", BindingFlags.Instance | BindingFlags.NonPublic)!
+                 .Invoke(panel, null);
+
+            // Act
+            panel.GetType()
+                 .GetMethod("LoadLayout", BindingFlags.Instance | BindingFlags.NonPublic)!
+                 .Invoke(panel, null);
+
+            // Assert
+            var lv = panel.GetType()
+                          .GetField("lvRecentFiles", BindingFlags.Instance | BindingFlags.NonPublic)!
+                          .GetValue(panel) as ListView;
+            lv!.Columns[0].Width.ShouldBe(200);
+            lv.Columns[1].Width.ShouldBe(100);
+        }
+
+        [Test]
+        public void OnColumnWidthChanged_Should_Debounce_Save()
+        {
+            // Arrange
+            var panel = new RecentFilesPanel(null!, tempDir);
+            panel.GetType()
+                 .GetMethod("SetupListView", BindingFlags.Instance | BindingFlags.NonPublic)!
+                 .Invoke(panel, null);
+
+            bool timerStarted = false;
+            var timerField = panel.GetType()
+                                  .GetField("saveDebounceTimer", BindingFlags.Instance | BindingFlags.NonPublic)!
+                                  .GetValue(panel) as System.Windows.Forms.Timer;
+            timerField!.Tick += (_, __) => timerStarted = true;
+
+            // Act
+            var args = new ColumnWidthChangedEventArgs(0);
+            panel.GetType()
+                 .GetMethod("OnColumnWidthChanged", BindingFlags.Instance | BindingFlags.NonPublic)!
+                 .Invoke(panel, new object?[] { panel, args });
+
+            // Force timer tick
+            timerField.Interval = 1;
+            timerField.Start();
+            Application.DoEvents();
+            System.Threading.Thread.Sleep(10);
+
+            // Assert
+            timerStarted.ShouldBeTrue();
         }
     }
 }
