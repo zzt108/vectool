@@ -70,6 +70,8 @@ namespace Vectool.UI.RecentFiles
             // Events
             grid.CellDoubleClick += OnGridCellDoubleClick;
             grid.CellMouseDown += OnGridCellMouseDown;
+            grid.MouseDown += OnGridMouseDown;
+            grid.MouseUp += OnGridMouseUpRightClick; 
 
             // Context menu
             contextMenu = new ContextMenuStrip();
@@ -78,6 +80,7 @@ namespace Vectool.UI.RecentFiles
             menuCopyPath = new ToolStripMenuItem("Copy Path", null, OnCopyPath);
             menuSeparator = new ToolStripSeparator();
             menuDelete = new ToolStripMenuItem("Remove from List", null, OnDelete);
+            contextMenu.Items.Clear();
             contextMenu.Items.AddRange(new ToolStripItem[]
             {
                 menuOpenFile,
@@ -86,8 +89,22 @@ namespace Vectool.UI.RecentFiles
                 menuSeparator,
                 menuDelete
             });
+            // This order is critical:
             contextMenu.Opening += OnContextMenuOpening;
+
+            // MUST come after the above
             grid.ContextMenuStrip = contextMenu;
+
+            // Fallback: Explicitly show context menu on right-click if automatic doesn't work
+            grid.CellMouseDown += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Right && e.RowIndex >= 0)
+                {
+                    // This ensures the context menu shows even if ContextMenuStrip fails
+                    var mousePos = grid.PointToClient(Cursor.Position);
+                    contextMenu.Show(grid, mousePos);
+                }
+            };
 
             // Filter UI
             cbFilter.Items.AddRange(new object[]
@@ -105,6 +122,37 @@ namespace Vectool.UI.RecentFiles
             Controls.Add(grid);
             Controls.Add(tbStoreId);
             Controls.Add(cbFilter);
+        }
+
+        private void OnGridMouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right) return;
+
+            var hit = grid.HitTest(e.X, e.Y);
+            if (hit.RowIndex >= 0 && hit.RowIndex < grid.Rows.Count)
+            {
+                if (!grid.Rows[hit.RowIndex].Selected)
+                {
+                    grid.ClearSelection();
+                    grid.Rows[hit.RowIndex].Selected = true;
+                }
+
+                var col = Math.Max(0, hit.ColumnIndex);
+                if (col >= 0 && col < grid.Columns.Count)
+                    grid.CurrentCell = grid.Rows[hit.RowIndex].Cells[col];
+            }
+        }
+        private void OnGridMouseUpRightClick(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right) return;
+
+            var hit = grid.HitTest(e.X, e.Y);
+            // Only show when over a valid row, avoids header/empty area surprises
+            if (hit.RowIndex >= 0 && !contextMenu.Visible)
+            {
+                var clientPos = new System.Drawing.Point(e.X, e.Y);
+                contextMenu.Show(grid, clientPos);
+            }
         }
 
         public void SetFilter(VectorStoreLinkFilter filter, string? storeId)
@@ -146,22 +194,42 @@ namespace Vectool.UI.RecentFiles
         private void OnGridCellMouseDown(object? sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.Button != MouseButtons.Right) return;
-            if (e.RowIndex >= 0 && e.RowIndex < grid.Rows.Count)
+
+            if (e.RowIndex < 0) return; // ignore header
+            if (e.RowIndex >= grid.Rows.Count)
+            {
+                grid.ClearSelection();
+                return;
+            }
+
+            if (!grid.Rows[e.RowIndex].Selected)
             {
                 grid.ClearSelection();
                 grid.Rows[e.RowIndex].Selected = true;
-                grid.CurrentCell = grid.Rows[e.RowIndex].Cells[Math.Max(0, e.ColumnIndex)];
             }
+
+            var col = Math.Max(0, e.ColumnIndex);
+            if (col >= 0 && col < grid.Columns.Count)
+                grid.CurrentCell = grid.Rows[e.RowIndex].Cells[col];
         }
 
         private void OnContextMenuOpening(object? sender, CancelEventArgs e)
         {
+            var sel = grid.SelectedRows;
+            var hasSelection = sel != null && sel.Count > 0;
+
+            // If nothing selected, cancel to avoid an empty menu appearing
+            if (!hasSelection)
+            {
+                e.Cancel = true;
+                return;
+            }
+
             var item = GetSelectedItem();
-            var hasSelection = item != null;
-            var fileExists = hasSelection && File.Exists(item!.Path);
+            var fileExists = item != null && !string.IsNullOrWhiteSpace(item.Path) && File.Exists(item.Path);
 
             menuOpenFile.Enabled = fileExists;
-            menuOpenFolder.Enabled = hasSelection && !string.IsNullOrWhiteSpace(item!.Path);
+            menuOpenFolder.Enabled = hasSelection && !string.IsNullOrWhiteSpace(item?.Path);
             menuCopyPath.Enabled = hasSelection;
             menuDelete.Enabled = hasSelection;
         }
