@@ -1,6 +1,66 @@
 ## Changelog
 
-### VecTool v1.25.0412
+### VecTool v1.25.1005 – 2025-10-05
+
+#### Breaking Changes
+
+*   **Feature Removed:** DocX export feature and associated handlers removed from the codebase. This includes removal of DocX-specific handlers, tests, and UI elements.
+*   **Feature Removed:** PDF export feature and associated handlers removed from the codebase. All PDF-related code, including QuestPDF integration, has been eliminated.
+*   **Feature Removed:** OpenAI Vector Store management feature removed. All OAI-specific handlers, UI components, and configuration related to vector store operations have been removed.
+
+#### Architecture Refactoring
+
+*   **Enhancement:** Major project restructuring with new modular architecture. Introduced separate projects: `Configuration`, `Constants`, `Core`, `Handlers`, `RecentFiles`, and `Utils` for better separation of concerns. (VecTool.sln)
+*   **Enhancement:** Implemented `VersionInfo` utility for centralized version reporting and assembly metadata management. (Constants/VersionInfo.cs)
+*   **Enhancement:** Added `RepoLocator` for intelligent Git repository root detection across multiple folder selections. (Core/RepoLocator.cs)
+*   **Refactor:** Consolidated UI state management into `UiStateConfig` with JSON-backed persistence for Recent Files layout preferences including column widths and row height scaling. (Configuration/UiStateConfig.cs)
+*   **Refactor:** Introduced `ISettingsStore` abstraction with `InMemorySettingsStore` implementation for testable configuration management. (Configuration/InMemorySettingsStore.cs, Configuration/ISettingsStore.cs)
+*   **Refactor:** Implemented `IAppSettingsReader` interface to decouple configuration reading from `System.Configuration` for improved testability. (Configuration/IAppSettingsReader.cs, Configuration/ConfigurationManagerAppSettingsReader.cs)
+
+#### Recent Files System
+
+*   **Feature:** Added comprehensive Recent Files tracking system with file type categorization (`RecentFileType` enum includes Docx, Md, Pdf, GitChanges, TestResults). (RecentFiles/RecentFileType.cs)
+*   **Feature:** Implemented `RecentFilesPanel` UI control with drag-and-drop support, filtering, and persistence. (RecentFiles/RecentFilesPanel.cs)
+*   **Feature:** Added `DatedFileWriter` for organizing generated files into dated subdirectories with automatic cleanup of expired files. (RecentFiles/DatedFileWriter.cs)
+*   **Enhancement:** Recent Files now supports vector store linking with filters (`VectorStoreLinkFilter` enum: All, Linked, Unlinked, SpecificStore). (Core/RecentFiles/VectorStoreLinkFilter.cs)
+*   **Enhancement:** Added `RecentFilesConfig` with validation for max count, retention days, and output path configuration. (Configuration/RecentFilesConfig.cs)
+*   **Testing:** Comprehensive unit tests added for Recent Files manager including drag-drop scenarios and file existence validation. (UnitTests/RecentFilesManagerTests.cs, UnitTests/RecentFilesPanelTests.cs)
+
+#### New Features
+
+*   **Feature:** Added "Run Unit Tests" functionality with `Ctrl+T` shortcut. Executes `dotnet test` programmatically and saves results to dated output files. (Handlers/TestRunnerHandler.cs, MainForm.RunTests.cs)
+*   **Feature:** Implemented Progress Bar system with EMA (Exponential Moving Average) rate calculation for accurate time-remaining estimates. (Progress/ProgressManager.cs, Progress/ProgressPanel.cs)
+*   **UI Improvement:** Added About dialog accessible via menu. (MainForm.About.cs, OaiUI/AboutForm.cs)
+*   **UI Improvement:** Menu system expanded with File menu containing Convert to MD, Get Git Changes, File Size Summary, Run Tests, and Exit options. (MainForm.Designer.cs)
+
+#### Code Quality & Testing
+
+*   **Enhancement:** Introduced VecTool.Constants library to eliminate magic strings with centralized `Tags`, `Attributes`, `TagBuilder`, and `TestStrings` classes. (Constants/Tags.cs, Constants/Attributes.cs, Constants/TagBuilder.cs, Constants/TestStrings.cs)
+*   **Enhancement:** Added `TagBuilder` utility with proper XML attribute escaping for safe tag construction. (Constants/TagBuilder.cs)
+*   **Testing:** Added architecture tests for Constants library ensuring consistent naming and no magic strings. (UnitTests/Constants/ConstantsArchitectureTests.cs)
+*   **Testing:** Added unit tests for Progress Manager with fake clock implementation for deterministic testing. (UnitTests/Progress/ProgressManagerTests.cs)
+*   **Testing:** Added tests for per-vector-store settings round-trip serialization. (UnitTests/Config/PerVectorStoreSettingsTests.cs)
+*   **Enhancement:** Git operations now include timeout handling and proper cancellation token support. (Core/GitRunner.cs)
+
+#### Configuration & Architecture
+
+*   **Enhancement:** Introduced `PerVectorStoreSettings` for per-store configuration of custom files and exclusion patterns. (Configuration/VectorStoreConfig.cs)
+*   **Enhancement:** Added `LastSelectionService` for persisting user's last selected vector store across sessions. (Services/LastSelectionService.cs)
+*   **Enhancement:** Improved `FileHandlerBase` with delegation to specialized helpers: `AiContextGenerator` and `FileSystemTraverser` following Single Responsibility Principle. (Handlers/FileHandlerBase.cs)
+*   **Configuration:** Updated app.config with new `recentFilesMaxCount`, `recentFilesRetentionDays`, and `recentFilesOutputPath` settings. (App.config)
+
+#### Documentation & Planning
+
+*   **Documentation:** Added comprehensive Gap Analysis Report for "Run Unit Tests" feature documenting implementation status, gaps, and next steps. (current plan.md)
+*   **Documentation:** Updated README.md to reflect new architecture, removed legacy features, and clarify that core features work without API keys. (README.md)
+*   **Documentation:** Added Constants library README explaining architecture, usage guidelines, and integration patterns. (Constants/README.md)
+
+#### Build & DevOps
+
+*   **Configuration:** Added VS Code launch configuration for debugging Vectool UI. (.vscode/launch.json)
+*   **Configuration:** Updated solution file with new project structure including Configuration, Constants, Core, Handlers, RecentFiles, and Utils projects. (VecTool.sln)
+
+### VecTool v1.25.0412 – 2025-04-12
 
 *   **Enhancement:** Added a new "Get Git Changes" button to the main form. This feature allows users to retrieve and save Git changes from selected folders. (MainForm.cs, MainForm.Designer.cs)
 *   **Enhancement:** Implemented a new `GitChangesHandler` class to process Git changes and generate a Markdown file with the changes. (GitChangesHandler.cs)
