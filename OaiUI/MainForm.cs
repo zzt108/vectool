@@ -1,21 +1,22 @@
-﻿// Path: src/VecTool.UI/OaiUI/MainForm.cs
+﻿// ✅ FULL FILE VERSION
+// Path: src/VecTool.UI/OaiUI/MainForm.cs
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
 using VecTool.Configuration;
 using VecTool.Core;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
-
 using oaiUI;
 using oaiUI.Services;
 
 namespace Vectool.OaiUI
 {
+    // Orchestration partial: keeps fields, constructors, InitializeComponent, wiring, and high-level flow.
     public partial class MainForm : Form
     {
         // UI services and data
@@ -45,10 +46,12 @@ namespace Vectool.OaiUI
             recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
             recentFilesManager.Load();
 
-            // Recent files panel created by designer; initialize once controls exist
+            // Recent files panel created by designer - initialize once controls exist
             recentFilesPanel.Initialize(recentFilesManager);
 
             WireUpEvents();
+
+            // Load vector stores into combo box (implementation in MainForm.VectorStoreManagement.cs)
             LoadVectorStoresIntoComboBox();
         }
 
@@ -76,423 +79,10 @@ namespace Vectool.OaiUI
             };
         }
 
-        private void UpdateFormTitle()
-        {
-            var selectedName = comboBoxVectorStores.SelectedItem?.ToString();
-            this.Text = string.IsNullOrEmpty(selectedName) ? "VecTool" : $"VecTool - {selectedName}";
-        }
-
-        private static string SanitizeFileName(string input, string replacement = "_")
-        {
-            // Guard: ensure a non-empty replacement character
-            var replChar = string.IsNullOrEmpty(replacement) ? '_' : replacement[0];
-
-            // Replace invalid filename chars with the replacement char
-            if (string.IsNullOrEmpty(input))
-                return "default";
-
-            var sanitized = input;
-            var invalidChars = Path.GetInvalidFileNameChars();
-            foreach (var ch in invalidChars)
-            {
-                sanitized = sanitized.Replace(ch, replChar);
-            }
-
-            // Normalize whitespace to replacement char
-            foreach (var ch in new[] { ' ', '\t', '\r', '\n' })
-            {
-                sanitized = sanitized.Replace(ch, replChar);
-            }
-
-            // Collapse consecutive replacement chars safely (no infinite loop)
-            var doubleRepl = new string(replChar, 2);
-            var singleRepl = new string(replChar, 1);
-            while (sanitized.Contains(doubleRepl, StringComparison.Ordinal))
-            {
-                sanitized = sanitized.Replace(doubleRepl, singleRepl, StringComparison.Ordinal);
-            }
-
-            // Trim leading/trailing replacement, dots, and spaces
-            sanitized = sanitized.Trim(replChar, '.', ' ');
-
-            return string.IsNullOrWhiteSpace(sanitized) ? "default" : sanitized;
-        }
-
-        private async void getGitChangesToolStripMenuItemClick(object? sender, EventArgs e)
-        {
-            if (selectedFolders.Count == 0)
-            {
-                userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
-                return;
-            }
-
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
-            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var defaultFileName = $"{vsName}.{branchName}.changes.md";
-
-            using var saveFileDialog = new SaveFileDialog
-            {
-                Title = "Save Git Changes As...",
-                Filter = "Markdown files (*.md)|*.md|All files (*.*)|*.*",
-                FileName = defaultFileName
-            };
-
-            if (saveFileDialog.ShowDialog() != DialogResult.OK)
-                return;
-
-            var outputPath = saveFileDialog.FileName;
-
-            try
-            {
-                userInterface.WorkStart($"Generating Git changes file...", selectedFolders);
-                var handler = new GitChangesHandler(userInterface, recentFilesManager);
-                await Task.Run(() => handler.GetGitChanges(selectedFolders, outputPath)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
-            }
-            catch (Exception ex)
-            {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
-            }
-            finally
-            {
-                userInterface.WorkFinish();
-            }
-        }
-
-        private async void convertToMdToolStripMenuItemClick(object? sender, EventArgs e)
-        {
-            if (selectedFolders.Count == 0)
-            {
-                userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
-                return;
-            }
-
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
-            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var defaultFileName = $"{vsName}.{branchName}.md";
-
-            using var saveFileDialog = new SaveFileDialog
-            {
-                Title = "Save as Markdown...",
-                Filter = "Markdown files (*.md)|*.md|All files (*.*)|*.*",
-                FileName = defaultFileName
-            };
-
-            if (saveFileDialog.ShowDialog() != DialogResult.OK)
-                return;
-
-            var outputPath = saveFileDialog.FileName;
-            var config = GetCurrentVectorStoreConfig();
-
-            try
-            {
-                userInterface.WorkStart($"Generating MD file...", selectedFolders);
-                var handler = new MDHandler(userInterface, recentFilesManager);
-                await Task.Run(() => handler.ExportSelectedFolders(selectedFolders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
-            }
-            catch (Exception ex)
-            {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
-            }
-            finally
-            {
-                userInterface.WorkFinish();
-            }
-        }
-
-        private async void fileSizeSummaryToolStripMenuItemClick(object? sender, EventArgs e)
-        {
-            if (selectedFolders.Count == 0)
-            {
-                userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
-                return;
-            }
-
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
-            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var defaultFileName = $"{vsName}.{branchName}.summary.txt";
-
-            using var saveFileDialog = new SaveFileDialog
-            {
-                Title = "Save File Size Summary As...",
-                Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
-                FileName = defaultFileName
-            };
-
-            if (saveFileDialog.ShowDialog() != DialogResult.OK)
-                return;
-
-            var outputPath = saveFileDialog.FileName;
-            var config = GetCurrentVectorStoreConfig();
-
-            try
-            {
-                userInterface.WorkStart($"Generating file size summary...", selectedFolders);
-                var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
-                await Task.Run(() => handler.GenerateFileSizeSummary(selectedFolders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
-            }
-            catch (Exception ex)
-            {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
-            }
-            finally
-            {
-                userInterface.WorkFinish();
-            }
-        }
-
-        private async void runTestsToolStripMenuItemClick(object? sender, EventArgs e)
-        {
-            var solutionPath = FindSolutionFile();
-            if (solutionPath is null)
-            {
-                userInterface.ShowMessage("Could not find VecTool.sln in parent directories.", "Solution Not Found", MessageType.Error);
-                return;
-            }
-
-            var vsName = comboBoxVectorStores.SelectedItem?.ToString() ?? "default";
-            var handler = new TestRunnerHandler(userInterface, recentFilesManager);
-
-            try
-            {
-                userInterface.WorkStart("Running unit tests...", selectedFolders);
-                await handler.RunTestsAsync(solutionPath, vsName, selectedFolders).ConfigureAwait(true);
-            }
-            catch (Exception ex)
-            {
-                userInterface.ShowMessage($"Test execution failed: {ex.Message}", "Test Error", MessageType.Error);
-            }
-            finally
-            {
-                userInterface.WorkFinish();
-            }
-        }
-
-        private async Task<string> GetCurrentBranchNameAsync()
-        {
-            try
-            {
-                // Prefer deriving branch from the selected vector store folders' repo, not the app repo.
-                var preferredWorkingDir = ResolvePreferredWorkingDirectory(selectedFolders);
-                if (!string.IsNullOrWhiteSpace(preferredWorkingDir))
-                {
-                    var git = new GitRunner(preferredWorkingDir);
-                    var branch = await git.GetCurrentBranchAsync().ConfigureAwait(false);
-                    return string.IsNullOrWhiteSpace(branch) ? "unknown" : branch;
-                }
-
-                // Fallback to previous behavior: solution directory
-                var solutionPath = FindSolutionFile();
-                var solutionDir = solutionPath is null
-                    ? AppDomain.CurrentDomain.BaseDirectory
-                    : Path.GetDirectoryName(solutionPath)!;
-
-                var gitFallback = new GitRunner(solutionDir);
-                var fallbackBranch = await gitFallback.GetCurrentBranchAsync().ConfigureAwait(false);
-                return string.IsNullOrWhiteSpace(fallbackBranch) ? "unknown" : fallbackBranch;
-            }
-            catch
-            {
-                return "unknown";
-            }
-        }
-
-        private static string? ResolvePreferredWorkingDirectory(IReadOnlyList<string> folders)
-        {
-            if (folders == null || folders.Count == 0)
-                return null;
-
-            string? firstExisting = null;
-            foreach (var folder in folders)
-            {
-                if (string.IsNullOrWhiteSpace(folder))
-                    continue;
-
-                if (firstExisting is null && Directory.Exists(folder))
-                    firstExisting = folder;
-
-                var root = FindRepoRoot(folder);
-                if (!string.IsNullOrWhiteSpace(root))
-                    return root;
-            }
-
-            return firstExisting;
-        }
-
-        private static string? FindRepoRoot(string? startPath)
-        {
-            if (string.IsNullOrWhiteSpace(startPath))
-                return null;
-
-            var dir = new DirectoryInfo(startPath);
-            while (dir != null)
-            {
-                var gitDir = Path.Combine(dir.FullName, ".git");
-                if (Directory.Exists(gitDir) || File.Exists(gitDir))
-                    return dir.FullName;
-
-                dir = dir.Parent;
-            }
-            return null;
-        }
-
-        private string? FindSolutionFile()
-        {
-            var currentDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
-            while (currentDir != null)
-            {
-                var solutionFile = Path.Combine(currentDir.FullName, "VecTool.sln");
-                if (File.Exists(solutionFile))
-                    return solutionFile;
-
-                currentDir = currentDir.Parent;
-            }
-            return null;
-        }
-
-        private void btnSelectFoldersClick(object? sender, EventArgs e)
-        {
-            using var folderBrowserDialog = new FolderBrowserDialog
-            {
-                Description = "Select a folder to add",
-                ShowNewFolderButton = true
-            };
-
-            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
-            {
-                var selectedPath = folderBrowserDialog.SelectedPath;
-                if (!selectedFolders.Contains(selectedPath))
-                {
-                    selectedFolders.Add(selectedPath);
-                    listBoxSelectedFolders.Items.Add(selectedPath);
-                    SaveChangesToCurrentVectorStore();
-                }
-            }
-        }
-
-        private void SaveChangesToCurrentVectorStore()
-        {
-            var currentVsName = comboBoxVectorStores.SelectedItem?.ToString();
-            if (string.IsNullOrEmpty(currentVsName) || !allVectorStoreConfigs.ContainsKey(currentVsName))
-                return;
-
-            allVectorStoreConfigs[currentVsName].FolderPaths = selectedFolders.ToList();
-            VectorStoreConfig.SaveAll(allVectorStoreConfigs);
-        }
-
-        private void LoadVectorStoresIntoComboBox()
-        {
-            try
-            {
-                allVectorStoreConfigs = VectorStoreConfig.LoadAll() ?? new Dictionary<string, VectorStoreConfig>(StringComparer.OrdinalIgnoreCase);
-                var names = allVectorStoreConfigs.Keys
-                    .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-
-                comboBoxVectorStores.Items.Clear();
-                if (names.Any())
-                {
-                    comboBoxVectorStores.Items.AddRange(names.Cast<object>().ToArray());
-
-                    // restore last selected vector store if present
-                    var last = lastSelection.GetLastSelectedVectorStore();
-                    if (!string.IsNullOrWhiteSpace(last))
-                    {
-                        var idx = names.FindIndex(n => string.Equals(n, last, StringComparison.Ordinal));
-                        if (idx >= 0)
-                            comboBoxVectorStores.SelectedIndex = idx;
-                        else
-                            comboBoxVectorStores.SelectedIndex = 0;
-                    }
-                    else
-                    {
-                        comboBoxVectorStores.SelectedIndex = 0;
-                    }
-                }
-                else
-                {
-                    comboBoxVectorStores.Items.Clear();
-                    selectedFolders.Clear();
-                    listBoxSelectedFolders.Items.Clear();
-                    UpdateFormTitle();
-                }
-
-                UpdateFormTitle();
-            }
-            catch (Exception ex)
-            {
-                userInterface.ShowMessage($"Failed to load vector stores: {ex.Message}", "Warning", MessageType.Warning);
-            }
-        }
-
-        private void comboBoxVectorStoresSelectedIndexChanged(object? sender, EventArgs e)
-        {
-            var selectedName = comboBoxVectorStores.SelectedItem?.ToString();
-            UpdateFormTitle();
-
-            if (string.IsNullOrEmpty(selectedName) || !allVectorStoreConfigs.ContainsKey(selectedName))
-            {
-                selectedFolders.Clear();
-                listBoxSelectedFolders.Items.Clear();
-
-                // persist cleared selection
-                lastSelection.SetLastSelectedVectorStore(null);
-                return;
-            }
-
-            var config = allVectorStoreConfigs[selectedName];
-            selectedFolders.Clear();
-            selectedFolders.AddRange(config.FolderPaths ?? Enumerable.Empty<string>());
-            listBoxSelectedFolders.Items.Clear();
-            listBoxSelectedFolders.Items.AddRange(selectedFolders.Cast<object>().ToArray());
-
-            // persist valid selection
-            lastSelection.SetLastSelectedVectorStore(selectedName);
-        }
-
-        private void btnCreateNewVectorStoreClick(object? sender, EventArgs e)
-        {
-            var newName = txtNewVectorStoreName.Text?.Trim();
-            if (string.IsNullOrWhiteSpace(newName))
-            {
-                userInterface.ShowMessage("Please enter a name for the new vector store.", "Input Required", MessageType.Warning);
-                return;
-            }
-
-            if (allVectorStoreConfigs.ContainsKey(newName))
-            {
-                userInterface.ShowMessage($"A vector store named '{newName}' already exists.", "Duplicate Name", MessageType.Warning);
-                return;
-            }
-
-            var newConfig = VectorStoreConfig.FromAppConfig();
-            newConfig.FolderPaths = new List<string>();
-
-            allVectorStoreConfigs[newName] = newConfig;
-            VectorStoreConfig.SaveAll(allVectorStoreConfigs);
-
-            LoadVectorStoresIntoComboBox();
-            comboBoxVectorStores.SelectedItem = newName;
-            txtNewVectorStoreName.Clear();
-
-            userInterface.ShowMessage($"Vector store '{newName}' created.", "Success", MessageType.Information);
-            UpdateFormTitle();
-        }
-
-        private VectorStoreConfig GetCurrentVectorStoreConfig()
-        {
-            var selectedName = comboBoxVectorStores.SelectedItem?.ToString();
-            if (!string.IsNullOrEmpty(selectedName) && allVectorStoreConfigs.TryGetValue(selectedName, out var config))
-                return config;
-
-            return VectorStoreConfig.FromAppConfig();
-        }
-
-        private void exitToolStripMenuItemClick(object? sender, EventArgs e)
-        {
-            Application.Exit();
-        }
+        // Note: UpdateFormTitle implementation moved to MainForm.VectorStoreManagement.cs.
+        // Note: SanitizeFileName implementation moved to MainForm.FileOperations.cs.
+        // Note: All file operation handlers moved to MainForm.FileOperations.cs.
+        // Note: Vector store handlers and helpers moved to MainForm.VectorStoreManagement.cs.
+        // Note: Folder selection handlers moved to MainForm.FolderSelection.cs.
     }
 }
