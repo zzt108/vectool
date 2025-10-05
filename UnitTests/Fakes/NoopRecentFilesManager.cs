@@ -31,5 +31,14 @@ namespace UnitTests.Fakes
         public void Remove(string filePath) { }
 
         public void Clear() { }
+        
+        /// <summary>
+        /// No-op removal for tests; satisfies the interface without side effects.
+        /// </summary>
+        /// <param name="path">Absolute path to remove from the recent files list.</param>
+        public void RemoveFile(string path)
+        {
+            // Intentionally no-op for unit tests
+        }
     }
 }

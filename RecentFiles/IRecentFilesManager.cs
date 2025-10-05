@@ -44,4 +44,10 @@ public interface IRecentFilesManager
     /// Loads state from storage.
     /// </summary>
     void Load();
+
+    /// <summary>
+    /// Removes a file from the recent files list by path.
+    /// </summary>
+    void RemoveFile(string path);
+
 }

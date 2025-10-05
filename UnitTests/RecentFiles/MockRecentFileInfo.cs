@@ -1,32 +1,24 @@
-﻿
+﻿// ✅ FULL FILE VERSION
+using System;
+using System.Collections.Generic;
 using VecTool.RecentFiles;
 
-namespace UnitTests.UI.RecentFiles
+namespace UnitTests.RecentFiles
 {
-    public partial class RecentFilesPanelTests
+    /// <summary>
+    /// Test helper exposing a controllable Exists flag without depending on other mocks.
+    /// Removes dependency on a separate MockFileInfo type.
+    /// </summary>
+    public sealed class MockRecentFileInfo : RecentFileInfo
     {
-        /// <summary>
-        /// Direct MockRecentFileInfo constructor for precise control in tests.
-        /// </summary>
-        private class MockRecentFileInfo : RecentFileInfo
+        private readonly bool mockExists;
+
+        public MockRecentFileInfo(string path, RecentFileType type, long size, bool exists)
+            : base(path, DateTimeOffset.UtcNow, type, new List<string>(), size)
         {
-            private readonly bool mockExists;
-
-            public MockRecentFileInfo(MockFileInfo info)
-                : base(info.Path, DateTimeOffset.UtcNow, info.Type, new List<string>(), info.Size)
-            {
-                mockExists = info.Exists;
-            }
-
-            // NEW: Direct constructor for test usage
-            public MockRecentFileInfo(string path, RecentFileType type, long size, bool exists)
-                : base(path, DateTimeOffset.UtcNow, type, new List<string>(), size)
-            {
-                mockExists = exists;
-            }
-
-            // Override the Exists property to return our mock value
-            public override bool Exists => mockExists;
+            mockExists = exists;
         }
+
+        public override bool Exists => mockExists;
     }
 }

@@ -1,7 +1,8 @@
 ﻿using Shouldly;
-using LogCtxShared;
 using NUnit.Framework;
+using System;
 using SeriLogShared;
+using LogCtxShared;
 
 namespace SeriLogAdapter.Tests
 {

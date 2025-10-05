@@ -1,9 +1,10 @@
-﻿using NUnit.Framework;
-using oaiUI.RecentFiles;
+﻿// ✅ FULL FILE VERSION
+using NUnit.Framework;
 using Shouldly;
 using System.Linq;
 using System.Windows.Forms;
-using Vectool.OaiUI;
+using oaiUI.RecentFiles;
+using Vectool.UI;
 
 namespace UnitTests.UI
 {
@@ -11,49 +12,52 @@ namespace UnitTests.UI
     public class MainFormRecentFilesTabTests
     {
         [Test]
-        public void MainForm_ShouldHaveRecentFilesTab()
+        public void MainFormShouldHaveRecentFilesTab()
         {
-            // Arrange & Act
+            // Act
             using var form = new MainForm();
-            var tabControl = form.Controls.OfType<TabControl>().FirstOrDefault();
 
             // Assert
+            var tabControl = form.Controls.OfType<TabControl>().FirstOrDefault();
             tabControl.ShouldNotBeNull();
-            tabControl.TabPages.Count.ShouldBeGreaterThanOrEqualTo(3);
+            tabControl!.TabPages.Count.ShouldBeGreaterThanOrEqualTo(3);
             tabControl.TabPages[2].Text.ShouldBe("Recent Files");
         }
 
         [Test]
-        public void RecentFilesTab_ShouldContainRecentFilesPanel()
+        public void RecentFilesTabShouldContainRecentFilesPanel()
         {
-            // Arrange & Act
+            // Act
             using var form = new MainForm();
-            var tabControl = form.Controls.OfType<TabControl>().FirstOrDefault();
-            var recentFilesTab = tabControl?.TabPages[2];
 
-            // Assert
+            var tabControl = form.Controls.OfType<TabControl>().FirstOrDefault();
+            tabControl.ShouldNotBeNull();
+            var recentFilesTab = tabControl!.TabPages[2];
             recentFilesTab.ShouldNotBeNull();
+
             var panel = recentFilesTab.Controls.OfType<RecentFilesPanel>().FirstOrDefault();
             panel.ShouldNotBeNull();
-            panel.Dock.ShouldBe(DockStyle.Fill);
+            panel!.Dock.ShouldBe(DockStyle.Fill);
         }
 
         [Test]
-        public void TabSelection_ShouldTriggerPanelRefresh()
+        public void TabSelectionShouldTriggerPanelRefresh()
         {
             // Arrange
             using var form = new MainForm();
-            form.Show(); // Form must be visible for events to fire
+            form.Show(); // events require a visible form
+
             var tabControl = form.Controls.OfType<TabControl>().FirstOrDefault();
+            tabControl.ShouldNotBeNull();
 
             // Act
-            tabControl.SelectedIndex = 2; // Select Recent Files tab
-            Application.DoEvents(); // Process pending UI events
+            tabControl!.SelectedIndex = 2; // select "Recent Files" tab
+            Application.DoEvents(); // process UI events
 
             // Assert
-            // Panel should have been refreshed (verify through log or internal state)
-            // This is more of an integration test - hard to unit test without mocking
             tabControl.SelectedIndex.ShouldBe(2);
+            // Deeper assertions could hook into a test-visible signal from RecentFilesPanel.RefreshList(),
+            // but that’s outside this test's current scope.
         }
     }
 }

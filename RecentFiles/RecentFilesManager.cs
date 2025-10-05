@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using VecTool.Configuration;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace VecTool.RecentFiles
 {
@@ -97,5 +98,15 @@ namespace VecTool.RecentFiles
                 EnforcePolicies_NoLock();
             }
         }
+
+        public void RemoveFile(string path)
+        {
+            lock (_gate)
+            {
+                _items.RemoveAll(i => i.FilePath.Equals(path, StringComparison.OrdinalIgnoreCase));
+            }
+            Save();
+        }
+
     }
 }

@@ -2,6 +2,8 @@ using Shouldly;
 using NUnit.Framework;
 using VecTool.Handlers;
 using VecTool.Configuration;
+using System.IO;
+using System.Collections.Generic;
 
 namespace DocXHandlerTests
 {
