@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <!-- Existing project references -->
+    <ProjectReference Include="..\\Constants\\Constants.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\Log\Log.csproj" />
     <ProjectReference Include="..\Handlers\Handlers.csproj" />
@@ -30,8 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- ✅ NEW: reference the UI project so tests can compile types like MainForm -->
-    <ProjectReference Include="..\OaiUI\vectool.UI.csproj" />
+    <ProjectReference Include="..\\OaiUI\\Vectool.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

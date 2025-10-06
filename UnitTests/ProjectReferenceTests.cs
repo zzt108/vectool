@@ -37,9 +37,6 @@ namespace VecTool.UnitTests
         [TestCase("UnitTests\\UnitTests.csproj", new[]
         {
             @"..\Constants\Constants.csproj",
-//            @"LogCtxShared.csproj",
-//            @"NlogShared.csproj",
-//            @"SerilogShared.csproj",
             @"..\Handlers\Handlers.csproj",
             @"..\RecentFiles\RecentFiles.csproj",
             @"..\Configuration\Configuration.csproj",
