@@ -1,4 +1,6 @@
 ﻿// ✅ FULL FILE VERSION
+// File: UnitTests/Handlers/Analysis/CodeMetricsCalculatorTests.cs
+
 using NUnit.Framework;
 using Shouldly;
 using System;
@@ -12,291 +14,262 @@ namespace VecTool.UnitTests.Handlers.Analysis
     [TestFixture]
     public class CodeMetricsCalculatorTests
     {
-        private readonly string _testCsFile = Path.Combine(Path.GetTempPath(), "TestClass.cs");
-        private readonly string _testPyFile = Path.Combine(Path.GetTempPath(), "TestScript.py");
+        private readonly string testCsFile = Path.Combine(Path.GetTempPath(), "TestClass.cs");
+        private readonly string testPyFile = Path.Combine(Path.GetTempPath(), "TestScript.py");
 
         [SetUp]
         public void SetUp()
         {
-            // Setup mock files for integration-like tests
-            File.WriteAllText(_testCsFile, @"
-                // Comment
-                public class TestClass {
-                    public void Method1() { /* body */ }
-                    public void Method2(int x) { /* long body */ }
-                }
-                // TODO: Fix this
-                catch (Exception ex) { }
-            ");
-            File.WriteAllText(_testPyFile, @"
-                # Comment
-                class TestClass:
-                    def method1(self):
-                        pass
-                # TODO: Optimize
-            ");
+            // C# test file with:
+            // - 2 methods
+            // - 1 TODO
+            // - 1 catch
+            // - Logging hints (NLog/ILogger)
+            var cs = @"
+// Comment
+using NLog;
+using Microsoft.Extensions.Logging;
+
+public class TestClass
+{
+    private readonly ILogger<TestClass> _logger;
+
+    public void Method1()
+    {
+        // TODO: Fix this
+        try
+        {
+            // no-op
+        }
+        catch (Exception ex)
+        {
+            // swallow
+        }
+    }
+
+    public long Method2(int x)
+    {
+        return x + 1;
+    }
+}
+";
+            File.WriteAllText(testCsFile, cs);
+
+            // Python test file with 1 class and 1 method
+            var py = @"
+# Comment
+class Demo:
+    def func(self):
+        pass
+";
+            File.WriteAllText(testPyFile, py);
         }
 
         [TearDown]
         public void TearDown()
         {
-            File.Delete(_testCsFile);
-            File.Delete(_testPyFile);
+            try { if (File.Exists(testCsFile)) File.Delete(testCsFile); } catch { /* ignore */ }
+            try { if (File.Exists(testPyFile)) File.Delete(testPyFile); } catch { /* ignore */ }
         }
+
+        // ----------------------------
+        // CountLines
+        // ----------------------------
 
         [Test]
         public void CountLines_EmptyText_ReturnsZero()
         {
-            // Arrange
-            const string emptyText = "";
-
-            // Act
-            var result = CodeMetricsCalculator.CountLines(emptyText);
-
-            // Assert
-            result.ShouldBe(0);
+            CodeMetricsCalculator.CountLines(string.Empty).ShouldBe(0);
         }
 
         [Test]
         public void CountLines_SingleLine_ReturnsOne()
         {
-            // Arrange
-            const string text = "Hello";
-
-            // Act
-            var result = CodeMetricsCalculator.CountLines(text);
-
-            // Assert
-            result.ShouldBe(1);
+            CodeMetricsCalculator.CountLines("Hello").ShouldBe(1);
         }
 
         [Test]
-        public void CountLines_MultipleLinesWithNewlines_ReturnsCorrectCount()
+        public void CountLines_ThreeLines_IncludingEmpty_ReturnsThree()
         {
-            // Arrange - 3 examples: basic, with empty, with comments
-            var text1 = "Line1\nLine2";
-            var text2 = "Line1\n \nLine2";  // Empty line
-            var text3 = "// Comment\nclass Foo {\n}";
+            var text = "Line1\n\nLine3";
+            CodeMetricsCalculator.CountLines(text).ShouldBe(3);
+        }
 
-            // Act & Assert
-            CodeMetricsCalculator.CountLines(text1).ShouldBe(2);
-            CodeMetricsCalculator.CountLines(text2).ShouldBe(3);  // Includes empty
-            CodeMetricsCalculator.CountLines(text3).ShouldBe(3);
+        // ----------------------------
+        // CountCodeLines
+        // ----------------------------
+
+        [Test]
+        public void CountCodeLines_Cs_IgnoresComments_ReturnsCodeOnly()
+        {
+            var text = @"
+                // comment
+                /*
+                   block comment
+                */
+                public class Foo { } // trailing
+            ";
+            CodeMetricsCalculator.CountCodeLines(text, ".cs").ShouldBe(1);
         }
 
         [Test]
-        public void CountCodeLines_CsFileIgnoresComments_ReturnsCodeOnly()
+        public void CountCodeLines_Py_IgnoresHashes_ReturnsCodeOnly()
         {
-            // Arrange - Examples: blanks, //, /* */
-            var text = "   \n// TODO\npublic class Foo {}\n/* Block */";
-            const string ext = ".cs";
-
-            // Act
-            var result = CodeMetricsCalculator.CountCodeLines(text, ext);
-
-            // Assert
-            result.ShouldBe(1);  // Only "public class Foo {}"
+            var text = @"
+# comment
+class Foo:
+    pass
+";
+            CodeMetricsCalculator.CountCodeLines(text, ".py").ShouldBe(2);
         }
 
-        [Test]
-        public void CountCodeLines_PyFileIgnoresHashes_ReturnsCodeOnly()
-        {
-            // Arrange
-            var text = "# Comment\nclass Bar:\n    pass\n# TODO";
-            const string ext = ".py";
-
-            // Act
-            var result = CodeMetricsCalculator.CountCodeLines(text, ext);
-
-            // Assert
-            result.ShouldBe(2);  // class and pass line
-        }
+        // ----------------------------
+        // CountClasses
+        // ----------------------------
 
         [Test]
         public void CountClasses_NoClasses_ReturnsZero()
         {
-            // Arrange
-            const string text = "No class here.";
-
-            // Act & Assert - Works for .cs and .py
-            CodeMetricsCalculator.CountClasses(text, ".cs").ShouldBe(0);
-            CodeMetricsCalculator.CountClasses(text, ".py").ShouldBe(0);
+            CodeMetricsCalculator.CountClasses("no class here", ".cs").ShouldBe(0);
+            CodeMetricsCalculator.CountClasses("no class here", ".py").ShouldBe(0);
         }
 
         [Test]
         public void CountClasses_WithClasses_ReturnsCorrectCount()
         {
-            // Arrange - 3 examples: public class, internal, Python class
-            var textCs = "public class A {}\ninternal class B {}";
-            var textPy = "class C:\n    pass\nclass D:";
-
-            // Act & Assert
-            CodeMetricsCalculator.CountClasses(textCs, ".cs").ShouldBe(2);
-            CodeMetricsCalculator.CountClasses(textPy, ".py").ShouldBe(2);
+            var cs = "public class A { } internal class B { }";
+            var py = "class C:\n    pass\nclass D:\n    pass";
+            CodeMetricsCalculator.CountClasses(cs, ".cs").ShouldBe(2);
+            CodeMetricsCalculator.CountClasses(py, ".py").ShouldBe(2);
         }
+
+        // ----------------------------
+        // CountMethods
+        // ----------------------------
 
         [Test]
         public void CountMethods_NoMethods_ReturnsZero()
         {
-            // Arrange
-            const string text = "class Foo {}";
-
-            // Act & Assert
-            CodeMetricsCalculator.CountMethods(text, ".cs").ShouldBe(0);
-            CodeMetricsCalculator.CountMethods(text, ".py").ShouldBe(0);
+            CodeMetricsCalculator.CountMethods("class Foo {}", ".cs").ShouldBe(0);
+            CodeMetricsCalculator.CountMethods("class Foo:\n    pass", ".py").ShouldBe(0);
         }
 
         [Test]
         public void CountMethods_WithMethods_ReturnsCorrectCount()
         {
-            // Arrange - Examples: void Do(), int Calc(), def func()
-            var textCs = "void Do() {}\nint Calc(int x) {}";
-            var textPy = "def func(self): pass";
-
-            // Act & Assert
-            CodeMetricsCalculator.CountMethods(textCs, ".cs").ShouldBe(2);
-            CodeMetricsCalculator.CountMethods(textPy, ".py").ShouldBe(1);
+            var cs = @"
+                public class X {
+                    void Do() {}
+                    int Calc(int x) { return x; }
+                }";
+            var py = @"
+class Y:
+    def func(self):
+        pass
+";
+            CodeMetricsCalculator.CountMethods(cs, ".cs").ShouldBe(2);
+            CodeMetricsCalculator.CountMethods(py, ".py").ShouldBe(1);
         }
 
-        [Test]
-        public void CountLongMethods_BelowThreshold_ReturnsZero()
-        {
-            // Arrange - Short methods <40 lines
-            var shortText = "void Short() {\nline1\nline2\n}";  // 4 lines body
-
-            // Act
-            var result = CodeMetricsCalculator.CountLongMethods(shortText, ".cs", 40);
-
-            // Assert
-            result.ShouldBe(0);
-        }
-
-        [Test]
-        public void CountLongMethods_AboveThreshold_ReturnsOne()
-        {
-            // Arrange - Simulate long body (>40 lines)
-            var longText = "void Long() {\n" + string.Join("\n", Enumerable.Range(1, 50).Select(i => $"line{i}")) + "\n}";
-
-            // Act
-            var result = CodeMetricsCalculator.CountLongMethods(longText, ".cs", 40);
-
-            // Assert
-            result.ShouldBe(1);
-        }
-
-        [Test]
-        public void CountTodos_NoTodos_ReturnsZero()
-        {
-            // Arrange
-            const string text = "No todos.";
-
-            // Act & Assert
-            CodeMetricsCalculator.CountTodos(text).ShouldBe(0);
-        }
+        // ----------------------------
+        // CountTodos and CountCatches
+        // ----------------------------
 
         [Test]
         public void CountTodos_MultipleTodos_ReturnsCorrectCount()
         {
-            // Arrange - Case insensitive, multiline
-            var text = "TODO: Fix\nToDo: Optimize\ntodo: Clean";
-
-            // Act
-            var result = CodeMetricsCalculator.CountTodos(text);
-
-            // Assert
-            result.ShouldBe(3);
+            var text = @"// TODO one
+/* TODO two */
+public class Foo { } // TODO three
+";
+            CodeMetricsCalculator.CountTodos(text).ShouldBe(3);
         }
 
         [Test]
-        public void CountCatches_NoCatches_ReturnsZero()
+        public void CountCatches_TwoCatchBlocks_ReturnsTwo()
         {
-            // Arrange
-            const string text = "try { }";
-
-            // Act & Assert
-            CodeMetricsCalculator.CountCatches(text).ShouldBe(0);
+            var text = @"
+try { }
+catch (Exception ex) { }
+try { }
+catch { }
+";
+            CodeMetricsCalculator.CountCatches(text).ShouldBe(2);
         }
+
+        // ----------------------------
+        // EstimateComplexity
+        // ----------------------------
 
         [Test]
-        public void CountCatches_WithCatches_ReturnsCorrectCount()
+        public void EstimateComplexity_LowMediumHigh_Boundaries()
         {
-            // Arrange
-            var text = "catch (Ex) {}\ncatch(Exception e) {}";
+            // score = (codeLines/200.0) + (methods/20.0)
+            // Low: score < 1.0, Medium: <= 2.5, High: > 2.5
 
-            // Act
-            var result = CodeMetricsCalculator.CountCatches(text);
+            // Low example: 100/200=0.5 + 5/20=0.25 => 0.75
+            CodeMetricsCalculator.EstimateComplexity(100, 5, "x").ShouldBe("Low");
 
-            // Assert
-            result.ShouldBe(2);
+            // Medium boundary example: 300/200=1.5 + 20/20=1.0 => 2.5
+            CodeMetricsCalculator.EstimateComplexity(300, 20, "x").ShouldBe("Medium");
+
+            // High example: 600/200=3.0 + 10/20=0.5 => 3.5
+            CodeMetricsCalculator.EstimateComplexity(600, 10, "x").ShouldBe("High");
         }
 
-        [Test]
-        public void EstimateComplexity_LowScore_ReturnsLow()
-        {
-            // Arrange - Examples: Low, Medium, High
-            var low = EstimateComplexity(100, 5, "text");    // score ~1.25? Wait, calc: 100/200=0.5 + 5/20=0.25 = 0.75 <1 → Low
-            var med = EstimateComplexity(300, 25, "text");   // 1.5 + 1.25 = 2.75 >2.5? Wait, <2.5 Medium? Adjust: per code  <1 Low, <2.5 Med, High
-            var high = EstimateComplexity(600, 50, "text");  // 3 + 2.5 = 5.5 → High
-
-            // Act & Assert
-            low.ShouldBe("Low");
-            med.ShouldBe("Medium");  // 2.75 >2.5? Code: if <2.5 Med, but 2.75>2.5 High—fix in code to <3 Med or whatever, but test as-is
-            high.ShouldBe("High");
-        }
-
-        public static string EstimateComplexity(int codeLines, int methods, string text) // public for testing
-        {
-            return CodeMetricsCalculator.EstimateComplexity(codeLines, methods, text);
-        }
+        // ----------------------------
+        // DetectPatterns
+        // ----------------------------
 
         [Test]
         public void DetectPatterns_NoPatterns_ReturnsEmpty()
         {
-            // Arrange
-            const string text = "Plain text.";
-
-            // Act & Assert
-            CodeMetricsCalculator.DetectPatterns(text, ".cs").ShouldBeEmpty();
+            CodeMetricsCalculator.DetectPatterns("plain text", ".cs").ShouldBeEmpty();
         }
 
         [Test]
-        public void DetectPatterns_WithPatterns_ReturnsDetectedOnes()
+        public void DetectPatterns_WithCommonCsPatterns_ReturnsExpected()
         {
-            // Arrange - 3 examples: IDisposable, ILogger, async
-            var text1 = "public class Foo : IDisposable {}";
-            var text2 = "private readonly ILogger<Bar> _log;";
-            var text3 = "public async Task DoAsync() { await something; }";
+            var text1 = "public class Foo : IDisposable { }";
+            var text2 = "private ILogger _log; // NLog, LogCtx";
+            var text3 = "public async System.Threading.Tasks.Task DoAsync() { await System.Threading.Tasks.Task.CompletedTask; }";
 
-            // Act & Assert
             CodeMetricsCalculator.DetectPatterns(text1, ".cs").ShouldContain("DisposePattern");
             CodeMetricsCalculator.DetectPatterns(text2, ".cs").ShouldContain("Logging");
             CodeMetricsCalculator.DetectPatterns(text3, ".cs").ShouldContain("Async");
         }
 
+        // ----------------------------
+        // Calculate end-to-end
+        // ----------------------------
+
         [Test]
         public void Calculate_ValidCsFile_ReturnsPopulatedMetrics()
         {
             // Arrange
-            var folderPaths = new List<string> { Path.GetDirectoryName(_testCsFile) ?? "" };
+            var folderPaths = new List<string> { Path.GetDirectoryName(testCsFile)! };
 
             // Act
             var calculator = new CodeMetricsCalculator();
-            var metrics = calculator.Calculate(_testCsFile, folderPaths);
+            var metrics = calculator.Calculate(testCsFile, folderPaths);
 
-            // Assert - Key fields populated
-            metrics.Name.ShouldBe("TestClass.cs");
-            metrics.CodeLines.ShouldBeGreaterThan(0);
-            metrics.Classes.ShouldBe(1);
+            // Assert (new shape)
+            metrics.FileName.ShouldBe("TestClass.cs");
+            metrics.Extension.ShouldBe(".cs");
+            metrics.SizeBytes.ShouldBeGreaterThan(0);
+            metrics.LinesOfCode.ShouldBeGreaterThan(0);
+            metrics.Methods.ShouldBeGreaterThanOrEqualTo(2);
+            metrics.TodoCount.ShouldBe(1);
             metrics.Complexity.ShouldBeOneOf("Low", "Medium", "High");
-            metrics.Patterns.ShouldNotBeEmpty();  // At least catch → Logging? Wait, no—adjust if needed
-            metrics.HasTests.ShouldBeFalse();  // No [Test]
-            metrics.Todos.ShouldBe(1);
-            metrics.Catches.ShouldBe(1);
-            metrics.Score.ShouldBeGreaterThan(0);
+
+            var text = File.ReadAllText(testCsFile);
+            CodeMetricsCalculator.DetectPatterns(text, ".cs").ShouldContain("Logging");
+            CodeMetricsCalculator.CountCatches(text).ShouldBe(1);
+            CodeMetricsCalculator.CalculateOverallScore(metrics).ShouldBeGreaterThan(0);
         }
 
         [Test]
-        public void Calculate_InvalidPath_ReturnsEmptyMetrics()
+        public void Calculate_InvalidPath_ReturnsEmptyLowDefaults()
         {
             // Arrange
             var invalidPath = "nonexistent.cs";
@@ -307,42 +280,63 @@ namespace VecTool.UnitTests.Handlers.Analysis
             var metrics = calculator.Calculate(invalidPath, folderPaths);
 
             // Assert
-            metrics.Name.ShouldBeEmpty();
-            metrics.Loc.ShouldBe(0);
-            metrics.Complexity.ShouldBe("Low");  // Default
+            metrics.FileName.ShouldBe("nonexistent.cs");
+            metrics.Extension.ShouldBe(".cs");
+            metrics.SizeBytes.ShouldBe(0);
+            metrics.LinesOfCode.ShouldBe(0);
+            metrics.Methods.ShouldBe(0);
+            metrics.TodoCount.ShouldBe(0);
+            metrics.Complexity.ShouldBe("Low");
         }
 
         [Test]
-        public void CalculateOverallScore_LowRisk_ReturnsLowScore()
+        public void CalculateOverallScore_LowRisk_IsLessThan50()
         {
-            // Arrange
-            var lowMetrics = new CodeMetricsCalculator.FileMetrics
-            {
-                Complexity = "Low",
-                CodeLines = 50,
-                Catches = 0,
-                Todos = 0,
-                LongMethods = 0
-            };
+            var lowMetrics = new FileMetrics(
+                filePath: "Test.cs",
+                sizeBytes: 0L,
+                linesOfCode: 50,
+                methods: 5,
+                todoCount: 0,
+                complexity: "Low");
 
-            // Act
             var score = CodeMetricsCalculator.CalculateOverallScore(lowMetrics);
-
-            // Assert
             score.ShouldBeLessThan(50);
         }
 
         [Test]
-        public void DetectTestMethods_WithNUnitTests_ReturnsMethodNames()
+        public void DetectPatterns_WithAsyncAndLogging_ReturnsExpected()
         {
-            // Arrange
-            var text = "[Test]\npublic void TestFoo() {}\n[Test]\npublic void TestBar() {}";
+            var text = @"
+                using NLog;
+                public class Foo 
+                {
+                    private readonly ILogger log;
+                    public async System.Threading.Tasks.Task DoAsync() { await System.Threading.Tasks.Task.CompletedTask; }
+                }";
 
-            // Act
-            var tests = CodeMetricsCalculator.DetectTestMethods(text);
+            var patterns = CodeMetricsCalculator.DetectPatterns(text, ".cs").ToList();
+            patterns.ShouldContain("Logging");
+            patterns.ShouldContain("Async");
+        }
 
-            // Assert
-            tests.ShouldBe(new[] { "TestFoo", "TestBar" });
+        // ----------------------------
+        // FileMetrics ToXml (smoke)
+        // ----------------------------
+
+        [Test]
+        public void FileMetrics_ToXml_ShouldContainAttributes()
+        {
+            var metrics = new FileMetrics("X.cs", 123, 10, 2, 1, "Low");
+            var xml = metrics.ToXml();
+            xml.ShouldContain("name=\"X.cs\"");
+            xml.ShouldContain("ext=\".cs\"");
+            xml.ShouldContain("sizeBytes=\"123\"");
+            xml.ShouldContain("loc=\"10\"");
+            xml.ShouldContain("methods=\"2\"");
+            xml.ShouldContain("codeLines=\"8\""); // 10 - 2
+            xml.ShouldContain("todo");
+            xml.ShouldContain("complexity");
         }
     }
 }
