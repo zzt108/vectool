@@ -7,6 +7,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+<PropertyGroup>
+  <MajorVersion>4</MajorVersion>
+  <PlanId>feat_file_size_refactor</PlanId>
+</PropertyGroup>
+
   <!-- Central global usings via MSBuild so no GlobalUsings.cs is required -->
   <ItemGroup>
     <Using Include="System" />
