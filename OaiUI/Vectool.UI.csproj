@@ -19,7 +19,7 @@
     <!-- Versioning (kept from repo pattern) -->
     <MajorVersion>4</MajorVersion>
     <PlanId>0</PlanId>
-    <PlanPhase>2</PlanPhase>
+    <PlanPhase>3</PlanPhase>
     <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
     <HHmm>$([System.DateTime]::UtcNow.ToString('HHmm'))</HHmm>
     <DayOfYear>$([System.DateTime]::UtcNow.DayOfYear)</DayOfYear>
