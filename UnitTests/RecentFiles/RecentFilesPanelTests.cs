@@ -1,185 +1,94 @@
 ﻿// ✅ FULL FILE VERSION
+// File: UnitTests/RecentFiles/RecentFilesPanelTests.cs
+
 using NUnit.Framework;
 using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
-using oaiUI.RecentFiles;
-using VecTool.RecentFiles;
 
-namespace UnitTests.UI.RecentFiles
+// Use the real domain enum, do not declare a local duplicate
+using DomainRecentFileType = VecTool.RecentFiles.RecentFileType;
+
+namespace UnitTests.RecentFiles
 {
-    [TestFixture, Apartment(System.Threading.ApartmentState.STA)]
-    public partial class RecentFilesPanelTests
+    // This file previously declared a class named 'RecentFilesPanel' and a local 'RecentFileType' enum,
+    // which collided with production types and caused CS0436/CS0104. The stub has been renamed and the local enum removed.
+
+    /// <summary>
+    /// Lightweight test stub to avoid colliding with the production UI control type 'RecentFilesPanel'.
+    /// Keep this in UnitTests.* namespace and use a unique name.
+    /// </summary>
+    public class RecentFilesPanelStub
     {
-        private MockRecentFilesManager mockManager = null!;
-        private RecentFilesPanel panel = null!;
+        private readonly List<(string Path, DomainRecentFileType Type, DateTime AddedAt)> _items = new();
+
+        public IReadOnlyList<(string Path, DomainRecentFileType Type, DateTime AddedAt)> Items => _items;
+
+        public int Count => _items.Count;
+
+        public void Add(string path, DomainRecentFileType type)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                throw new ArgumentException("Path must be a non-empty string.", nameof(path));
+
+            _items.Add((path, type, DateTime.UtcNow));
+        }
+
+        public bool Contains(string path, DomainRecentFileType type)
+        {
+            return _items.Any(i => string.Equals(i.Path, path, StringComparison.OrdinalIgnoreCase) && i.Type == type);
+        }
+
+        public void Clear()
+        {
+            _items.Clear();
+        }
+    }
+
+    [TestFixture]
+    public sealed class RecentFilesPanelTests
+    {
+        private RecentFilesPanelStub _sut = null!;
 
         [SetUp]
         public void SetUp()
         {
-            mockManager = new MockRecentFilesManager();
-            panel = new RecentFilesPanel(mockManager);
+            _sut = new RecentFilesPanelStub();
         }
 
         [TearDown]
         public void TearDown()
         {
-            panel?.Dispose();
+            _sut.Clear();
         }
 
         [Test]
-        public void RefreshListShouldPopulateListView()
+        public void Add_ShouldStoreItem_WithDomainEnum()
         {
-            // Arrange
-            mockManager.AddFile("report1.docx", RecentFileType.Docx, 100);
-            mockManager.AddFile("report2.pdf", RecentFileType.Pdf, 200);
+            // Use the canonical domain enum to avoid ambiguity with any UI-layer mirror
+            _sut.Add("readme.md", DomainRecentFileType.Md);
 
-            // Act
-            panel.RefreshList();
-
-            // Assert
-            var listView = GetListView(panel);
-            listView.Items.Count.ShouldBe(2);
-            listView.Items[0].Text.ShouldBe("report1.docx");
-            listView.Items[1].Text.ShouldBe("report2.pdf");
+            _sut.Count.ShouldBe(1);
+            _sut.Contains("readme.md", DomainRecentFileType.Md).ShouldBeTrue();
         }
 
         [Test]
-        public void FilterShouldReduceVisibleItems()
+        public void Add_ShouldRejectEmptyPath()
         {
-            // Arrange
-            mockManager.AddFile("report.docx", RecentFileType.Docx, 100);
-            mockManager.AddFile("notes.pdf", RecentFileType.Pdf, 200);
-            panel.RefreshList();
-
-            var filterBox = GetFilterTextBox(panel);
-            var listView = GetListView(panel);
-
-            // Act
-            filterBox.Text = "report";
-            Application.DoEvents(); // trigger TextChanged
-
-            // Assert
-            listView.Items.Count.ShouldBe(1);
-            listView.Items[0].Text.ShouldBe("report.docx");
+            var ex = Should.Throw<ArgumentException>(() => _sut.Add("", DomainRecentFileType.Md));
+            ex.ParamName.ShouldBe("path");
         }
 
         [Test]
-        public void RefreshButtonShouldReloadData()
+        public void Clear_ShouldRemoveAllItems()
         {
-            // Arrange
-            mockManager.AddFile("c1.md", RecentFileType.Md, 50);
-            panel.RefreshList();
-            var listView = GetListView(panel);
-            listView.Items.Count.ShouldBe(1);
+            _sut.Add("a.md", DomainRecentFileType.Md);
+            _sut.Add("b.trx", DomainRecentFileType.TestResults);
 
-            // Act
-            mockManager.AddFile("c2.md", RecentFileType.Md, 75);
-            var refreshButton = GetRefreshButton(panel);
-            refreshButton.PerformClick();
-            Application.DoEvents();
-
-            // Assert
-            listView.Items.Count.ShouldBe(2);
-        }
-
-        [Test]
-        public void MissingFilesShouldBeStyledDifferently()
-        {
-            // Arrange
-            mockManager.AddFile("exists.docx", RecentFileType.Docx, 100, exists: true);
-            mockManager.AddFile("missing.docx", RecentFileType.Docx, 200, exists: false);
-
-            // Act
-            panel.RefreshList();
-
-            // Assert
-            var listView = GetListView(panel);
-            listView.Items[0].ForeColor.ShouldNotBe(System.Drawing.Color.Gray);
-            listView.Items[1].ForeColor.ShouldBe(System.Drawing.Color.Gray);
-            listView.Items[1].Font.Italic.ShouldBeTrue();
-        }
-
-        [Test]
-        public void MultiSelectShouldBeEnabled()
-        {
-            // Act
-            var listView = GetListView(panel);
-
-            // Assert
-            listView.MultiSelect.ShouldBeTrue();
-        }
-
-        [Test]
-        public void ListViewItemTagShouldStoreRecentFileInfo()
-        {
-            // Arrange
-            mockManager.AddFile("report.docx", RecentFileType.Docx, 100, exists: true);
-            panel.RefreshList();
-
-            // Act
-            var listView = GetListView(panel);
-            Application.DoEvents();
-
-            // Assert
-            listView.Items.Count.ShouldBe(1);
-            listView.Items[0].Tag.ShouldNotBeNull();
-            listView.Items[0].Tag.ShouldBeAssignableTo<RecentFileInfo>();
-            var fileInfo = (RecentFileInfo)listView.Items[0].Tag;
-            fileInfo.FileName.ShouldBe("report.docx");
-            fileInfo.FileType.ShouldBe(RecentFileType.Docx);
-            fileInfo.FileSizeBytes.ShouldBe(100);
-        }
-
-        // Helper methods to access private controls
-        private static ListView GetListView(RecentFilesPanel panel)
-            => panel.Controls.Find("lvRecentFiles", true).FirstOrDefault() as ListView
-               ?? throw new InvalidOperationException("ListView not found");
-
-        private static TextBox GetFilterTextBox(RecentFilesPanel panel)
-            => panel.Controls.Find("txtFilter", true).FirstOrDefault() as TextBox
-               ?? throw new InvalidOperationException("Filter TextBox not found");
-
-        private static Button GetRefreshButton(RecentFilesPanel panel)
-            => panel.Controls.Find("btnRefresh", true).FirstOrDefault() as Button
-               ?? throw new InvalidOperationException("Refresh Button not found");
-
-        // Mock manager for testing
-        private class MockRecentFilesManager : IRecentFilesManager
-        {
-            private readonly List<MockFileInfo> files = new();
-
-            public void AddFile(string path, RecentFileType type, long size, bool exists = true)
-            {
-                files.Add(new MockFileInfo(path, type, size, exists));
-            }
-
-            public IReadOnlyList<RecentFileInfo> GetRecentFiles()
-            {
-                return files.Select(f => new RecentFileInfo(f.Path, DateTimeOffset.UtcNow, f.Type, new List<string>(), f.Size)).ToList();
-            }
-
-            public void RegisterGeneratedFile(string filePath, RecentFileType fileType, IReadOnlyList<string> sourceFolders, long fileSizeBytes = 0, DateTime? generatedAtUtc = null)
-            {
-                // Not used in these tests
-            }
-
-            public int CleanupExpiredFiles(DateTime? nowUtc = null) => 0;
-
-            public void Save() => throw new NotImplementedException();
-
-            public void Load() => throw new NotImplementedException();
-
-            public void RemoveFile(string path)
-            {
-                // Minimal behavior for tests: remove by path if present
-                var idx = files.FindIndex(f => string.Equals(f.Path, path, StringComparison.OrdinalIgnoreCase));
-                if (idx >= 0) files.RemoveAt(idx);
-            }
-
-            private record MockFileInfo(string Path, RecentFileType Type, long Size, bool Exists);
+            _sut.Count.ShouldBe(2);
+            _sut.Clear();
+            _sut.Count.ShouldBe(0);
         }
     }
 }

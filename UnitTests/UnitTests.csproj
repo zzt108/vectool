@@ -13,6 +13,7 @@
   <Import Project="..\LogCtx\SeriLogShared\SeriLogShared.projitems" Label="Shared" />
 
   <Import Project="..\LogCtx\NLogShared\NLogShared.projitems" Label="Shared" />
+  
   <ItemGroup>
     <PackageReference Include="NUnit" Version="4.4.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="5.1.0" />
