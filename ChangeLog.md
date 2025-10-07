@@ -1,7 +1,30 @@
 ## Changelog
 
-### VecTool v4.25.1007 – 2025-10-07
+### Planned Features (TODO)
 
+- Utilize perplexity API to get git commit message
+- Add ability to drag to the recent documents grid docs from the file system
+- Add console commands (git log, build, dotnet test, etc) with redirection to a text file, and addint to the recent file list
+- Link recent files entries to the active vector store on creation
+- Add ability to filter the recent documents grid docs by vector store, sort by coluns, etc.
+- Git repo branch should be part of the vector store linking key.
+- **Progress Bar Enhancements** - **Need VS Code styling**
+
+- **Error Handling UI System**
+- **VS Code Theme System**
+- there should be a menu system to access get git changes, docx, md, pdf, filesize button functionality, etc. (they are important for the recent file list tab also )
+### VecTool 4.0.p2 – ongoing
+- LogCtx structured logging module documentation and upgrading for WinUI 3
+- UI upgrading to WinUI 3
+- Fixing and enhancing unit tests
+
+### VecTool 4.0.p2 – 2025-10-07
+
+## New Features
+v 4.0.p2 - 2025-10-07 Finished
+* new versioning scheme Major, Minor = Plan ID, Plan phase
+* Plan 0 is maintenance and removing technical debt
+* 
 #### Bug Fixes
 
 *   **Build:** Fixed broken codebase - restored project to buildable state
