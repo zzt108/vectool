@@ -8,7 +8,7 @@ using Vectool.UI.RecentFiles;
 using VecTool.Configuration;
 using VecTool.Core.RecentFiles;
 
-namespace Vectool.OaiUI
+namespace Vectool.UI
 {
     /// <summary>
     /// Partial MainForm implementation managing the Recent Files tab state:

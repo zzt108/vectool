@@ -11,7 +11,7 @@ using VecTool.Configuration;
 using VecTool.Core;
 using VecTool.Handlers;
 
-namespace Vectool.OaiUI
+namespace Vectool.UI
 {
     public partial class MainForm : Form
     {

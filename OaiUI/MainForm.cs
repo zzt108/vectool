@@ -1,88 +1,56 @@
-﻿// ✅ FULL FILE VERSION
-// Path: src/VecTool.UI/OaiUI/MainForm.cs
+﻿// Path: Vectool.UI/MainForm.cs
+// File: MainForm.cs
+
+#nullable enable
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using VecTool.Configuration;
-using VecTool.Core;
-using VecTool.Handlers;
-using VecTool.RecentFiles;
-using oaiUI;
-using oaiUI.Services;
+// Ensure LogCtx is available in the solution; if not initialized at startup, calls can be added later.
+// using LogCtx;
 
-namespace Vectool.OaiUI
+namespace Vectool.UI
 {
-    // Orchestration partial: keeps fields, constructors, InitializeComponent, wiring, and high-level flow.
     public partial class MainForm : Form
     {
-        // UI services and data
-        private WinFormsUserInterface userInterface;
-        private IRecentFilesManager recentFilesManager;
-
-        // Selected folders bound to the listbox
-        private readonly List<string> selectedFolders = new();
-
-        // All known vector stores
-        private Dictionary<string, VectorStoreConfig> allVectorStoreConfigs = new();
-
-        // Persist last vector store selection
-        private readonly ILastSelectionService lastSelection = new LastSelectionService();
-
         public MainForm()
         {
             InitializeComponent();
-
-            // Initialize UI service wrappers
-            userInterface = new WinFormsUserInterface(statusLabel, progressBar);
-
-            // Initialize Recent Files
-            var recentFilesConfig = RecentFilesConfig.FromAppConfig();
-            Directory.CreateDirectory(recentFilesConfig.OutputPath);
-            var recentFilesStore = new FileRecentFilesStore(recentFilesConfig);
-            recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
-            recentFilesManager.Load();
-
-            // Recent files panel created by designer - initialize once controls exist
-            recentFilesPanel.Initialize(recentFilesManager);
-
-            WireUpEvents();
-
-            // Load vector stores into combo box (implementation in MainForm.VectorStoreManagement.cs)
-            LoadVectorStoresIntoComboBox();
+            WireUpEvents(); // Centralize event wiring to avoid duplicate subscriptions across partials. 
+                            // [Design: idempotent re-wiring pattern used below] 
+                            // LogCtx can be added here if initialized globally. 
         }
 
+        // Centralized, idempotent wiring for Settings tab and related controls.
+        // Pattern: always "-= handler; += handler;" to prevent duplicate subscriptions after re-inits.
         private void WireUpEvents()
         {
-            // Menu items
-            convertToMdToolStripMenuItem.Click += convertToMdToolStripMenuItemClick;
-            getGitChangesToolStripMenuItem.Click += getGitChangesToolStripMenuItemClick;
-            fileSizeSummaryToolStripMenuItem.Click += fileSizeSummaryToolStripMenuItemClick;
-            runTestsToolStripMenuItem.Click += runTestsToolStripMenuItemClick;
-            exitToolStripMenuItem.Click += exitToolStripMenuItemClick;
+            // SETTINGS TAB
+            cmbSettingsVectorStore.SelectedIndexChanged -= cmbSettingsVectorStoreSelectedIndexChanged;
+            cmbSettingsVectorStore.SelectedIndexChanged += cmbSettingsVectorStoreSelectedIndexChanged;
 
-            // Form controls
-            btnSelectFolders.Click += btnSelectFoldersClick;
-            comboBoxVectorStores.SelectedIndexChanged += comboBoxVectorStoresSelectedIndexChanged;
-            btnCreateNewVectorStore.Click += btnCreateNewVectorStoreClick;
+            chkInheritExcludedFiles.CheckedChanged -= chkInheritExcludedFilesCheckedChanged;
+            chkInheritExcludedFiles.CheckedChanged += chkInheritExcludedFilesCheckedChanged;
 
-            // Tab change refresh (ensure recent files grid stays fresh)
-            tabControl1.SelectedIndexChanged += (sender, args) =>
-            {
-                if (tabControl1.SelectedTab == tabPageRecentFiles)
-                {
-                    recentFilesPanel.RefreshList();
-                }
-            };
+            chkInheritExcludedFolders.CheckedChanged -= chkInheritExcludedFoldersCheckedChanged;
+            chkInheritExcludedFolders.CheckedChanged += chkInheritExcludedFoldersCheckedChanged;
+
+            btnSaveVsSettings.Click -= btnSaveVsSettingsClick;
+            btnSaveVsSettings.Click += btnSaveVsSettingsClick;
+
+            btnResetVsSettings.Click -= btnResetVsSettingsClick;
+            btnResetVsSettings.Click += btnResetVsSettingsClick;
+
+            // Optional logging if LogCtx is initialized in Program.cs
+            // LogCtx.Log.Info("WireUpEvents completed for Settings tab handlers");
         }
 
-        // Note: UpdateFormTitle implementation moved to MainForm.VectorStoreManagement.cs.
-        // Note: SanitizeFileName implementation moved to MainForm.FileOperations.cs.
-        // Note: All file operation handlers moved to MainForm.FileOperations.cs.
-        // Note: Vector store handlers and helpers moved to MainForm.VectorStoreManagement.cs.
-        // Note: Folder selection handlers moved to MainForm.FolderSelection.cs.
+        // Note:
+        // - The actual handler methods referenced here (e.g., cmbSettingsVectorStoreSelectedIndexChanged,
+        //   chkInheritExcludedFilesCheckedChanged, chkInheritExcludedFoldersCheckedChanged,
+        //   btnSaveVsSettingsClick, btnResetVsSettingsClick) are implemented in other partial files:
+        //   MainForm.SettingsTab.cs and/or MainForm.VectorStoreManagement.cs.
+        //
+        // - This file intentionally centralizes event wiring to prevent triple-subscription issues and
+        //   to keep the Settings tab behavior stable during programmatic UI updates and reloads.
     }
 }

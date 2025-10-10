@@ -3,7 +3,7 @@ using Shouldly;
 using System;
 using System.Linq;
 using System.Windows.Forms;
-using Vectool.OaiUI;
+using Vectool.UI;
 using Vectool.UI.Versioning;
 
 namespace UnitTests.UI

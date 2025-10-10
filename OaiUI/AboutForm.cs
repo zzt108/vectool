@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 using Vectool.UI.Versioning;
 
-namespace Vectool.OaiUI
+namespace Vectool.UI
 {
     public partial class AboutForm : Form
     {
