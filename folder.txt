@@ -1,0 +1,21 @@
+ Volume in drive C is Acer
+ Volume Serial Number is 1C79-C9F4
+
+ Directory of c:\Git\vectoolDev\ui.winui
+
+2025. 10. 10.  23:22    <DIR>          .
+2025. 10. 10.  23:24    <DIR>          ..
+2025. 10. 10.  23:22             1ÿ040 app.manifest
+2025. 10. 10.  23:22               679 App.xaml
+2025. 10. 10.  23:22             1ÿ648 App.xaml.cs
+2025. 10. 10.  23:22    <DIR>          Assets
+2025. 10. 10.  23:22    <DIR>          bin
+2025. 10. 10.  23:22               563 MainWindow.xaml
+2025. 10. 10.  23:22               896 MainWindow.xaml.cs
+2025. 10. 10.  23:23    <DIR>          obj
+2025. 10. 10.  23:22             1ÿ835 Package.appxmanifest
+2025. 10. 10.  23:22    <DIR>          Properties
+2025. 10. 10.  23:22             2ÿ534 UI.WinUI.csproj
+2025. 10. 10.  23:22               452 UI.WinUI.csproj.user
+               8 File(s)          9ÿ647 bytes
+               6 Dir(s)  2ÿ296ÿ503ÿ222ÿ272 bytes free

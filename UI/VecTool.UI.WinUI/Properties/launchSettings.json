@@ -1,0 +1,12 @@
+// FULL FILE VERSION
+// Path: src/UI/VecTool.UI.WinUI/Properties/launchSettings.json
+{
+  "profiles": {
+    "VecTool.UI.WinUI (Unpackaged)": {
+      "commandName": "Project"
+    },
+    "VecTool.UI.WinUI (Package)": {
+      "commandName": "MsixPackage"
+    }
+  }
+}
