@@ -16,7 +16,7 @@
   
   <ItemGroup>
     <PackageReference Include="NUnit" Version="4.4.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="5.1.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
@@ -39,7 +39,7 @@
     <PackageReference Update="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
     <PackageReference Update="Microsoft.Extensions.Configuration.Xml" Version="9.0.9" />
     <PackageReference Update="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Update="NLog" Version="6.0.4" />
+    <PackageReference Update="NLog" Version="6.0.5" />
     <PackageReference Update="NLog.Targets.Seq" Version="4.0.2" />
     <PackageReference Update="Serilog" Version="4.3.0" />
     <PackageReference Update="Serilog.Extensions.Logging" Version="9.0.2" />
