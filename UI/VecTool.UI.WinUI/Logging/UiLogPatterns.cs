@@ -19,7 +19,7 @@ namespace VecTool.UI.WinUI.Logging
 
         public static void ReportWarning(string fileName, string reason)
         {
-            var evt = new LogEventInfo(LogLevel.Warning, Log.Name, "Excluded file encountered");
+            var evt = new LogEventInfo(LogLevel.Warn, Log.Name, "Excluded file encountered");
             evt.Properties["FileName"] = fileName;
             evt.Properties["Reason"] = reason;
             Log.Log(evt);
