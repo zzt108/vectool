@@ -1,222 +1,118 @@
 ﻿// ✅ FULL FILE VERSION
-// Path: Vectool.UI/MainForm.SettingsTab.cs
-// File: MainForm.SettingsTab.cs
-
-#nullable enable
+// Path: OaiUI/MainForm.SettingsTab.cs
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using Vectool.UI.Config;
 using VecTool.Configuration;
-// using LogCtx; // Uncomment if LogCtx is initialized in the hosting app
+using Vectool.UI.Config;
 
 namespace Vectool.UI
 {
-    public partial class MainForm : Form
+    public partial class MainForm
     {
-        // NOTE:
-        // - This file assumes the following members exist elsewhere in the partial class:
-        //   - private Dictionary<string, VectorStoreConfig> allVectorStoreConfigs;
-        //   - private void ReloadAllVectorStoreConfigs();
-        //   - ComboBox cmbSettingsVectorStore;
-        //   - TextBox txtExcludedFiles, txtExcludedFolders;
-        //   - CheckBox chkInheritExcludedFiles, chkInheritExcludedFolders;
-        //   - Button btnSaveVsSettings, btnResetVsSettings;
+        // Wire up in designer: cmbSettingsVectorStore, chkInheritExcludedFiles, chkInheritExcludedFolders,
+        // txtExcludedFiles, txtExcludedFolders, btnSaveVsSettings
 
-        // ============================================
-        // Settings Tab: Load selection into the editor
-        // ============================================
-        private void SettingsTabLoadSelection(string? name)
+        private void SettingsTab_Initialize()
         {
-            // Detach handlers while performing programmatic updates to avoid reentrancy and clobbering
-            chkInheritExcludedFiles.CheckedChanged -= chkInheritExcludedFilesCheckedChanged;
-            chkInheritExcludedFolders.CheckedChanged -= chkInheritExcludedFoldersCheckedChanged;
+            // Optional: call this from constructor after InitializeComponent()
+            // to ensure events are hooked once.
+            cmbSettingsVectorStore.SelectedIndexChanged -= cmbSettingsVectorStore_SelectedIndexChanged;
+            cmbSettingsVectorStore.SelectedIndexChanged += cmbSettingsVectorStore_SelectedIndexChanged;
 
-            try
-            {
-                var selected = (name ?? string.Empty).Trim();
-                if (string.IsNullOrWhiteSpace(selected))
-                {
-                    // Nothing selected – reset UI to inherited state
-                    chkInheritExcludedFiles.Checked = true;
-                    chkInheritExcludedFolders.Checked = true;
+            chkInheritExcludedFiles.CheckedChanged -= chkInheritExcludedFiles_CheckedChanged;
+            chkInheritExcludedFiles.CheckedChanged += chkInheritExcludedFiles_CheckedChanged;
 
-                    txtExcludedFiles.Text = string.Empty;
-                    txtExcludedFolders.Text = string.Empty;
+            chkInheritExcludedFolders.CheckedChanged -= chkInheritExcludedFolders_CheckedChanged;
+            chkInheritExcludedFolders.CheckedChanged += chkInheritExcludedFolders_CheckedChanged;
 
-                    txtExcludedFiles.Enabled = false;
-                    txtExcludedFolders.Enabled = false;
-
-                    return;
-                }
-
-                var global = VectorStoreConfig.FromAppConfig();
-                allVectorStoreConfigs.TryGetValue(selected, out var per);
-
-                var vm = PerVectorStoreSettings.From(selected, global, per);
-
-                // Reflect inheritance toggles
-                chkInheritExcludedFiles.Checked = !vm.UseCustomExcludedFiles;
-                chkInheritExcludedFolders.Checked = !vm.UseCustomExcludedFolders;
-
-                // Reflect custom lists
-                txtExcludedFiles.Text = string.Join(Environment.NewLine, vm.CustomExcludedFiles ?? Enumerable.Empty<string>());
-                txtExcludedFolders.Text = string.Join(Environment.NewLine, vm.CustomExcludedFolders ?? Enumerable.Empty<string>());
-
-                // Enable editors only if custom list is used
-                txtExcludedFiles.Enabled = vm.UseCustomExcludedFiles;
-                txtExcludedFolders.Enabled = vm.UseCustomExcludedFolders;
-
-                // Log (optional)
-                // LogCtx.Log.Info("Settings loaded for {store}", selected);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    this,
-                    $"Failed to load settings: {ex.Message}",
-                    "Settings",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-
-                // Log (optional)
-                // LogCtx.Log.Error(ex, "Error in SettingsTabLoadSelection");
-            }
-            finally
-            {
-                // Reattach handlers
-                chkInheritExcludedFiles.CheckedChanged += chkInheritExcludedFilesCheckedChanged;
-                chkInheritExcludedFolders.CheckedChanged += chkInheritExcludedFoldersCheckedChanged;
-            }
+            // If needed, initial population can happen elsewhere after configs are loaded.
         }
 
-        // ============================================
-        // UI Event Handlers
-        // ============================================
-        private void cmbSettingsVectorStoreSelectedIndexChanged(object? sender, EventArgs e)
+        private void cmbSettingsVectorStore_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            var name = (cmbSettingsVectorStore.Text ?? string.Empty).Trim();
+            var selected = cmbSettingsVectorStore?.SelectedItem?.ToString();
+            SettingsTabLoadSelection(selected);
+        }
+
+        private void chkInheritExcludedFiles_CheckedChanged(object? sender, EventArgs e)
+        {
+            // When inheriting, disable the custom list editor.
+            txtExcludedFiles.Enabled = !chkInheritExcludedFiles.Checked;
+        }
+
+        private void chkInheritExcludedFolders_CheckedChanged(object? sender, EventArgs e)
+        {
+            // When inheriting, disable the custom list editor.
+            txtExcludedFolders.Enabled = !chkInheritExcludedFolders.Checked;
+        }
+
+        private void SettingsTabLoadSelection(string? name)
+        {
+            var selected = (name ?? string.Empty).Trim();
+            var global = VectorStoreConfig.FromAppConfig();
+
+            allVectorStoreConfigs.TryGetValue(selected, out var perConfigOrNull);
+
+            var vm = PerVectorStoreSettings.From(
+                selected,
+                global,
+                perConfigOrNull);
+
+            // Bind to controls
+            if (!string.Equals(cmbSettingsVectorStore.Text, selected, StringComparison.Ordinal))
+            {
+                cmbSettingsVectorStore.Text = selected;
+            }
+
+            chkInheritExcludedFiles.Checked = !vm.UseCustomExcludedFiles;
+            chkInheritExcludedFolders.Checked = !vm.UseCustomExcludedFolders;
+
+            txtExcludedFiles.Text = string.Join(Environment.NewLine, vm.CustomExcludedFiles ?? Enumerable.Empty<string>());
+            txtExcludedFolders.Text = string.Join(Environment.NewLine, vm.CustomExcludedFolders ?? Enumerable.Empty<string>());
+
+            // Respect enabled state based on inheritance toggles
+            txtExcludedFiles.Enabled = !chkInheritExcludedFiles.Checked;
+            txtExcludedFolders.Enabled = !chkInheritExcludedFolders.Checked;
+        }
+
+        private void btnSaveVsSettings_Click(object? sender, EventArgs e)
+        {
+            var name = (cmbSettingsVectorStore?.Text ?? string.Empty).Trim();
+
+            var vm = new PerVectorStoreSettings(
+                name: name, // fixed named parameter from 'vectorStoreName' -> 'name'
+                useCustomExcludedFiles: !chkInheritExcludedFiles.Checked,
+                useCustomExcludedFolders: !chkInheritExcludedFolders.Checked,
+                customExcludedFiles: SplitLines(txtExcludedFiles.Text),
+                customExcludedFolders: SplitLines(txtExcludedFolders.Text));
+
+            var global = VectorStoreConfig.FromAppConfig();
+
+            // Persist in-memory and to disk
+            PerVectorStoreSettings.Save(allVectorStoreConfigs, vm, global);
+            VectorStoreConfig.SaveAll(allVectorStoreConfigs);
+
+            // Refresh UI sources and selection
+            ReloadAllVectorStoreConfigs();
             SettingsTabLoadSelection(name);
         }
 
-        private void chkInheritExcludedFilesCheckedChanged(object? sender, EventArgs e)
+        private static IEnumerable<string>? SplitLines(string? text)
         {
-            // When inheritance is ON, editor is disabled; otherwise enabled
-            var inherit = chkInheritExcludedFiles.Checked;
-            txtExcludedFiles.Enabled = !inherit;
-
-            // If turning inheritance ON, do not clear text – the Save path determines final persisted state
-        }
-
-        private void chkInheritExcludedFoldersCheckedChanged(object? sender, EventArgs e)
-        {
-            // When inheritance is ON, editor is disabled; otherwise enabled
-            var inherit = chkInheritExcludedFolders.Checked;
-            txtExcludedFolders.Enabled = !inherit;
-
-            // If turning inheritance ON, do not clear text – the Save path determines final persisted state
-        }
-
-        private void btnSaveVsSettingsClick(object? sender, EventArgs e)
-        {
-            var name = (cmbSettingsVectorStore.Text ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(text))
             {
-                MessageBox.Show(
-                    this,
-                    "Please select or enter a Vector Store name before saving.",
-                    "Settings",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-                return;
+                return Array.Empty<string>();
             }
 
-            try
-            {
-                var global = VectorStoreConfig.FromAppConfig();
-
-                // Build the ViewModel from current UI state
-                var useCustomFiles = !chkInheritExcludedFiles.Checked;
-                var useCustomFolders = !chkInheritExcludedFolders.Checked;
-
-                var files = useCustomFiles
-                    ? SplitLines(txtExcludedFiles.Text)
-                    : new List<string>();
-
-                var folders = useCustomFolders
-                    ? SplitLines(txtExcludedFolders.Text)
-                    : new List<string>();
-
-                var vm = new PerVectorStoreSettings(
-                    vectorStoreName: name,
-                    useCustomExcludedFiles: useCustomFiles,
-                    useCustomExcludedFolders: useCustomFolders,
-                    customExcludedFiles: files,
-                    customExcludedFolders: folders);
-
-                // Persist to the shared in-memory dictionary (do NOT create a new local dict)
-                PerVectorStoreSettings.Save(allVectorStoreConfigs, vm, global);
-
-                // Persist to disk
-                VectorStoreConfig.SaveAll(allVectorStoreConfigs);
-
-                // Align in-memory state with disk to keep all tabs/views consistent
-                ReloadAllVectorStoreConfigs();
-
-                MessageBox.Show(
-                    this,
-                    "Settings saved.",
-                    "Settings",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-
-                // Log (optional)
-                // LogCtx.Log.Info("Settings saved for {store}", name);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    this,
-                    $"Failed to save settings: {ex.Message}",
-                    "Settings",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                // Log (optional)
-                // LogCtx.Log.Error(ex, "Error in btnSaveVsSettingsClick for {store}", name);
-            }
-        }
-
-        private void btnResetVsSettingsClick(object? sender, EventArgs e)
-        {
-            // Reset UI to inherited defaults (does not persist until Save is pressed)
-            chkInheritExcludedFiles.Checked = true;
-            chkInheritExcludedFolders.Checked = true;
-
-            txtExcludedFiles.Text = string.Empty;
-            txtExcludedFolders.Text = string.Empty;
-
-            txtExcludedFiles.Enabled = false;
-            txtExcludedFolders.Enabled = false;
-
-            // Log (optional)
-            // LogCtx.Log.Info("Settings reset to inherited state for editor only");
-        }
-
-        // ============================================
-        // Helpers
-        // ============================================
-        private static List<string> SplitLines(string? text)
-        {
-            return (text ?? string.Empty)
-                .Replace("\r\n", "\n", StringComparison.Ordinal)
-                .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            return text
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
                 .Select(s => s.Trim())
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+                .ToArray();
         }
     }
 }
