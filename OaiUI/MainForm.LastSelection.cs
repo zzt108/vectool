@@ -4,11 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using Vectool.UI.RecentFiles;
+using VecTool.UI.RecentFiles;
 using VecTool.Configuration;
 using VecTool.Core.RecentFiles;
 
-namespace Vectool.OaiUI
+namespace VecTool.OaiUI
 {
     /// <summary>
     /// Partial MainForm implementation managing the Recent Files tab state:

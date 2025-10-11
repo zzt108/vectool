@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace Vectool.OaiUI
+namespace VecTool.OaiUI
 {
     partial class AboutForm
     {

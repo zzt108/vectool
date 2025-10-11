@@ -27,7 +27,7 @@ namespace UnitTests
             // - New modular projects: Configuration, Constants, Core, Handlers, RecentFiles, Utils, Log
             var expected = new[]
             {
-                @"..\OaiUI\Vectool.UI.csproj",
+                @"..\OaiUI\VecTool.UI.csproj",
                 @"..\Handlers\Handlers.csproj",
                 @"..\RecentFiles\RecentFiles.csproj",
                 @"..\Configuration\Configuration.csproj",

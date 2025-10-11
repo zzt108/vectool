@@ -4,7 +4,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Vectool.UI.Config;
+using VecTool.UI.Config;
 using VecTool.Configuration;
 
 namespace UnitTests.Config

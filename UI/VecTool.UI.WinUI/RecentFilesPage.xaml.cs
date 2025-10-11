@@ -16,7 +16,7 @@ using VecTool.Configuration;
 using VecTool.Core.RecentFiles;
 using VecTool.UI.WinUI;
 
-namespace Vectool.UI.WinUI
+namespace VecTool.UI.WinUI
 {
     public sealed partial class RecentFilesPage : Page
     {

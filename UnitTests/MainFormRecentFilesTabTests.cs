@@ -4,7 +4,7 @@ using Shouldly;
 using System.Linq;
 using System.Windows.Forms;
 using oaiUI.RecentFiles;
-using Vectool.OaiUI;
+using VecTool.OaiUI;
 
 namespace UnitTests.UI
 {

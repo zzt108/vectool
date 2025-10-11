@@ -1,11 +1,11 @@
-﻿// Path: Vectool.UI/OaiUI/MainForm.Designer.cs
+﻿// Path: VecTool.UI/OaiUI/MainForm.Designer.cs
 // NOTE: Designer-generated layout for MainForm. Control names match existing partials.
 
 using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Vectool.OaiUI
+namespace VecTool.OaiUI
 {
     partial class MainForm
     {

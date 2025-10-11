@@ -14,7 +14,7 @@ using VecTool.RecentFiles;
 using oaiUI;
 using oaiUI.Services;
 
-namespace Vectool.OaiUI
+namespace VecTool.OaiUI
 {
     // Orchestration partial: keeps fields, constructors, InitializeComponent, wiring, and high-level flow.
     public partial class MainForm : Form

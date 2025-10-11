@@ -35,7 +35,7 @@ namespace VecTool.WinUI.Tests.Smoke
         public void Should_create_window_and_menu_bar()
         {
             // Note: in real UI tests, host WinUI via UITestAdapter; here we assert construction and named members
-            var win = new Vectool.UI.WinUI.MainWindow();
+            var win = new VecTool.UI.WinUI.MainWindow();
             win.ShouldNotBeNull("MainWindow should construct without exceptions.");
 
             // Using reflection to find named controls since we don't have a visual tree host in this smoke test
@@ -54,7 +54,7 @@ namespace VecTool.WinUI.Tests.Smoke
         [Test]
         public void Should_have_status_controls()
         {
-            var win = new Vectool.UI.WinUI.MainWindow();
+            var win = new VecTool.UI.WinUI.MainWindow();
             win.ShouldNotBeNull();
 
             var statusText = win.FindName("StatusText") as TextBlock;
@@ -69,11 +69,11 @@ namespace VecTool.WinUI.Tests.Smoke
         [Test]
         public async Task About_dialog_should_open()
         {
-            var win = new Vectool.UI.WinUI.MainWindow();
+            var win = new VecTool.UI.WinUI.MainWindow();
             win.ShouldNotBeNull();
 
             // Simulate About click
-            var method = typeof(Vectool.UI.WinUI.MainWindow).GetMethod("AboutMenu_Click", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var method = typeof(VecTool.UI.WinUI.MainWindow).GetMethod("AboutMenu_Click", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             method.ShouldNotBeNull("AboutMenu_Click handler should exist.");
             method!.Invoke(win, new object?[] { null, new RoutedEventArgs() });
 

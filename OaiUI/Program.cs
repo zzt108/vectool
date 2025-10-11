@@ -5,7 +5,7 @@ using NLog.Config;
 using NLog.Targets;
 using NLogShared;
 
-namespace Vectool.UI
+namespace VecTool.UI
 {
     internal static class Program
     {

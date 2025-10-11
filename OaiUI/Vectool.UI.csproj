@@ -12,8 +12,8 @@
     <ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
 
     <!-- Names and icon -->
-    <AssemblyName>Vectool.UI</AssemblyName>
-    <RootNamespace>Vectool.UI</RootNamespace>
+    <AssemblyName>VecTool.UI</AssemblyName>
+    <RootNamespace>VecTool.UI</RootNamespace>
     <ApplicationIcon>..\Media\icon.ico</ApplicationIcon>
 
     <!-- Versioning (kept from repo pattern) -->

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Windows.Forms;
 using VecTool.Core.RecentFiles;
 
-namespace Vectool.UI.RecentFiles
+namespace VecTool.UI.RecentFiles
 {
     /// <summary>
     /// Displays and filters recent files in a DataGridView with a right-click context menu.

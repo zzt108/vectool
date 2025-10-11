@@ -7,7 +7,7 @@ using System.Linq;
 using System.Windows.Forms;
 using VecTool.Handlers;
 
-namespace Vectool.OaiUI
+namespace VecTool.OaiUI
 {
     public partial class MainForm : Form
     {

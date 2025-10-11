@@ -2,7 +2,7 @@
 
 using VecTool.Configuration;
 
-namespace Vectool.UI.Config
+namespace VecTool.UI.Config
 {
     /// <summary>
     /// Per-vector-store exclusion settings with inheritance from global app.config.

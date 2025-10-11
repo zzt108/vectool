@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\\OaiUI\\Vectool.UI.csproj" />
+    <ProjectReference Include="..\\OaiUI\\VecTool.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
