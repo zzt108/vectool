@@ -112,6 +112,33 @@ namespace VecTool.UI.WinUI
             Log.Info("RecentFiles refreshed for {Filter} and {StoreId}", filter, storeId ?? "(null)");
         }
 
+        // Event: Double-tap to open (placeholder for real navigation/open behavior)
+        private void FilesDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (Files.SelectedItem is RecentFileItem item)
+            {
+                uiState.SetRecentFilesLastSelection(item.Path);
+
+                var evt = new LogEventInfo(LogLevel.Info, Log.Name, "RecentFiles item double-tapped");
+                evt.Properties["FileName"] = item.FileName;
+                evt.Properties["Path"] = item.Path;
+                evt.Properties["LinkedStoreName"] = item.LinkedStoreName ?? string.Empty;
+                Log.Log(evt);
+
+                // TODO: In real app, open file or navigate here
+            }
+        }
+
+        // Event: Single click action (selection)
+        private void FilesItem_Click(object sender, ItemClickEventArgs e)
+        {
+            if (e.ClickedItem is RecentFileItem item)
+            {
+                uiState.SetRecentFilesLastSelection(item.Path);
+                Log.Info("RecentFiles item clicked: {FileName} at {Path}", item.FileName, item.Path);
+            }
+        }
+
         // Event: Single click action (selection)
         private void Files_ItemClick(object sender, ItemClickEventArgs e)
         {
