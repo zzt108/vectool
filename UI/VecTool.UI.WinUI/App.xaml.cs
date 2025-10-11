@@ -17,11 +17,28 @@ namespace VecTool.UI.WinUI
 
         public App()
         {
+            // Initialize NLog once; never throw if config is missing, per guide
+            TryInitializeLogging();
+
             // Initialize generated XAML components
             this.InitializeComponent();
 
             // Capture UI-thread exceptions and log them with structured properties
             this.UnhandledException += App_UnhandledException;
+        }
+        private static void TryInitializeLogging()
+        {
+            try
+            {
+                // Safe bootstrap: Seq + console with buffering, non-throwing
+                // Reads colocated NLog.config if present
+                LogManager.Setup().LoadConfigurationFromFile(optional: true);
+                Log.Info("WinUI App bootstrap complete");
+            }
+            catch
+            {
+                // Do not throw; logging must not crash the process
+            }
         }
 
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
@@ -33,7 +50,7 @@ namespace VecTool.UI.WinUI
             window.Activate();
             log.Info("MainWindow activated at {TimestampUtc}", DateTime.UtcNow);
         }
-
+         
         private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
             // Log exception with template and properties — do not crash the process unless policy dictates

@@ -20,6 +20,9 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="RecentFilesPage.xaml" />
+  </ItemGroup>
+  <ItemGroup>
     <Page Remove="about\AboutPage.xaml" />
   </ItemGroup>
 
@@ -38,6 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6584" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
     <PackageReference Include="NLog" Version="6.0.5" />
@@ -56,11 +60,20 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\..\Handlers\Handlers.csproj" />
+    <ProjectReference Include="..\..\RecentFiles\RecentFiles.csproj" />
+  </ItemGroup>
   
   <ItemGroup>
     <None Update="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Page Update="RecentFilesPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <!-- Publish Properties -->
