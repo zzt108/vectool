@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Reflection;
 
-namespace Vectool.UI.Versioning
+namespace VecTool.Core.Versioning
 {
     public interface IVersionProvider
     {

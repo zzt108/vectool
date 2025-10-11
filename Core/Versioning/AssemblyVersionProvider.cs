@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Vectool.UI.Versioning
+namespace VecTool.Core.Versioning
 {
     public sealed class AssemblyVersionProvider : IVersionProvider
     {

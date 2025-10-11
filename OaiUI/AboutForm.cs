@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-using Vectool.UI.Versioning;
+using VecTool.Core.Versioning;
 
 namespace Vectool.OaiUI
 {

@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using Vectool.OaiUI;
-using Vectool.UI.Versioning;
+using VecTool.Core.Versioning;
 
 namespace UnitTests.UI
 {

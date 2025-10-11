@@ -5,6 +5,7 @@ using System;
 using NLog; // NLog is mandatory for structured logging
 
 using Microsoft.UI.Xaml.Controls;
+using VecTool.Core.Versioning;
 
 namespace VecTool.UI.WinUI.About
 {

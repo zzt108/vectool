@@ -1,58 +1,68 @@
-﻿// Required Imports Template
-using Microsoft.UI.Dispatching;
+// FULL FILE VERSION
+// Path: UI/VecTool.UI.WinUI/MainWindow.xaml.cs
+
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using NLog; // NLog is mandatory for structured logging
+using NLog;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using VecTool.Configuration;
+using VecTool.Constants;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
+using VecTool.Core.Versioning;
 using VecTool.UI.WinUI.About;
 using VecTool.UI.WinUI.Infrastructure;
-using VecTool.UI.Versioning; // For AssemblyVersionProvider
 
-
-namespace Vectool.UI.WinUI
+namespace VecTool.UI.WinUI
 {
     public sealed partial class MainWindow : Window
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-        private readonly IRecentFilesManager recentFilesManager;
+
         private readonly IUserInterface userInterface;
-        private readonly DispatcherQueue ui;
+        private readonly IRecentFilesManager recentFilesManager;
 
         public MainWindow()
         {
+            Log.Info("MainWindow initializing");
+
             InitializeComponent();
-            ui = DispatcherQueue.GetForCurrentThread();
-            var config = RecentFilesConfig.FromAppConfig(); // Load from app.config with defaults
+
+            // Initialize UI wrapper with WinUI controls and dispatcher
+            userInterface = new WinUiUserInterface(StatusText, StatusProgress, DispatcherQueue);
+
+            // Initialize Recent Files system
+            var config = RecentFilesConfig.FromAppConfig();
             var store = new FileRecentFilesStore(config);
             recentFilesManager = new RecentFilesManager(config, store);
-            //userInterface = new WinUiUserInterface(this, StatusText, StatusProgress);
-            userInterface = new WinUiUserInterface(StatusText, StatusProgress, ui);
-            ContentHost.Navigate(typeof(RecentFilesPage));
+
+            Log.Info("MainWindow initialized");
         }
 
-        private async void ConvertToMd_Click(object sender, RoutedEventArgs e)
+        // Menu handlers (stubs - preserve parity with WinForms handlers)
+        private async void ConvertToMdMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("ConvertToMd invoked");
-            userInterface.WorkStart("Generating MD file...", Array.Empty<string>().ToList());
+            var (folders, outputPath) = await SelectFoldersAndOutputAsync(".md", "Save Markdown File").ConfigureAwait(true);
+
+            if (folders == null || string.IsNullOrEmpty(outputPath))
+                return;
+
             try
             {
-                // Mirror WinForms flow: MDHandler.ExportSelectedFolders(...)
-                var handler = new MDHandler(userInterface, recentFilesManager);
+                userInterface.WorkStart("Generating MD...", new List<string>(folders));
                 var config = GetCurrentVectorStoreConfig();
-                var (folders, outputPath) = await SelectFoldersAndOutputAsync(".md", "Save as Markdown...");
-                if (folders is null || outputPath is null) return;
-
-                await Task.Run(() => handler.ExportSelectedFolders(folders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at {outputPath}", "Success", MessageType.Information);
-                Log.Info("MD export completed at {OutputPath}", outputPath);
+                var handler = new MDHandler(userInterface, recentFilesManager);
+                await Task.Run(() => handler.ExportSelectedFolders(new List<string>(folders), outputPath, config)).ConfigureAwait(true);
+                userInterface.ShowMessage($"Successfully generated {outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
-                var evt = new LogEventInfo(LogLevel.Error, Log.Name, "ConvertToMd failed") { Exception = ex };
-                Log.Log(evt);
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                Log.Error(ex, "ConvertToMd failed");
+                userInterface.ShowMessage($"Error: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
@@ -60,105 +70,115 @@ namespace Vectool.UI.WinUI
             }
         }
 
-        private async void GetGitChanges_Click(object sender, RoutedEventArgs e)
+        private async void GetGitChangesMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("GetGitChanges invoked");
+            var (folders, outputPath) = await SelectFoldersAndOutputAsync(".changes.md", "Save Git Changes File").ConfigureAwait(true);
+
+            if (folders == null || string.IsNullOrEmpty(outputPath))
+                return;
+
             try
             {
+                userInterface.WorkStart("Generating Git changes...", new List<string>(folders));
                 var handler = new GitChangesHandler(userInterface, recentFilesManager);
-                var (folders, outputPath) = await SelectFoldersAndOutputAsync(".md", "Save Git Changes As...");
-                if (folders is null || outputPath is null) return;
-
-                await Task.Run(() => handler.GetGitChanges(folders, outputPath)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at {outputPath}", "Success", MessageType.Information);
-                Log.Info("Git changes file created at {OutputPath}", outputPath);
+                await Task.Run(() => handler.GetGitChanges(new List<string>(folders), outputPath)).ConfigureAwait(true);
+                userInterface.ShowMessage($"Successfully generated {outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
-                var evt = new LogEventInfo(LogLevel.Error, Log.Name, "GetGitChanges failed") { Exception = ex };
-                Log.Log(evt);
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                Log.Error(ex, "GetGitChanges failed");
+                userInterface.ShowMessage($"Error: {ex.Message}", "Error", MessageType.Error);
+            }
+            finally
+            {
+                userInterface.WorkFinish();
             }
         }
 
-        private async void FileSizeSummary_Click(object sender, RoutedEventArgs e)
+        private async void FileSizeSummaryMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("FileSizeSummary invoked");
+            var (folders, outputPath) = await SelectFoldersAndOutputAsync(".summary.txt", "Save File Size Summary").ConfigureAwait(true);
+
+            if (folders == null || string.IsNullOrEmpty(outputPath))
+                return;
+
             try
             {
-                var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
+                userInterface.WorkStart("Generating file size summary...", new List<string>(folders));
                 var config = GetCurrentVectorStoreConfig();
-                var (folders, outputPath) = await SelectFoldersAndOutputAsync(".txt", "Save File Size Summary As...");
-                if (folders is null || outputPath is null) return;
-
-                await Task.Run(() => handler.GenerateFileSizeSummary(folders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at {outputPath}", "Success", MessageType.Information);
-                Log.Info("File size summary created at {OutputPath}", outputPath);
+                var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
+                await Task.Run(() => handler.GenerateFileSizeSummary(new List<string>(folders), outputPath, config)).ConfigureAwait(true);
+                userInterface.ShowMessage($"Successfully generated {outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
-                var evt = new LogEventInfo(LogLevel.Error, Log.Name, "FileSizeSummary failed") { Exception = ex };
-                Log.Log(evt);
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                Log.Error(ex, "FileSizeSummary failed");
+                userInterface.ShowMessage($"Error: {ex.Message}", "Error", MessageType.Error);
+            }
+            finally
+            {
+                userInterface.WorkFinish();
             }
         }
 
-        private async void RunTests_Click(object sender, RoutedEventArgs e)
-        {
-            Log.Info("RunTests invoked");
-            try
-            {
-                var handler = new TestRunnerHandler(userInterface, recentFilesManager);
-                var solutionPath = TryFindSolutionPath();
-                if (solutionPath is null)
-                {
-                    userInterface.ShowMessage("Could not find VecTool.sln in parent directories.", "Solution Not Found", MessageType.Error);
-                    return;
-                }
-                var vsName = GetSelectedVectorStoreName();
-                await handler.RunTestsAsync(solutionPath, vsName, Array.Empty<string>()).ConfigureAwait(true);
-                Log.Info("RunTests completed for {Solution}", solutionPath);
-            }
-            catch (Exception ex)
-            {
-                var evt = new LogEventInfo(LogLevel.Error, Log.Name, "RunTests failed") { Exception = ex };
-                Log.Log(evt);
-                userInterface.ShowMessage($"Test execution failed: {ex.Message}", "Test Error", MessageType.Error);
-            }
-        }
-
-        private void ExitMenu_Click(object sender, RoutedEventArgs e) => this.Close();
-
-        // ✅ NEW:
         private async void AboutMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("About invoked");
 
-            // Create IVersionProvider from assembly metadata (mimic WinForms AboutForm)
-            var versionProvider = new AssemblyVersionProvider(); // Or resolve from DI
-
-            // AboutPage is a ContentDialog wrapper - instantiate with IVersionProvider
-            var dialog = new ContentDialog
+            try
             {
-                Title = "About VecTool",
-                Content = new AboutPage(versionProvider),
-                CloseButtonText = "OK",
-                XamlRoot = this.Content.XamlRoot
-            };
+                // Create IVersionProvider from assembly metadata (parity with WinForms AboutForm)
+                var versionProvider = new AssemblyVersionProvider();
 
-            await dialog.ShowAsync();
+                // AboutPage is a Page displaying version info - wrap in ContentDialog for modal behavior
+                var aboutContent = new AboutPage(versionProvider);
 
-            Log.Info("About dialog closed");
+                var dialog = new ContentDialog
+                {
+                    Title = "About VecTool",
+                    Content = aboutContent,
+                    CloseButtonText = "OK",
+                    XamlRoot = this.Content.XamlRoot // Critical for WinUI dialog parenting
+                };
+
+                await dialog.ShowAsync();
+
+                Log.Info("About dialog closed");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "About dialog failed");
+                userInterface.ShowMessage($"Could not display About dialog: {ex.Message}", "Error", MessageType.Error);
+            }
         }
 
-        // Helpers (stubs mimic WinForms helpers for parity)
+        // Helpers (stubs - mimic WinForms helpers for parity)
         private Task<(string[]? folders, string? outputPath)> SelectFoldersAndOutputAsync(string ext, string title)
         {
-            // TODO: Implement WinUI 3 file/folder pickers (StorageFolder, FileSavePicker)
+            // TODO Phase 2: Implement WinUI 3 folder/file pickers
+            // Use Windows.Storage.Pickers.FolderPicker and FileSavePicker with proper COM initialization
+            // For now, return empty to allow compilation and preserve handler signatures
             return Task.FromResult<(string[]?, string?)>((Array.Empty<string>(), null));
         }
-        private string? TryFindSolutionPath() => null;
-        private string GetSelectedVectorStoreName() => "default";
-        private VectorStoreConfig GetCurrentVectorStoreConfig() => new VectorStoreConfig();
+
+        private string? TryFindSolutionPath()
+        {
+            // TODO: Implement solution file discovery (walk up from BaseDirectory)
+            return null;
+        }
+
+        private string GetSelectedVectorStoreName()
+        {
+            // TODO: Read from ComboBox or state when UI is complete
+            return "default";
+        }
+
+        private VectorStoreConfig GetCurrentVectorStoreConfig()
+        {
+            // TODO: Load from persisted vector store configs
+            return new VectorStoreConfig();
+        }
     }
 }
