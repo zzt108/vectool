@@ -8,6 +8,7 @@ using System;
 using NLog; // NLog is mandatory for structured logging
 
 using Microsoft.UI.Xaml;
+using Vectool.UI.WinUI;
 
 namespace VecTool.UI.WinUI
 {

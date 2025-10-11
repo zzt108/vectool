@@ -54,7 +54,7 @@ namespace Vectool.UI.WinUI
             RefreshStoreIds(persistedStoreId);
 
             // Enable/disable specific-store input based on filter
-            SpecificStore.IsEnabled = persistedFilter == VectorStoreLinkFilter.Specific;
+            SpecificStore.IsEnabled = persistedFilter == VectorStoreLinkFilter.SpecificStore;
 
             // Bind items for current filter/storeId
             BindItems(persistedFilter, persistedStoreId);
@@ -66,10 +66,10 @@ namespace Vectool.UI.WinUI
         private void Filter_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var filter = GetSelectedFilter();
-            SpecificStore.IsEnabled = filter == VectorStoreLinkFilter.Specific;
+            SpecificStore.IsEnabled = filter == VectorStoreLinkFilter.SpecificStore;
 
             // When switching away from Specific, clear the store selection
-            string? storeId = filter == VectorStoreLinkFilter.Specific ? GetSelectedStoreId() : null;
+            string? storeId = filter == VectorStoreLinkFilter.SpecificStore ? GetSelectedStoreId() : null;
 
             // Persist immediately
             uiState.SetRecentFilesFilter(filter);
@@ -259,7 +259,10 @@ namespace Vectool.UI.WinUI
 
         public string? Get(string key) => _data.TryGetValue(key, out var v) ? v : null;
 
-        public void Set(string key, string value) => _data[key] = value ?? string.Empty;
+        public void Set(string key, string? value)
+        {
+            _data[key] = value ?? string.Empty;
+        }
     }
 
     // Extension methods for UiStateConfig keys utilized by this page

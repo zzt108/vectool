@@ -1,40 +1,15 @@
-//// FULL FILE VERSION
-//// Path: src/UI/VecTool.UI.WinUI/MainWindow.xaml.cs
-
-//// Required Imports Template
-//using NUnit.Framework;
-//using Shouldly;
-//using System;
-//using NLog; // NLog is mandatory for structured logging
-
-//using Microsoft.UI.Xaml;
-
-//namespace VecTool.UI.WinUI
-//{
-//    public sealed partial class MainWindow : Window
-//    {
-//        private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
-
-//        public MainWindow()
-//        {
-//            InitializeComponent();
-//            Log.Info("MainWindow constructed at {TimestampUtc}", DateTime.UtcNow);
-//        }
-//    }
-//}
-
-// Required Imports Template
-using NUnit.Framework;
-using Shouldly;
-using System;
-using NLog; // NLog is mandatory for structured logging
-
-using Microsoft.UI.Xaml;
+﻿// Required Imports Template
 using Microsoft.UI.Dispatching;
-using System.Threading.Tasks;
-using VecTool.Handlers;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using NLog; // NLog is mandatory for structured logging
 using VecTool.Configuration;
+using VecTool.Handlers;
 using VecTool.RecentFiles;
+using VecTool.UI.WinUI.About;
+using VecTool.UI.WinUI.Infrastructure;
+using VecTool.UI.Versioning; // For AssemblyVersionProvider
+
 
 namespace Vectool.UI.WinUI
 {
@@ -49,16 +24,18 @@ namespace Vectool.UI.WinUI
         {
             InitializeComponent();
             ui = DispatcherQueue.GetForCurrentThread();
-            // DI would provide these in the real app
-            recentFilesManager = new RecentFilesManager();
-            userInterface = new WinUiUserInterface(this, StatusText, StatusProgress);
+            var config = RecentFilesConfig.FromAppConfig(); // Load from app.config with defaults
+            var store = new FileRecentFilesStore(config);
+            recentFilesManager = new RecentFilesManager(config, store);
+            //userInterface = new WinUiUserInterface(this, StatusText, StatusProgress);
+            userInterface = new WinUiUserInterface(StatusText, StatusProgress, ui);
             ContentHost.Navigate(typeof(RecentFilesPage));
         }
 
         private async void ConvertToMd_Click(object sender, RoutedEventArgs e)
         {
             Log.Info("ConvertToMd invoked");
-            userInterface.WorkStart("Generating MD file...", Array.Empty<string>());
+            userInterface.WorkStart("Generating MD file...", Array.Empty<string>().ToList());
             try
             {
                 // Mirror WinForms flow: MDHandler.ExportSelectedFolders(...)
@@ -152,17 +129,34 @@ namespace Vectool.UI.WinUI
 
         private void ExitMenu_Click(object sender, RoutedEventArgs e) => this.Close();
 
-        private async void AboutMenu_Click(object sender, RoutedEventArgs e)
+        // ✅ NEW:
+        private async void AboutMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("About invoked");
-            // Show ContentDialog bound to IVersionProvider with identical labels/values
-            var dlg = new AboutDialog(); // page/dialog that reads IVersionProvider
-            dlg.XamlRoot = this.Content.XamlRoot;
-            await dlg.ShowAsync();
+
+            // Create IVersionProvider from assembly metadata (mimic WinForms AboutForm)
+            var versionProvider = new AssemblyVersionProvider(); // Or resolve from DI
+
+            // AboutPage is a ContentDialog wrapper - instantiate with IVersionProvider
+            var dialog = new ContentDialog
+            {
+                Title = "About VecTool",
+                Content = new AboutPage(versionProvider),
+                CloseButtonText = "OK",
+                XamlRoot = this.Content.XamlRoot
+            };
+
+            await dialog.ShowAsync();
+
+            Log.Info("About dialog closed");
         }
 
         // Helpers (stubs mimic WinForms helpers for parity)
-        private (string[]? folders, string? outputPath) SelectFoldersAndOutputAsync(string ext, string title) => (Array.Empty<string>(), null);
+        private Task<(string[]? folders, string? outputPath)> SelectFoldersAndOutputAsync(string ext, string title)
+        {
+            // TODO: Implement WinUI 3 file/folder pickers (StorageFolder, FileSavePicker)
+            return Task.FromResult<(string[]?, string?)>((Array.Empty<string>(), null));
+        }
         private string? TryFindSolutionPath() => null;
         private string GetSelectedVectorStoreName() => "default";
         private VectorStoreConfig GetCurrentVectorStoreConfig() => new VectorStoreConfig();
