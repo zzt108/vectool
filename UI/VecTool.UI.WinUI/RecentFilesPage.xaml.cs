@@ -237,21 +237,6 @@ namespace VecTool.UI.WinUI
         }
     }
 
-    // UI projection model used by the XAML DataTemplate
-    public sealed class RecentFileItem
-    {
-        public string FileName { get; }
-        public string Path { get; }
-        public string? LinkedStoreName { get; }
-
-        public RecentFileItem(string path, string? linkedStoreName)
-        {
-            Path = path ?? throw new ArgumentNullException(nameof(path));
-            FileName = System.IO.Path.GetFileName(path);
-            LinkedStoreName = linkedStoreName;
-        }
-    }
-
     // Minimal in-memory settings store to ensure the page never crashes if DI is not yet wired
     internal sealed class InMemorySettingsStore : ISettingsStore
     {
