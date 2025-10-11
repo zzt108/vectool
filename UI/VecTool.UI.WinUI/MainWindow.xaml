@@ -21,10 +21,10 @@
             </MenuBarItem>
 
             <MenuBarItem Title="Actions" x:Name="ActionsMenu">
-                <MenuFlyoutItem Text="Convert to MD" x:Name="ConvertToMdMenu" Click="ConvertToMd_Click" />
+                <MenuFlyoutItem Text="Convert to MD" x:Name="ConvertToMdMenu" Click="ConvertToMdMenu_Click" />
                 <MenuFlyoutSeparator />
-                <MenuFlyoutItem Text="Get Git Changes" x:Name="GetGitChangesMenu" Click="GetGitChanges_Click" />
-                <MenuFlyoutItem Text="File Size Summary" x:Name="FileSizeSummaryMenu" Click="FileSizeSummary_Click" />
+                <MenuFlyoutItem Text="Get Git Changes" x:Name="GetGitChangesMenu" Click="GetGitChangesMenu_Click" />
+                <MenuFlyoutItem Text="File Size Summary" x:Name="FileSizeSummaryMenu" Click="FileSizeSummaryMenu_Click" />
                 <MenuFlyoutItem Text="Run Tests" x:Name="RunTestsMenu" Click="RunTests_Click" />
             </MenuBarItem>
 

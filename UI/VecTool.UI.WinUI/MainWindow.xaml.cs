@@ -154,6 +154,48 @@ namespace VecTool.UI.WinUI
             }
         }
 
+        // ? NEW: Run Tests handler
+        private async void RunTests_Click(object sender, RoutedEventArgs e)
+        {
+            Log.Info("RunTests invoked");
+
+            var solutionPath = TryFindSolutionPath();
+            if (solutionPath is null)
+            {
+                userInterface.ShowMessage(
+                    "Could not find VecTool.sln in parent directories.",
+                    "Solution Not Found",
+                    MessageType.Error);
+                return;
+            }
+
+            var vsName = GetSelectedVectorStoreName();
+            var handler = new TestRunnerHandler(userInterface, recentFilesManager);
+
+            try
+            {
+                userInterface.WorkStart("Running unit tests...", new List<string>());
+                await handler.RunTestsAsync(solutionPath, vsName, new List<string>()).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "RunTests failed");
+                userInterface.ShowMessage($"Test execution failed: {ex.Message}", "Test Error", MessageType.Error);
+            }
+            finally
+            {
+                userInterface.WorkFinish();
+            }
+        }
+
+        // ? NEW: Exit handler
+        private void ExitMenu_Click(object sender, RoutedEventArgs e)
+        {
+            Log.Info("Exit menu invoked");
+            this.Close();
+        }
+
+
         // Helpers (stubs - mimic WinForms helpers for parity)
         private Task<(string[]? folders, string? outputPath)> SelectFoldersAndOutputAsync(string ext, string title)
         {
