@@ -19,6 +19,9 @@
     <!-- Optional: copy Windows App SDK next to EXE for simple xcopy -->
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
+  <ItemGroup>
+    <Page Remove="about\AboutPage.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -47,6 +50,13 @@
     <Folder Include="VecTool\UI\WinUI\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Page Include="About\AboutPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  
   <ItemGroup>
     <None Update="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

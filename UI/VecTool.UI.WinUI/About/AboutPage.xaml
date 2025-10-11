@@ -1,0 +1,13 @@
+<Page
+  x:Class="VecTool.UI.WinUI.About.AboutPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Padding="16" Spacing="6">
+        <TextBlock Text="{Binding ApplicationName}" />
+        <TextBlock Text="{Binding AssemblyVersion}" />
+        <TextBlock Text="{Binding FileVersion}" />
+        <TextBlock Text="{Binding InformationalVersion}" />
+        <TextBlock Text="{Binding CommitShort}" />
+        <TextBlock Text="{Binding BuildTimestampUtc}" />
+    </StackPanel>
+</Page>

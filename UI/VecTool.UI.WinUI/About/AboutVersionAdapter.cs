@@ -1,5 +1,3 @@
-// Path: src/UI/VecTool.UI.WinUI/About/AboutVersionAdapter.cs
-
 // Required Imports Template
 using NUnit.Framework;
 using Shouldly;
@@ -20,15 +18,14 @@ namespace VecTool.UI.WinUI.About
 
     internal sealed class AboutVersionAdapter
     {
-        private readonly IVersionProvider _versions;
+        private readonly IVersionProvider _v;
+        public AboutVersionAdapter(IVersionProvider v) => _v = v;
 
-        public AboutVersionAdapter(IVersionProvider versions) => _versions = versions;
-
-        public string ApplicationName => _versions.ApplicationName;
-        public string AssemblyVersion => _versions.AssemblyVersion;
-        public string FileVersion => _versions.FileVersion;
-        public string InformationalVersion => _versions.InformationalVersion;
-        public string CommitShort => _versions.CommitShort;
-        public DateTime BuildTimestampUtc => _versions.BuildTimestampUtc;
+        public string ApplicationName => _v.ApplicationName;
+        public string AssemblyVersion => _v.AssemblyVersion;
+        public string FileVersion => _v.FileVersion;
+        public string InformationalVersion => _v.InformationalVersion;
+        public string CommitShort => _v.CommitShort;
+        public DateTime BuildTimestampUtc => _v.BuildTimestampUtc;
     }
 }
