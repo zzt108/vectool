@@ -35,6 +35,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Config\nlog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Update="Microsoft.Extensions.Configuration" Version="9.0.9" />
     <PackageReference Update="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
     <PackageReference Update="Microsoft.Extensions.Configuration.Xml" Version="9.0.9" />
