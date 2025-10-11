@@ -1,8 +1,13 @@
+<!-- File: Vectool.UI.WinUI/MainWindow.xaml -->
+<Window
     x:Class="Vectool.UI.WinUI.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Vectool.UI.WinUI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
     Title="VecTool">
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -10,11 +15,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- MenuBar: mirrors WinForms -->
+        <!-- MenuBar: mirrors WinForms MainForm menu structure -->
         <MenuBar Grid.Row="0">
             <MenuBarItem Title="File" x:Name="FileMenu">
                 <MenuFlyoutItem Text="Exit" x:Name="ExitMenu" Click="ExitMenu_Click" />
             </MenuBarItem>
+
             <MenuBarItem Title="Actions" x:Name="ActionsMenu">
                 <MenuFlyoutItem Text="Convert to MD" x:Name="ConvertToMdMenu" Click="ConvertToMd_Click" />
                 <MenuFlyoutSeparator />
@@ -22,18 +28,30 @@
                 <MenuFlyoutItem Text="File Size Summary" x:Name="FileSizeSummaryMenu" Click="FileSizeSummary_Click" />
                 <MenuFlyoutItem Text="Run Tests" x:Name="RunTestsMenu" Click="RunTests_Click" />
             </MenuBarItem>
+
             <MenuBarItem Title="Help" x:Name="HelpMenu">
                 <MenuFlyoutItem Text="About" x:Name="AboutMenu" Click="AboutMenu_Click" />
             </MenuBarItem>
         </MenuBar>
 
-        <!-- Content: RecentFilesControl placeholder -->
+        <!-- Content host: navigates to pages like RecentFilesPage -->
         <Frame Grid.Row="1" x:Name="ContentHost" />
 
-        <!-- Status bar -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" Padding="8">
-            <TextBlock x:Name="StatusText" Text="Ready" />
-            <ProgressBar x:Name="StatusProgress" Width="200" Height="8" IsIndeterminate="False" />
+        <!-- Status bar: mirrors WinForms StatusStrip with status label and progress bar -->
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    Spacing="12" 
+                    Padding="8"
+                    Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
+            <TextBlock x:Name="StatusText" 
+                       Text="Ready" 
+                       VerticalAlignment="Center"
+                       Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
+            <ProgressBar x:Name="StatusProgress" 
+                         Width="200" 
+                         Height="8" 
+                         IsIndeterminate="False" 
+                         VerticalAlignment="Center"/>
         </StackPanel>
     </Grid>
 </Window>
