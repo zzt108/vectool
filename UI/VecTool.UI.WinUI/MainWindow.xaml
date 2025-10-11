@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- ✅ FULL FILE VERSION -->
 <Window
     x:Class="VecTool.UI.WinUI.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -34,7 +35,7 @@
             </MenuBarItem>
         </MenuBar>
 
-        <!-- ✅ NEW TabView with three tabs: Main, Settings, Recent Files -->
+        <!-- TabView with three tabs: Main, Settings, Recent Files -->
         <TabView Grid.Row="1" 
                  x:Name="MainTabView"
                  TabWidthMode="Equal"
@@ -43,7 +44,7 @@
                  IsAddTabButtonVisible="False">
 
             <TabView.TabItems>
-                <!-- ✅ NEW Main Tab - Vector Store Management -->
+                <!-- Main Tab - Vector Store Management -->
                 <TabViewItem Header="Main" x:Name="TabMain" IsClosable="False">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <Grid Padding="16" RowSpacing="12">
@@ -100,15 +101,90 @@
                     </ScrollViewer>
                 </TabViewItem>
 
-                <!-- Settings Tab - Placeholder for Phase 2 -->
+                <!-- Settings Tab - Vector Store Exclusion Settings -->
                 <TabViewItem Header="Settings" x:Name="TabSettings" IsClosable="False">
-                    <Grid Padding="16">
-                        <TextBlock Text="Settings (Coming Soon)" 
-                                   FontSize="16" 
-                                   Foreground="Gray"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Center"/>
-                    </Grid>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid Padding="16" RowSpacing="16">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Header -->
+                            <TextBlock Grid.Row="0" 
+                                       Text="Vector Store Settings" 
+                                       FontSize="18" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,8"/>
+
+                            <!-- Vector Store Selector -->
+                            <ComboBox Grid.Row="1" 
+                                      x:Name="CmbSettingsVectorStore" 
+                                      PlaceholderText="Select vector store..."
+                                      Width="300"
+                                      HorizontalAlignment="Left"
+                                      SelectionChanged="CmbSettingsVectorStore_SelectionChanged"/>
+
+                            <!-- Excluded Files Section -->
+                            <StackPanel Grid.Row="2" Spacing="8">
+                                <CheckBox x:Name="ChkInheritExcludedFiles" 
+                                          Content="Inherit Excluded Files from Global Settings"
+                                          IsChecked="True"
+                                          Checked="ChkInheritExcludedFiles_CheckedChanged"
+                                          Unchecked="ChkInheritExcludedFiles_CheckedChanged"/>
+                                <TextBlock Text="Excluded Files (one pattern per line):" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                                <TextBox x:Name="TxtExcludedFiles" 
+                                         AcceptsReturn="True" 
+                                         TextWrapping="Wrap"
+                                         Height="150"
+                                         IsEnabled="False"
+                                         PlaceholderText="*.exe&#x0a;*.dll&#x0a;*.log"/>
+                            </StackPanel>
+
+                            <!-- Excluded Folders Section -->
+                            <StackPanel Grid.Row="3" Spacing="8">
+                                <CheckBox x:Name="ChkInheritExcludedFolders" 
+                                          Content="Inherit Excluded Folders from Global Settings"
+                                          IsChecked="True"
+                                          Checked="ChkInheritExcludedFolders_CheckedChanged"
+                                          Unchecked="ChkInheritExcludedFolders_CheckedChanged"/>
+                                <TextBlock Text="Excluded Folders (one name per line):" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
+                                <TextBox x:Name="TxtExcludedFolders" 
+                                         AcceptsReturn="True" 
+                                         TextWrapping="Wrap"
+                                         Height="150"
+                                         IsEnabled="False"
+                                         PlaceholderText="bin&#x0a;obj&#x0a;node_modules"/>
+                            </StackPanel>
+
+                            <!-- Action Buttons -->
+                            <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="12">
+                                <Button x:Name="BtnSaveVsSettings" 
+                                        Content="Save Settings" 
+                                        Click="BtnSaveVsSettings_Click"
+                                        Style="{StaticResource AccentButtonStyle}"/>
+                                <Button x:Name="BtnResetVsSettings" 
+                                        Content="Reset to Global" 
+                                        Click="BtnResetVsSettings_Click"/>
+                            </StackPanel>
+
+                            <!-- Info Text -->
+                            <TextBlock Grid.Row="5" 
+                                       Text="Tip: Unchecking 'Inherit' allows custom exclusion patterns for this vector store."
+                                       Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0"/>
+                        </Grid>
+                    </ScrollViewer>
                 </TabViewItem>
 
                 <!-- Recent Files Tab - Embed existing RecentFilesPage -->

@@ -14,6 +14,7 @@ using VecTool.RecentFiles;
 using VecTool.Core.Versioning;
 using VecTool.UI.WinUI.About;
 using VecTool.UI.WinUI.Infrastructure;
+using VecTool.UI.Config;
 
 namespace VecTool.UI.WinUI
 {
@@ -36,10 +37,13 @@ namespace VecTool.UI.WinUI
             var store = new FileRecentFilesStore(config);
             recentFilesManager = new RecentFilesManager(config, store);
 
-            // ✅ NEW Initialize vector store UI
+            // Initialize vector store UI
             LoadVectorStoresIntoComboBox();
 
-            // ✅ NEW Navigate RecentFiles to dedicated Frame in tab
+            // Initialize Settings tab ComboBox
+            SettingsTabInitializeData();
+
+            // Navigate RecentFiles to dedicated Frame in tab
             RecentFilesFrame.Navigate(typeof(RecentFilesPage));
 
             Log.Info("MainWindow initialized");
@@ -326,6 +330,185 @@ namespace VecTool.UI.WinUI
             var invalid = Path.GetInvalidFileNameChars();
             var sanitized = string.Concat(name.Select(c => invalid.Contains(c) ? '_' : c));
             return sanitized;
+        }
+
+        #endregion
+
+        #region Settings Tab
+
+        /// <summary>
+        /// Initializes Settings tab ComboBox with available vector stores.
+        /// Called from constructor after LoadVectorStoresIntoComboBox.
+        /// </summary>
+        private void SettingsTabInitializeData()
+        {
+            try
+            {
+                var config = UiStateConfig.FromAppConfig();
+                var stores = GetVectorStores(config);
+
+                CmbSettingsVectorStore.Items.Clear();
+                foreach (var store in stores)
+                {
+                    CmbSettingsVectorStore.Items.Add(store);
+                }
+
+                Log.Info("Settings tab initialized", new { StoreCount = CmbSettingsVectorStore.Items.Count });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to initialize Settings tab");
+            }
+        }
+
+        /// <summary>
+        /// Loads settings for the selected vector store.
+        /// Uses PerVectorStoreSettings view model to handle inheritance logic.
+        /// </summary>
+        private void CmbSettingsVectorStore_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedName = CmbSettingsVectorStore.SelectedItem?.ToString();
+            if (string.IsNullOrWhiteSpace(selectedName))
+            {
+                // Clear UI when no store selected
+                TxtExcludedFiles.Text = string.Empty;
+                TxtExcludedFolders.Text = string.Empty;
+                ChkInheritExcludedFiles.IsChecked = true;
+                ChkInheritExcludedFolders.IsChecked = true;
+                TxtExcludedFiles.IsEnabled = false;
+                TxtExcludedFolders.IsEnabled = false;
+                return;
+            }
+
+            try
+            {
+                var global = VectorStoreConfig.FromAppConfig();
+                var all = VectorStoreConfig.LoadAll();
+                all.TryGetValue(selectedName, out var per);
+
+                // Build view model - mirrors MainForm.SettingsTab.cs logic
+                var vm = PerVectorStoreSettings.From(selectedName, global, per);
+
+                // Inherit checkboxes are inverse of "use custom"
+                ChkInheritExcludedFiles.IsChecked = !vm.UseCustomExcludedFiles;
+                ChkInheritExcludedFolders.IsChecked = !vm.UseCustomExcludedFolders;
+
+                TxtExcludedFiles.Text = string.Join(Environment.NewLine, vm.CustomExcludedFiles);
+                TxtExcludedFolders.Text = string.Join(Environment.NewLine, vm.CustomExcludedFolders);
+
+                TxtExcludedFiles.IsEnabled = vm.UseCustomExcludedFiles;
+                TxtExcludedFolders.IsEnabled = vm.UseCustomExcludedFolders;
+
+                Log.Info("Settings loaded for vector store", new { Store = selectedName });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to load settings for vector store", new { Store = selectedName });
+                userInterface.ShowMessage($"Error loading settings: {ex.Message}", "Error", MessageType.Error);
+            }
+        }
+
+        /// <summary>
+        /// Toggles TxtExcludedFiles enabled state when inheritance checkbox changes.
+        /// Mirrors WinForms chkInheritExcludedFiles_CheckedChanged handler.
+        /// </summary>
+        private void ChkInheritExcludedFiles_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            TxtExcludedFiles.IsEnabled = ChkInheritExcludedFiles.IsChecked != true;
+        }
+
+        /// <summary>
+        /// Toggles TxtExcludedFolders enabled state when inheritance checkbox changes.
+        /// Mirrors WinForms chkInheritExcludedFolders_CheckedChanged handler.
+        /// </summary>
+        private void ChkInheritExcludedFolders_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            TxtExcludedFolders.IsEnabled = ChkInheritExcludedFolders.IsChecked != true;
+        }
+
+        /// <summary>
+        /// Saves current settings for the selected vector store.
+        /// Uses PerVectorStoreSettings.Save to persist to JSON file.
+        /// </summary>
+        private void BtnSaveVsSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var name = CmbSettingsVectorStore.SelectedItem?.ToString()?.Trim();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                userInterface.ShowMessage("Please select a vector store.", "Validation", MessageType.Warning);
+                return;
+            }
+
+            try
+            {
+                var global = VectorStoreConfig.FromAppConfig();
+                var all = VectorStoreConfig.LoadAll();
+
+                var files = SplitLines(TxtExcludedFiles.Text);
+                var folders = SplitLines(TxtExcludedFolders.Text);
+
+                var vm = new PerVectorStoreSettings(
+                    name,
+                    useCustomExcludedFiles: ChkInheritExcludedFiles.IsChecked != true,
+                    useCustomExcludedFolders: ChkInheritExcludedFolders.IsChecked != true,
+                    customExcludedFiles: files,
+                    customExcludedFolders: folders
+                );
+
+                PerVectorStoreSettings.Save(all, vm, global);
+                VectorStoreConfig.SaveAll(all);
+
+                Log.Info("Settings saved", new { Store = name });
+                userInterface.ShowMessage("Settings saved successfully.", "Success", MessageType.Information);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to save settings", new { Store = name });
+                userInterface.ShowMessage($"Error saving settings: {ex.Message}", "Error", MessageType.Error);
+            }
+        }
+
+        /// <summary>
+        /// Resets settings to global defaults (inheritance enabled, global patterns shown).
+        /// Mirrors WinForms btnResetVsSettings_Click handler.
+        /// </summary>
+        private void BtnResetVsSettings_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ChkInheritExcludedFiles.IsChecked = true;
+                ChkInheritExcludedFolders.IsChecked = true;
+
+                var global = VectorStoreConfig.FromAppConfig();
+                TxtExcludedFiles.Text = string.Join(Environment.NewLine, global.ExcludedFiles ?? new List<string>());
+                TxtExcludedFolders.Text = string.Join(Environment.NewLine, global.ExcludedFolders ?? new List<string>());
+
+                TxtExcludedFiles.IsEnabled = false;
+                TxtExcludedFolders.IsEnabled = false;
+
+                Log.Info("Settings reset to global defaults");
+                userInterface.ShowMessage("Settings reset to global defaults.", "Reset", MessageType.Information);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to reset settings");
+                userInterface.ShowMessage($"Error resetting settings: {ex.Message}", "Error", MessageType.Error);
+            }
+        }
+
+        /// <summary>
+        /// Splits multiline text into distinct, trimmed, non-empty lines.
+        /// Mirrors MainForm.SettingsTab.cs SplitLines helper.
+        /// </summary>
+        private static List<string> SplitLines(string text)
+        {
+            return (text ?? string.Empty)
+                .Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Split('\n')
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         #endregion
