@@ -31,7 +31,7 @@
             <ComboBox x:Name="SpecificStore" Width="260" IsEnabled="False" PlaceholderText="Specific store">
             </ComboBox>
 
-            <Button x:Name="RefreshBtn" Click="RefreshBtn_Click" Content="Refresh" />
+            <Button x:Name="RefreshBtn" Click="RefreshBtnClick" Content="Refresh" />
         </StackPanel>
 
         <!-- Files grid (mirrors Recent Files list with name/path/store) -->
@@ -40,7 +40,7 @@
             Grid.Row="1" 
             DoubleTapped="FilesDoubleTapped" 
             IsItemClickEnabled="True" 
-            ItemClick="FilesItem_Click" 
+            ItemClick="FilesItemClick" 
             Padding="8" 
             SelectionMode="Single">
             <GridView.ItemTemplate>

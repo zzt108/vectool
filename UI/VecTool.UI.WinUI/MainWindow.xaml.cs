@@ -1,7 +1,7 @@
-﻿// ✅ FULL FILE VERSION
+﻿// Required Imports Template
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using NLog;
+using NLog; // NLog is mandatory for structured logging
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,12 +20,14 @@ namespace VecTool.UI.WinUI
     public sealed partial class MainWindow : Window
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
         private readonly IUserInterface userInterface;
         private readonly IRecentFilesManager recentFilesManager;
 
         public MainWindow()
         {
             Log.Info("MainWindow initializing");
+
             InitializeComponent();
 
             // Initialize UI wrapper with WinUI controls and dispatcher
@@ -56,92 +58,105 @@ namespace VecTool.UI.WinUI
         private async void ConvertToMdMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("ConvertToMd invoked");
-            var (folders, outputPath) = await SelectFoldersAndOutputAsync(".md", "Save Markdown File").ConfigureAwait(true);
-            if (folders == null || string.IsNullOrEmpty(outputPath)) return;
 
             try
             {
-                userInterface.WorkStart("Generating MD...", new List<string>(folders));
-                var config = GetCurrentVectorStoreConfig();
-                var handler = new MDHandler(userInterface, recentFilesManager);
-                await Task.Run(() => handler.ExportSelectedFolders(new List<string>(folders), outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated {outputPath}", "Success", MessageType.Information);
+                // Phase 2.2: WinUI folder picker with COM interop
+                // Placeholder: Shows message instead of picker until Gap #2 is fixed
+                userInterface.ShowMessage(
+                    "Folder picker not yet implemented. Please see Phase 2.2 (Gap #2).",
+                    "Not Implemented",
+                    MessageType.Warning);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "ConvertToMd failed");
                 userInterface.ShowMessage($"Error: {ex.Message}", "Error", MessageType.Error);
             }
-            finally
-            {
-                userInterface.WorkFinish();
-            }
         }
 
         private async void GetGitChangesMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("GetGitChanges invoked");
-            var (folders, outputPath) = await SelectFoldersAndOutputAsync(".changes.md", "Save Git Changes File").ConfigureAwait(true);
-            if (folders == null || string.IsNullOrEmpty(outputPath)) return;
 
             try
             {
-                userInterface.WorkStart("Generating Git changes...", new List<string>(folders));
-                var handler = new GitChangesHandler(userInterface, recentFilesManager);
-                await Task.Run(() => handler.GetGitChanges(new List<string>(folders), outputPath)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated {outputPath}", "Success", MessageType.Information);
+                // Phase 2.2: WinUI folder picker with COM interop
+                // Placeholder: Shows message instead of picker until Gap #2 is fixed
+                userInterface.ShowMessage(
+                    "Folder picker not yet implemented. Please see Phase 2.2 (Gap #2).",
+                    "Not Implemented",
+                    MessageType.Warning);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "GetGitChanges failed");
                 userInterface.ShowMessage($"Error: {ex.Message}", "Error", MessageType.Error);
             }
-            finally
-            {
-                userInterface.WorkFinish();
-            }
         }
 
         private async void FileSizeSummaryMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("FileSizeSummary invoked");
-            var (folders, outputPath) = await SelectFoldersAndOutputAsync(".summary.txt", "Save File Size Summary").ConfigureAwait(true);
-            if (folders == null || string.IsNullOrEmpty(outputPath)) return;
 
             try
             {
-                userInterface.WorkStart("Generating file size summary...", new List<string>(folders));
-                var config = GetCurrentVectorStoreConfig();
-                var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
-                await Task.Run(() => handler.GenerateFileSizeSummary(new List<string>(folders), outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated {outputPath}", "Success", MessageType.Information);
+                // Phase 2.2: WinUI folder picker with COM interop
+                // Placeholder: Shows message instead of picker until Gap #2 is fixed
+                userInterface.ShowMessage(
+                    "Folder picker not yet implemented. Please see Phase 2.2 (Gap #2).",
+                    "Not Implemented",
+                    MessageType.Warning);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "FileSizeSummary failed");
                 userInterface.ShowMessage($"Error: {ex.Message}", "Error", MessageType.Error);
             }
-            finally
+        }
+
+        private async void RunTestsClick(object sender, RoutedEventArgs e)
+        {
+            Log.Info("RunTests invoked");
+            try
             {
-                userInterface.WorkFinish();
+                // ✅ NEW: Use the correct class name and signature
+                var handler = new TestRunnerHandler(userInterface, recentFilesManager);
+
+                // TODO: Wire up actual solution path, store ID, and selected folders from UI state
+                var solutionPath = @"C:\path\to\your\solution.sln"; // Replace with actual path from config
+                var storeId = ComboBoxVectorStores.SelectedItem?.ToString() ?? "default";
+                var selectedFolders = LstSelectedFolders.Items.Cast<string>().ToList();
+
+                var resultPath = await handler.RunTestsAsync(
+                    solutionPath,
+                    storeId,
+                    selectedFolders,
+                    CancellationToken.None);
+
+                if (resultPath != null)
+                {
+                    userInterface.ShowMessage($"Tests completed. Report: {resultPath}", "Run Tests", MessageType.Information);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "RunTests failed");
+                userInterface.ShowMessage($"Error: {ex.Message}", "Error", MessageType.Error);
             }
         }
 
         private void ExitMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("Exit invoked");
-            this.Close();
-        }
-
-        private void RunTestsClick(object sender, RoutedEventArgs e)
-        {
-            Log.Info("RunTests invoked - not implemented yet");
-            userInterface.ShowMessage("Run Tests feature is not yet implemented.", "Info", MessageType.Information);
+            Close();
         }
 
         private async void AboutMenuClick(object sender, RoutedEventArgs e)
         {
             Log.Info("About invoked");
+
             try
             {
                 // Create IVersionProvider from assembly metadata - parity with WinForms AboutForm
@@ -156,7 +171,9 @@ namespace VecTool.UI.WinUI
                     CloseButtonText = "OK",
                     XamlRoot = this.Content.XamlRoot // Critical for WinUI dialog parenting
                 };
+
                 await dialog.ShowAsync();
+
                 Log.Info("About dialog closed");
             }
             catch (Exception ex)
@@ -179,41 +196,36 @@ namespace VecTool.UI.WinUI
             try
             {
                 var config = UiStateConfig.FromAppConfig();
-                var stores = GetVectorStores(config);
+                var stores = config.GetVectorStores();
 
                 ComboBoxVectorStores.Items.Clear();
                 foreach (var store in stores)
-                {
                     ComboBoxVectorStores.Items.Add(store);
-                }
 
                 // Select last used store
-                var lastStore = GetSelectedVectorStore(config);
-                if (!string.IsNullOrEmpty(lastStore) && ComboBoxVectorStores.Items.Contains(lastStore))
-                {
+                var lastStore = config.GetSelectedVectorStore();
+                if (!string.IsNullOrWhiteSpace(lastStore) && stores.Contains(lastStore))
                     ComboBoxVectorStores.SelectedItem = lastStore;
-                }
                 else if (ComboBoxVectorStores.Items.Count > 0)
-                {
                     ComboBoxVectorStores.SelectedIndex = 0;
-                }
 
-                Log.Info("Vector stores loaded into ComboBox", new { StoreCount = ComboBoxVectorStores.Items.Count });
+                Log.Info("Vector stores loaded into ComboBox", new { Count = stores.Count, LastStore = lastStore });
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to load vector stores into ComboBox");
+                Log.Error(ex, "Failed to load vector stores");
                 userInterface.ShowMessage($"Error loading vector stores: {ex.Message}", "Error", MessageType.Error);
             }
         }
 
         /// <summary>
-        /// Handles vector store selection change.
-        /// Loads selected folders for the chosen store.
+        /// Persists selected vector store when user changes selection.
+        /// Loads folders for the selected store into the folder list.
         /// </summary>
-        private void ComboBoxVectorStores_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ComboBoxVectorStoresSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ComboBoxVectorStores.SelectedItem is not string selectedStore)
+            var selectedName = ComboBoxVectorStores.SelectedItem?.ToString();
+            if (string.IsNullOrWhiteSpace(selectedName))
             {
                 LstSelectedFolders.Items.Clear();
                 return;
@@ -222,30 +234,51 @@ namespace VecTool.UI.WinUI
             try
             {
                 var config = UiStateConfig.FromAppConfig();
-                SetSelectedVectorStore(config, selectedStore); // Persist selection
 
-                var folders = GetVectorStoreFolders(config, selectedStore);
+                // Persist selection
+                config.SetSelectedVectorStore(selectedName);
 
+                // Load folders
+                var folders = config.GetVectorStoreFolders(selectedName);
                 LstSelectedFolders.Items.Clear();
                 foreach (var folder in folders)
-                {
                     LstSelectedFolders.Items.Add(folder);
-                }
 
-                Log.Info("Vector store selected", new { Store = selectedStore, FolderCount = folders.Count });
+                Log.Info("Vector store selected", new { Store = selectedName, FolderCount = folders.Count });
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to load folders for vector store", new { Store = selectedStore });
+                Log.Error(ex, "Failed to load folders for vector store", new { Store = selectedName });
                 userInterface.ShowMessage($"Error loading folders: {ex.Message}", "Error", MessageType.Error);
             }
         }
 
         /// <summary>
-        /// Creates a new vector store with sanitized name.
-        /// Adds to ComboBox and selects it.
+        /// Placeholder for WinUI FolderPicker with COM interop (Phase 2.2).
+        /// Shows message instead of picker until Gap #2 is fixed.
+        /// Preserves WinForms parity from MainForm.VectorStoreManagement.cs.
         /// </summary>
-        private void BtnCreateNewVectorStore_Click(object sender, RoutedEventArgs e)
+        private void BtnSelectFoldersClick(object sender, RoutedEventArgs e)
+        {
+            Log.Info("BtnSelectFolders invoked");
+
+            // Phase 2.2: WinUI folder picker requires COM interop
+            // Example code (currently commented out):
+            // var picker = new FolderPicker();
+            // var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            // WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            // var folder = await picker.PickSingleFolderAsync();
+
+            userInterface.ShowMessage(
+                "Folder picker not yet implemented. Please see Phase 2.2 (Gap #2).",
+                "Not Implemented",
+                MessageType.Warning);
+        }
+
+        /// <summary>
+        /// Creates a new vector store with sanitized name. Adds to ComboBox and selects it.
+        /// </summary>
+        private void BtnCreateNewVectorStoreClick(object sender, RoutedEventArgs e)
         {
             var newName = TxtNewVectorStoreName.Text?.Trim();
             if (string.IsNullOrEmpty(newName))
@@ -257,17 +290,16 @@ namespace VecTool.UI.WinUI
             try
             {
                 var sanitized = SanitizeVectorStoreName(newName);
-
                 var config = UiStateConfig.FromAppConfig();
-                var existing = GetVectorStores(config);
 
+                var existing = config.GetVectorStores();
                 if (existing.Contains(sanitized, StringComparer.OrdinalIgnoreCase))
                 {
                     userInterface.ShowMessage($"Vector store '{sanitized}' already exists.", "Duplicate", MessageType.Warning);
                     return;
                 }
 
-                AddVectorStore(config, sanitized);
+                config.AddVectorStore(sanitized);
 
                 ComboBoxVectorStores.Items.Add(sanitized);
                 ComboBoxVectorStores.SelectedItem = sanitized;
@@ -284,44 +316,7 @@ namespace VecTool.UI.WinUI
         }
 
         /// <summary>
-        /// Opens folder picker and adds selected folders to the current vector store.
-        /// </summary>
-        private async void BtnSelectFolders_Click(object sender, RoutedEventArgs e)
-        {
-            if (ComboBoxVectorStores.SelectedItem is not string selectedStore)
-            {
-                userInterface.ShowMessage("Please select a vector store first.", "No Store", MessageType.Warning);
-                return;
-            }
-
-            try
-            {
-                // TODO: Phase 2 - Implement WinUI FolderPicker (requires COM init + Window handle)
-                // For now, show placeholder message
-                userInterface.ShowMessage("Folder selection will be implemented in Phase 2 with proper WinUI pickers.", "Info", MessageType.Information);
-
-                // Placeholder for future implementation:
-                // var picker = new Windows.Storage.Pickers.FolderPicker();
-                // var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-                // WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
-                // var folder = await picker.PickSingleFolderAsync();
-                // if (folder != null)
-                // {
-                //     var config = UiStateConfig.FromAppConfig();
-                //     AddFolderToVectorStore(config, selectedStore, folder.Path);
-                //     LstSelectedFolders.Items.Add(folder.Path);
-                //     Log.Info("Folder added", new { Store = selectedStore, Path = folder.Path });
-                // }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to select folders");
-                userInterface.ShowMessage($"Error: {ex.Message}", "Error", MessageType.Error);
-            }
-        }
-
-        /// <summary>
-        /// Sanitizes vector store name by removing invalid file system characters.
+        /// Sanitizes vector store name by removing invalid path characters.
         /// Preserves WinForms parity from MainForm.VectorStoreManagement.cs.
         /// </summary>
         private static string SanitizeVectorStoreName(string name)
@@ -344,13 +339,11 @@ namespace VecTool.UI.WinUI
             try
             {
                 var config = UiStateConfig.FromAppConfig();
-                var stores = GetVectorStores(config);
+                var stores = config.GetVectorStores();
 
                 CmbSettingsVectorStore.Items.Clear();
                 foreach (var store in stores)
-                {
                     CmbSettingsVectorStore.Items.Add(store);
-                }
 
                 Log.Info("Settings tab initialized", new { StoreCount = CmbSettingsVectorStore.Items.Count });
             }
@@ -364,7 +357,7 @@ namespace VecTool.UI.WinUI
         /// Loads settings for the selected vector store.
         /// Uses PerVectorStoreSettings view model to handle inheritance logic.
         /// </summary>
-        private void CmbSettingsVectorStore_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void CmbSettingsVectorStoreSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var selectedName = CmbSettingsVectorStore.SelectedItem?.ToString();
             if (string.IsNullOrWhiteSpace(selectedName))
@@ -411,7 +404,7 @@ namespace VecTool.UI.WinUI
         /// Toggles TxtExcludedFiles enabled state when inheritance checkbox changes.
         /// Mirrors WinForms chkInheritExcludedFiles_CheckedChanged handler.
         /// </summary>
-        private void ChkInheritExcludedFiles_CheckedChanged(object sender, RoutedEventArgs e)
+        private void ChkInheritExcludedFilesCheckedChanged(object sender, RoutedEventArgs e)
         {
             TxtExcludedFiles.IsEnabled = ChkInheritExcludedFiles.IsChecked != true;
         }
@@ -420,7 +413,7 @@ namespace VecTool.UI.WinUI
         /// Toggles TxtExcludedFolders enabled state when inheritance checkbox changes.
         /// Mirrors WinForms chkInheritExcludedFolders_CheckedChanged handler.
         /// </summary>
-        private void ChkInheritExcludedFolders_CheckedChanged(object sender, RoutedEventArgs e)
+        private void ChkInheritExcludedFoldersCheckedChanged(object sender, RoutedEventArgs e)
         {
             TxtExcludedFolders.IsEnabled = ChkInheritExcludedFolders.IsChecked != true;
         }
@@ -429,7 +422,7 @@ namespace VecTool.UI.WinUI
         /// Saves current settings for the selected vector store.
         /// Uses PerVectorStoreSettings.Save to persist to JSON file.
         /// </summary>
-        private void BtnSaveVsSettings_Click(object sender, RoutedEventArgs e)
+        private void BtnSaveVsSettingsClick(object sender, RoutedEventArgs e)
         {
             var name = CmbSettingsVectorStore.SelectedItem?.ToString()?.Trim();
             if (string.IsNullOrWhiteSpace(name))
@@ -468,146 +461,56 @@ namespace VecTool.UI.WinUI
         }
 
         /// <summary>
-        /// Resets settings to global defaults (inheritance enabled, global patterns shown).
-        /// Mirrors WinForms btnResetVsSettings_Click handler.
+        /// Resets per-vector-store settings to inherit from global settings.
+        /// Clears custom exclusion lists and re-enables inheritance checkboxes.
         /// </summary>
-        private void BtnResetVsSettings_Click(object sender, RoutedEventArgs e)
+        private void BtnResetVsSettingsClick(object sender, RoutedEventArgs e)
         {
+            var name = CmbSettingsVectorStore.SelectedItem?.ToString()?.Trim();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                userInterface.ShowMessage("Please select a vector store.", "Validation", MessageType.Warning);
+                return;
+            }
+
             try
             {
+                var all = VectorStoreConfig.LoadAll();
+
+                // Remove per-store settings to reset to global
+                if (all.ContainsKey(name))
+                {
+                    all.Remove(name);
+                    VectorStoreConfig.SaveAll(all);
+                }
+
+                // Reset UI to inherited state
                 ChkInheritExcludedFiles.IsChecked = true;
                 ChkInheritExcludedFolders.IsChecked = true;
-
-                var global = VectorStoreConfig.FromAppConfig();
-                TxtExcludedFiles.Text = string.Join(Environment.NewLine, global.ExcludedFiles ?? new List<string>());
-                TxtExcludedFolders.Text = string.Join(Environment.NewLine, global.ExcludedFolders ?? new List<string>());
-
+                TxtExcludedFiles.Text = string.Empty;
+                TxtExcludedFolders.Text = string.Empty;
                 TxtExcludedFiles.IsEnabled = false;
                 TxtExcludedFolders.IsEnabled = false;
 
-                Log.Info("Settings reset to global defaults");
-                userInterface.ShowMessage("Settings reset to global defaults.", "Reset", MessageType.Information);
+                Log.Info("Settings reset to global for vector store", new { Store = name });
+                userInterface.ShowMessage($"Settings for '{name}' reset to global defaults.", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to reset settings");
+                Log.Error(ex, "Failed to reset settings", new { Store = name });
                 userInterface.ShowMessage($"Error resetting settings: {ex.Message}", "Error", MessageType.Error);
             }
         }
 
-        /// <summary>
-        /// Splits multiline text into distinct, trimmed, non-empty lines.
-        /// Mirrors MainForm.SettingsTab.cs SplitLines helper.
-        /// </summary>
         private static List<string> SplitLines(string text)
         {
-            return (text ?? string.Empty)
-                .Replace("\r\n", "\n", StringComparison.Ordinal)
-                .Split('\n')
-                .Select(s => s.Trim())
-                .Where(s => s.Length > 0)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-        }
+            if (string.IsNullOrWhiteSpace(text))
+                return new List<string>();
 
-        #endregion
-
-        #region UiStateConfig Helper Extensions (Temporary until API is finalized)
-
-        /// <summary>
-        /// Gets list of vector store names from config.
-        /// TODO: Replace with UiStateConfig.GetVectorStores() when implemented.
-        /// </summary>
-        private static List<string> GetVectorStores(UiStateConfig config)
-        {
-            // Placeholder: Read from app.config <vectorStores> section or return hardcoded list
-            // In production, this will call config.GetVectorStores()
-            return new List<string> { "VecToolDev", "TestStore" };
-        }
-
-        /// <summary>
-        /// Gets currently selected vector store name.
-        /// TODO: Replace with UiStateConfig.GetSelectedVectorStore() when implemented.
-        /// </summary>
-        private static string? GetSelectedVectorStore(UiStateConfig config)
-        {
-            // Placeholder: Read from persisted state
-            return "VecToolDev";
-        }
-
-        /// <summary>
-        /// Sets currently selected vector store name.
-        /// TODO: Replace with UiStateConfig.SetSelectedVectorStore() when implemented.
-        /// </summary>
-        private static void SetSelectedVectorStore(UiStateConfig config, string storeName)
-        {
-            // Placeholder: Persist to app.config or state file
-            Log.Info("Vector store selection persisted", new { Store = storeName });
-        }
-
-        /// <summary>
-        /// Gets folders associated with a vector store.
-        /// TODO: Replace with UiStateConfig.GetVectorStoreFolders() when implemented.
-        /// </summary>
-        private static List<string> GetVectorStoreFolders(UiStateConfig config, string storeName)
-        {
-            // Placeholder: Read from app.config or state file
-            return storeName == "VecToolDev"
-                ? new List<string> { @"C:\Git\vectoolDev" }
-                : new List<string>();
-        }
-
-        /// <summary>
-        /// Adds a new vector store to config.
-        /// TODO: Replace with UiStateConfig.AddVectorStore() when implemented.
-        /// </summary>
-        private static void AddVectorStore(UiStateConfig config, string storeName)
-        {
-            // Placeholder: Persist to app.config
-            Log.Info("Vector store added to config", new { Store = storeName });
-        }
-
-        /// <summary>
-        /// Adds a folder to a vector store.
-        /// TODO: Replace with UiStateConfig.AddFolderToVectorStore() when implemented.
-        /// </summary>
-        private static void AddFolderToVectorStore(UiStateConfig config, string storeName, string folderPath)
-        {
-            // Placeholder: Persist folder association
-            Log.Info("Folder added to vector store", new { Store = storeName, Path = folderPath });
-        }
-
-        #endregion
-
-        #region Helpers
-
-        /// <summary>
-        /// Helpers - mimic WinForms helpers for parity
-        /// </summary>
-        private Task<(string[]? folders, string? outputPath)> SelectFoldersAndOutputAsync(string ext, string title)
-        {
-            // TODO: Phase 2 - Implement WinUI 3 folder/file pickers
-            // Use Windows.Storage.Pickers.FolderPicker and FileSavePicker with proper COM initialization
-            // For now, return empty to allow compilation and preserve handler signatures
-            return Task.FromResult<(string[]?, string?)>((Array.Empty<string>(), null));
-        }
-
-        private string? TryFindSolutionPath()
-        {
-            // TODO: Implement solution file discovery - walk up from BaseDirectory
-            return null;
-        }
-
-        private string GetSelectedVectorStoreName()
-        {
-            // TODO: Read from ComboBox or state when UI is complete
-            return "VecToolDev";
-        }
-
-        private VectorStoreConfig GetCurrentVectorStoreConfig()
-        {
-            // TODO: Load from persisted vector store configs
-            return new VectorStoreConfig();
+            return text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                       .Select(l => l.Trim())
+                       .Where(l => !string.IsNullOrWhiteSpace(l))
+                       .ToList();
         }
 
         #endregion

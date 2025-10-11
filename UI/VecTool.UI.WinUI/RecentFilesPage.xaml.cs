@@ -103,7 +103,7 @@ namespace VecTool.UI.WinUI
         }
 
         // Event: Manual refresh
-        private void RefreshBtn_Click(object sender, RoutedEventArgs e)
+        private void RefreshBtnClick(object sender, RoutedEventArgs e)
         {
             var filter = GetSelectedFilter();
             var storeId = GetSelectedStoreId();
@@ -130,7 +130,7 @@ namespace VecTool.UI.WinUI
         }
 
         // Event: Single click action (selection)
-        private void FilesItem_Click(object sender, ItemClickEventArgs e)
+        private void FilesItemClick(object sender, ItemClickEventArgs e)
         {
             if (e.ClickedItem is RecentFileItem item)
             {
