@@ -43,7 +43,7 @@ namespace VecTool.UI.WinUI
         }
 
         // Menu handlers (stubs - preserve parity with WinForms handlers)
-        private async void ConvertToMdMenuClick(object sender, RoutedEventArgs e)
+        private async void ConvertToMdMenu_Click(object sender, RoutedEventArgs e)
         {
             Log.Info("ConvertToMd invoked");
             var (folders, outputPath) = await SelectFoldersAndOutputAsync(".md", "Save Markdown File").ConfigureAwait(true);
@@ -70,7 +70,7 @@ namespace VecTool.UI.WinUI
             }
         }
 
-        private async void GetGitChangesMenuClick(object sender, RoutedEventArgs e)
+        private async void GetGitChangesMenu_Click(object sender, RoutedEventArgs e)
         {
             Log.Info("GetGitChanges invoked");
             var (folders, outputPath) = await SelectFoldersAndOutputAsync(".changes.md", "Save Git Changes File").ConfigureAwait(true);
@@ -96,7 +96,7 @@ namespace VecTool.UI.WinUI
             }
         }
 
-        private async void FileSizeSummaryMenuClick(object sender, RoutedEventArgs e)
+        private async void FileSizeSummaryMenu_Click(object sender, RoutedEventArgs e)
         {
             Log.Info("FileSizeSummary invoked");
             var (folders, outputPath) = await SelectFoldersAndOutputAsync(".summary.txt", "Save File Size Summary").ConfigureAwait(true);
@@ -123,7 +123,7 @@ namespace VecTool.UI.WinUI
             }
         }
 
-        private async void AboutMenuClick(object sender, RoutedEventArgs e)
+        private async void AboutMenu_Click(object sender, RoutedEventArgs e)
         {
             Log.Info("About invoked");
 
