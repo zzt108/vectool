@@ -18,7 +18,43 @@
 
     <!-- Optional: copy Windows App SDK next to EXE for simple xcopy -->
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+
+    <!-- High DPI and designer compatibility -->
+    <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
+    <ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
+
+    <ApplicationIcon>..\..\Media\icon.ico</ApplicationIcon>
+
   </PropertyGroup>
+
+  <PropertyGroup>
+
+
+    <!-- Versioning (kept from repo pattern) -->
+    <MajorVersion>4</MajorVersion>
+    <PlanId>0</PlanId>
+    <PlanPhase>3</PlanPhase>
+    <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
+    <HHmm>$([System.DateTime]::UtcNow.ToString('HHmm'))</HHmm>
+    <DayOfYear>$([System.DateTime]::UtcNow.DayOfYear)</DayOfYear>
+    <BuildPart>$([MSBuild]::Add($([MSBuild]::Multiply($(PlanPhase), 1000)),$(DayOfYear)))</BuildPart>
+
+    <AssemblyVersion>$(MajorVersion).0.0.0</AssemblyVersion>
+    <FileVersion>$(MajorVersion).$(PlanId).$(BuildPart).$(HHmm)</FileVersion>
+    <ApplicationDisplayVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)</ApplicationDisplayVersion>
+
+    <!-- CI metadata and SourceLink -->
+    <CommitSha>$([System.Environment]::GetEnvironmentVariable('GITHUB_SHA'))</CommitSha>
+    <CommitSha Condition=" '$(CommitSha)' == '' ">$([System.Environment]::GetEnvironmentVariable('BUILD_SOURCEVERSION'))</CommitSha>
+    <CommitShort Condition=" '$(CommitSha)' != '' ">$([System.String]::Copy('$(CommitSha)').Substring(0,7))</CommitShort>
+    <InfoSuffix Condition=" '$(CommitShort)' != '' ">-$(CommitShort)</InfoSuffix>
+    <InformationalVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)-$(YyyyMMdd)$(HHmm)$(InfoSuffix)</InformationalVersion>
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -48,17 +84,6 @@
   <ItemGroup>
     <Folder Include="VecTool\UI\WinUI\" />
   </ItemGroup>
-
-  <!--<ItemGroup>
-    <Page Include="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="RecentFilesPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>-->
 
   <ItemGroup>
     <ProjectReference Include="..\..\Configuration\Configuration.csproj" />
