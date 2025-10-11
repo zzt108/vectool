@@ -25,26 +25,4 @@ namespace VecTool.WinUI.TestMS
             Should.NotThrow(() => logger.Info("Smoke test log at {TimestampUtc}", DateTime.UtcNow));
         }
     }
-
-    /// <summary>
-    /// Had to create WinUI test, to be able to execute NUnit tests in the other project
-    /// I guess x64 test runner was installed upon creation.
-    /// </summary>
-    [TestClass]
-    public partial class UnitTest1
-    {
-        [TestMethod]
-        public void TestMethod1()
-        {
-            Assert.AreEqual(0, 0);
-        }
-
-        // Use the UITestMethod attribute for tests that need to run on the UI thread.
-        [UITestMethod]
-        public void TestMethod2()
-        {
-            var grid = new Grid();
-            Assert.AreEqual(0, grid.MinWidth);
-        }
-    }
 }

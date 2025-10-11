@@ -17,7 +17,7 @@ namespace VecTool.UI.WinUI.About
         public string AssemblyVersion => _v.AssemblyVersion;
         public string FileVersion => _v.FileVersion;
         public string InformationalVersion => _v.InformationalVersion;
-        public string CommitShort => _v.CommitShort;
+        public string CommitShort => _v.CommitShort ?? string.Empty;
         public DateTime BuildTimestampUtc => _v.BuildTimestampUtc ?? DateTime.MinValue;
     }
 }

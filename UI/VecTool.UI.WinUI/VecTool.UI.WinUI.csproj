@@ -38,6 +38,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.6584" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.0.0" />
     <PackageReference Include="NLog" Version="6.0.5" />
     <PackageReference Include="NLog.Targets.Seq" Version="4.0.2" />
     <PackageReference Include="NUnit" Version="4.4.0" />
