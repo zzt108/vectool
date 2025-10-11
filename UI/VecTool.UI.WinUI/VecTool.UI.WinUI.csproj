@@ -1,4 +1,4 @@
-<!-- // FULL FILE VERSION -->
+﻿<!-- // FULL FILE VERSION -->
 <!-- Path: src/UI/VecTool.UI.WinUI/VecTool.UI.WinUI.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -19,12 +19,6 @@
     <!-- Optional: copy Windows App SDK next to EXE for simple xcopy -->
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="RecentFilesPage.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Remove="about\AboutPage.xaml" />
-  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -54,12 +48,16 @@
     <Folder Include="VecTool\UI\WinUI\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Page Include="About\AboutPage.xaml">
+  <!--<ItemGroup>
+    <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-  </ItemGroup>
+    <Page Include="RecentFilesPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>-->
 
   <ItemGroup>
     <ProjectReference Include="..\..\Configuration\Configuration.csproj" />
