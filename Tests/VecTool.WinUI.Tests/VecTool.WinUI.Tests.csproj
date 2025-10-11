@@ -7,10 +7,11 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <Platforms>AnyCPU</Platforms>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <!--<PlatformTarget>x64</PlatformTarget>-->
-    <!--<RuntimeIdentifier>win-x64</RuntimeIdentifier>-->
+    <!--<Platforms>AnyCPU</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>-->
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>

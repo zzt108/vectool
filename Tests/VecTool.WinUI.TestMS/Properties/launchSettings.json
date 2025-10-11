@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "VecTool.WinUI.TestMS (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "VecTool.WinUI.TestMS (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
