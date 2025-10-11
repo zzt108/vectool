@@ -27,6 +27,10 @@ namespace VecTool.UI.WinUI
         {
             InitializeComponent();
 
+            // Subscribe to events AFTER InitializeComponent to avoid null reference
+            Filter.SelectionChanged += Filter_SelectionChanged;
+            SpecificStore.SelectionChanged += SpecificStore_SelectionChanged;
+
             // Resolve UiStateConfig from DI if available; fall back to in-memory store so page never crashes
             uiState = TryResolve<UiStateConfig>()
                       ?? new UiStateConfig(new InMemorySettingsStore());
@@ -60,6 +64,9 @@ namespace VecTool.UI.WinUI
         private void Filter_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var filter = GetSelectedFilter();
+
+            if (SpecificStore == null) return;
+
             SpecificStore.IsEnabled = filter == VectorStoreLinkFilter.SpecificStore;
 
             // When switching away from Specific, clear the store selection

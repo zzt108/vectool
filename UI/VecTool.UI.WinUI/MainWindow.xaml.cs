@@ -1,4 +1,6 @@
-using DocumentFormat.OpenXml.Wordprocessing;
+﻿// ✅ FULL FILE VERSION
+// File: src/UI/VecTool.UI.WinUI/MainWindow.xaml.cs
+
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using NLog;
@@ -34,6 +36,9 @@ namespace VecTool.UI.WinUI
             var store = new FileRecentFilesStore(config);
             recentFilesManager = new RecentFilesManager(config, store);
 
+            // ✅ NEW: Navigate to default page
+            ContentHost.Navigate(typeof(RecentFilesPage));
+
             Log.Info("MainWindow initialized");
         }
 
@@ -48,16 +53,17 @@ namespace VecTool.UI.WinUI
             var (folders, outputPath) = await SelectFoldersAndOutputAsync(".md", "Save Markdown File").ConfigureAwait(true);
 
             if (folders == null || string.IsNullOrEmpty(outputPath))
-            {
                 return;
-            }
 
             try
             {
                 userInterface.WorkStart("Generating MD...", new List<string>(folders));
+
                 var config = GetCurrentVectorStoreConfig();
                 var handler = new MDHandler(userInterface, recentFilesManager);
+
                 await Task.Run(() => handler.ExportSelectedFolders(new List<string>(folders), outputPath, config)).ConfigureAwait(true);
+
                 userInterface.ShowMessage($"Successfully generated {outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
@@ -77,15 +83,16 @@ namespace VecTool.UI.WinUI
             var (folders, outputPath) = await SelectFoldersAndOutputAsync(".changes.md", "Save Git Changes File").ConfigureAwait(true);
 
             if (folders == null || string.IsNullOrEmpty(outputPath))
-            {
                 return;
-            }
 
             try
             {
                 userInterface.WorkStart("Generating Git changes...", new List<string>(folders));
+
                 var handler = new GitChangesHandler(userInterface, recentFilesManager);
+
                 await Task.Run(() => handler.GetGitChanges(new List<string>(folders), outputPath)).ConfigureAwait(true);
+
                 userInterface.ShowMessage($"Successfully generated {outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
@@ -105,16 +112,17 @@ namespace VecTool.UI.WinUI
             var (folders, outputPath) = await SelectFoldersAndOutputAsync(".summary.txt", "Save File Size Summary").ConfigureAwait(true);
 
             if (folders == null || string.IsNullOrEmpty(outputPath))
-            {
                 return;
-            }
 
             try
             {
                 userInterface.WorkStart("Generating file size summary...", new List<string>(folders));
+
                 var config = GetCurrentVectorStoreConfig();
                 var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
+
                 await Task.Run(() => handler.GenerateFileSizeSummary(new List<string>(folders), outputPath, config)).ConfigureAwait(true);
+
                 userInterface.ShowMessage($"Successfully generated {outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
@@ -143,6 +151,7 @@ namespace VecTool.UI.WinUI
         private async void AboutMenu_Click(object sender, RoutedEventArgs e)
         {
             Log.Info("About invoked");
+
             try
             {
                 // Create IVersionProvider from assembly metadata - parity with WinForms AboutForm
@@ -150,6 +159,7 @@ namespace VecTool.UI.WinUI
 
                 // AboutPage is a Page displaying version info - wrap in ContentDialog for modal behavior
                 var aboutContent = new AboutPage(versionProvider);
+
                 var dialog = new ContentDialog
                 {
                     Title = "About VecTool",
@@ -159,6 +169,7 @@ namespace VecTool.UI.WinUI
                 };
 
                 await dialog.ShowAsync();
+
                 Log.Info("About dialog closed");
             }
             catch (Exception ex)
@@ -177,7 +188,7 @@ namespace VecTool.UI.WinUI
         /// </summary>
         private Task<(string[]? folders, string? outputPath)> SelectFoldersAndOutputAsync(string ext, string title)
         {
-            // TODO: Phase 2 - Implement WinUI 3 folder/file pickers
+            // TODO Phase 2 - Implement WinUI 3 folder/file pickers
             // Use Windows.Storage.Pickers.FolderPicker and FileSavePicker with proper COM initialization
             // For now, return empty to allow compilation and preserve handler signatures
             return Task.FromResult<(string[]?, string?)>((Array.Empty<string>(), null));
@@ -192,7 +203,7 @@ namespace VecTool.UI.WinUI
         private string GetSelectedVectorStoreName()
         {
             // TODO: Read from ComboBox or state when UI is complete
-            return "default";
+            return default;
         }
 
         private VectorStoreConfig GetCurrentVectorStoreConfig()
