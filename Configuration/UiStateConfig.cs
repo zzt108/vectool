@@ -7,6 +7,7 @@ using System.Configuration;
 using System.IO;
 using System.Text.Json;
 using VecTool.Core.RecentFiles;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace VecTool.Configuration
 {
@@ -80,6 +81,231 @@ namespace VecTool.Configuration
         {
             _store.Set(KEY_RECENT_LAST, string.IsNullOrWhiteSpace(path) ? null : path);
         }
+
+        // File: Configuration/UiStateConfig.cs
+        // ADDITIONS: Main tab vector store management methods (extend existing class)
+        // Location: Add these methods to the existing UiStateConfig class after the Recent Files methods
+
+        #region Main Tab - Vector Store Management
+
+        /// <summary>
+        /// Get list of all known vector store names from vectorStoreFolders.json.
+        /// Returns empty list if file doesn't exist or can't be loaded.
+        /// </summary>
+        public List<string> GetVectorStores()
+        {
+            try
+            {
+                var all = VectorStoreConfig.LoadAll();
+                return all?.Keys
+                    .Where(k => !string.IsNullOrWhiteSpace(k))
+                    .OrderBy(k => k, StringComparer.OrdinalIgnoreCase)
+                    .ToList() ?? new List<string>();
+            }
+            catch
+            {
+                // Defensive: never crash UI on load failures
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Get the last selected vector store name from persisted UI state.
+        /// Returns null if no selection was persisted.
+        /// </summary>
+        public string? GetSelectedVectorStore()
+        {
+            return _store.Get("ui.main.selectedVectorStore");
+        }
+
+        /// <summary>
+        /// Persist the selected vector store name to UI state.
+        /// Pass null or empty to clear the selection.
+        /// </summary>
+        public void SetSelectedVectorStore(string? storeName)
+        {
+            _store.Set("ui.main.selectedVectorStore",
+                string.IsNullOrWhiteSpace(storeName) ? null : storeName);
+        }
+
+        /// <summary>
+        /// Get the folder paths associated with a specific vector store.
+        /// Returns empty list if the store doesn't exist or has no folders.
+        /// </summary>
+        /// <param name="storeName">Vector store name (case-sensitive).</param>
+        public List<string> GetVectorStoreFolders(string storeName)
+        {
+            if (string.IsNullOrWhiteSpace(storeName))
+                return new List<string>();
+
+            try
+            {
+                var all = VectorStoreConfig.LoadAll();
+                if (all.TryGetValue(storeName, out var config))
+                    return config.FolderPaths?.ToList() ?? new List<string>();
+
+                return new List<string>();
+            }
+            catch
+            {
+                // Defensive: return empty on errors
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Add a new vector store with global defaults from app.config.
+        /// Persists immediately to vectorStoreFolders.json.
+        /// </summary>
+        /// <param name="storeName">New vector store name (must be unique).</param>
+        /// <returns>True if created successfully, false if name already exists or save failed.</returns>
+        public bool AddVectorStore(string storeName)
+        {
+            if (string.IsNullOrWhiteSpace(storeName))
+                return false;
+
+            try
+            {
+                var all = VectorStoreConfig.LoadAll();
+
+                // Check for duplicate (case-insensitive)
+                if (all.Keys.Any(k => string.Equals(k, storeName, StringComparison.OrdinalIgnoreCase)))
+                    return false;
+
+                // Create new config from global defaults
+                var newConfig = VectorStoreConfig.FromAppConfig();
+                newConfig.FolderPaths = new List<string>(); // Empty folder list for new stores
+
+                all[storeName] = newConfig;
+                VectorStoreConfig.SaveAll(all);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Add a folder path to a specific vector store's folder list.
+        /// Creates the store if it doesn't exist.
+        /// Persists immediately to vectorStoreFolders.json.
+        /// </summary>
+        /// <param name="storeName">Vector store name.</param>
+        /// <param name="folderPath">Folder path to add (must exist).</param>
+        /// <returns>True if added successfully, false if duplicate or save failed.</returns>
+        public bool AddFolderToVectorStore(string storeName, string folderPath)
+        {
+            if (string.IsNullOrWhiteSpace(storeName) || string.IsNullOrWhiteSpace(folderPath))
+                return false;
+
+            try
+            {
+                var all = VectorStoreConfig.LoadAll();
+
+                // Get or create config
+                if (!all.TryGetValue(storeName, out var config))
+                {
+                    config = VectorStoreConfig.FromAppConfig();
+                    config.FolderPaths = new List<string>();
+                    all[storeName] = config;
+                }
+
+                // Avoid duplicates (case-insensitive)
+                if (config.FolderPaths?.Any(f =>
+                    string.Equals(f, folderPath, StringComparison.OrdinalIgnoreCase)) == true)
+                    return false;
+
+                config.FolderPaths ??= new List<string>();
+                config.FolderPaths.Add(folderPath);
+
+                VectorStoreConfig.SaveAll(all);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Remove a folder path from a specific vector store's folder list.
+        /// Persists immediately to vectorStoreFolders.json.
+        /// </summary>
+        /// <param name="storeName">Vector store name.</param>
+        /// <param name="folderPath">Folder path to remove.</param>
+        /// <returns>True if removed successfully, false if not found or save failed.</returns>
+        public bool RemoveFolderFromVectorStore(string storeName, string folderPath)
+        {
+            if (string.IsNullOrWhiteSpace(storeName) || string.IsNullOrWhiteSpace(folderPath))
+                return false;
+
+            try
+            {
+                var all = VectorStoreConfig.LoadAll();
+                if (!all.TryGetValue(storeName, out var config))
+                    return false;
+
+                if (config.FolderPaths == null || config.FolderPaths.Count == 0)
+                    return false;
+
+                // Case-insensitive removal
+                var removed = config.FolderPaths.RemoveAll(f =>
+                    string.Equals(f, folderPath, StringComparison.OrdinalIgnoreCase));
+
+                if (removed > 0)
+                {
+                    VectorStoreConfig.SaveAll(all);
+                    return true;
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Update the folder list for a specific vector store (replaces existing list).
+        /// Persists immediately to vectorStoreFolders.json.
+        /// </summary>
+        /// <param name="storeName">Vector store name.</param>
+        /// <param name="folders">New folder list (replaces existing).</param>
+        /// <returns>True if saved successfully, false otherwise.</returns>
+        public bool SetVectorStoreFolders(string storeName, IEnumerable<string> folders)
+        {
+            if (string.IsNullOrWhiteSpace(storeName))
+                return false;
+
+            try
+            {
+                var all = VectorStoreConfig.LoadAll();
+
+                if (!all.TryGetValue(storeName, out var config))
+                {
+                    config = VectorStoreConfig.FromAppConfig();
+                    all[storeName] = config;
+                }
+
+                config.FolderPaths = (folders ?? Enumerable.Empty<string>())
+                    .Where(f => !string.IsNullOrWhiteSpace(f))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                VectorStoreConfig.SaveAll(all);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        #endregion
+
 
         /// <summary>
         /// JSON-backed UI state for Recent Files grid layout.

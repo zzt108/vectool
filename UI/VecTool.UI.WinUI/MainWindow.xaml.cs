@@ -14,7 +14,6 @@ using VecTool.RecentFiles;
 using VecTool.Core.Versioning;
 using VecTool.UI.WinUI.About;
 using VecTool.UI.WinUI.Infrastructure;
-using VecTool.UI.Config;
 
 namespace VecTool.UI.WinUI
 {
