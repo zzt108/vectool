@@ -26,7 +26,6 @@
                 x:Name="Filter"
                 Width="220"
                 PlaceholderText="Filter"
-                SelectionChanged="Filter_SelectionChanged">
                 <ComboBoxItem
                     Content="All"
                     IsSelected="True"
@@ -40,8 +39,7 @@
                 x:Name="SpecificStore"
                 Width="260"
                 IsEnabled="False"
-                PlaceholderText="Specific store"
-                SelectionChanged="SpecificStore_SelectionChanged" />
+                PlaceholderText="Specific store"/>
 
             <Button
                 x:Name="RefreshBtn"
