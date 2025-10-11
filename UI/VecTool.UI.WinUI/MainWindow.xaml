@@ -1,3 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Window
     x:Class="VecTool.UI.WinUI.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -14,29 +15,110 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- MenuBar: mirrors WinForms MainForm menu structure -->
+        <!-- MenuBar mirrors WinForms MainForm menu structure -->
         <MenuBar Grid.Row="0">
             <MenuBarItem Title="File" x:Name="FileMenu">
-                <MenuFlyoutItem Text="Exit" x:Name="ExitMenu" Click="ExitMenu_Click" />
+                <MenuFlyoutItem Text="Exit" x:Name="ExitMenu" Click="ExitMenuClick"/>
             </MenuBarItem>
 
             <MenuBarItem Title="Actions" x:Name="ActionsMenu">
-                <MenuFlyoutItem Text="Convert to MD" x:Name="ConvertToMdMenu" Click="ConvertToMdMenu_Click" />
-                <MenuFlyoutSeparator />
-                <MenuFlyoutItem Text="Get Git Changes" x:Name="GetGitChangesMenu" Click="GetGitChangesMenu_Click" />
-                <MenuFlyoutItem Text="File Size Summary" x:Name="FileSizeSummaryMenu" Click="FileSizeSummaryMenu_Click" />
-                <MenuFlyoutItem Text="Run Tests" x:Name="RunTestsMenu" Click="RunTests_Click" />
+                <MenuFlyoutItem Text="Convert to MD" x:Name="ConvertToMdMenu" Click="ConvertToMdMenuClick"/>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutItem Text="Get Git Changes" x:Name="GetGitChangesMenu" Click="GetGitChangesMenuClick"/>
+                <MenuFlyoutItem Text="File Size Summary" x:Name="FileSizeSummaryMenu" Click="FileSizeSummaryMenuClick"/>
+                <MenuFlyoutItem Text="Run Tests" x:Name="RunTestsMenu" Click="RunTestsClick"/>
             </MenuBarItem>
 
             <MenuBarItem Title="Help" x:Name="HelpMenu">
-                <MenuFlyoutItem Text="About" x:Name="AboutMenu" Click="AboutMenu_Click" />
+                <MenuFlyoutItem Text="About" x:Name="AboutMenu" Click="AboutMenuClick"/>
             </MenuBarItem>
         </MenuBar>
 
-        <!-- Content host: navigates to pages like RecentFilesPage -->
-        <Frame Grid.Row="1" x:Name="ContentHost" />
+        <!-- ✅ NEW TabView with three tabs: Main, Settings, Recent Files -->
+        <TabView Grid.Row="1" 
+                 x:Name="MainTabView"
+                 TabWidthMode="Equal"
+                 CanReorderTabs="False"
+                 CanDragTabs="False"
+                 IsAddTabButtonVisible="False">
 
-        <!-- Status bar: mirrors WinForms StatusStrip with status label and progress bar -->
+            <TabView.TabItems>
+                <!-- ✅ NEW Main Tab - Vector Store Management -->
+                <TabViewItem Header="Main" x:Name="TabMain" IsClosable="False">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid Padding="16" RowSpacing="12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*" MinHeight="200"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Vector Store Management Header -->
+                            <TextBlock Grid.Row="0" 
+                                       Text="Vector Store Management" 
+                                       FontSize="18" 
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,8"/>
+
+                            <!-- Vector Store Selection -->
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
+                                <ComboBox x:Name="ComboBoxVectorStores" 
+                                          PlaceholderText="VecToolDev"
+                                          Width="300"
+                                          SelectionChanged="ComboBoxVectorStores_SelectionChanged"/>
+                                <Button x:Name="BtnSelectFolders" 
+                                        Content="Select Folders..." 
+                                        Click="BtnSelectFolders_Click"/>
+                            </StackPanel>
+
+                            <!-- New Vector Store Creation -->
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12">
+                                <TextBox x:Name="TxtNewVectorStoreName" 
+                                         PlaceholderText="New vector store name..." 
+                                         Width="300"/>
+                                <Button x:Name="BtnCreateNewVectorStore" 
+                                        Content="Create" 
+                                        Click="BtnCreateNewVectorStore_Click"/>
+                            </StackPanel>
+
+                            <!-- Selected Folders ListBox -->
+                            <Border Grid.Row="3" 
+                                    BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="8"
+                                    Margin="0,12,0,0">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ListBox x:Name="LstSelectedFolders" 
+                                             SelectionMode="Multiple"
+                                             Background="Transparent"
+                                             BorderThickness="0"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </TabViewItem>
+
+                <!-- Settings Tab - Placeholder for Phase 2 -->
+                <TabViewItem Header="Settings" x:Name="TabSettings" IsClosable="False">
+                    <Grid Padding="16">
+                        <TextBlock Text="Settings (Coming Soon)" 
+                                   FontSize="16" 
+                                   Foreground="Gray"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                    </Grid>
+                </TabViewItem>
+
+                <!-- Recent Files Tab - Embed existing RecentFilesPage -->
+                <TabViewItem Header="Recent Files" x:Name="TabRecentFiles" IsClosable="False">
+                    <Frame x:Name="RecentFilesFrame"/>
+                </TabViewItem>
+            </TabView.TabItems>
+        </TabView>
+
+        <!-- Status bar mirrors WinForms StatusStrip with status label and progress bar -->
         <StackPanel Grid.Row="2" 
                     Orientation="Horizontal" 
                     Spacing="12" 
@@ -49,7 +131,7 @@
             <ProgressBar x:Name="StatusProgress" 
                          Width="200" 
                          Height="8" 
-                         IsIndeterminate="False" 
+                         IsIndeterminate="False"
                          VerticalAlignment="Center"/>
         </StackPanel>
     </Grid>
