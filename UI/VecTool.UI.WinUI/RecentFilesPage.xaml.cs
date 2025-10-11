@@ -6,15 +6,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using NLog; // NLog is mandatory for structured logging
-using NUnit.Framework;
-using Shouldly;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using VecTool.Configuration;
 using VecTool.Core.RecentFiles;
-using VecTool.UI.WinUI;
 
 namespace VecTool.UI.WinUI
 {
