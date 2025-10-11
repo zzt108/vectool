@@ -406,6 +406,12 @@ namespace VecTool.UI.WinUI
         /// </summary>
         private void ChkInheritExcludedFilesCheckedChanged(object sender, RoutedEventArgs e)
         {
+            if (TxtExcludedFiles == null)
+            {
+                // Control not initialized yet, skip update
+                return;
+            }
+
             TxtExcludedFiles.IsEnabled = ChkInheritExcludedFiles.IsChecked != true;
         }
 
@@ -415,6 +421,11 @@ namespace VecTool.UI.WinUI
         /// </summary>
         private void ChkInheritExcludedFoldersCheckedChanged(object sender, RoutedEventArgs e)
         {
+            if (TxtExcludedFolders == null)
+            {
+                // Control not initialized yet, skip update
+                return;
+            }
             TxtExcludedFolders.IsEnabled = ChkInheritExcludedFolders.IsChecked != true;
         }
 
