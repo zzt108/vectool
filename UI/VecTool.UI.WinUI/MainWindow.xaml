@@ -1,132 +1,144 @@
-﻿ // ✅ FULL FILE VERSION<Window
+﻿<Window
     x:Class="VecTool.UI.WinUI.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="VecTool - WinUI 3"
-    Width="900"
-    Height="600">
+    Title="VecTool - WinUI 3">
 
     <Grid>
         <TabView>
-            <!-- ====================================== -->
-            <!-- MAIN TAB - Vector Store Operations     -->
-            <!-- ====================================== -->
-            <TabViewItem Header="Main" IconSource="Home">
+            <!-- -->
+            <!-- MAIN TAB - Vector Store Operations -->
+            <!-- -->
+            <TabViewItem Header="Main">
+                <TabViewItem.IconSource>
+                    <SymbolIconSource Symbol="Home"/>
+                </TabViewItem.IconSource>
                 <ScrollViewer>
                     <StackPanel Margin="20" Spacing="15">
-
                         <!-- Title -->
-                        <TextBlock Text="Vector Store Operations" 
-                                   Style="{StaticResource TitleTextBlockStyle}"/>
+                        <TextBlock 
+                            Text="Vector Store Operations" 
+                            Style="{StaticResource TitleTextBlockStyle}"/>
 
                         <!-- Vector Store Selection Section -->
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Select Vector Store" 
-                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+                            <TextBlock 
+                                Text="Select Vector Store" 
+                                Style="{StaticResource SubtitleTextBlockStyle}"/>
 
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Text="Vector Store:" 
-                                           VerticalAlignment="Center"
-                                           Width="100"/>
+                                <TextBlock 
+                                    Text="Vector Store:" 
+                                    VerticalAlignment="Center" 
+                                    Width="100"/>
 
-                                <!-- ✅ MODIFIED: Dynamic placeholder with default disabled state -->
-                                <ComboBox x:Name="ComboBoxVectorStores" 
-                                          PlaceholderText="Create a vector store first" 
-                                          Width="300"
-                                          SelectionChanged="ComboBoxVectorStoresSelectionChanged"
-                                          IsEnabled="False"/>
+                                <!-- MODIFIED: Dynamic placeholder with default disabled state -->
+                                <ComboBox 
+                                    x:Name="ComboBoxVectorStores" 
+                                    PlaceholderText="Create a vector store first" 
+                                    Width="300" 
+                                    SelectionChanged="ComboBoxVectorStoresSelectionChanged"
+                                    IsEnabled="False"/>
 
-                                <Button x:Name="BtnSelectFolders" 
-                                        Content="Select Folders..." 
-                                        Click="BtnSelectFoldersClick"
-                                        IsEnabled="False"/>
+                                <Button 
+                                    x:Name="BtnSelectFolders" 
+                                    Content="Select Folders..." 
+                                    Click="BtnSelectFoldersClick"
+                                    IsEnabled="False"/>
                             </StackPanel>
                         </StackPanel>
 
                         <!-- Create New Vector Store Section -->
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Create New Vector Store" 
-                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+                            <TextBlock 
+                                Text="Create New Vector Store" 
+                                Style="{StaticResource SubtitleTextBlockStyle}"/>
 
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Text="Name:" 
-                                           VerticalAlignment="Center"
-                                           Width="100"/>
+                                <TextBlock 
+                                    Text="Name:" 
+                                    VerticalAlignment="Center" 
+                                    Width="100"/>
 
-                                <TextBox x:Name="TxtNewVectorStoreName" 
-                                         PlaceholderText="Enter vector store name"
-                                         Width="300"/>
+                                <TextBox 
+                                    x:Name="TxtNewVectorStoreName" 
+                                    PlaceholderText="Enter vector store name" 
+                                    Width="300"/>
 
-                                <Button Content="Create" 
-                                        Click="BtnCreateNewVectorStoreClick"
-                                        Style="{StaticResource AccentButtonStyle}"/>
+                                <Button 
+                                    Content="Create" 
+                                    Click="BtnCreateNewVectorStoreClick"
+                                    Style="{StaticResource AccentButtonStyle}"/>
                             </StackPanel>
                         </StackPanel>
 
                         <!-- Vector Store Operations Section -->
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Operations" 
-                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+                            <TextBlock 
+                                Text="Operations" 
+                                Style="{StaticResource SubtitleTextBlockStyle}"/>
 
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <Button Content="Build Index" 
-                                        Click="BtnBuildIndexClick"/>
-
-                                <Button Content="Query" 
-                                        Click="BtnQueryClick"/>
-
-                                <Button Content="Clear Index" 
-                                        Click="BtnClearIndexClick"/>
+                                <Button Content="Build Index" Click="BtnBuildIndexClick"/>
+                                <Button Content="Query" Click="BtnQueryClick"/>
+                                <Button Content="Clear Index" Click="BtnClearIndexClick"/>
                             </StackPanel>
                         </StackPanel>
 
                         <!-- Status Output -->
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Status" 
-                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+                            <TextBlock 
+                                Text="Status" 
+                                Style="{StaticResource SubtitleTextBlockStyle}"/>
 
-                            <TextBox x:Name="TxtStatus" 
-                                     PlaceholderText="Operation status will appear here..."
-                                     IsReadOnly="True"
-                                     TextWrapping="Wrap"
-                                     AcceptsReturn="True"
-                                     Height="150"
-                                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                            <TextBox 
+                                x:Name="TxtStatus" 
+                                PlaceholderText="Operation status will appear here..." 
+                                IsReadOnly="True"
+                                TextWrapping="Wrap"
+                                AcceptsReturn="True"
+                                Height="150"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"/>
                         </StackPanel>
-
                     </StackPanel>
                 </ScrollViewer>
             </TabViewItem>
 
-            <!-- ====================================== -->
-            <!-- SETTINGS TAB                           -->
-            <!-- ====================================== -->
-            <TabViewItem Header="Settings" IconSource="Setting">
+            <!-- -->
+            <!-- SETTINGS TAB -->
+            <!-- -->
+            <TabViewItem Header="Settings">
+                <TabViewItem.IconSource>
+                    <SymbolIconSource Symbol="Setting"/>
+                </TabViewItem.IconSource>
                 <ScrollViewer>
                     <StackPanel Margin="20" Spacing="15">
-
-                        <TextBlock Text="Settings" 
-                                   Style="{StaticResource TitleTextBlockStyle}"/>
+                        <TextBlock 
+                            Text="Settings" 
+                            Style="{StaticResource TitleTextBlockStyle}"/>
 
                         <!-- API Configuration -->
                         <StackPanel Spacing="10">
-                            <TextBlock Text="OpenAI Configuration" 
-                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+                            <TextBlock 
+                                Text="OpenAI Configuration" 
+                                Style="{StaticResource SubtitleTextBlockStyle}"/>
 
                             <StackPanel Spacing="8">
                                 <TextBlock Text="API Key:"/>
-                                <PasswordBox x:Name="TxtApiKey" 
-                                             PlaceholderText="Enter OpenAI API key"
-                                             Width="400"
-                                             HorizontalAlignment="Left"/>
+                                <PasswordBox 
+                                    x:Name="TxtApiKey" 
+                                    PlaceholderText="Enter OpenAI API key" 
+                                    Width="400" 
+                                    HorizontalAlignment="Left"/>
 
                                 <TextBlock Text="Model:"/>
-                                <ComboBox x:Name="ComboBoxModel" 
-                                          Width="400"
-                                          HorizontalAlignment="Left">
+                                <ComboBox 
+                                    x:Name="ComboBoxModel" 
+                                    Width="400" 
+                                    HorizontalAlignment="Left">
                                     <ComboBoxItem Content="text-embedding-ada-002" IsSelected="True"/>
                                     <ComboBoxItem Content="text-embedding-3-small"/>
                                     <ComboBoxItem Content="text-embedding-3-large"/>
@@ -136,59 +148,65 @@
 
                         <!-- Vector Store Settings -->
                         <StackPanel Spacing="10">
-                            <TextBlock Text="Vector Store Settings" 
-                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+                            <TextBlock 
+                                Text="Vector Store Settings" 
+                                Style="{StaticResource SubtitleTextBlockStyle}"/>
 
                             <StackPanel Spacing="8">
-                                <CheckBox x:Name="ChkAutoSave" 
-                                          Content="Auto-save changes"
-                                          IsChecked="True"/>
-
-                                <CheckBox x:Name="ChkVerboseLogging" 
-                                          Content="Enable verbose logging"/>
+                                <CheckBox 
+                                    x:Name="ChkAutoSave" 
+                                    Content="Auto-save changes" 
+                                    IsChecked="True"/>
+                                <CheckBox 
+                                    x:Name="ChkVerboseLogging" 
+                                    Content="Enable verbose logging"/>
                             </StackPanel>
                         </StackPanel>
 
                         <!-- Action Buttons -->
                         <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
-                            <Button Content="Save Settings" 
-                                    Click="BtnSaveSettingsClick"
-                                    Style="{StaticResource AccentButtonStyle}"/>
-
-                            <Button Content="Reset to Defaults" 
-                                    Click="BtnResetSettingsClick"/>
+                            <Button 
+                                Content="Save Settings" 
+                                Click="BtnSaveSettingsClick"
+                                Style="{StaticResource AccentButtonStyle}"/>
+                            <Button 
+                                Content="Reset to Defaults" 
+                                Click="BtnResetSettingsClick"/>
                         </StackPanel>
-
                     </StackPanel>
                 </ScrollViewer>
             </TabViewItem>
 
-            <!-- ====================================== -->
-            <!-- ABOUT TAB                              -->
-            <!-- ====================================== -->
-            <TabViewItem Header="About" IconSource="Help">
+            <!-- -->
+            <!-- ABOUT TAB -->
+            <!-- -->
+            <TabViewItem Header="About">
+                <TabViewItem.IconSource>
+                    <SymbolIconSource Symbol="Help"/>
+                </TabViewItem.IconSource>
                 <ScrollViewer>
                     <StackPanel Margin="20" Spacing="15">
-
-                        <TextBlock Text="About VecTool" 
-                                   Style="{StaticResource TitleTextBlockStyle}"/>
+                        <TextBlock 
+                            Text="About VecTool" 
+                            Style="{StaticResource TitleTextBlockStyle}"/>
 
                         <StackPanel Spacing="10">
                             <TextBlock Text="VecTool - Vector Store Management Tool"/>
-                            <TextBlock x:Name="TxtVersion" 
-                                       Text="Version: 4.1.0"
-                                       Foreground="Gray"/>
-                            <TextBlock Text="Built with WinUI 3 and NLog"
-                                       Foreground="Gray"/>
+                            <TextBlock 
+                                x:Name="TxtVersion" 
+                                Text="Version: 4.1.0" 
+                                Foreground="Gray"/>
+                            <TextBlock 
+                                Text="Built with WinUI 3 and NLog" 
+                                Foreground="Gray"/>
                         </StackPanel>
 
-                        <HyperlinkButton Content="View Documentation" 
-                                         NavigateUri="https://github.com/yourusername/vectool"/>
-
+                        <HyperlinkButton 
+                            Content="View Documentation" 
+                            NavigateUri="https://github.com/yourusername/vectool"/>
                     </StackPanel>
                 </ScrollViewer>
             </TabViewItem>
-
         </TabView>
     </Grid>
 </Window>

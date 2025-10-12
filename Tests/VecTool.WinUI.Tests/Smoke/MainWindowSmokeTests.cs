@@ -1,6 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// Path: Tests/VecTool.WinUI.Tests/Smoke/MainWindowSmokeTests.cs
-
+﻿
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using NUnit.Framework;
