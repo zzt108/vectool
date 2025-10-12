@@ -1,108 +1,161 @@
-// Path: Configuration/VectorStoreConfig.cs
-
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using static System.Reflection.Metadata.BlobBuilder;
-using NLogS = NLogShared;
+using NLog;
 
 namespace VecTool.Configuration
 {
-    public class VectorStoreConfig
+    /// <summary>
+    /// Holds global and per-vector-store configuration.
+    /// Provides loading from appSettings and JSON, with safe defaults.
+    /// </summary>
+    public sealed class VectorStoreConfig
     {
-        private static readonly NLogS.CtxLogger _log = new();
+        private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
-        public List<string> FolderPaths { get; set; } = new List<string>();
-        public List<string> ExcludedFiles { get; set; } = new List<string>();
-        public List<string> ExcludedFolders { get; set; } = new List<string>();
+        #region Properties
 
-        // Create a VectorStoreConfig from app.config settings
+        /// <summary>
+        /// List of source code folder paths to be processed.
+        /// </summary>
+        public List<string> FolderPaths { get; set; } = new();
+
+        /// <summary>
+        /// File extensions/patterns to exclude, e.g., ".bin", "*.dll".
+        /// Inherited from global config unless overridden.
+        /// </summary>
+        public List<string> ExcludedFiles { get; set; } = new();
+
+        /// <summary>
+        /// Folder names to exclude, e.g., "bin", "obj".
+        /// Inherited from global config unless overridden.
+        /// </summary>
+        public List<string> ExcludedFolders { get; set; } = new();
+
+        #endregion
+
+        #region Defaults
+
+        /// <summary>
+        /// Opinionated default file exclusions used when appSettings are missing.
+        /// </summary>
+        public static readonly IReadOnlyList<string> DefaultExcludedFiles = new[] { ".bin", ".exe", ".dll", ".pdb", "*.log" };
+
+        /// <summary>
+        /// Opinionated default folder exclusions used when appSettings are missing.
+        /// </summary>
+        public static readonly IReadOnlyList<string> DefaultExcludedFolders = new[] { "bin", "obj", ".git", ".vs", "packages" };
+
+        #endregion
+
+        #region Static Factory and Persistence
+
+        /// <summary>
+        /// Creates a VectorStoreConfig from global app.config settings.
+        /// Falls back to sensible defaults if appSettings keys are missing or empty.
+        /// </summary>
         public static VectorStoreConfig FromAppConfig()
         {
             var config = new VectorStoreConfig();
-            config.LoadExcludedFilesConfig();
-            config.LoadExcludedFoldersConfig();
+
+            var files = ReadListFromAppSettings("excludedFiles");
+            var folders = ReadListFromAppSettings("excludedFolders");
+
+            if (files.Count == 0)
+            {
+                config.ExcludedFiles = new List<string>(DefaultExcludedFiles);
+                Log.Info("AppSetting 'excludedFiles' was missing or empty. Using default values: {DefaultValues}", string.Join(", ", DefaultExcludedFiles));
+            }
+            else
+            {
+                config.ExcludedFiles = files;
+            }
+
+            if (folders.Count == 0)
+            {
+                config.ExcludedFolders = new List<string>(DefaultExcludedFolders);
+                Log.Info("AppSetting 'excludedFolders' was missing or empty. Using default values: {DefaultValues}", string.Join(", ", DefaultExcludedFolders));
+            }
+            else
+            {
+                config.ExcludedFolders = folders;
+            }
+
             return config;
         }
 
-        // Load excluded files from app.config
-        public void LoadExcludedFilesConfig()
+        /// <summary>
+        /// Helper to read and parse a delimited list from appSettings.
+        /// </summary>
+        private static List<string> ReadListFromAppSettings(string key)
         {
-            string? excludedFilesConfig = ConfigurationManager.AppSettings["excludedFiles"];
-            if (!string.IsNullOrEmpty(excludedFilesConfig))
+            try
             {
-                ExcludedFiles = excludedFilesConfig.Split(',')
-                    .Select(f => f.Trim())
+                var rawValue = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrWhiteSpace(rawValue))
+                {
+                    return new List<string>();
+                }
+
+                return rawValue
+                    .Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
+            }
+            catch (ConfigurationErrorsException ex)
+            {
+                Log.Warn(ex, "Failed to read appSetting '{Key}'. Returning empty list.", key);
+                return new List<string>();
             }
         }
 
-        // Load excluded folders from app.config
-        public void LoadExcludedFoldersConfig()
-        {
-            string? excludedFoldersConfig = ConfigurationManager.AppSettings["excludedFolders"];
-            if (!string.IsNullOrEmpty(excludedFoldersConfig))
-            {
-                ExcludedFolders = excludedFoldersConfig.Split(',')
-                    .Select(f => f.Trim())
-                    .ToList();
-            }
-        }
+        #endregion
 
-        // Check if a file should be excluded
+        #region Exclusion Logic
+
+        /// <summary>
+        /// Checks if a file should be excluded based on wildcard patterns.
+        /// </summary>
         public bool IsFileExcluded(string fileName)
         {
             foreach (var pattern in ExcludedFiles)
             {
+                // Simple wildcard to regex conversion
                 string regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*") + "$";
                 if (Regex.IsMatch(fileName, regexPattern, RegexOptions.IgnoreCase))
                 {
-                    _log.Trace($"File '{fileName}' excluded by pattern '{pattern}'");
+                    Log.Trace("File '{FileName}' excluded by pattern '{Pattern}'", fileName, pattern);
                     return true;
                 }
             }
             return false;
         }
 
-        // Check if a folder should be excluded
+        /// <summary>
+        /// Checks if a folder should be excluded by an exact name match.
+        /// </summary>
         public bool IsFolderExcluded(string folderName)
         {
-            bool isExcluded = ExcludedFolders.Contains(folderName);
+            bool isExcluded = ExcludedFolders.Contains(folderName, StringComparer.OrdinalIgnoreCase);
             if (isExcluded)
             {
-                _log.Trace($"Folder '{folderName}' is in excluded list");
+                Log.Trace("Folder '{FolderName}' is in the excluded list", folderName);
             }
             return isExcluded;
         }
 
-        // Add a folder path if it doesn't exist
-        public bool AddFolderPath(string folderPath)
-        {
-            if (!FolderPaths.Contains(folderPath))
-            {
-                FolderPaths.Add(folderPath);
-                return true;
-            }
-            return false;
-        }
+        #endregion
 
-        // Remove a folder path
-        public bool RemoveFolderPath(string folderPath)
-        {
-            return FolderPaths.Remove(folderPath);
-        }
+        #region Instance Methods
 
-        // Clear all folder paths
-        public void ClearFolderPaths()
-        {
-            FolderPaths.Clear();
-        }
-
-        // Create a deep copy of this configuration
+        /// <summary>
+        /// Creates a deep copy of this configuration instance.
+        /// </summary>
         public VectorStoreConfig Clone()
         {
             return new VectorStoreConfig
@@ -113,38 +166,45 @@ namespace VecTool.Configuration
             };
         }
 
-        // Load all vector store configurations
+        #endregion
+
+        #region JSON Persistence (for Per-Store Configs)
+
+        /// <summary>
+        /// Loads all vector store configurations from the JSON file specified in app.config.
+        /// </summary>
         public static Dictionary<string, VectorStoreConfig> LoadAll(string? configPath = null)
         {
             string vectorStoreFoldersPath = configPath ??
                 ConfigurationManager.AppSettings["vectorStoreFoldersPath"] ??
                 @"..\..\vectorStoreFolders.json";
 
-            Dictionary<string, VectorStoreConfig> configs = new();
-
-            if (File.Exists(vectorStoreFoldersPath))
+            if (!File.Exists(vectorStoreFoldersPath))
             {
-                try
-                {
-                    string json = File.ReadAllText(vectorStoreFoldersPath);
-                    var deserializedConfigs = JsonSerializer.Deserialize<Dictionary<string, VectorStoreConfig>>(json);
-                    if (deserializedConfigs != null)
-                    {
-                        configs = deserializedConfigs;
-                    }
-
-                    _log.Debug($"Loaded {configs.Count} vector store configurations");
-                }
-                catch (Exception ex)
-                {
-                    _log.Error(ex, $"Error loading vector store configurations from {vectorStoreFoldersPath}");
-                }
+                return new Dictionary<string, VectorStoreConfig>(StringComparer.OrdinalIgnoreCase);
             }
 
-            return configs;
+            try
+            {
+                string json = File.ReadAllText(vectorStoreFoldersPath);
+                var configs = JsonSerializer.Deserialize<Dictionary<string, VectorStoreConfig>>(json);
+
+                var validConfigs = configs ?? new Dictionary<string, VectorStoreConfig>();
+                Log.Debug("Loaded {Count} vector store configurations from {Path}", validConfigs.Count, vectorStoreFoldersPath);
+
+                // Ensure dictionary uses case-insensitive comparer
+                return new Dictionary<string, VectorStoreConfig>(validConfigs, StringComparer.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error loading vector store configurations from {Path}", vectorStoreFoldersPath);
+                return new Dictionary<string, VectorStoreConfig>(StringComparer.OrdinalIgnoreCase);
+            }
         }
 
-        // Save all vector store configurations
+        /// <summary>
+        /// Saves all vector store configurations to the JSON file specified in app.config.
+        /// </summary>
         public static void SaveAll(Dictionary<string, VectorStoreConfig> configs, string? configPath = null)
         {
             string vectorStoreFoldersPath = configPath ??
@@ -157,12 +217,14 @@ namespace VecTool.Configuration
                 string json = JsonSerializer.Serialize(configs, options);
                 File.WriteAllText(vectorStoreFoldersPath, json);
 
-                _log.Debug($"Saved {configs.Count} vector store configurations to {vectorStoreFoldersPath}");
+                Log.Debug("Saved {Count} vector store configurations to {Path}", configs.Count, vectorStoreFoldersPath);
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Error saving vector store configurations to {vectorStoreFoldersPath}");
+                Log.Error(ex, "Error saving vector store configurations to {Path}", vectorStoreFoldersPath);
             }
         }
+
+        #endregion
     }
 }
