@@ -28,8 +28,8 @@ namespace VecTool.UI.WinUI
             InitializeComponent();
 
             // Subscribe to events AFTER InitializeComponent to avoid null reference
-            Filter.SelectionChanged += Filter_SelectionChanged;
-            SpecificStore.SelectionChanged += SpecificStore_SelectionChanged;
+            Filter.SelectionChanged += FilterSelectionChanged;
+            SpecificStore.SelectionChanged += SpecificStoreSelectionChanged;
 
             // Resolve UiStateConfig from DI if available; fall back to in-memory store so page never crashes
             uiState = TryResolve<UiStateConfig>()
@@ -61,7 +61,7 @@ namespace VecTool.UI.WinUI
         }
 
         // Event: Filter changed by user
-        private void Filter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void FilterSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var filter = GetSelectedFilter();
 
@@ -85,7 +85,7 @@ namespace VecTool.UI.WinUI
         }
 
         // Event: Specific store changed
-        private void SpecificStore_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void SpecificStoreSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var filter = GetSelectedFilter();
             var storeId = GetSelectedStoreId();
