@@ -66,7 +66,7 @@
                                           SelectionChanged="ComboBoxVectorStoresSelectionChanged"/>
                                 <Button x:Name="BtnSelectFolders" 
                                         Content="Select Folders..." 
-                                        Click="BtnSelectFolders_Click"/>
+                                        Click="BtnSelectFoldersClick"/>
                             </StackPanel>
 
                             <!-- New Vector Store Creation + Remove Folder Button -->
@@ -76,12 +76,12 @@
                                          Width="300"/>
                                 <Button x:Name="BtnCreateNewVectorStore" 
                                         Content="Create" 
-                                        Click="BtnCreateNewVectorStore_Click"/>
+                                        Click="BtnCreateNewVectorStoreClick"/>
 
                                 <!-- ✅ NEW: Remove Folder button -->
                                 <Button x:Name="BtnRemoveFolder" 
                                         Content="Remove Folder" 
-                                        Click="BtnRemoveFolder_Click"
+                                        Click="BtnRemoveFolderClick"
                                         Margin="100,0,0,0"/>
                             </StackPanel>
 
@@ -171,11 +171,11 @@
                             <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="12">
                                 <Button x:Name="BtnSaveVsSettings" 
                                         Content="Save Settings" 
-                                        Click="BtnSaveVsSettings_Click" 
+                                        Click="BtnSaveVsSettingsClick" 
                                         Style="{StaticResource AccentButtonStyle}"/>
                                 <Button x:Name="BtnResetVsSettings" 
                                         Content="Reset to Global" 
-                                        Click="BtnResetVsSettings_Click"/>
+                                        Click="BtnResetVsSettingsClick"/>
                             </StackPanel>
 
                             <!-- Info Text -->
