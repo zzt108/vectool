@@ -1,6 +1,6 @@
 ﻿// ✅ FULL FILE VERSION
 // Path: UI/VecTool.UI.WinUI/Pages/RecentFilesPage.xaml.cs
-// Phase 2, Option C: Complete Recent Files Integration with drag-drop support
+// Phase 3.1: Complete Drag-and-Drop Support (Inbound + Outbound)
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -22,7 +22,6 @@ namespace VecTool.UI.WinUI.Pages
     public sealed partial class RecentFilesPage : Page
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
         private readonly UiStateConfig uiState;
 
         public RecentFilesPage()
@@ -32,12 +31,6 @@ namespace VecTool.UI.WinUI.Pages
             // Subscribe to events AFTER InitializeComponent
             Filter.SelectionChanged += FilterSelectionChanged;
             SpecificStore.SelectionChanged += SpecificStoreSelectionChanged;
-
-            // ✅ Wire drag-drop for GridView
-            Files.AllowDrop = true;
-            Files.DragOver += Files_DragOver;
-            Files.Drop += Files_Drop;
-            Files.DragItemsStarting += Files_DragItemsStarting;
 
             // Resolve UiStateConfig from DI
             uiState = TryResolveUiStateConfig() ?? new UiStateConfig(new InMemorySettingsStore());
@@ -55,7 +48,7 @@ namespace VecTool.UI.WinUI.Pages
         {
             try
             {
-                // Load known stores into "Specific Store" dropdown
+                // Load known stores into Specific Store dropdown
                 var storeIds = LoadKnownStoreIds().ToList();
                 SpecificStore.ItemsSource = storeIds;
 
@@ -142,9 +135,8 @@ namespace VecTool.UI.WinUI.Pages
             {
                 var items = LoadRecentFiles(filter, storeId).ToList();
                 Files.ItemsSource = items;
-
-                Log.Debug("Bound {Count} recent files to grid (filter: {Filter}, store: {Store})",
-                    items.Count, filter, storeId ?? "(none)");
+                Log.Debug("Bound {Count} recent files to grid (filter={Filter}, store={Store})",
+                    items.Count, filter, storeId ?? "none");
             }
             catch (Exception ex)
             {
@@ -158,18 +150,18 @@ namespace VecTool.UI.WinUI.Pages
         /// </summary>
         private IEnumerable<RecentFileItem> LoadRecentFiles(VectorStoreLinkFilter filter, string? storeId)
         {
-            // ✅ Resolve IRecentFilesManager from MainWindow
+            // Resolve IRecentFilesManager from MainWindow
             var manager = TryResolveRecentFilesManager();
             if (manager == null)
             {
-                Log.Warn("IRecentFilesManager not available; returning empty list");
+                Log.Warn("IRecentFilesManager not available — returning empty list");
                 yield break;
             }
 
-            // ✅ Get all recent files
+            // Get all recent files
             var allFiles = manager.GetRecentFiles();
 
-            // ✅ Map RecentFileInfo → RecentFileItem with filtering
+            // Map RecentFileInfo → RecentFileItem with filtering
             foreach (var info in allFiles)
             {
                 // Determine linked store name from SourceFolders
@@ -185,23 +177,19 @@ namespace VecTool.UI.WinUI.Pages
                     VectorStoreLinkFilter.All => true,
                     VectorStoreLinkFilter.Linked => isLinked,
                     VectorStoreLinkFilter.Unlinked => !isLinked,
-                    VectorStoreLinkFilter.SpecificStore =>
-                        string.Equals(linkedStoreName, storeId, StringComparison.OrdinalIgnoreCase),
+                    VectorStoreLinkFilter.SpecificStore => string.Equals(linkedStoreName, storeId, StringComparison.OrdinalIgnoreCase),
                     _ => true
                 };
 
                 if (!include) continue;
 
                 // Map to view model
-                yield return new RecentFileItem(
-                    path: info.FilePath,
-                    linkedStoreName: linkedStoreName
-                );
+                yield return new RecentFileItem(path: info.FilePath, linkedStoreName: linkedStoreName);
             }
         }
 
         /// <summary>
-        /// Load known vector store IDs for "Specific Store" dropdown.
+        /// Load known vector store IDs for Specific Store dropdown.
         /// </summary>
         private IEnumerable<string> LoadKnownStoreIds()
         {
@@ -222,15 +210,17 @@ namespace VecTool.UI.WinUI.Pages
         #region Drag-Drop Support
 
         /// <summary>
-        /// Handle drag-over to set cursor effect for inbound drops.
+        /// Handle drag-over to validate dropped file types and set cursor effect.
         /// </summary>
-        private void Files_DragOver(object sender, DragEventArgs e)
+        private void FilesDragOver(object sender, DragEventArgs e)
         {
-            // Check if dropped data contains storage items (files)
+            // Accept only file storage items
             if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
                 e.AcceptedOperation = DataPackageOperation.Copy;
-                e.DragUIOverride.Caption = "Drop to add files";
+                e.DragUIOverride.Caption = "Drop files to register";
+                e.DragUIOverride.IsCaptionVisible = true;
+                e.DragUIOverride.IsGlyphVisible = true;
             }
             else
             {
@@ -239,44 +229,57 @@ namespace VecTool.UI.WinUI.Pages
         }
 
         /// <summary>
-        /// Handle file drop from Explorer (inbound drag-drop).
+        /// Handle drop event to register dragged files with IRecentFilesManager.
         /// </summary>
-        private async void Files_Drop(object sender, DragEventArgs e)
+        private async void FilesDrop(object sender, DragEventArgs e)
         {
             try
             {
                 if (!e.DataView.Contains(StandardDataFormats.StorageItems))
                 {
-                    Log.Warn("Drop rejected: No storage items");
+                    Log.Warn("Dropped content does not contain storage items");
                     return;
                 }
 
                 var items = await e.DataView.GetStorageItemsAsync();
-                var filePaths = items.OfType<StorageFile>().Select(f => f.Path).Where(File.Exists).ToList();
+                var files = items.OfType<StorageFile>().ToList();
 
-                if (filePaths.Count == 0)
+                if (files.Count == 0)
                 {
-                    Log.Warn("Drop rejected: No valid files");
+                    Log.Warn("No files found in dropped content");
                     return;
                 }
 
                 var manager = TryResolveRecentFilesManager();
                 if (manager == null)
                 {
-                    Log.Error("Cannot add files: RecentFilesManager unavailable");
+                    Log.Error("Cannot register dropped files: RecentFilesManager unavailable");
+                    ShowErrorDialog("Registration Failed", "Recent Files manager is not available.");
                     return;
                 }
 
-                // Register each dropped file as a recent file
-                foreach (var path in filePaths)
+                // Register each file with current vector store
+                var currentStore = uiState.GetSelectedVectorStore();
+                foreach (var file in files)
                 {
-                    var fileInfo = new FileInfo(path);
+                    var filePath = file.Path;
+
+                    // Validate file type (optional: extend filter)
+                    var ext = Path.GetExtension(filePath).ToLowerInvariant();
+                    if (ext != ".cs" && ext != ".md" && ext != ".txt" && ext != ".json")
+                    {
+                        Log.Warn("Skipping unsupported file type: {Path}", filePath);
+                        continue;
+                    }
+
+                    var fileInfo = new FileInfo(filePath);
                     manager.RegisterGeneratedFile(
-                        path,
+                        filePath,
                         RecentFileType.Unknown, // Infer from extension if needed
-                        Array.Empty<string>(),  // No source folders for manual drops
-                        fileInfo.Length
-                    );
+                        new[] { currentStore },
+                        fileInfo.Length);
+
+                    Log.Info("Registered dropped file: {Path} → {Store}", filePath, currentStore);
                 }
 
                 manager.Save();
@@ -286,19 +289,19 @@ namespace VecTool.UI.WinUI.Pages
                 var storeId = GetSelectedStoreId();
                 BindItems(filter, storeId);
 
-                Log.Info("Added {Count} files via drag-drop", filePaths.Count);
+                Log.Info("Dropped {Count} files registered successfully", files.Count);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error handling file drop");
-                ShowErrorDialog("Drop Error", $"Failed to add files: {ex.Message}");
+                Log.Error(ex, "Failed to process dropped files");
+                ShowErrorDialog("Drop Failed", ex.Message);
             }
         }
 
         /// <summary>
         /// Handle drag-out to external apps (outbound drag-drop).
         /// </summary>
-        private async void Files_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
+        private async void FilesDragItemsStarting(object sender, DragItemsStartingEventArgs e)
         {
             try
             {
@@ -352,38 +355,13 @@ namespace VecTool.UI.WinUI.Pages
                 return;
             }
 
-            try
-            {
-                var file = await StorageFile.GetFileFromPathAsync(item.Path);
-                await Windows.System.Launcher.LaunchFileAsync(file);
-                Log.Info("Opened file: {Path}", item.Path);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to open file: {Path}", item.Path);
-                ShowErrorDialog("Failed to open file", ex.Message);
-            }
+            await OpenFileAsync(item);
         }
 
-        /// <summary>
-        /// Double-tap handler for touch devices.
-        /// </summary>
-        private async void FilesDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        private async void MenuOpenFileClick(object sender, RoutedEventArgs e)
         {
             var item = Files.SelectedItem as RecentFileItem;
-            if (item != null)
-            {
-                await OpenFileAsync(item);
-            }
-        }
-
-        private async void MenuOpenFile_Click(object sender, RoutedEventArgs e)
-        {
-            var item = Files.SelectedItem as RecentFileItem;
-            if (item != null)
-            {
-                await OpenFileAsync(item);
-            }
+            if (item != null) await OpenFileAsync(item);
         }
 
         private async Task OpenFileAsync(RecentFileItem item)
@@ -408,7 +386,7 @@ namespace VecTool.UI.WinUI.Pages
             }
         }
 
-        private async void MenuOpenFolder_Click(object sender, RoutedEventArgs e)
+        private async void MenuOpenFolderClick(object sender, RoutedEventArgs e)
         {
             var item = Files.SelectedItem as RecentFileItem;
             if (item == null || string.IsNullOrWhiteSpace(item.Path))
@@ -433,12 +411,12 @@ namespace VecTool.UI.WinUI.Pages
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to open folder for: {Path}", item.Path);
+                Log.Error(ex, "Failed to open folder for {Path}", item.Path);
                 ShowErrorDialog("Failed to open folder", ex.Message);
             }
         }
 
-        private void MenuCopyPath_Click(object sender, RoutedEventArgs e)
+        private void MenuCopyPathClick(object sender, RoutedEventArgs e)
         {
             var item = Files.SelectedItem as RecentFileItem;
             if (item == null || string.IsNullOrWhiteSpace(item.Path))
@@ -461,7 +439,7 @@ namespace VecTool.UI.WinUI.Pages
             }
         }
 
-        private void MenuRemove_Click(object sender, RoutedEventArgs e)
+        private void MenuRemoveClick(object sender, RoutedEventArgs e)
         {
             var item = Files.SelectedItem as RecentFileItem;
             if (item == null)
@@ -572,13 +550,14 @@ namespace VecTool.UI.WinUI.Pages
         {
             try
             {
-                // WinUI 3: App doesn't expose MainWindow property by default
-                // Access through reflection or add public property to App class
-                // For now, return null and rely on fallback
-                Log.Warn("Direct MainWindow access not available in WinUI 3 - using null fallback");
-                return null;
+                // WinUI 3 doesn't expose MainWindow property by default
+                // Access via App.Current or public property on MainWindow
+                if (App.Current is App app && app.MainWindow is MainWindow mainWindow)
+                {
+                    return mainWindow.RecentFilesManager;
+                }
 
-                Log.Warn("MainWindow not available; RecentFilesManager unavailable");
+                Log.Warn("MainWindow not available — RecentFilesManager unavailable");
                 return null;
             }
             catch (Exception ex)
@@ -604,25 +583,25 @@ namespace VecTool.UI.WinUI.Pages
         }
 
         #endregion
-    }
 
-    #region View Models
+        #region View Models
 
-    /// <summary>
-    /// View model for Recent Files grid items.
-    /// </summary>
-    public sealed class RecentFileItem
-    {
-        public string Path { get; }
-        public string? LinkedStoreName { get; }
-        public bool IsLinked => !string.IsNullOrWhiteSpace(LinkedStoreName);
-
-        public RecentFileItem(string path, string? linkedStoreName)
+        /// <summary>
+        /// View model for Recent Files grid items.
+        /// </summary>
+        public sealed class RecentFileItem
         {
-            Path = path ?? throw new ArgumentNullException(nameof(path));
-            LinkedStoreName = linkedStoreName;
-        }
-    }
+            public string Path { get; }
+            public string? LinkedStoreName { get; }
+            public bool IsLinked => !string.IsNullOrWhiteSpace(LinkedStoreName);
 
-    #endregion
+            public RecentFileItem(string path, string? linkedStoreName)
+            {
+                Path = path ?? throw new ArgumentNullException(nameof(path));
+                LinkedStoreName = linkedStoreName;
+            }
+        }
+
+        #endregion
+    }
 }
