@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using VecTool.Configuration;
+using VecTool.Core.RecentFiles; // ✅ NEW: Required for IRecentFilesManager interface
+using VecTool.RecentFiles; // ✅ NEW: Required for RecentFilesManager implementation
 
 namespace VecTool.UI.WinUI
 {
@@ -17,10 +19,18 @@ namespace VecTool.UI.WinUI
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private readonly UiStateConfig uiState;
 
+        // ✅ NEW: IRecentFilesManager instance for RecentFilesPage (Phase 3.1 Fix)
+        public IRecentFilesManager RecentFilesManager { get; }
+
         public MainWindow()
         {
             this.InitializeComponent();
             uiState = UiStateConfig.FromAppConfig();
+
+            // ✅ NEW: Initialize RecentFilesManager from config (Phase 3.1 Fix)
+            var config = VecTool.Core.RecentFiles.RecentFilesConfig.FromAppConfig();
+            RecentFilesManager = new VecTool.RecentFiles.RecentFilesManager(config);
+
             LoadSettingsTab();
         }
 
@@ -54,7 +64,7 @@ namespace VecTool.UI.WinUI
 
         /// <summary>
         /// Event handler: Settings tab vector store selection changed.
-        /// Uses PerVectorStoreSettings.From() to compute effective settings.
+        /// Uses PerVectorStoreSettings.From to compute effective settings.
         /// </summary>
         private void CmbSettingsVectorStoreSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -65,12 +75,13 @@ namespace VecTool.UI.WinUI
             {
                 var global = VectorStoreConfig.FromAppConfig();
                 var all = VectorStoreConfig.LoadAll();
+
                 all.TryGetValue(selected, out var perConfig); // May be null if new store
 
                 // Use PerVectorStoreSettings to compute effective settings
                 var vm = PerVectorStoreSettings.From(selected, global, perConfig);
 
-                // Bind to UI (Inherit checkboxes are inverse of UseCustom)
+                // Bind to UI: Inherit checkboxes are inverse of UseCustom
                 ChkInheritExcludedFiles.IsChecked = !vm.UseCustomExcludedFiles;
                 ChkInheritExcludedFolders.IsChecked = !vm.UseCustomExcludedFolders;
 
@@ -92,7 +103,7 @@ namespace VecTool.UI.WinUI
         /// <summary>
         /// Event handler: Inherit Excluded Files checkbox toggled.
         /// </summary>
-        private void ChkInheritExcludedFilesChecked(object sender, RoutedEventArgs e)
+        private void ChkInheritExcludedFilesCheckedChanged(object sender, RoutedEventArgs e)
         {
             TxtExcludedFiles.IsEnabled = !(ChkInheritExcludedFiles.IsChecked ?? true);
         }
@@ -100,14 +111,14 @@ namespace VecTool.UI.WinUI
         /// <summary>
         /// Event handler: Inherit Excluded Folders checkbox toggled.
         /// </summary>
-        private void ChkInheritExcludedFoldersChecked(object sender, RoutedEventArgs e)
+        private void ChkInheritExcludedFoldersCheckedChanged(object sender, RoutedEventArgs e)
         {
             TxtExcludedFolders.IsEnabled = !(ChkInheritExcludedFolders.IsChecked ?? true);
         }
 
         /// <summary>
         /// Event handler: Save button clicked.
-        /// Uses PerVectorStoreSettings.Save() for proper serialization.
+        /// Uses PerVectorStoreSettings.Save for proper serialization.
         /// </summary>
         private void BtnSaveVsSettingsClick(object sender, RoutedEventArgs e)
         {
@@ -148,11 +159,11 @@ namespace VecTool.UI.WinUI
                     customExcludedFolders: customFolders
                 );
 
-                // Save via PerVectorStoreSettings (updates `all` in place)
+                // Save via PerVectorStoreSettings (updates all in place)
                 PerVectorStoreSettings.Save(all, vm, global);
                 VectorStoreConfig.SaveAll(all);
 
-                Log.Info("Settings saved for {Store} CustomFiles={FileCount}, CustomFolders={FolderCount}",
+                Log.Info("Settings saved for {Store}: CustomFiles={FileCount}, CustomFolders={FolderCount}",
                     selectedStore, customFiles.Count, customFolders.Count);
 
                 ShowSuccessDialog("Success", $"Settings saved for {selectedStore}.");
@@ -166,7 +177,7 @@ namespace VecTool.UI.WinUI
 
         /// <summary>
         /// Event handler: Reset button clicked.
-        /// Uses PerVectorStoreSettings.Save() to reset to inherited defaults.
+        /// Uses PerVectorStoreSettings.Save to reset to inherited defaults.
         /// </summary>
         private void BtnResetVsSettingsClick(object sender, RoutedEventArgs e)
         {
@@ -182,7 +193,7 @@ namespace VecTool.UI.WinUI
                 var global = VectorStoreConfig.FromAppConfig();
                 var all = VectorStoreConfig.LoadAll();
 
-                // Create default VM (inherit everything from global)
+                // Create default VM: inherit everything from global
                 var defaultVm = new PerVectorStoreSettings(
                     selectedStore,
                     useCustomExcludedFiles: false,
@@ -228,7 +239,7 @@ namespace VecTool.UI.WinUI
                 CloseButtonText = "OK",
                 XamlRoot = this.Content.XamlRoot
             };
-            _ = dialog.ShowAsync();
+            dialog.ShowAsync();
         }
 
         private void ShowWarningDialog(string title, string message)
@@ -240,7 +251,7 @@ namespace VecTool.UI.WinUI
                 CloseButtonText = "OK",
                 XamlRoot = this.Content.XamlRoot
             };
-            _ = dialog.ShowAsync();
+            dialog.ShowAsync();
         }
 
         private void ShowSuccessDialog(string title, string message)
@@ -252,7 +263,7 @@ namespace VecTool.UI.WinUI
                 CloseButtonText = "OK",
                 XamlRoot = this.Content.XamlRoot
             };
-            _ = dialog.ShowAsync();
+            dialog.ShowAsync();
         }
 
         #endregion

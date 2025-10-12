@@ -1,12 +1,11 @@
-﻿// FULL FILE VERSION
+﻿// ✅ FULL FILE VERSION
 // Path: src/UI/VecTool.UI.WinUI/App.xaml.cs
-
 // Required Imports Template
+
 using NUnit.Framework;
 using Shouldly;
 using System;
 using NLog; // NLog is mandatory for structured logging
-
 using Microsoft.UI.Xaml;
 
 namespace VecTool.UI.WinUI
@@ -15,29 +14,33 @@ namespace VecTool.UI.WinUI
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
+        // ✅ NEW: Public property for MainWindow instance (Phase 3.1 Fix)
+        public MainWindow? MainWindow { get; private set; }
+
         public App()
         {
-            // Initialize NLog once; never throw if config is missing, per guide
+            // Initialize NLog once (never throw if config is missing, per guide)
             TryInitializeLogging();
 
             // Initialize generated XAML components
             this.InitializeComponent();
 
             // Capture UI-thread exceptions and log them with structured properties
-            this.UnhandledException += App_UnhandledException;
+            this.UnhandledException += AppUnhandledException;
         }
+
         private static void TryInitializeLogging()
         {
             try
             {
-                // Safe bootstrap: Seq + console with buffering, non-throwing
+                // Safe bootstrap (Seq + console with buffering, non-throwing)
                 // Reads colocated NLog.config if present
-                LogManager.Setup().LoadConfigurationFromFile(optional: true);
+                LogManager.Setup().LoadConfiguration(optional: true);
                 Log.Info("WinUI App bootstrap complete");
             }
             catch
             {
-                // Do not throw; logging must not crash the process
+                // Do not throw – logging must not crash the process
             }
         }
 
@@ -45,18 +48,21 @@ namespace VecTool.UI.WinUI
         {
             VecTool.UI.WinUI.Infrastructure.NLogBootstrap.Init(); // idempotent, safe
             var log = NLog.LogManager.GetCurrentClassLogger();
-            log.Info("WinUI application starting {Application} with {ProcessId}", "VecTool.UI.WinUI", Environment.ProcessId);
-            var window = new MainWindow();
-            window.Activate();
+            log.Info("WinUI application starting: {Application} with {ProcessId}", "VecTool.UI.WinUI", Environment.ProcessId);
+
+            // ✅ NEW: Store MainWindow as public property for DI/service resolution
+            MainWindow = new MainWindow();
+            MainWindow.Activate();
+
             log.Info("MainWindow activated at {TimestampUtc}", DateTime.UtcNow);
         }
-         
-        private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+
+        private void AppUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
-            // Log exception with template and properties — do not crash the process unless policy dictates
+            // Log exception with template and properties (do not crash the process unless policy dictates)
             Log.Error(e.Exception, "Unhandled UI exception at {TimestampUtc}", DateTime.UtcNow);
 
-            // Preserve responsiveness; parity policy can adjust this if legacy behavior differs
+            // Preserve responsiveness (parity policy can adjust this if legacy behavior differs)
             e.Handled = true;
         }
     }
