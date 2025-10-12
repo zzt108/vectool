@@ -106,6 +106,7 @@ namespace VecTool.UI.WinUI
         /// </summary>
         private void ChkInheritExcludedFilesCheckedChanged(object sender, RoutedEventArgs e)
         {
+            if(TxtExcludedFiles is not null)
             TxtExcludedFiles.IsEnabled = !(ChkInheritExcludedFiles.IsChecked ?? true);
         }
 
@@ -114,7 +115,8 @@ namespace VecTool.UI.WinUI
         /// </summary>
         private void ChkInheritExcludedFoldersCheckedChanged(object sender, RoutedEventArgs e)
         {
-            TxtExcludedFolders.IsEnabled = !(ChkInheritExcludedFolders.IsChecked ?? true);
+            if (TxtExcludedFolders is not null)
+                TxtExcludedFolders.IsEnabled = !(ChkInheritExcludedFolders.IsChecked ?? true);
         }
 
         /// <summary>
