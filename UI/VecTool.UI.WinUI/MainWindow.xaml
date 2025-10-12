@@ -1,213 +1,194 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- File: UI/VecTool.UI.WinUI/MainWindow.xaml -->
-<!-- Phase 2.1: Add Remove Folder button to Main tab -->
-<Window
+﻿ // ✅ FULL FILE VERSION<Window
     x:Class="VecTool.UI.WinUI.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="VecTool">
+    Title="VecTool - WinUI 3"
+    Width="900"
+    Height="600">
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        <TabView>
+            <!-- ====================================== -->
+            <!-- MAIN TAB - Vector Store Operations     -->
+            <!-- ====================================== -->
+            <TabViewItem Header="Main" IconSource="Home">
+                <ScrollViewer>
+                    <StackPanel Margin="20" Spacing="15">
 
-        <!-- MenuBar mirrors WinForms MainForm menu structure -->
-        <MenuBar Grid.Row="0">
-            <MenuBarItem Title="File" x:Name="FileMenu">
-                <MenuFlyoutItem Text="Exit" x:Name="ExitMenu" Click="ExitMenuClick"/>
-            </MenuBarItem>
+                        <!-- Title -->
+                        <TextBlock Text="Vector Store Operations" 
+                                   Style="{StaticResource TitleTextBlockStyle}"/>
 
-            <MenuBarItem Title="Actions" x:Name="ActionsMenu">
-                <MenuFlyoutItem Text="Convert to MD" x:Name="ConvertToMdMenu" Click="ConvertToMdMenuClick"/>
-                <MenuFlyoutSeparator/>
-                <MenuFlyoutItem Text="Get Git Changes" x:Name="GetGitChangesMenu" Click="GetGitChangesMenuClick"/>
-                <MenuFlyoutItem Text="File Size Summary" x:Name="FileSizeSummaryMenu" Click="FileSizeSummaryMenuClick"/>
-                <MenuFlyoutItem Text="Run Tests" x:Name="RunTestsMenu" Click="RunTestsClick"/>
-            </MenuBarItem>
+                        <!-- Vector Store Selection Section -->
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Select Vector Store" 
+                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
 
-            <MenuBarItem Title="Help" x:Name="HelpMenu">
-                <MenuFlyoutItem Text="About" x:Name="AboutMenu" Click="AboutMenuClick"/>
-            </MenuBarItem>
-        </MenuBar>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="Vector Store:" 
+                                           VerticalAlignment="Center"
+                                           Width="100"/>
 
-        <!-- TabView with three tabs: Main, Settings, Recent Files -->
-        <TabView Grid.Row="1" x:Name="MainTabView" TabWidthMode="Equal" CanReorderTabs="False" CanDragTabs="False" IsAddTabButtonVisible="False">
-            <TabView.TabItems>
-
-                <!-- Main Tab - Vector Store Management -->
-                <TabViewItem Header="Main" x:Name="TabMain" IsClosable="False">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <Grid Padding="16" RowSpacing="12">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*" MinHeight="200"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Vector Store Management Header -->
-                            <TextBlock Grid.Row="0" 
-                                       Text="Vector Store Management" 
-                                       FontSize="18" 
-                                       FontWeight="SemiBold" 
-                                       Margin="0,0,0,8"/>
-
-                            <!-- Vector Store Selection + Select Folders Button -->
-                            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
+                                <!-- ✅ MODIFIED: Dynamic placeholder with default disabled state -->
                                 <ComboBox x:Name="ComboBoxVectorStores" 
-                                          PlaceholderText="VecToolDev" 
-                                          Width="300" 
-                                          SelectionChanged="ComboBoxVectorStoresSelectionChanged"/>
+                                          PlaceholderText="Create a vector store first" 
+                                          Width="300"
+                                          SelectionChanged="ComboBoxVectorStoresSelectionChanged"
+                                          IsEnabled="False"/>
+
                                 <Button x:Name="BtnSelectFolders" 
                                         Content="Select Folders..." 
-                                        Click="BtnSelectFoldersClick"/>
+                                        Click="BtnSelectFoldersClick"
+                                        IsEnabled="False"/>
                             </StackPanel>
+                        </StackPanel>
 
-                            <!-- New Vector Store Creation + Remove Folder Button -->
-                            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12">
+                        <!-- Create New Vector Store Section -->
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Create New Vector Store" 
+                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="Name:" 
+                                           VerticalAlignment="Center"
+                                           Width="100"/>
+
                                 <TextBox x:Name="TxtNewVectorStoreName" 
-                                         PlaceholderText="New vector store name..." 
+                                         PlaceholderText="Enter vector store name"
                                          Width="300"/>
-                                <Button x:Name="BtnCreateNewVectorStore" 
-                                        Content="Create" 
-                                        Click="BtnCreateNewVectorStoreClick"/>
 
-                                <!-- ✅ NEW: Remove Folder button -->
-                                <Button x:Name="BtnRemoveFolder" 
-                                        Content="Remove Folder" 
-                                        Click="BtnRemoveFolderClick"
-                                        Margin="100,0,0,0"/>
-                            </StackPanel>
-
-                            <!-- Selected Folders ListBox -->
-                            <Border Grid.Row="3" 
-                                    BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}" 
-                                    BorderThickness="1" 
-                                    CornerRadius="4" 
-                                    Padding="8" 
-                                    Margin="0,12,0,0">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <ListBox x:Name="LstSelectedFolders" 
-                                             SelectionMode="Multiple" 
-                                             Background="Transparent" 
-                                             BorderThickness="0"/>
-                                </ScrollViewer>
-                            </Border>
-                        </Grid>
-                    </ScrollViewer>
-                </TabViewItem>
-
-                <!-- Settings Tab - Vector Store Exclusion Settings -->
-                <TabViewItem Header="Settings" x:Name="TabSettings" IsClosable="False">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <Grid Padding="16" RowSpacing="16">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Header -->
-                            <TextBlock Grid.Row="0" 
-                                       Text="Vector Store Settings" 
-                                       FontSize="18" 
-                                       FontWeight="SemiBold" 
-                                       Margin="0,0,0,8"/>
-
-                            <!-- Vector Store Selector -->
-                            <ComboBox Grid.Row="1" 
-                                      x:Name="CmbSettingsVectorStore" 
-                                      PlaceholderText="Select vector store..." 
-                                      Width="300" 
-                                      HorizontalAlignment="Left" 
-                                      SelectionChanged="CmbSettingsVectorStoreSelectionChanged"/>
-
-                            <!-- Excluded Files Section -->
-                            <StackPanel Grid.Row="2" Spacing="8">
-                                <CheckBox x:Name="ChkInheritExcludedFiles" 
-                                          Content="Inherit Excluded Files from Global Settings" 
-                                          IsChecked="True" 
-                                          Checked="ChkInheritExcludedFilesCheckedChanged" 
-                                          Unchecked="ChkInheritExcludedFilesCheckedChanged"/>
-                                <TextBlock Text="Excluded Files (one pattern per line)" 
-                                           FontWeight="SemiBold" 
-                                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
-                                <TextBox x:Name="TxtExcludedFiles" 
-                                         AcceptsReturn="True" 
-                                         TextWrapping="Wrap" 
-                                         Height="150" 
-                                         IsEnabled="False" 
-                                         PlaceholderText="*.exe&#x0a;*.dll&#x0a;*.log"/>
-                            </StackPanel>
-
-                            <!-- Excluded Folders Section -->
-                            <StackPanel Grid.Row="3" Spacing="8">
-                                <CheckBox x:Name="ChkInheritExcludedFolders" 
-                                          Content="Inherit Excluded Folders from Global Settings" 
-                                          IsChecked="True" 
-                                          Checked="ChkInheritExcludedFoldersCheckedChanged" 
-                                          Unchecked="ChkInheritExcludedFoldersCheckedChanged"/>
-                                <TextBlock Text="Excluded Folders (one name per line)" 
-                                           FontWeight="SemiBold" 
-                                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
-                                <TextBox x:Name="TxtExcludedFolders" 
-                                         AcceptsReturn="True" 
-                                         TextWrapping="Wrap" 
-                                         Height="150" 
-                                         IsEnabled="False" 
-                                         PlaceholderText="bin&#x0a;obj&#x0a;node_modules"/>
-                            </StackPanel>
-
-                            <!-- Action Buttons -->
-                            <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="12">
-                                <Button x:Name="BtnSaveVsSettings" 
-                                        Content="Save Settings" 
-                                        Click="BtnSaveVsSettingsClick" 
+                                <Button Content="Create" 
+                                        Click="BtnCreateNewVectorStoreClick"
                                         Style="{StaticResource AccentButtonStyle}"/>
-                                <Button x:Name="BtnResetVsSettings" 
-                                        Content="Reset to Global" 
-                                        Click="BtnResetVsSettingsClick"/>
                             </StackPanel>
+                        </StackPanel>
 
-                            <!-- Info Text -->
-                            <TextBlock Grid.Row="5" 
-                                       Text="Tip: Unchecking 'Inherit' allows custom exclusion patterns for this vector store." 
-                                       Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" 
-                                       FontSize="12" 
-                                       TextWrapping="Wrap" 
-                                       Margin="0,8,0,0"/>
-                        </Grid>
-                    </ScrollViewer>
-                </TabViewItem>
+                        <!-- Vector Store Operations Section -->
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Operations" 
+                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
 
-                <!-- Recent Files Tab - Frame hosting RecentFilesPage -->
-                <TabViewItem Header="Recent Files" x:Name="TabRecentFiles" IsClosable="False">
-                    <Frame x:Name="RecentFilesFrame"/>
-                </TabViewItem>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button Content="Build Index" 
+                                        Click="BtnBuildIndexClick"/>
 
-            </TabView.TabItems>
+                                <Button Content="Query" 
+                                        Click="BtnQueryClick"/>
+
+                                <Button Content="Clear Index" 
+                                        Click="BtnClearIndexClick"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Status Output -->
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Status" 
+                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                            <TextBox x:Name="TxtStatus" 
+                                     PlaceholderText="Operation status will appear here..."
+                                     IsReadOnly="True"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     Height="150"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabViewItem>
+
+            <!-- ====================================== -->
+            <!-- SETTINGS TAB                           -->
+            <!-- ====================================== -->
+            <TabViewItem Header="Settings" IconSource="Setting">
+                <ScrollViewer>
+                    <StackPanel Margin="20" Spacing="15">
+
+                        <TextBlock Text="Settings" 
+                                   Style="{StaticResource TitleTextBlockStyle}"/>
+
+                        <!-- API Configuration -->
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="OpenAI Configuration" 
+                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="API Key:"/>
+                                <PasswordBox x:Name="TxtApiKey" 
+                                             PlaceholderText="Enter OpenAI API key"
+                                             Width="400"
+                                             HorizontalAlignment="Left"/>
+
+                                <TextBlock Text="Model:"/>
+                                <ComboBox x:Name="ComboBoxModel" 
+                                          Width="400"
+                                          HorizontalAlignment="Left">
+                                    <ComboBoxItem Content="text-embedding-ada-002" IsSelected="True"/>
+                                    <ComboBoxItem Content="text-embedding-3-small"/>
+                                    <ComboBoxItem Content="text-embedding-3-large"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Vector Store Settings -->
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Vector Store Settings" 
+                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                            <StackPanel Spacing="8">
+                                <CheckBox x:Name="ChkAutoSave" 
+                                          Content="Auto-save changes"
+                                          IsChecked="True"/>
+
+                                <CheckBox x:Name="ChkVerboseLogging" 
+                                          Content="Enable verbose logging"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Action Buttons -->
+                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+                            <Button Content="Save Settings" 
+                                    Click="BtnSaveSettingsClick"
+                                    Style="{StaticResource AccentButtonStyle}"/>
+
+                            <Button Content="Reset to Defaults" 
+                                    Click="BtnResetSettingsClick"/>
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabViewItem>
+
+            <!-- ====================================== -->
+            <!-- ABOUT TAB                              -->
+            <!-- ====================================== -->
+            <TabViewItem Header="About" IconSource="Help">
+                <ScrollViewer>
+                    <StackPanel Margin="20" Spacing="15">
+
+                        <TextBlock Text="About VecTool" 
+                                   Style="{StaticResource TitleTextBlockStyle}"/>
+
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="VecTool - Vector Store Management Tool"/>
+                            <TextBlock x:Name="TxtVersion" 
+                                       Text="Version: 4.1.0"
+                                       Foreground="Gray"/>
+                            <TextBlock Text="Built with WinUI 3 and NLog"
+                                       Foreground="Gray"/>
+                        </StackPanel>
+
+                        <HyperlinkButton Content="View Documentation" 
+                                         NavigateUri="https://github.com/yourusername/vectool"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabViewItem>
+
         </TabView>
-
-        <!-- Status bar mirrors WinForms StatusStrip with status label and progress bar -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" Padding="8" Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
-            <TextBlock x:Name="StatusText" 
-                       Text="Ready" 
-                       VerticalAlignment="Center" 
-                       Foreground="{ThemeResource SystemControlForegroundBaseHighBrush}"/>
-            <ProgressBar x:Name="StatusProgress" 
-                         Width="200" 
-                         Height="8" 
-                         IsIndeterminate="False" 
-                         VerticalAlignment="Center"/>
-        </StackPanel>
     </Grid>
 </Window>
