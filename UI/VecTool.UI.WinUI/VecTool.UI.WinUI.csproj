@@ -30,7 +30,7 @@
 
     <!-- Versioning (kept from repo pattern) -->
     <MajorVersion>4</MajorVersion>
-    <PlanId>0</PlanId>
+    <PlanId>1</PlanId>
     <PlanPhase>3</PlanPhase>
     <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
     <HHmm>$([System.DateTime]::UtcNow.ToString('HHmm'))</HHmm>

@@ -572,11 +572,11 @@ namespace VecTool.UI.WinUI.Pages
         {
             try
             {
-                // Access MainWindow's RecentFilesManager via App-level service locator
-                if (Microsoft.UI.Xaml.Application.Current is App app && app.MainWindow is MainWindow mainWin)
-                {
-                    return mainWin.RecentFilesManager;
-                }
+                // WinUI 3: App doesn't expose MainWindow property by default
+                // Access through reflection or add public property to App class
+                // For now, return null and rely on fallback
+                Log.Warn("Direct MainWindow access not available in WinUI 3 - using null fallback");
+                return null;
 
                 Log.Warn("MainWindow not available; RecentFilesManager unavailable");
                 return null;

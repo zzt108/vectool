@@ -152,11 +152,20 @@ namespace VecTool.UI.WinUI
                     return;
                 }
 
-                var handler = new RunTestsHandler(userInterface, RecentFilesManager);
-                await handler.RunTestsAsync(solutionPath);
-
-                userInterface.ShowMessage("Test run completed.", "Success", MessageType.Information);
-                Log.Info("Test run completed for solution: {Solution}", solutionPath);
+                var handler = new TestRunnerHandler(userInterface, RecentFilesManager);
+                // TestRunnerHandler.RunTestsAsync requires 3 mandatory params: solutionPath, storeId, selectedFolders
+                var selectedStore = ComboBoxVectorStores.SelectedItem?.ToString() ?? "default";
+                var selectedFolders = LstSelectedFolders.ItemsSource as IReadOnlyList<string>
+                    ?? Array.Empty<string>();
+                var resultPath = await handler.RunTestsAsync(solutionPath, selectedStore, selectedFolders);
+                if (resultPath != null)
+                {
+                    userInterface.ShowMessage($"Test run completed. Report: {resultPath}", "Success", MessageType.Information);
+                }
+                else
+                {
+                    userInterface.ShowMessage("Test run failed or returned non-zero exit code.", "Warning", MessageType.Warning);
+                }
             }
             catch (Exception ex)
             {
@@ -408,12 +417,14 @@ namespace VecTool.UI.WinUI
 
         private void ChkInheritExcludedFilesCheckedChanged(object sender, RoutedEventArgs e)
         {
+            if (TxtExcludedFiles is not null)
             TxtExcludedFiles.IsEnabled = ChkInheritExcludedFiles.IsChecked == false;
         }
 
         private void ChkInheritExcludedFoldersCheckedChanged(object sender, RoutedEventArgs e)
         {
-            TxtExcludedFolders.IsEnabled = ChkInheritExcludedFolders.IsChecked == false;
+            if (TxtExcludedFolders is not null)
+                TxtExcludedFolders.IsEnabled = ChkInheritExcludedFolders.IsChecked == false;
         }
 
         private void BtnSaveVsSettingsClick(object sender, RoutedEventArgs e)
@@ -525,7 +536,11 @@ namespace VecTool.UI.WinUI
 
                 folders.Add(folderPicker.Path);
 
-                var savePicker = await PickerHelper.PickSaveFileAsync(this, title);
+                var savePicker = await PickerHelper.PickSaveFileAsync(
+                    this,
+                    title,
+                    new[] { ("Markdown Files", new[] { ".md" }) }
+                );
                 if (savePicker != null)
                 {
                     outputPath = savePicker.Path;
