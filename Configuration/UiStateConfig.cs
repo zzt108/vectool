@@ -1,4 +1,6 @@
-﻿// Description: Persists simple UI state (last selected vector store, Recent Files layout) 
+﻿// ✅ FULL FILE VERSION
+// Path: Configuration/UiStateConfig.cs
+// Description: Persists simple UI state (last selected vector store, Recent Files layout) 
 // as JSON next to vectorStoreFolders.json if configured, otherwise under Generated.
 // Also exposes legacy Recent Files getters/setters backed by ISettingsStore.
 // Now includes vector-store APIs for Main tab (Phase 2.1).
@@ -165,7 +167,7 @@ namespace VecTool.Configuration
             try
             {
                 store.Set(KEY_SELECTED_VECTORSTORE, storeName);
-                Log.Info("Vector store selection persisted", new { Store = storeName });
+                Log.Info("Vector store selection persisted: {Store}", storeName);
             }
             catch (Exception ex)
             {
@@ -218,7 +220,7 @@ namespace VecTool.Configuration
                 {
                     all[storeName] = new VectorStoreConfig();
                     VectorStoreConfig.SaveAll(all);
-                    Log.Info("Vector store added to config", new { Store = storeName });
+                    Log.Info("Vector store added to config: {Store}", storeName);
                 }
                 else
                 {
@@ -236,11 +238,11 @@ namespace VecTool.Configuration
         /// </summary>
         public void AddFolderToVectorStore(string storeName, string folderPath)
         {
-            if (string.IsNullOrWhiteSpace(storeName) || string.IsNullOrWhiteSpace(folderPath))
-            {
-                Log.Warn("Attempted to add folder with empty store or path");
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(storeName))
+                throw new ArgumentException("Store name cannot be empty", nameof(storeName));
+
+            if (string.IsNullOrWhiteSpace(folderPath))
+                throw new ArgumentException("Folder path cannot be empty", nameof(folderPath));
 
             try
             {
@@ -253,19 +255,64 @@ namespace VecTool.Configuration
                     Log.Debug("Created new vector store config for: {Store}", storeName);
                 }
 
-                if (cfg.AddFolderPath(folderPath))
-                {
-                    VectorStoreConfig.SaveAll(all);
-                    Log.Info("Folder added to vector store", new { Store = storeName, Path = folderPath });
-                }
-                else
+                // Avoid duplicates (case-insensitive)
+                if (cfg.FolderPaths.Any(f => string.Equals(f, folderPath, StringComparison.OrdinalIgnoreCase)))
                 {
                     Log.Debug("Folder already exists in store: {Path}", folderPath);
+                    return;
                 }
+
+                cfg.FolderPaths.Add(folderPath);
+                VectorStoreConfig.SaveAll(all);
+                Log.Info("Folder added to vector store: {Store}, {Path}", storeName, folderPath);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Failed to add folder to store: {Store}, {Path}", storeName, folderPath);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Remove folder from a vector store's folder collection.
+        /// </summary>
+        public void RemoveFolderFromVectorStore(string storeName, string folderPath)
+        {
+            if (string.IsNullOrWhiteSpace(storeName))
+                throw new ArgumentException("Store name cannot be empty", nameof(storeName));
+
+            if (string.IsNullOrWhiteSpace(folderPath))
+                throw new ArgumentException("Folder path cannot be empty", nameof(folderPath));
+
+            try
+            {
+                var all = VectorStoreConfig.LoadAll();
+
+                if (!all.TryGetValue(storeName, out var cfg))
+                {
+                    Log.Debug("Vector store not found, nothing to remove: {Store}", storeName);
+                    return;
+                }
+
+                // Remove case-insensitive match
+                var toRemove = cfg.FolderPaths
+                    .FirstOrDefault(f => string.Equals(f, folderPath, StringComparison.OrdinalIgnoreCase));
+
+                if (toRemove != null)
+                {
+                    cfg.FolderPaths.Remove(toRemove);
+                    VectorStoreConfig.SaveAll(all);
+                    Log.Info("Folder removed from vector store: {Store}, {Path}", storeName, folderPath);
+                }
+                else
+                {
+                    Log.Debug("Folder not found in store: {Path}", folderPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to remove folder from store: {Store}, {Path}", storeName, folderPath);
+                throw;
             }
         }
 
