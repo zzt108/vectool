@@ -55,8 +55,9 @@
                     <ComboBox Grid.Row="1" 
                              x:Name="ComboBoxVectorStores"
                              Header="Vector Store"
-                             PlaceholderText="Select a vector store..."
-                             HorizontalAlignment="Stretch"
+                              IsEnabled="False"
+                              PlaceholderText="Create a vector store first"
+                              HorizontalAlignment="Stretch"
                              Margin="0,0,0,10"
                              SelectionChanged="comboBoxVectorStoresSelectedIndexChanged"/>
 

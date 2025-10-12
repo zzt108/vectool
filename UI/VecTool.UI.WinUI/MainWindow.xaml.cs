@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using VecTool.Configuration;
 using VecTool.RecentFiles;
+using VecTool.UI.WinUI.Infrastructure;
 
 namespace VecTool.UI.WinUI
 {
@@ -15,12 +16,34 @@ namespace VecTool.UI.WinUI
 
         private UiStateConfig uiStateConfig;
 
-        // ✅ NEW: Public property to match external references
+        #region Test Accessors
+
+        /// <summary>
+        /// Exposes ComboBox for unit testing.
+        /// In WinUI 3, x:Name fields are internal/private in generated code.
+        /// </summary>
+        public ComboBox ComboBoxVectorStoresAccessor => ComboBoxVectorStores;
+
+        /// <summary>
+        /// Exposes Select Folders button for unit testing.
+        /// </summary>
+        public Button BtnSelectFoldersAccessor => BtnSelectFolders;
+        public void btnCreateNewVectorStoreClickAccessor(object sender, RoutedEventArgs e) => btnCreateNewVectorStoreClick(sender, e);
+
+        #endregion
+
+
         public IRecentFilesManager? RecentFilesManager { get; private set; }
 
         public MainWindow()
         {
             this.InitializeComponent();
+            NLogBootstrap.Init(); // Ensure logging is ready
+            // Initialize configuration
+            uiStateConfig = UiStateConfig.FromAppConfig();
+
+            InitializeMainTab();  //  Initialize empty state handling
+            LoadVectorStores();
 
             // WinUI 3: set size programmatically (no Width/Height on Window in XAML)
             IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
@@ -28,8 +51,6 @@ namespace VecTool.UI.WinUI
             var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
             appWindow.Resize(new Windows.Graphics.SizeInt32(1200, 700));
 
-            // Initialize configuration
-            uiStateConfig = UiStateConfig.FromAppConfig();
 
             // Initialize RecentFilesManager
             try
@@ -48,6 +69,34 @@ namespace VecTool.UI.WinUI
             // Populate UI
             LoadVectorStores();
         }
+
+        #region Main Tab Initialization
+
+        /// <summary>
+        /// Initializes Main tab controls based on available vector stores.
+        /// Disables dropdown and related controls when no stores exist.
+        /// </summary>
+        private void InitializeMainTab()
+        {
+            var allStores = VectorStoreConfig.LoadAll();
+            bool hasStores = allStores.Count > 0;
+
+            // Enable/disable controls based on store availability
+            ComboBoxVectorStores.IsEnabled = hasStores;
+            BtnSelectFolders.IsEnabled = hasStores; // Assuming this button exists
+
+            if (!hasStores)
+            {
+                Log.Info("No vector stores available - Main tab controls disabled");
+            }
+            else
+            {
+                ComboBoxVectorStores.SelectedItem = uiStateConfig.GetSelectedVectorStore();
+                Log.Info("Vector stores available: {Count}", allStores.Count);
+            }
+        }
+
+        #endregion
 
         #region Main Tab Event Handlers
 
@@ -89,6 +138,15 @@ namespace VecTool.UI.WinUI
                 }
 
                 uiStateConfig.AddVectorStore(storeName);
+
+                var hasStores = VectorStoreConfig.LoadAll().Count > 0;
+                if (hasStores)
+                {
+                    ComboBoxVectorStores.IsEnabled = true;
+                    BtnSelectFolders.IsEnabled = true;
+                    Log.Info("Main tab controls enabled after vector store creation");
+                }
+
                 LoadVectorStores();
                 ComboBoxVectorStores.SelectedItem = storeName;
                 TxtNewVectorStoreName.Text = string.Empty;

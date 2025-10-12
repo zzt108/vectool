@@ -203,6 +203,7 @@ namespace VecTool.Configuration
 
         /// <summary>
         /// Add a new store if missing, then save to JSON.
+        /// Loads, adds, then saves.
         /// </summary>
         public void AddVectorStore(string storeName)
         {
