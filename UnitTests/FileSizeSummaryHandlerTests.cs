@@ -170,6 +170,11 @@ namespace UnitTests
             {
                 // No-op for these tests; not required by the current assertions
             }
+
+            public void RegisterGeneratedFile(string filePath, RecentFileType fileType, IReadOnlyList<string> sourceFolders, long fileSizeBytes = 0, DateTimeOffset? generatedAt = null)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

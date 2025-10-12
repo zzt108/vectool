@@ -1,295 +1,628 @@
-// File: Vectool.UI.WinUI/Pages/RecentFilesPage.xaml.cs
+﻿// ✅ FULL FILE VERSION
+// Path: UI/VecTool.UI.WinUI/Pages/RecentFilesPage.xaml.cs
+// Phase 2, Option C: Complete Recent Files Integration with drag-drop support
 
-// Required Imports Template
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using NLog; // NLog is mandatory for structured logging
-using System.Collections.ObjectModel;
+using NLog;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using VecTool.Configuration;
 using VecTool.Core.RecentFiles;
+using VecTool.RecentFiles;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 
-namespace VecTool.UI.WinUI
+namespace VecTool.UI.WinUI.Pages
 {
     public sealed partial class RecentFilesPage : Page
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        // Persisted UI state (filter, specific store, last selection)
         private readonly UiStateConfig uiState;
-
-        // View data
-        private readonly ObservableCollection<RecentFileItem> items = new();
-        private readonly ObservableCollection<string> storeIds = new();
 
         public RecentFilesPage()
         {
             InitializeComponent();
 
-            // Subscribe to events AFTER InitializeComponent to avoid null reference
+            // Subscribe to events AFTER InitializeComponent
             Filter.SelectionChanged += FilterSelectionChanged;
             SpecificStore.SelectionChanged += SpecificStoreSelectionChanged;
 
-            // Resolve UiStateConfig from DI if available; fall back to in-memory store so page never crashes
-            uiState = TryResolve<UiStateConfig>()
-                      ?? new UiStateConfig(new InMemorySettingsStore());
+            // ✅ Wire drag-drop for GridView
+            Files.AllowDrop = true;
+            Files.DragOver += Files_DragOver;
+            Files.Drop += Files_Drop;
+            Files.DragItemsStarting += Files_DragItemsStarting;
+
+            // Resolve UiStateConfig from DI
+            uiState = TryResolveUiStateConfig() ?? new UiStateConfig(new InMemorySettingsStore());
 
             // Initialize UI with persisted state
             InitializeRecentFilesTab();
         }
 
-        // Initializes filters and store list from persisted state and binds items
+        #region Initialization
+
+        /// <summary>
+        /// Initialize Recent Files tab: load stores, set filters, bind data.
+        /// </summary>
         private void InitializeRecentFilesTab()
         {
-            var persistedFilter = uiState.GetRecentFilesFilter();
-            var persistedStoreId = uiState.GetRecentFilesSpecificStoreId();
+            try
+            {
+                // Load known stores into "Specific Store" dropdown
+                var storeIds = LoadKnownStoreIds().ToList();
+                SpecificStore.ItemsSource = storeIds;
 
-            // Set filter ComboBox selection by Tag
-            SetFilterSelection(persistedFilter);
+                // Restore persisted filter
+                var filter = uiState.GetRecentFilesFilter();
+                var storeId = uiState.GetRecentFilesSpecificStoreId();
 
-            // Populate SpecificStore ComboBox (placeholder; will be hydrated by service in app composition)
-            RefreshStoreIds(persistedStoreId);
+                // Set filter ComboBox
+                Filter.SelectedIndex = filter switch
+                {
+                    VectorStoreLinkFilter.All => 0,
+                    VectorStoreLinkFilter.Linked => 1,
+                    VectorStoreLinkFilter.Unlinked => 2,
+                    VectorStoreLinkFilter.SpecificStore => 3,
+                    _ => 0
+                };
 
-            // Enable/disable specific-store input based on filter
-            SpecificStore.IsEnabled = persistedFilter == VectorStoreLinkFilter.SpecificStore;
+                // Show/hide Specific Store dropdown
+                SpecificStore.Visibility = filter == VectorStoreLinkFilter.SpecificStore
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
 
-            // Bind items for current filter/storeId
-            BindItems(persistedFilter, persistedStoreId);
+                // Set specific store if applicable
+                if (!string.IsNullOrWhiteSpace(storeId) && storeIds.Contains(storeId))
+                {
+                    SpecificStore.SelectedItem = storeId;
+                }
 
-            Log.Info("RecentFiles initialized with {Filter} and {StoreId}", persistedFilter, persistedStoreId ?? "(null)");
+                // Bind items
+                BindItems(filter, storeId);
+
+                Log.Info("Recent Files tab initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to initialize Recent Files tab");
+                ShowErrorDialog("Initialization Error", ex.Message);
+            }
         }
 
-        // Event: Filter changed by user
+        #endregion
+
+        #region Filter Handlers
+
         private void FilterSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var filter = GetSelectedFilter();
 
-            if (SpecificStore == null) return;
+            // Show/hide Specific Store dropdown
+            SpecificStore.Visibility = filter == VectorStoreLinkFilter.SpecificStore
+                ? Visibility.Visible
+                : Visibility.Collapsed;
 
-            SpecificStore.IsEnabled = filter == VectorStoreLinkFilter.SpecificStore;
-
-            // When switching away from Specific, clear the store selection
-            string? storeId = filter == VectorStoreLinkFilter.SpecificStore ? GetSelectedStoreId() : null;
-
-            // Persist immediately
+            // Persist filter
             uiState.SetRecentFilesFilter(filter);
-            uiState.SetRecentFilesSpecificStoreId(storeId);
 
+            // Refresh grid
+            var storeId = GetSelectedStoreId();
             BindItems(filter, storeId);
-
-            var evt = new LogEventInfo(LogLevel.Info, Log.Name, "RecentFiles filter changed");
-            evt.Properties["Filter"] = filter.ToString();
-            evt.Properties["StoreId"] = storeId ?? string.Empty;
-            Log.Log(evt);
         }
 
-        // Event: Specific store changed
         private void SpecificStoreSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var filter = GetSelectedFilter();
             var storeId = GetSelectedStoreId();
 
-            // Persist
-            uiState.SetRecentFilesFilter(filter);
+            // Persist specific store ID
             uiState.SetRecentFilesSpecificStoreId(storeId);
 
-            BindItems(filter, storeId);
-
-            var evt = new LogEventInfo(LogLevel.Info, Log.Name, "RecentFiles specific store changed");
-            evt.Properties["Filter"] = filter.ToString();
-            evt.Properties["StoreId"] = storeId ?? string.Empty;
-            Log.Log(evt);
-        }
-
-        // Event: Manual refresh
-        private void RefreshBtnClick(object sender, RoutedEventArgs e)
-        {
+            // Refresh grid
             var filter = GetSelectedFilter();
-            var storeId = GetSelectedStoreId();
-
             BindItems(filter, storeId);
-            Log.Info("RecentFiles refreshed for {Filter} and {StoreId}", filter, storeId ?? "(null)");
         }
 
-        // Event: Double-tap to open (placeholder for real navigation/open behavior)
-        private void FilesDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            if (Files.SelectedItem is RecentFileItem item)
-            {
-                uiState.SetRecentFilesLastSelection(item.Path);
+        #endregion
 
-                var evt = new LogEventInfo(LogLevel.Info, Log.Name, "RecentFiles item double-tapped");
-                evt.Properties["FileName"] = item.FileName;
-                evt.Properties["Path"] = item.Path;
-                evt.Properties["LinkedStoreName"] = item.LinkedStoreName ?? string.Empty;
-                Log.Log(evt);
+        #region Data Binding
 
-                // TODO: In real app, open file or navigate here
-            }
-        }
-
-        // Event: Single click action (selection)
-        private void FilesItemClick(object sender, ItemClickEventArgs e)
-        {
-            if (e.ClickedItem is RecentFileItem item)
-            {
-                uiState.SetRecentFilesLastSelection(item.Path);
-                Log.Info("RecentFiles item clicked: {FileName} at {Path}", item.FileName, item.Path);
-            }
-        }
-
-        // Event: Single click action (selection)
-        private void Files_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            if (e.ClickedItem is RecentFileItem item)
-            {
-                uiState.SetRecentFilesLastSelection(item.Path);
-                Log.Info("RecentFiles item clicked: {FileName} at {Path}", item.FileName, item.Path);
-            }
-        }
-
-        // Event: Double-tap to open (placeholder for real navigation/open behavior)
-        private void Files_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            if (Files.SelectedItem is RecentFileItem item)
-            {
-                // In real app: open file or navigate; here we just log
-                var evt = new LogEventInfo(LogLevel.Info, Log.Name, "RecentFiles item double-tapped");
-                evt.Properties["FileName"] = item.FileName;
-                evt.Properties["Path"] = item.Path;
-                evt.Properties["LinkedStoreName"] = item.LinkedStoreName ?? string.Empty;
-                Log.Log(evt);
-            }
-        }
-
-        // Reads current filter from the ComboBox Tag values
-        private VectorStoreLinkFilter GetSelectedFilter()
-        {
-            if (Filter.SelectedItem is ComboBoxItem cbi && cbi.Tag is string tag)
-            {
-                if (Enum.TryParse<VectorStoreLinkFilter>(tag, ignoreCase: true, out var parsed))
-                    return parsed;
-            }
-            return VectorStoreLinkFilter.All;
-        }
-
-        // Applies ComboBox selection for filter based on enum value
-        private void SetFilterSelection(VectorStoreLinkFilter filter)
-        {
-            foreach (var obj in Filter.Items.OfType<ComboBoxItem>())
-            {
-                if ((obj.Tag as string)?.Equals(filter.ToString(), StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    obj.IsSelected = true;
-                    return;
-                }
-            }
-            // Default to All if not found
-            if (Filter.Items.OfType<ComboBoxItem>().FirstOrDefault() is { } first)
-            {
-                first.IsSelected = true;
-            }
-        }
-
-        // Gets currently selected specific store id (or null)
-        private string? GetSelectedStoreId()
-        {
-            return SpecificStore.SelectedItem as string;
-        }
-
-        // Populate SpecificStore list, optionally select a given id
-        private void RefreshStoreIds(string? selectStoreId)
-        {
-            storeIds.Clear();
-
-            // Placeholder: load known store ids; in production, populate via service
-            foreach (var id in LoadKnownStoreIds())
-            {
-                storeIds.Add(id);
-            }
-
-            SpecificStore.ItemsSource = storeIds;
-
-            if (!string.IsNullOrWhiteSpace(selectStoreId) && storeIds.Contains(selectStoreId))
-            {
-                SpecificStore.SelectedItem = selectStoreId;
-            }
-            else
-            {
-                SpecificStore.SelectedIndex = storeIds.Count > 0 ? 0 : -1;
-            }
-        }
-
-        // Rebinds file items based on filter and store
+        /// <summary>
+        /// Load recent files, apply filter, and bind to GridView.
+        /// </summary>
         private void BindItems(VectorStoreLinkFilter filter, string? storeId)
-        {
-            items.Clear();
-
-            foreach (var vm in LoadRecentFiles(filter, storeId))
-            {
-                items.Add(vm);
-            }
-
-            Files.ItemsSource = items;
-        }
-
-        // Loads recent file view models (placeholder; replace with service when wired)
-        private IEnumerable<RecentFileItem> LoadRecentFiles(VectorStoreLinkFilter filter, string? storeId)
-        {
-            // TODO: Replace with IRecentFilesService.GetRecentFiles(filter, storeId) mapping when DI is wired
-            // For now, return an empty list to keep the page functional
-            yield break;
-        }
-
-        // Loads known store ids (placeholder; replace with service)
-        private IEnumerable<string> LoadKnownStoreIds()
-        {
-            // TODO: Replace with a service call returning known vector store ids
-            return Enumerable.Empty<string>();
-        }
-
-        // Generic DI resolver that does not throw
-        private static T? TryResolve<T>() where T : class
         {
             try
             {
-                var app = Application.Current as App;
-                var sp = app?.GetType().GetProperty("Services")?.GetValue(app) as IServiceProvider;
-                return sp?.GetService<T>();
+                var items = LoadRecentFiles(filter, storeId).ToList();
+                Files.ItemsSource = items;
+
+                Log.Debug("Bound {Count} recent files to grid (filter: {Filter}, store: {Store})",
+                    items.Count, filter, storeId ?? "(none)");
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Error(ex, "Failed to bind recent files");
+                Files.ItemsSource = new List<RecentFileItem>();
+            }
+        }
+
+        /// <summary>
+        /// Load recent files from RecentFilesManager and map to view models with filtering.
+        /// </summary>
+        private IEnumerable<RecentFileItem> LoadRecentFiles(VectorStoreLinkFilter filter, string? storeId)
+        {
+            // ✅ Resolve IRecentFilesManager from MainWindow
+            var manager = TryResolveRecentFilesManager();
+            if (manager == null)
+            {
+                Log.Warn("IRecentFilesManager not available; returning empty list");
+                yield break;
+            }
+
+            // ✅ Get all recent files
+            var allFiles = manager.GetRecentFiles();
+
+            // ✅ Map RecentFileInfo → RecentFileItem with filtering
+            foreach (var info in allFiles)
+            {
+                // Determine linked store name from SourceFolders
+                string? linkedStoreName = info.SourceFolders.Count > 0
+                    ? DetermineStoreNameFromFolder(info.SourceFolders.First())
+                    : null;
+
+                bool isLinked = !string.IsNullOrWhiteSpace(linkedStoreName);
+
+                // Apply filter logic
+                bool include = filter switch
+                {
+                    VectorStoreLinkFilter.All => true,
+                    VectorStoreLinkFilter.Linked => isLinked,
+                    VectorStoreLinkFilter.Unlinked => !isLinked,
+                    VectorStoreLinkFilter.SpecificStore =>
+                        string.Equals(linkedStoreName, storeId, StringComparison.OrdinalIgnoreCase),
+                    _ => true
+                };
+
+                if (!include) continue;
+
+                // Map to view model
+                yield return new RecentFileItem(
+                    path: info.FilePath,
+                    linkedStoreName: linkedStoreName
+                );
+            }
+        }
+
+        /// <summary>
+        /// Load known vector store IDs for "Specific Store" dropdown.
+        /// </summary>
+        private IEnumerable<string> LoadKnownStoreIds()
+        {
+            try
+            {
+                var all = VectorStoreConfig.LoadAll();
+                return all.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to load vector store IDs for Recent Files filter");
+                return Array.Empty<string>();
+            }
+        }
+
+        #endregion
+
+        #region Drag-Drop Support
+
+        /// <summary>
+        /// Handle drag-over to set cursor effect for inbound drops.
+        /// </summary>
+        private void Files_DragOver(object sender, DragEventArgs e)
+        {
+            // Check if dropped data contains storage items (files)
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
+            {
+                e.AcceptedOperation = DataPackageOperation.Copy;
+                e.DragUIOverride.Caption = "Drop to add files";
+            }
+            else
+            {
+                e.AcceptedOperation = DataPackageOperation.None;
+            }
+        }
+
+        /// <summary>
+        /// Handle file drop from Explorer (inbound drag-drop).
+        /// </summary>
+        private async void Files_Drop(object sender, DragEventArgs e)
+        {
+            try
+            {
+                if (!e.DataView.Contains(StandardDataFormats.StorageItems))
+                {
+                    Log.Warn("Drop rejected: No storage items");
+                    return;
+                }
+
+                var items = await e.DataView.GetStorageItemsAsync();
+                var filePaths = items.OfType<StorageFile>().Select(f => f.Path).Where(File.Exists).ToList();
+
+                if (filePaths.Count == 0)
+                {
+                    Log.Warn("Drop rejected: No valid files");
+                    return;
+                }
+
+                var manager = TryResolveRecentFilesManager();
+                if (manager == null)
+                {
+                    Log.Error("Cannot add files: RecentFilesManager unavailable");
+                    return;
+                }
+
+                // Register each dropped file as a recent file
+                foreach (var path in filePaths)
+                {
+                    var fileInfo = new FileInfo(path);
+                    manager.RegisterGeneratedFile(
+                        path,
+                        RecentFileType.Unknown, // Infer from extension if needed
+                        Array.Empty<string>(),  // No source folders for manual drops
+                        fileInfo.Length
+                    );
+                }
+
+                manager.Save();
+
+                // Refresh grid
+                var filter = GetSelectedFilter();
+                var storeId = GetSelectedStoreId();
+                BindItems(filter, storeId);
+
+                Log.Info("Added {Count} files via drag-drop", filePaths.Count);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error handling file drop");
+                ShowErrorDialog("Drop Error", $"Failed to add files: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handle drag-out to external apps (outbound drag-drop).
+        /// </summary>
+        private async void Files_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
+        {
+            try
+            {
+                // Collect selected file paths that exist
+                var selectedPaths = e.Items
+                    .OfType<RecentFileItem>()
+                    .Where(item => File.Exists(item.Path))
+                    .Select(item => item.Path)
+                    .ToList();
+
+                if (selectedPaths.Count == 0)
+                {
+                    e.Cancel = true;
+                    Log.Warn("Drag canceled: No valid files selected");
+                    return;
+                }
+
+                // Create StorageFile references for WinUI drag-drop
+                var storageFiles = new List<IStorageItem>();
+                foreach (var path in selectedPaths)
+                {
+                    var file = await StorageFile.GetFileFromPathAsync(path);
+                    storageFiles.Add(file);
+                }
+
+                e.Data.SetStorageItems(storageFiles, readOnly: true);
+                e.Data.RequestedOperation = DataPackageOperation.Copy;
+
+                Log.Info("Drag started with {Count} files", storageFiles.Count);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error starting drag operation");
+                e.Cancel = true;
+            }
+        }
+
+        #endregion
+
+        #region Context Menu Handlers
+
+        /// <summary>
+        /// Item click handler for double-click to open file.
+        /// </summary>
+        private async void FilesItemClick(object sender, ItemClickEventArgs e)
+        {
+            var item = e.ClickedItem as RecentFileItem;
+            if (item == null || !File.Exists(item.Path))
+            {
+                Log.Warn("Cannot open file: Invalid selection or file missing");
+                return;
+            }
+
+            try
+            {
+                var file = await StorageFile.GetFileFromPathAsync(item.Path);
+                await Windows.System.Launcher.LaunchFileAsync(file);
+                Log.Info("Opened file: {Path}", item.Path);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to open file: {Path}", item.Path);
+                ShowErrorDialog("Failed to open file", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Double-tap handler for touch devices.
+        /// </summary>
+        private async void FilesDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            var item = Files.SelectedItem as RecentFileItem;
+            if (item != null)
+            {
+                await OpenFileAsync(item);
+            }
+        }
+
+        private async void MenuOpenFile_Click(object sender, RoutedEventArgs e)
+        {
+            var item = Files.SelectedItem as RecentFileItem;
+            if (item != null)
+            {
+                await OpenFileAsync(item);
+            }
+        }
+
+        private async Task OpenFileAsync(RecentFileItem item)
+        {
+            if (!File.Exists(item.Path))
+            {
+                Log.Warn("Cannot open file: File missing at {Path}", item.Path);
+                ShowErrorDialog("File Not Found", $"File no longer exists:\n{item.Path}");
+                return;
+            }
+
+            try
+            {
+                var file = await StorageFile.GetFileFromPathAsync(item.Path);
+                await Windows.System.Launcher.LaunchFileAsync(file);
+                Log.Info("Opened file: {Path}", item.Path);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to open file: {Path}", item.Path);
+                ShowErrorDialog("Failed to open file", ex.Message);
+            }
+        }
+
+        private async void MenuOpenFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var item = Files.SelectedItem as RecentFileItem;
+            if (item == null || string.IsNullOrWhiteSpace(item.Path))
+            {
+                Log.Warn("Cannot open folder: Invalid selection");
+                return;
+            }
+
+            try
+            {
+                var directory = Path.GetDirectoryName(item.Path);
+                if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+                {
+                    Log.Warn("Folder does not exist: {Directory}", directory);
+                    ShowErrorDialog("Folder Not Found", $"Folder no longer exists:\n{directory}");
+                    return;
+                }
+
+                var folder = await StorageFolder.GetFolderFromPathAsync(directory);
+                await Windows.System.Launcher.LaunchFolderAsync(folder);
+                Log.Info("Opened folder: {Directory}", directory);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to open folder for: {Path}", item.Path);
+                ShowErrorDialog("Failed to open folder", ex.Message);
+            }
+        }
+
+        private void MenuCopyPath_Click(object sender, RoutedEventArgs e)
+        {
+            var item = Files.SelectedItem as RecentFileItem;
+            if (item == null || string.IsNullOrWhiteSpace(item.Path))
+            {
+                Log.Warn("Cannot copy path: Invalid selection");
+                return;
+            }
+
+            try
+            {
+                var dataPackage = new DataPackage();
+                dataPackage.SetText(item.Path);
+                Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dataPackage);
+                Log.Info("Copied path to clipboard: {Path}", item.Path);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to copy path: {Path}", item.Path);
+                ShowErrorDialog("Copy Failed", ex.Message);
+            }
+        }
+
+        private void MenuRemove_Click(object sender, RoutedEventArgs e)
+        {
+            var item = Files.SelectedItem as RecentFileItem;
+            if (item == null)
+            {
+                Log.Warn("Cannot remove: Invalid selection");
+                return;
+            }
+
+            try
+            {
+                var manager = TryResolveRecentFilesManager();
+                if (manager == null)
+                {
+                    Log.Error("Cannot remove: RecentFilesManager unavailable");
+                    return;
+                }
+
+                // Remove from manager
+                manager.RemoveFile(item.Path);
+                manager.Save();
+
+                // Refresh grid
+                var filter = GetSelectedFilter();
+                var storeId = GetSelectedStoreId();
+                BindItems(filter, storeId);
+
+                Log.Info("Removed file from recent list: {Path}", item.Path);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to remove file: {Path}", item.Path);
+                ShowErrorDialog("Remove Failed", ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>
+        /// Get currently selected filter from ComboBox.
+        /// </summary>
+        private VectorStoreLinkFilter GetSelectedFilter()
+        {
+            return Filter.SelectedIndex switch
+            {
+                0 => VectorStoreLinkFilter.All,
+                1 => VectorStoreLinkFilter.Linked,
+                2 => VectorStoreLinkFilter.Unlinked,
+                3 => VectorStoreLinkFilter.SpecificStore,
+                _ => VectorStoreLinkFilter.All
+            };
+        }
+
+        /// <summary>
+        /// Get currently selected store ID from SpecificStore ComboBox.
+        /// </summary>
+        private string? GetSelectedStoreId()
+        {
+            return SpecificStore.SelectedItem?.ToString();
+        }
+
+        /// <summary>
+        /// Map source folder → vector store name using VectorStoreConfig.
+        /// </summary>
+        private string? DetermineStoreNameFromFolder(string sourceFolder)
+        {
+            try
+            {
+                var all = VectorStoreConfig.LoadAll();
+                foreach (var kvp in all)
+                {
+                    if (kvp.Value.FolderPaths?.Any(f => sourceFolder.Contains(f, StringComparison.OrdinalIgnoreCase)) == true)
+                    {
+                        return kvp.Key;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(ex, "Failed to resolve store name for folder: {Folder}", sourceFolder);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Resolve UiStateConfig from DI or create in-memory fallback.
+        /// </summary>
+        private UiStateConfig? TryResolveUiStateConfig()
+        {
+            try
+            {
+                // For now, create a simple in-memory store
+                // TODO: Replace with app-level DI when available
+                return UiStateConfig.FromAppConfig();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to resolve UiStateConfig");
                 return null;
             }
         }
+
+        /// <summary>
+        /// Resolve IRecentFilesManager from MainWindow's public property.
+        /// </summary>
+        private IRecentFilesManager? TryResolveRecentFilesManager()
+        {
+            try
+            {
+                // Access MainWindow's RecentFilesManager via App-level service locator
+                if (Microsoft.UI.Xaml.Application.Current is App app && app.MainWindow is MainWindow mainWin)
+                {
+                    return mainWin.RecentFilesManager;
+                }
+
+                Log.Warn("MainWindow not available; RecentFilesManager unavailable");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to resolve IRecentFilesManager");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Show error dialog to user.
+        /// </summary>
+        private async void ShowErrorDialog(string title, string message)
+        {
+            var dialog = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = "OK",
+                XamlRoot = this.XamlRoot
+            };
+            await dialog.ShowAsync();
+        }
+
+        #endregion
     }
 
-    // Minimal in-memory settings store to ensure the page never crashes if DI is not yet wired
-    internal sealed class InMemorySettingsStore : ISettingsStore
+    #region View Models
+
+    /// <summary>
+    /// View model for Recent Files grid items.
+    /// </summary>
+    public sealed class RecentFileItem
     {
-        private readonly Dictionary<string, string> _data = new(StringComparer.OrdinalIgnoreCase);
+        public string Path { get; }
+        public string? LinkedStoreName { get; }
+        public bool IsLinked => !string.IsNullOrWhiteSpace(LinkedStoreName);
 
-        public string? Get(string key) => _data.TryGetValue(key, out var v) ? v : null;
-
-        public void Set(string key, string? value)
+        public RecentFileItem(string path, string? linkedStoreName)
         {
-            _data[key] = value ?? string.Empty;
+            Path = path ?? throw new ArgumentNullException(nameof(path));
+            LinkedStoreName = linkedStoreName;
         }
     }
 
-    // Extension methods for UiStateConfig keys utilized by this page
-    internal static class UiStateConfigExtensions
-    {
-        public static string? GetRecentFilesSpecificStoreId(this UiStateConfig ui) => ui.GetString("ui.recentFiles.storeId");
-
-        public static void SetRecentFilesSpecificStoreId(this UiStateConfig ui, string? storeId) => ui.SetString("ui.recentFiles.storeId", storeId ?? string.Empty);
-
-        public static void SetRecentFilesLastSelection(this UiStateConfig ui, string path) => ui.SetString("ui.recentFiles.lastSelection", path);
-
-        // Generic helpers to bridge simple string values; real UiStateConfig has richer APIs
-        public static string? GetString(this UiStateConfig ui, string key) => ui.GetType().GetMethod("GetString", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)?.Invoke(ui, new object[] { key }) as string;
-
-        public static void SetString(this UiStateConfig ui, string key, string value) => ui.GetType().GetMethod("SetString", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)?.Invoke(ui, new object[] { key, value });
-    }
+    #endregion
 }

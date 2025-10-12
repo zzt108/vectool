@@ -134,7 +134,7 @@ namespace VecTool.Handlers
                     fileType: RecentFileType.TestResults,
                     sourceFolders: selectedFolders,
                     fileSizeBytes: length,
-                    generatedAtUtc: DateTime.UtcNow);
+                    generatedAt: DateTime.UtcNow);
             }
             catch
             {

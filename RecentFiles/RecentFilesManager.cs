@@ -1,112 +1,230 @@
-﻿// Path: RecentFiles/RecentFilesManager.cs
+﻿// ✅ FULL FILE VERSION
+// Path: RecentFiles/RecentFilesManager.cs
+// Phase 2, Option C: Recent Files integration with RemoveFile support
+
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using VecTool.Configuration;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace VecTool.RecentFiles
 {
     /// <summary>
-    /// Manages the recent files list with persistence and retention policies.
+    /// Manages recent files: registration, retrieval, cleanup, persistence.
+    /// Thread-safe for concurrent access.
     /// </summary>
     public sealed class RecentFilesManager : IRecentFilesManager
     {
-        private readonly object _gate = new();
-        private readonly List<RecentFileInfo> _items = new();
-        private readonly RecentFilesConfig _config;
-        private readonly IRecentFilesStore _store;
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+        private readonly RecentFilesConfig config;
+        private readonly IRecentFilesStore store;
+        private readonly object sync = new();
+        private readonly List<RecentFileInfo> files = new();
 
         public RecentFilesManager(RecentFilesConfig config, IRecentFilesStore store)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
-            _store = store ?? throw new ArgumentNullException(nameof(store));
-            Load();
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.store = store ?? throw new ArgumentNullException(nameof(store));
         }
 
+        /// <summary>
+        /// Gets all tracked recent files ordered by generation date (newest first).
+        /// </summary>
         public IReadOnlyList<RecentFileInfo> GetRecentFiles()
         {
-            lock (_gate)
+            lock (sync)
             {
-                return _items.OrderByDescending(f => f.GeneratedAt).ToList();
+                return files
+                    .OrderByDescending(f => f.GeneratedAt)
+                    .ToList();
             }
         }
 
-        public void RegisterGeneratedFile(string filePath, RecentFileType fileType, IReadOnlyList<string> sourceFolders, long fileSizeBytes = 0, DateTime? generatedAtUtc = null)
+        /// <summary>
+        /// Registers a newly generated file with metadata.
+        /// </summary>
+        public void RegisterGeneratedFile(
+            string filePath,
+            RecentFileType fileType,
+            IReadOnlyList<string> sourceFolders,
+            long fileSizeBytes = 0,
+            DateTimeOffset? generatedAt = null)
         {
-            var newItem = new RecentFileInfo(filePath, generatedAtUtc?.ToLocalTime() ?? DateTime.Now, fileType, sourceFolders.ToList(), fileSizeBytes);
-
-            lock (_gate)
+            if (string.IsNullOrWhiteSpace(filePath))
             {
-                _items.RemoveAll(i => i.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
-                _items.Add(newItem);
-                EnforcePolicies_NoLock();
+                throw new ArgumentException("File path cannot be empty", nameof(filePath));
             }
-            Save();
+
+            lock (sync)
+            {
+                // Remove existing entry for the same path (update scenario)
+                var existing = files.FirstOrDefault(f =>
+                    string.Equals(f.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+
+                if (existing != null)
+                {
+                    files.Remove(existing);
+                }
+
+                // Create new entry
+                var newFile = new RecentFileInfo(
+                    filePath,
+                    generatedAt ?? DateTimeOffset.UtcNow,
+                    fileType,
+                    sourceFolders?.ToList() ?? new List<string>(),
+                    fileSizeBytes);
+
+                files.Add(newFile);
+
+                Log.Info("Registered recent file: {Path} (type: {Type}, size: {Size} bytes)",
+                    filePath, fileType, fileSizeBytes);
+
+                // Enforce max count
+                EnforceMaxCount();
+            }
         }
 
-        public int CleanupExpiredFiles(DateTime? nowUtc = null)
+        /// <summary>
+        /// Removes a specific file from the recent files list by path.
+        /// </summary>
+        public void RemoveFile(string filePath)
         {
-            var now = nowUtc?.ToLocalTime() ?? DateTime.Now;
-            int removedCount;
-
-            lock (_gate)
+            if (string.IsNullOrWhiteSpace(filePath))
             {
-                var cutoff = now.AddDays(-_config.RetentionDays);
-                removedCount = _items.RemoveAll(f => f.GeneratedAt < cutoff && _config.RetentionDays > 0);
+                throw new ArgumentException("File path cannot be empty", nameof(filePath));
             }
 
-            if (removedCount > 0)
+            lock (sync)
             {
-                Save();
+                var existing = files.FirstOrDefault(f =>
+                    string.Equals(f.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+
+                if (existing != null)
+                {
+                    files.Remove(existing);
+                    Log.Debug("Removed file from recent list: {Path}", filePath);
+                }
+                else
+                {
+                    Log.Debug("File not found in recent list: {Path}", filePath);
+                }
             }
+        }
+
+        /// <summary>
+        /// Removes expired files based on retention policy and enforces max count.
+        /// </summary>
+        public int CleanupExpiredFiles(DateTime? now = null)
+        {
+            var cutoff = (now ?? DateTime.UtcNow).AddDays(-config.RetentionDays);
+            int removedCount = 0;
+
+            lock (sync)
+            {
+                // Remove expired files
+                var expired = files.Where(f => f.GeneratedAt.UtcDateTime < cutoff).ToList();
+                foreach (var file in expired)
+                {
+                    files.Remove(file);
+                    removedCount++;
+                }
+
+                // Enforce max count
+                removedCount += EnforceMaxCount();
+
+                if (removedCount > 0)
+                {
+                    Log.Info("Cleanup removed {Count} files (retention: {Days} days, max: {Max})",
+                        removedCount, config.RetentionDays, config.MaxCount);
+                }
+            }
+
             return removedCount;
         }
 
-        private void EnforcePolicies_NoLock()
-        {
-            if (_items.Count > _config.MaxCount)
-            {
-                var trimmedList = _items.OrderByDescending(f => f.GeneratedAt)
-                                        .Take(_config.MaxCount)
-                                        .ToList();
-                _items.Clear();
-                _items.AddRange(trimmedList);
-            }
-        }
-
+        /// <summary>
+        /// Persists current state to storage.
+        /// </summary>
         public void Save()
         {
-            string json;
-            lock (_gate)
+            lock (sync)
             {
-                json = RecentFilesJson.ToJson(_items);
+                try
+                {
+                    var json = RecentFilesJson.ToJson(files);
+                    store.Write(json);
+
+                    Log.Debug("Saved {Count} recent files to storage", files.Count);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Failed to save recent files");
+                    throw;
+                }
             }
-            _store.Write(json);
         }
 
+        /// <summary>
+        /// Loads state from storage.
+        /// </summary>
         public void Load()
         {
-            var json = _store.Read();
-            if (string.IsNullOrWhiteSpace(json)) return;
-
-            var deserialized = RecentFilesJson.FromJson(json);
-            lock (_gate)
+            lock (sync)
             {
-                _items.Clear();
-                _items.AddRange(deserialized);
-                EnforcePolicies_NoLock();
+                try
+                {
+                    var json = store.Read();
+                    if (string.IsNullOrWhiteSpace(json))
+                    {
+                        Log.Debug("No recent files JSON found; starting fresh");
+                        files.Clear();
+                        return;
+                    }
+
+                    var loaded = RecentFilesJson.FromJson(json);
+                    files.Clear();
+                    files.AddRange(loaded);
+
+                    Log.Info("Loaded {Count} recent files from storage", files.Count);
+
+                    // Clean up on load
+                    CleanupExpiredFiles();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Failed to load recent files; starting fresh");
+                    files.Clear();
+                }
             }
         }
 
-        public void RemoveFile(string path)
+        /// <summary>
+        /// Enforces max count policy by removing oldest entries.
+        /// Must be called within lock(sync).
+        /// </summary>
+        private int EnforceMaxCount()
         {
-            lock (_gate)
-            {
-                _items.RemoveAll(i => i.FilePath.Equals(path, StringComparison.OrdinalIgnoreCase));
-            }
-            Save();
-        }
+            if (files.Count <= config.MaxCount)
+                return 0;
 
+            var ordered = files.OrderBy(f => f.GeneratedAt).ToList();
+            int toRemove = files.Count - config.MaxCount;
+            int removed = 0;
+
+            for (int i = 0; i < toRemove && i < ordered.Count; i++)
+            {
+                files.Remove(ordered[i]);
+                removed++;
+            }
+
+            if (removed > 0)
+            {
+                Log.Debug("Enforced max count: removed {Count} oldest files", removed);
+            }
+
+            return removed;
+        }
     }
 }
