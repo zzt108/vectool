@@ -35,7 +35,7 @@ namespace VecTool.UI.WinUI
             {
                 // Safe bootstrap (Seq + console with buffering, non-throwing)
                 // Reads colocated NLog.config if present
-                LogManager.Setup().LoadConfiguration(optional: true);
+                LogManager.Setup().LoadConfigurationFromFile( optional:true );
                 Log.Info("WinUI App bootstrap complete");
             }
             catch

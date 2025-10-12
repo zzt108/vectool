@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using VecTool.Configuration;
-using VecTool.Core.RecentFiles; // ✅ NEW: Required for IRecentFilesManager interface
 using VecTool.RecentFiles; // ✅ NEW: Required for RecentFilesManager implementation
 
 namespace VecTool.UI.WinUI
@@ -28,9 +27,10 @@ namespace VecTool.UI.WinUI
             uiState = UiStateConfig.FromAppConfig();
 
             // ✅ NEW: Initialize RecentFilesManager from config (Phase 3.1 Fix)
-            var config = VecTool.Core.RecentFiles.RecentFilesConfig.FromAppConfig();
-            RecentFilesManager = new VecTool.RecentFiles.RecentFilesManager(config);
-
+            // NEW Initialize RecentFilesManager from config (Phase 3.1 Fix)
+            var config = RecentFilesConfig.FromAppConfig();
+            var store = new FileRecentFilesStore(config);
+            RecentFilesManager = new RecentFilesManager(config, store);
             LoadSettingsTab();
         }
 
