@@ -5,13 +5,7 @@ VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{E0724151-FEA3-4332-87A9-BC75974A5AD8}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SeriLogShared", "LogCtx\SeriLogShared\SeriLogShared.shproj", "{20D441B5-5A67-4BD2-85AB-5B8A98D1F907}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{53AFF8FD-EBC6-4A3D-8E96-27201177A44C}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "LogCtxShared", "LogCtx\LogCtxShared\LogCtxShared.shproj", "{7EC4223B-6D17-4608-816E-CD1E6A5411D9}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "NLogShared", "LogCtx\NLogShared\NLogShared.shproj", "{EBBB11C7-70A0-41D7-A255-5F47E6F30091}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject

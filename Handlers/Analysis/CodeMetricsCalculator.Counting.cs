@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -25,27 +24,6 @@ namespace VecTool.Handlers.Analysis
         }
 
         /// <summary>
-        /// Counts non-empty, non-comment code lines based on extension.
-        /// Example: Skips "//" or multi-line "/* */" comments for real code density.
-        /// Step-by-step: Split lines, trim, filter out blanks/comments.
-        /// </summary>
-        //public static int CountCodeLines(string text, string ext) // public for testing
-        //{
-        //    if (string.IsNullOrWhiteSpace(text)) return 0;
-        //    var lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        //    return lines.Count(l =>
-        //    {
-        //        var s = l.Trim();
-        //        if (s.Length == 0) return false;
-        //        if (s.StartsWith("//")) return false;
-        //        if (s.StartsWith("/*") || s.Contains("*/")) return false;  // Basic multi-line check
-        //        // Extend for lang-specific (e.g., Python #, JS //) if ext != ".cs"
-        //        if (ext == ".py" && s.StartsWith("#")) return false;
-        //        return true;
-        //    });
-        //}
-
-        /// <summary>
         /// Counts class declarations using regex.
         /// Example 1: Matches "class MyClass" – straightforward for C#/Java.
         /// Example 2: Handles "public class Foo" or "internal class Bar".
@@ -59,19 +37,6 @@ namespace VecTool.Handlers.Analysis
                 : @"\bclass\s+[A-Za-z_][A-Za-z0-9_]*"; // Tailor per lang
             return Regex.Matches(text, classPattern).Count;
         }
-
-        /// <summary>
-        /// Counts method declarations using regex.
-        /// Example 1: "void DoStuff()" or "int Calculate(int x)".
-        /// Example 2: Ignores lambdas or local funcs for now—focus on top-level.
-        /// Sarcastic note: Methods are the heart; counting them reveals the beast within.
-        /// </summary>
-        //public static int CountMethods(string text, string ext) // public for testing
-        //{
-        //    if (string.IsNullOrWhiteSpace(text)) return 0;
-        //    var methodPattern = ext == ".cs" ? @"[A-Za-z_][A-Za-z0-9_]*\s+[A-Za-z_][A-Za-z0-9_]*\s*\(" : @"def\s+\w+\(";  // C# vs Python example
-        //    return Regex.Matches(text, methodPattern).Count;
-        //}
 
         /// <summary>
         /// Counts methods exceeding a line threshold.
@@ -118,27 +83,5 @@ namespace VecTool.Handlers.Analysis
             }
             return count;
         }
-
-        /// <summary>
-        /// Counts TODO comments.
-        /// Example: "// TODO: Fix this mess" or "/* TODO: Refactor */".
-        /// Quick win for tech debt tracking—every TODO is a future headache.
-        /// </summary>
-        //public static int CountTodos(string text) // public for testing
-        //{
-        //    if (string.IsNullOrWhiteSpace(text)) return 0;
-        //    return Regex.Matches(text, @"TODO", RegexOptions.IgnoreCase | RegexOptions.Multiline).Count;
-        //}
-
-        /// <summary>
-        /// Counts catch blocks.
-        /// Example: "catch (Exception ex)" – smell of defensive programming.
-        /// Step-by-step: Regex for "catch (" patterns, count per block.
-        /// </summary>
-        //public static int CountCatches(string text) // public for testing
-        //{
-        //    if (string.IsNullOrWhiteSpace(text)) return 0;
-        //    return Regex.Matches(text, @"catch\s*\(", RegexOptions.IgnoreCase).Count;
-        //}
     }
 }
