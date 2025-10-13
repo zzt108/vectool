@@ -54,7 +54,9 @@ namespace VecTool.Handlers.Analysis
         public static int CountClasses(string text, string ext) // public for testing
         {
             if (string.IsNullOrWhiteSpace(text)) return 0;
-            var classPattern = ext == ".cs" ? @"(public|private|internal|protected)?\s*class\s+\w+" : @"class\s+\w+";  // Tailor per lang
+            var classPattern = ext == ".cs"
+                ? @"(public|private|internal|protected)?\s*class\s+[A-Za-z_][A-Za-z0-9_]*"
+                : @"\bclass\s+[A-Za-z_][A-Za-z0-9_]*"; // Tailor per lang
             return Regex.Matches(text, classPattern).Count;
         }
 
