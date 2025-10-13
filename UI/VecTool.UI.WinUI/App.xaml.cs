@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// Path: src/UI/VecTool.UI.WinUI/App.xaml.cs
+﻿// Path: src/UI/VecTool.UI.WinUI/App.xaml.cs
 // Required Imports Template
 
 using NUnit.Framework;
@@ -7,6 +6,8 @@ using Shouldly;
 using System;
 using NLog; // NLog is mandatory for structured logging
 using Microsoft.UI.Xaml;
+using VecTool.Core.Infrastructure;
+using Microsoft.UI.Dispatching;
 
 namespace VecTool.UI.WinUI
 {
@@ -44,17 +45,18 @@ namespace VecTool.UI.WinUI
             }
         }
 
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            VecTool.UI.WinUI.Infrastructure.NLogBootstrap.Init(); // idempotent, safe
-            var log = NLog.LogManager.GetCurrentClassLogger();
-            log.Info("WinUI application starting: {Application} with {ProcessId}", "VecTool.UI.WinUI", Environment.ProcessId);
+            NLogBootstrap.Init(); // structured logging bootstrap, idempotent​
+            MainWindow = new MainWindow(); // assign property so it’s available elsewhere​
+            MainWindow.Activate(); // show window​
 
-            // ✅ NEW: Store MainWindow as public property for DI/service resolution
-            MainWindow = new MainWindow();
-            MainWindow.Activate();
-
-            log.Info("MainWindow activated at {TimestampUtc}", DateTime.UtcNow);
+            // Use the window’s DispatcherQueue to avoid null on startup
+            MainWindow.DispatcherQueue.TryEnqueue(() =>
+            {
+                var log = LogManager.GetCurrentClassLogger();
+                log.Info("WinUI launched with {Args}", args.Arguments); // NLog structured logging[1]
+            });
         }
 
         private void AppUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)

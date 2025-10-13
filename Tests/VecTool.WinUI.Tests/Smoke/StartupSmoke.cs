@@ -1,12 +1,10 @@
-// FULL FILE VERSION
 // Path: tests/VecTool.WinUI.Tests/Smoke/StartupSmoke.cs
 
 // Required Imports Template
-using NUnit.Framework;
+using NLog; // NLog is mandatory for structured logging
 using Shouldly;
 using System;
-using NLog; // NLog is mandatory for structured logging
-using VecTool.UI.WinUI.Infrastructure;
+using VecTool.Core.Infrastructure;
 
 namespace VecTool.WinUI.Tests.Smoke
 {

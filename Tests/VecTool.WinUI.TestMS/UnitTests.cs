@@ -6,9 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Shouldly;
 using System;
-using NLog; // NLog is mandatory for structurd logging
-using VecTool.UI.WinUI;
-using VecTool.UI.WinUI.Infrastructure;
+using NLog;
+using VecTool.Core.Infrastructure; // NLog is mandatory for structurd logging
 
 namespace VecTool.WinUI.TestMS
 {
