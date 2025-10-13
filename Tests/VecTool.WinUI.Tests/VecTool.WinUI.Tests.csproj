@@ -43,5 +43,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <Content Include="..\..\Docs\WinForms-Business-Logic-Reference.md">
+      <Link>Docs\WinForms-Business-Logic-Reference.md</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
