@@ -1,8 +1,7 @@
-﻿// ✅ FULL FILE VERSION
-using NLogShared;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using NLog;
 using VecTool.Configuration;
 using VecTool.Handlers.Analysis;
 using VecTool.Handlers.Traversal;
@@ -17,9 +16,13 @@ namespace VecTool.Handlers
     /// </summary>
     public abstract class FileHandlerBase
     {
-        protected static readonly CtxLogger log = new();
+        // Unified logging per project standards (no wrappers).
+        protected static readonly Logger log = LogManager.GetCurrentClassLogger();
+
         protected readonly IUserInterface? ui;
         protected readonly IRecentFilesManager? recentFilesManager;
+
+        // Delegated helpers
         protected readonly AiContextGenerator aiContextGenerator;
         protected readonly FileSystemTraverser fileSystemTraverser;
 
@@ -27,11 +30,13 @@ namespace VecTool.Handlers
         {
             this.ui = ui;
             this.recentFilesManager = recentFilesManager;
+
             aiContextGenerator = new AiContextGenerator();
             fileSystemTraverser = new FileSystemTraverser(ui);
         }
 
-        // AI Context - Delegated to AiContextGenerator
+        #region AI Context (delegated to AiContextGenerator)
+
         protected string GenerateTableOfContents(List<string> folderPaths)
             => aiContextGenerator.GenerateTableOfContents(folderPaths);
 
@@ -46,6 +51,9 @@ namespace VecTool.Handlers
             T context,
             Action<T, string> writeContent)
         {
+            if (folderPaths == null || writeContent == null)
+                return;
+
             var toc = GenerateTableOfContents(folderPaths);
             if (!string.IsNullOrWhiteSpace(toc))
                 writeContent(context, toc);
@@ -59,7 +67,10 @@ namespace VecTool.Handlers
                 writeContent(context, meta);
         }
 
-        // Traversal - Delegated to FileSystemTraverser
+        #endregion
+
+        #region Traversal (delegated to FileSystemTraverser)
+
         protected void ProcessFolder<T>(
             string folderPath,
             T context,
@@ -80,7 +91,10 @@ namespace VecTool.Handlers
         protected IEnumerable<string> EnumerateFilesRespectingExclusions(string root, VectorStoreConfig config)
             => fileSystemTraverser.EnumerateFilesRespectingExclusions(root, config);
 
-        // Validation - Virtual for derived overrides
+        #endregion
+
+        #region Validation (virtual for derived overrides)
+
         protected virtual bool IsFolderExcluded(string folderName, VectorStoreConfig config)
             => FileValidator.IsFolderExcluded(folderName, config);
 
@@ -90,22 +104,30 @@ namespace VecTool.Handlers
         protected virtual bool IsFileValid(string path, string? outputPath)
             => FileValidator.IsFileValid(path, outputPath);
 
-        // Content helpers - Virtual for derived customization
+        #endregion
+
+        #region Content helpers (virtual for derived customization)
+
         protected virtual string GetFileContent(string filePath)
             => PathHelpers.SafeReadAllText(filePath);
 
         protected virtual string GetEnhancedFileContent(string file)
             => PathHelpers.SafeReadAllText(file);
 
-        // Legacy compatibility overloads
-        protected virtual void ProcessFile(string file, System.IO.StreamWriter writer, VectorStoreConfig vectorStoreConfig)
+        #endregion
+
+        #region Legacy compatibility overloads (StreamWriter context)
+
+        // Default no-op - derived handlers override when using StreamWriter context
+        protected virtual void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
-            // Default no-op - derived handlers override when using StreamWriter context
         }
 
-        protected virtual void WriteFolderName(System.IO.StreamWriter writer, string folderName)
+        // Default no-op - derived handlers override when using StreamWriter context
+        protected virtual void WriteFolderName(StreamWriter writer, string folderName)
         {
-            // Default no-op - derived handlers override when using StreamWriter context
         }
+
+        #endregion
     }
 }

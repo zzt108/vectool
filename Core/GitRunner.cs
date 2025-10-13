@@ -1,5 +1,5 @@
-﻿// ✅ FULL FILE VERSION
-using NLogShared;
+﻿// GitRunner.cs — migrate from NLogShared/CtxLogger to NLog
+using NLog;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -15,7 +15,7 @@ namespace VecTool.Core
     /// </summary>
     public sealed class GitRunner : IGitRunner
     {
-        private static readonly CtxLogger log = new();
+        private static readonly Logger log = LogManager.GetCurrentClassLogger();
         private readonly string workingDirectory;
 
         public GitRunner(string workingDirectory)
@@ -23,10 +23,9 @@ namespace VecTool.Core
             this.workingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
         }
 
-        /// <summary>
-        /// Runs an arbitrary git command in the configured working directory with a timeout.
-        /// Throws TimeoutException on timeout and InvalidOperationException on non-zero exit.
-        /// </summary>
+        public static bool IsGitRepository(string path)
+            => !string.IsNullOrWhiteSpace(path) && Directory.Exists(Path.Combine(path, ".git"));
+
         public async Task<string> RunGitCommandAsync(string command, int timeoutSeconds = 60)
         {
             if (string.IsNullOrWhiteSpace(command))
@@ -45,167 +44,56 @@ namespace VecTool.Core
                 StandardErrorEncoding = Encoding.UTF8
             };
 
-            using var process = new Process
-            {
-                StartInfo = startInfo,
-                EnableRaisingEvents = false
-            };
-
+            using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = false };
             var outputBuilder = new StringBuilder();
             var errorBuilder = new StringBuilder();
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
-
-            process.OutputDataReceived += (_, e) =>
-            {
-                if (e.Data != null) outputBuilder.AppendLine(e.Data);
-            };
-            process.ErrorDataReceived += (_, e) =>
-            {
-                if (e.Data != null) errorBuilder.AppendLine(e.Data);
-            };
-
-            log.Info($"Running git command: git {command} in {workingDirectory}");
-
-            if (!process.Start())
-            {
-                throw new InvalidOperationException("Failed to start git process.");
-            }
-
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
+            log.Info("Starting git command {Command} in {WorkingDirectory}", command, workingDirectory);
             try
             {
-                await process.WaitForExitAsync(cts.Token).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                try
+                if (!process.Start())
+                    throw new InvalidOperationException("Failed to start git process.");
+
+                _ = process.StandardOutput.ReadToEndAsync().ContinueWith(t => outputBuilder.Append(t.Result));
+                _ = process.StandardError.ReadToEndAsync().ContinueWith(t => errorBuilder.Append(t.Result));
+
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+                await Task.Run(() => process.WaitForExit(), cts.Token).ConfigureAwait(false);
+
+                if (process.ExitCode != 0)
                 {
-                    if (!process.HasExited)
-                    {
-                        process.Kill(entireProcessTree: true);
-                    }
-                }
-                catch
-                {
-                    // ignored
+                    var err = errorBuilder.ToString();
+                    var ex = new InvalidOperationException($"git {command} failed with exit code {process.ExitCode}: {err}");
+                    log.Error(ex, "Git command failed {Command} in {WorkingDirectory}", command, workingDirectory);
+                    throw ex;
                 }
 
-                log.Warn($"Git command timed out after {timeoutSeconds}s.");
-                throw new TimeoutException("Git command timed out.");
+                var output = outputBuilder.ToString();
+                log.Info("Git command completed {Command} in {WorkingDirectory} with {Length} chars", command, workingDirectory, output.Length);
+                return output;
             }
-
-            // Ensure async reads complete
-            process.WaitForExit();
-
-            var exitCode = process.ExitCode;
-            var stdOut = outputBuilder.ToString().Trim();
-            var stdErr = errorBuilder.ToString().Trim();
-
-            if (exitCode == 0)
+            catch (OperationCanceledException oce)
             {
-                log.Info("Git command finished successfully.");
-                return stdOut;
+                var ex = new TimeoutException($"git {command} timed out after {timeoutSeconds}s", oce);
+                log.Error(ex, "Git command timeout {Command} in {WorkingDirectory} after {TimeoutSeconds}s", command, workingDirectory, timeoutSeconds);
+                throw ex;
             }
-
-            log.Warn($"Git command failed with exit code {exitCode}. Error: {stdErr}");
-            throw new InvalidOperationException($"Git command failed: {stdErr}");
         }
 
-        /// <summary>
-        /// Gets the git status (porcelain) of the repository, returning an error string for
-        /// well-known issues like “dubious ownership” instead of throwing.
-        /// </summary>
-        public async Task<string> GetStatusAsync()
+        public Task<string> GetStatusAsync(CancellationToken ct = default)
+            => RunGitCommandAsync("status --porcelain=v1");
+
+        public Task<string> GetDiffAsync(CancellationToken ct = default)
+            => RunGitCommandAsync("diff --patch --no-color");
+
+        public async Task<string?> GetCurrentBranchAsync(string path, CancellationToken ct = default)
         {
-            try
-            {
-                return await RunGitCommandAsync("status --porcelain").ConfigureAwait(false);
-            }
-            catch (Exception ex) when (ex.Message.Contains("dubious ownership", StringComparison.OrdinalIgnoreCase))
-            {
-                var safeDirectoryCommand = $"git config --global --add safe.directory \"{workingDirectory}\"";
-                log.Warn($"Dubious ownership detected in {workingDirectory}. Solution: {safeDirectoryCommand}");
-                return $"Error: Dubious ownership in {workingDirectory}. Fix with: {safeDirectoryCommand}";
-            }
-            catch (Exception ex)
-            {
-                return $"Error: {ex.Message}";
-            }
+            var runner = new GitRunner(path);
+            var name = await runner.RunGitCommandAsync("rev-parse --abbrev-ref HEAD").ConfigureAwait(false);
+            return string.IsNullOrWhiteSpace(name) ? null : name.Trim();
         }
 
-        /// <summary>
-        /// Gets combined diff of unstaged and staged changes with simple headings.
-        /// </summary>
-        public async Task<string> GetDiffAsync()
-        {
-            var unstaged = await RunGitCommandAsync("diff").ConfigureAwait(false);
-            var staged = await RunGitCommandAsync("diff --cached").ConfigureAwait(false);
-
-            if (string.IsNullOrWhiteSpace(unstaged) && string.IsNullOrWhiteSpace(staged))
-                return "No diff changes.";
-
-            var result = new StringBuilder();
-            if (!string.IsNullOrWhiteSpace(unstaged))
-            {
-                result.AppendLine("Unstaged Changes");
-                result.AppendLine(unstaged);
-            }
-
-            if (!string.IsNullOrWhiteSpace(staged))
-            {
-                result.AppendLine("Staged Changes");
-                result.AppendLine(staged);
-            }
-
-            return result.ToString().Trim();
-        }
-
-        /// <summary>
-        /// Gets the status of Git submodules.
-        /// </summary>
-        public async Task<string> GetSubmodulesAsync()
-        {
-            return await RunGitCommandAsync("submodule status").ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Convenience overload for UI code that doesn’t pass a working directory explicitly.
-        /// Forwards to the interface method using the instance’s configured working directory.
-        /// </summary>
-        public Task<string> GetCurrentBranchAsync(CancellationToken cancellationToken = default)
-            => GetCurrentBranchAsync(workingDirectory, cancellationToken);
-
-        /// <summary>
-        /// Returns the current branch name from the repository or "unknown" on errors.
-        /// </summary>
-        public async Task<string> GetCurrentBranchAsync(string workingDirectory, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                // Use an explicit runner bound to the provided directory to honor the parameter.
-                var runner = new GitRunner(workingDirectory);
-                var result = await runner.RunGitCommandAsync("branch --show-current").ConfigureAwait(false);
-                return string.IsNullOrWhiteSpace(result) ? "unknown" : result.Trim();
-            }
-            catch
-            {
-                return "unknown";
-            }
-        }
-
-        /// <summary>
-        /// Checks if the provided folder is a Git repository by looking for a .git marker.
-        /// </summary>
-        public static bool IsGitRepository(string folderPath)
-        {
-            if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
-                return false;
-
-            var gitPath = Path.Combine(folderPath, ".git");
-            return Directory.Exists(gitPath) || File.Exists(gitPath);
-        }
+        public async Task<string> GetSubmodulesAsync(CancellationToken ct = default)
+            => await RunGitCommandAsync("submodule status --recursive").ConfigureAwait(false);
     }
 }
