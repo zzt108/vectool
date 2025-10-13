@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Log\Log.csproj" />
+    <PackageReference Include="NLog" Version="6.0.5" />
   </ItemGroup>
 
 </Project>

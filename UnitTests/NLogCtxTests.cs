@@ -1,4 +1,5 @@
-﻿using Shouldly;
+﻿/* Tests for NLogCtx class 
+using Shouldly;
 using NLogShared;
 using NUnit.Framework;
 
@@ -85,3 +86,4 @@ namespace NLogAdapter.Tests
         }
     }
 }
+*/

@@ -250,8 +250,7 @@ catch { }
             var folderPaths = new List<string> { Path.GetDirectoryName(testCsFile)! };
 
             // Act
-            var calculator = new CodeMetricsCalculator();
-            var metrics = calculator.Calculate(testCsFile, folderPaths);
+            var metrics = CodeMetricsCalculator.Calculate(testCsFile, folderPaths);
 
             // Assert (new shape)
             metrics.FileName.ShouldBe("TestClass.cs");
@@ -276,8 +275,7 @@ catch { }
             var folderPaths = new List<string>();
 
             // Act
-            var calculator = new CodeMetricsCalculator();
-            var metrics = calculator.Calculate(invalidPath, folderPaths);
+            var metrics = CodeMetricsCalculator.Calculate(invalidPath, folderPaths);
 
             // Assert
             metrics.FileName.ShouldBe("nonexistent.cs");

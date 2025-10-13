@@ -14,14 +14,6 @@ using VecTool.Handlers.Traversal;
 /// </summary>
 public sealed class AiContextGenerator
 {
-    private readonly CSharpSymbolAnalyzer _symbolAnalyzer;
-    private readonly CodeMetricsCalculator _metricsCalculator;
-
-    public AiContextGenerator()
-    {
-        _symbolAnalyzer = new CSharpSymbolAnalyzer();
-        _metricsCalculator = new CodeMetricsCalculator();
-    }
 
     /// <summary>
     /// Generates table of contents XML block.
@@ -102,8 +94,8 @@ public sealed class AiContextGenerator
             }
         }
 
-        var dependsOn = _symbolAnalyzer.AnalyzeDependencies(csFiles);
-        var usedBy = _symbolAnalyzer.InvertDependencyMap(dependsOn);
+        var dependsOn = CSharpSymbolAnalyzer.AnalyzeDependencies(csFiles);
+        var usedBy = CSharpSymbolAnalyzer.InvertDependencyMap(dependsOn);
 
         var sb = new StringBuilder();
         sb.AppendLine(TagBuilder.Open(Tags.CrossReferences));
@@ -165,7 +157,7 @@ public sealed class AiContextGenerator
 
         foreach (var f in files.OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
         {
-            var metrics = _metricsCalculator.Calculate(f, folderPaths);
+            var metrics = CodeMetricsCalculator.Calculate(f, folderPaths);
             inner.AppendLine(metrics.ToXml());
         }
 

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vectool.UI", "OaiUI\Vectool.UI.csproj", "{AB47A1CC-420B-431A-B6AB-A156D39DA7CA}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{E0724151-FEA3-4332-87A9-BC75974A5AD8}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SeriLogShared", "LogCtx\SeriLogShared\SeriLogShared.shproj", "{20D441B5-5A67-4BD2-85AB-5B8A98D1F907}"
@@ -14,8 +12,6 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "LogCtxShared", "LogCtx\LogCtxShared\LogCtxShared.shproj", "{7EC4223B-6D17-4608-816E-CD1E6A5411D9}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "NLogShared", "LogCtx\NLogShared\NLogShared.shproj", "{EBBB11C7-70A0-41D7-A255-5F47E6F30091}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Log", "Log\Log.csproj", "{DB75F003-DF91-4B72-A3DA-FCC869EE9B42}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
@@ -52,18 +48,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AB47A1CC-420B-431A-B6AB-A156D39DA7CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AB47A1CC-420B-431A-B6AB-A156D39DA7CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AB47A1CC-420B-431A-B6AB-A156D39DA7CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AB47A1CC-420B-431A-B6AB-A156D39DA7CA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E0724151-FEA3-4332-87A9-BC75974A5AD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E0724151-FEA3-4332-87A9-BC75974A5AD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0724151-FEA3-4332-87A9-BC75974A5AD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0724151-FEA3-4332-87A9-BC75974A5AD8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DB75F003-DF91-4B72-A3DA-FCC869EE9B42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DB75F003-DF91-4B72-A3DA-FCC869EE9B42}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DB75F003-DF91-4B72-A3DA-FCC869EE9B42}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DB75F003-DF91-4B72-A3DA-FCC869EE9B42}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4F752466-BF43-4D4B-800C-6E9221C9A4C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4F752466-BF43-4D4B-800C-6E9221C9A4C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4F752466-BF43-4D4B-800C-6E9221C9A4C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -124,10 +112,6 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		LogCtx\SeriLogShared\SeriLogShared.projitems*{20d441b5-5a67-4bd2-85ab-5b8a98d1f907}*SharedItemsImports = 13
 		LogCtx\LogCtxShared\LogCtxShared.projitems*{7ec4223b-6d17-4608-816e-cd1e6a5411d9}*SharedItemsImports = 13
-		LogCtx\LogCtxShared\LogCtxShared.projitems*{db75f003-df91-4b72-a3da-fcc869ee9b42}*SharedItemsImports = 5
-		LogCtx\NLogShared\NLogShared.projitems*{db75f003-df91-4b72-a3da-fcc869ee9b42}*SharedItemsImports = 5
-		LogCtx\NLogShared\NLogShared.projitems*{e0724151-fea3-4332-87a9-bc75974a5ad8}*SharedItemsImports = 5
-		LogCtx\SeriLogShared\SeriLogShared.projitems*{e0724151-fea3-4332-87a9-bc75974a5ad8}*SharedItemsImports = 5
 		LogCtx\NLogShared\NLogShared.projitems*{ebbb11c7-70a0-41d7-a255-5f47e6f30091}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

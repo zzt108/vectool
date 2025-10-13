@@ -1,4 +1,7 @@
-using NLogShared;
+﻿// Handlers/GitChangesHandler.cs
+// Migrated from NLogShared/CtxLogger to NLog with message-template logging per guide.
+
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -13,23 +16,26 @@ namespace VecTool.Handlers
 {
     /// <summary>
     /// Handler for extracting and formatting Git changes from repositories.
-    /// This class is the entry point and orchestrator, delegating complex
-    // tasks like submodule processing and recursive searching to other partial classes.
+    /// This class is the entry point and orchestrator, delegating complex tasks
+    /// like submodule processing and recursive searching to other partial classes.
     /// </summary>
     public partial class GitChangesHandler : FileHandlerBase
     {
+        private static readonly Logger log = LogManager.GetCurrentClassLogger();
         private readonly string aiPrompt;
 
         public GitChangesHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
             : base(ui, recentFilesManager)
         {
             // Fallback to a default prompt if not configured in app.config
-            aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"] ?? "Analyze the following Git changes and provide a concise, descriptive commit message.";
+            aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"]
+                ?? "Analyze the following Git changes and provide a concise, descriptive commit message.";
         }
 
         /// <summary>
-        /// Extracts Git changes from all repositories in the given folders and saves the result to a Markdown file.
-        /// It acts as an orchestrator, handling both root-level repositories and recursively discovered ones.
+        /// Extracts Git changes from all repositories in the given folders and saves the result
+        /// to a Markdown file. It acts as an orchestrator, handling both root-level repositories
+        /// and recursively discovered ones.
         /// </summary>
         public async Task<string> GetGitChangesAsync(List<string> folderPaths, string outputPath)
         {
@@ -42,7 +48,7 @@ namespace VecTool.Handlers
             try
             {
                 ui?.UpdateStatus("Analyzing Git repositories...");
-                _log.Info($"Starting Git changes analysis for {folderPaths.Count} folder(s).");
+                log.Info("Starting Git changes analysis for {FolderCount} folders.", folderPaths.Count);
 
                 var allChanges = new StringBuilder();
                 allChanges.AppendLine("# AI Prompt for Commit Message");
@@ -84,14 +90,16 @@ namespace VecTool.Handlers
                         fileInfo.Exists ? fileInfo.Length : 0);
                 }
 
-                ui?.UpdateStatus($"Git changes analysis complete. Saved to: {outputPath}");
-                _log.Info($"Git changes analysis successfully completed. Output: {outputPath}");
-
+                ui?.UpdateStatus($"Git changes analysis complete. Saved to {outputPath}");
+                log.Info("Git changes analysis successfully completed. Output {OutputPath}", outputPath);
                 return allChanges.ToString();
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Failed to complete Git changes analysis for output path: {outputPath}");
+                var evt = new LogEventInfo(LogLevel.Error, log.Name, "Failed to complete Git changes analysis for output path");
+                evt.Exception = ex;
+                evt.Properties["OutputPath"] = outputPath;
+                log.Log(evt);
                 // Rethrow to allow the UI layer to handle and display the error
                 throw;
             }
@@ -115,11 +123,12 @@ namespace VecTool.Handlers
             var fullPath = Path.GetFullPath(repoPath);
             if (!processedRepos.Add(fullPath))
             {
-                _log.Trace($"Skipping already processed repository: '{fullPath}'");
-                return; // Avoids processing the same repository twice if selected in multiple ways.
+                log.Trace("Skipping already processed repository {RepoPath}", fullPath);
+                return;
             }
+            // Avoids processing the same repository twice if selected in multiple ways.
 
-            mainChanges.AppendLine($"## Git Changes for: `{repoPath}`");
+            mainChanges.AppendLine($"## Git Changes for `{repoPath}`");
             mainChanges.AppendLine();
 
             var gitRunner = new GitRunner(repoPath);
@@ -128,18 +137,18 @@ namespace VecTool.Handlers
             {
                 // Get repository status
                 var statusChanges = await gitRunner.GetStatusAsync();
+
                 mainChanges.AppendLine("### Status Changes");
-                mainChanges.AppendLine("```");
+                mainChanges.AppendLine();
                 mainChanges.AppendLine(string.IsNullOrWhiteSpace(statusChanges) ? "No status changes." : statusChanges);
-                mainChanges.AppendLine("```");
                 mainChanges.AppendLine();
 
                 // Get repository diff
                 var diffChanges = await gitRunner.GetDiffAsync();
+
                 mainChanges.AppendLine("### Diff Changes");
-                mainChanges.AppendLine("```");
+                mainChanges.AppendLine();
                 mainChanges.AppendLine(string.IsNullOrWhiteSpace(diffChanges) ? "No diff changes." : diffChanges);
-                mainChanges.AppendLine("```");
                 mainChanges.AppendLine();
 
                 // Delegate submodule processing to the SubmoduleProcessor partial class
@@ -147,10 +156,13 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Error processing git repository: {repoPath}");
-                mainChanges.AppendLine($"**Error processing repository:** {ex.Message}");
+                var evt = new LogEventInfo(LogLevel.Error, log.Name, "Error processing git repository");
+                evt.Exception = ex;
+                evt.Properties["RepoPath"] = repoPath;
+                log.Log(evt);
+                mainChanges.AppendLine($"*Error processing repository: {ex.Message}*");
+                mainChanges.AppendLine();
             }
-            mainChanges.AppendLine();
         }
     }
 }
