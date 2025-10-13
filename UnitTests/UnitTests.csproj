@@ -25,13 +25,8 @@
     <!-- Existing project references -->
     <ProjectReference Include="..\\Constants\\Constants.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
-    <ProjectReference Include="..\Log\Log.csproj" />
     <ProjectReference Include="..\Handlers\Handlers.csproj" />
     <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\\OaiUI\\VecTool.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
