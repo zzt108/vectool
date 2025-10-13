@@ -5,11 +5,40 @@
     <!-- Centralize implicit usings + nullable for all projects -->
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
 
 <PropertyGroup>
   <MajorVersion>4</MajorVersion>
-  <PlanId>feat_file_size_refactor</PlanId>
+  <PlanId>2</PlanId>
+  <PlanPhase>1</PlanPhase>
+
+      <!-- Time-based build metadata (UTC) -->
+    <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
+    <HHmm>$([System.DateTime]::UtcNow.ToString('HHmm'))</HHmm>
+    <DayOfYear>$([System.DateTime]::UtcNow.DayOfYear)</DayOfYear>
+
+    <!-- BuildPart = (PlanPhase * 1000) + DayOfYear -->
+    <BuildPart>$([MSBuild]::Add($([MSBuild]::Multiply($(PlanPhase), 1000)),$(DayOfYear)))</BuildPart>
+
+    <!-- Assembly versions -->
+    <AssemblyVersion>$(MajorVersion).0.0.0</AssemblyVersion>
+    <FileVersion>$(MajorVersion).$(PlanId).$(BuildPart).$(HHmm)</FileVersion>
+    <ApplicationDisplayVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)</ApplicationDisplayVersion>
+
+    <!-- CI metadata and SourceLink-friendly informational version -->
+    <CommitSha>$([System.Environment]::GetEnvironmentVariable('GITHUB_SHA'))</CommitSha>
+    <CommitSha Condition=" '$(CommitSha)' == '' ">$([System.Environment]::GetEnvironmentVariable('BUILD_SOURCEVERSION'))</CommitSha>
+    <CommitShort Condition=" '$(CommitSha)' != '' ">$([System.String]::Copy('$(CommitSha)').Substring(0,7))</CommitShort>
+    <InfoSuffix Condition=" '$(CommitShort)' != '' ">-$(CommitShort)</InfoSuffix>
+    <InformationalVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)-$(YyyyMMdd)$(HHmm)$(InfoSuffix)</InformationalVersion>
+
+    <!-- Embed repo info for SourceLink -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild Condition="'$(CI)'=='true'">true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
 </PropertyGroup>
 
   <!-- Central global usings via MSBuild so no GlobalUsings.cs is required -->
