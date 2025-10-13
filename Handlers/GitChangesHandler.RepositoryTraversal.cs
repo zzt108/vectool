@@ -1,4 +1,8 @@
-﻿using NLogShared;
+﻿// ✅ FULL FILE VERSION
+// Handlers/GitChangesHandler.RepositoryTraversal.cs
+// Migrated from NLogShared/CtxLogger to NLog with message-template logging per guide.
+
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +17,7 @@ namespace VecTool.Handlers
     /// </summary>
     public partial class GitChangesHandler
     {
-        private static readonly CtxLogger _log = new();
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// Finds all nested Git repositories within a root directory, skipping common excluded folders.
@@ -24,9 +28,10 @@ namespace VecTool.Handlers
         private async Task<IEnumerable<string>> FindGitRepositoriesRecursivelyAsync(string rootDirectory)
         {
             var foundRepositories = new List<string>();
+
             if (!Directory.Exists(rootDirectory))
             {
-                _log.Warn($"Root directory for search does not exist: '{rootDirectory}'");
+                _log.Warn("Root directory for search does not exist {Root}", rootDirectory);
                 return foundRepositories;
             }
 
@@ -35,12 +40,7 @@ namespace VecTool.Handlers
 
             var excludedDirNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                "bin",
-                "obj",
-                "node_modules",
-                "packages",
-                ".vs",
-                ".idea"
+                "bin", "obj", "node_modules", "packages", ".vs", ".idea"
             };
 
             while (directoriesToScan.Any())
@@ -48,7 +48,7 @@ namespace VecTool.Handlers
                 var currentDir = directoriesToScan.Pop();
 
                 // If the current directory is a repository, add it and stop traversing deeper.
-                // Submodules inside will be handled by the submodule processor.
+                // Submodules inside will be handled by the submodule processor
                 if (GitRunner.IsGitRepository(currentDir))
                 {
                     foundRepositories.Add(currentDir);
@@ -60,6 +60,7 @@ namespace VecTool.Handlers
                     foreach (var subDir in Directory.EnumerateDirectories(currentDir))
                     {
                         var dirName = Path.GetFileName(subDir);
+
                         // Skip hidden folders and commonly excluded ones
                         if (!dirName.StartsWith(".") && !excludedDirNames.Contains(dirName))
                         {
@@ -69,15 +70,15 @@ namespace VecTool.Handlers
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    _log.Trace($"Access denied to directory: '{currentDir}'. Skipping.");
+                    _log.Trace("Access denied to directory {CurrentDir}. Skipping.", currentDir);
                 }
                 catch (Exception ex)
                 {
-                    _log.Error(ex, $"Could not scan directory '{currentDir}' for repositories. It might be a permissions issue.");
+                    _log.Error(ex, "Could not scan directory {CurrentDir} for repositories. It might be a permissions issue.", currentDir);
                 }
             }
 
-            // The operation is I/O-bound but implemented synchronously for simplicity.
+            // The operation is IO-bound but implemented synchronously for simplicity.
             // We return a completed task to match the async signature.
             return await Task.FromResult(foundRepositories);
         }

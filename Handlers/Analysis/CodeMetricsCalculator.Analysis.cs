@@ -19,21 +19,21 @@ namespace VecTool.Handlers.Analysis
         /// - High: score > 2.5
         /// Where score = (codeLines / 200.0) + (methods / 20.0).
         /// </summary>
-        public static string EstimateComplexity(int codeLines, int methods, string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                return "Low";
-            }
+        //public static string EstimateComplexity(int codeLines, int methods, string text)
+        //{
+        //    if (string.IsNullOrWhiteSpace(text))
+        //    {
+        //        return "Low";
+        //    }
 
-            var lineScore = codeLines / 200.0;   // 200 lines ~ 1 point
-            var methodScore = methods / 20.0;    // 20 methods ~ 1 point
-            var score = lineScore + methodScore;
+        //    var lineScore = codeLines / 200.0;   // 200 lines ~ 1 point
+        //    var methodScore = methods / 20.0;    // 20 methods ~ 1 point
+        //    var score = lineScore + methodScore;
 
-            if (score < 1.0) return "Low";
-            if (score <= 2.5) return "Medium";
-            return "High";
-        }
+        //    if (score < 1.0) return "Low";
+        //    if (score <= 2.5) return "Medium";
+        //    return "High";
+        //}
 
         /// <summary>
         /// Fast pattern detector for common C#/.NET idioms.

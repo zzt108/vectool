@@ -22,7 +22,7 @@ public sealed class CSharpSymbolAnalyzer
     /// <summary>
     /// Extracts declared symbols (types and methods) from a C# file.
     /// </summary>
-    public HashSet<string> ExtractDeclaredSymbols(string filePath)
+    public static HashSet<string> ExtractDeclaredSymbols(string filePath)
     {
         var symbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var text = PathHelpers.SafeReadAllText(filePath);
@@ -42,7 +42,7 @@ public sealed class CSharpSymbolAnalyzer
     /// <summary>
     /// Analyzes dependencies between C# files based on symbol usage.
     /// </summary>
-    public Dictionary<string, HashSet<string>> AnalyzeDependencies(List<string> csFiles)
+    public static Dictionary<string, HashSet<string>> AnalyzeDependencies(List<string> csFiles)
     {
         var declaredByFile = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
         
@@ -99,7 +99,7 @@ public sealed class CSharpSymbolAnalyzer
     /// <summary>
     /// Inverts dependency map to create "used by" relationships.
     /// </summary>
-    public Dictionary<string, HashSet<string>> InvertDependencyMap(
+    public static Dictionary<string, HashSet<string>> InvertDependencyMap(
         Dictionary<string, HashSet<string>> dependsOn)
     {
         var usedBy = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
