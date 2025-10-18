@@ -148,7 +148,10 @@ namespace Vectool.OaiUI
                 userInterface.WorkStart($"Generating Git changes file...", selectedFolders);
                 var handler = new GitChangesHandler(userInterface, recentFilesManager);
                 await Task.Run(() => handler.GetGitChanges(selectedFolders, outputPath)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
+
+                convertToMdToolStripMenuItemClick(sender, e);
+
+                // userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {

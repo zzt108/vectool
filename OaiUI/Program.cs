@@ -1,28 +1,24 @@
 using System.Linq;
 using System.Windows.Forms;
-//using NLog;
-//using NLog.Config;
-//using NLog.Targets;
 using NLogShared;
 
-namespace Vectool.UI
+namespace Vectool.OaiUI
 {
     internal static class Program
     {
+        public static NLogShared.CtxLogger Log { get; private set; } = new CtxLogger();
 
         [STAThread]
         private static void Main()
         {
-            
-            using var log = new CtxLogger();
-            
-            log.Info("Starting VecTool application.");
+                      
+            Log.Info("Starting VecTool application.");
             Application.ThreadException += (sender, args) =>
-                new CtxLogger().Error(args.Exception, "Unhandled UI thread exception.");
+                Log.Error(args.Exception, "Unhandled UI thread exception.");
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var ex = args.ExceptionObject as Exception;
-                new CtxLogger().Fatal(ex, "Unhandled domain exception.");
+                Log.Fatal(ex, "Unhandled domain exception.");
             };
 
             ApplicationConfiguration.Initialize();
