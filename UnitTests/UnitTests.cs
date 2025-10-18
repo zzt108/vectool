@@ -17,8 +17,8 @@ namespace UnitTests
         [TestCase(".cs", "csharp")]
         [TestCase(".csproj", "msbuild")]
         [TestCase(".feature", "gherkin")]
-        [TestCase(".unknown", "")]
-        [TestCase(".txt", "")]
+        [TestCase(".unknown", "unknown")]
+        [TestCase(".txt", "text")]
         [TestCase(null, "")]
         public void GetMdTag_ValidAndInvalidExtensions_ReturnsCorrectMdTag(string extension, string expectedMdTag)
         {
