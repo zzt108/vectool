@@ -31,7 +31,13 @@ public static class RecentFilesJson
         if (string.IsNullOrWhiteSpace(json))
             return new List<RecentFileInfo>();
 
-        var result = JsonSerializer.Deserialize<List<RecentFileInfo>>(json, _options);
-        return result ?? new List<RecentFileInfo>();
+        try
+        {   
+            return JsonSerializer.Deserialize<List<RecentFileInfo>>(json, _options);
+        }
+        catch
+        {
+            return new List<RecentFileInfo>();
+        }
     }
 }

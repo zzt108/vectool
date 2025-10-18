@@ -44,6 +44,18 @@ namespace Vectool.UI
                 // Do not block startup on icon failures
             }
 
+            // NEW: Visibility safeguards to ensure the main window is actually visible
+          if (mainForm.WindowState == FormWindowState.Minimized)
+              mainForm.WindowState = FormWindowState.Normal;
+
+          mainForm.ShowInTaskbar = true;
+
+          if (mainForm.Width < 400 || mainForm.Height < 300)
+              mainForm.Size = new System.Drawing.Size(
+                  Math.Max(mainForm.Width, 800),
+                  Math.Max(mainForm.Height, 600));
+
+
             Application.Run(mainForm);
         }
 
@@ -51,11 +63,25 @@ namespace Vectool.UI
         {
             try
             {
-                var formType = typeof(Program).Assembly
+              // OLD:
+              // var formType = typeof(Program).Assembly
+              //     .GetTypes()
+              //     .FirstOrDefault(t => typeof(Form).IsAssignableFrom(t) && string.Equals(t.Name, "MainForm", StringComparison.Ordinal));
+
+                // NEW: Prefer deterministic selection of the designer-backed MainForm
+                var candidateTypes = typeof(Program).Assembly
                     .GetTypes()
-                    .FirstOrDefault(t => typeof(Form).IsAssignableFrom(t) && string.Equals(t.Name, "MainForm", StringComparison.Ordinal));
+                    .Where(t => typeof(Form).IsAssignableFrom(t) && string.Equals(t.Name, "MainForm", StringComparison.Ordinal))
+                    .ToList();
+
+                var preferred = candidateTypes
+                    .FirstOrDefault(t => string.Equals(t.FullName, "Vectool.OaiUI.MainForm", StringComparison.Ordinal));
+
+                var formType = preferred ?? candidateTypes.FirstOrDefault();
+
                 if (formType != null)
                 {
+                    new CtxLogger().Info($"Launching MainForm type: {formType.FullName}");
                     var instance = Activator.CreateInstance(formType) as Form;
                     if (instance != null) return instance;
                 }

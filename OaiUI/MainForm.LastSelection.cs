@@ -1,10 +1,9 @@
-﻿// ✅ FULL FILE VERSION
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows.Forms;
 using oaiUI.RecentFiles;
 
-namespace Vectool.UI
+namespace Vectool.OaiUI
 {
     /// <summary>
     /// Partial MainForm slice: provides a handler to refresh the Recent Files panel after a removal request.
