@@ -33,8 +33,8 @@ namespace UnitTests.UI.RecentFiles
         public void RefreshListShouldPopulateListView()
         {
             // Arrange
-            mockManager.AddFile("report1.docx", RecentFileType.Docx, 100);
-            mockManager.AddFile("report2.pdf", RecentFileType.Pdf, 200);
+            mockManager.AddFile("report1.docx", RecentFileType.AllSourceDocx, 100);
+            mockManager.AddFile("report2.pdf", RecentFileType.AllSourcePdf, 200);
 
             // Act
             panel.RefreshList();
@@ -50,8 +50,8 @@ namespace UnitTests.UI.RecentFiles
         public void FilterShouldReduceVisibleItems()
         {
             // Arrange
-            mockManager.AddFile("report.docx", RecentFileType.Docx, 100);
-            mockManager.AddFile("notes.pdf", RecentFileType.Pdf, 200);
+            mockManager.AddFile("report.docx", RecentFileType.AllSourceDocx, 100);
+            mockManager.AddFile("notes.pdf", RecentFileType.AllSourcePdf, 200);
             panel.RefreshList();
 
             var filterBox = GetFilterTextBox(panel);
@@ -70,13 +70,13 @@ namespace UnitTests.UI.RecentFiles
         public void RefreshButtonShouldReloadData()
         {
             // Arrange
-            mockManager.AddFile("c1.md", RecentFileType.Md, 50);
+            mockManager.AddFile("c1.md", RecentFileType.AllSourceMd, 50);
             panel.RefreshList();
             var listView = GetListView(panel);
             listView.Items.Count.ShouldBe(1);
 
             // Act
-            mockManager.AddFile("c2.md", RecentFileType.Md, 75);
+            mockManager.AddFile("c2.md", RecentFileType.AllSourceMd, 75);
             var refreshButton = GetRefreshButton(panel);
             refreshButton.PerformClick();
             Application.DoEvents();
@@ -89,8 +89,8 @@ namespace UnitTests.UI.RecentFiles
         public void MissingFilesShouldBeStyledDifferently()
         {
             // Arrange
-            mockManager.AddFile("exists.docx", RecentFileType.Docx, 100, exists: true);
-            mockManager.AddFile("missing.docx", RecentFileType.Docx, 200, exists: false);
+            mockManager.AddFile("exists.docx", RecentFileType.AllSourceDocx, 100, exists: true);
+            mockManager.AddFile("missing.docx", RecentFileType.AllSourceDocx, 200, exists: false);
 
             // Act
             panel.RefreshList();
@@ -116,7 +116,7 @@ namespace UnitTests.UI.RecentFiles
         public void ListViewItemTagShouldStoreRecentFileInfo()
         {
             // Arrange
-            mockManager.AddFile("report.docx", RecentFileType.Docx, 100, exists: true);
+            mockManager.AddFile("report.docx", RecentFileType.AllSourceDocx, 100, exists: true);
             panel.RefreshList();
 
             // Act
@@ -129,7 +129,7 @@ namespace UnitTests.UI.RecentFiles
             listView.Items[0].Tag.ShouldBeAssignableTo<RecentFileInfo>();
             var fileInfo = (RecentFileInfo)listView.Items[0].Tag;
             fileInfo.FileName.ShouldBe("report.docx");
-            fileInfo.FileType.ShouldBe(RecentFileType.Docx);
+            fileInfo.FileType.ShouldBe(RecentFileType.AllSourceDocx);
             fileInfo.FileSizeBytes.ShouldBe(100);
         }
 

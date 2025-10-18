@@ -455,9 +455,9 @@ namespace oaiUI.RecentFiles
             var e = (ext ?? string.Empty).Trim().ToLowerInvariant();
             return e switch
             {
-                ".docx" => RecentFileType.Docx,
-                ".pdf" => RecentFileType.Pdf,
-                ".md" or ".markdown" => RecentFileType.Md,
+                ".docx" => RecentFileType.AllSourceDocx,
+                ".pdf" => RecentFileType.AllSourcePdf,
+                ".md" or ".markdown" => RecentFileType.AllSourceMd,
                 _ => RecentFileType.Unknown
             };
         }

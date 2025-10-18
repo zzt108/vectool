@@ -20,7 +20,7 @@ namespace UnitTests.RecentFiles
             using var tmp = new TempFile(".md", "hello");
             var original = RecentFileInfo.FromPath(
                 tmp.Path,
-                RecentFileType.Md,
+                RecentFileType.AllSourceMd,
                 new[] { Path.GetDirectoryName(tmp.Path) ?? "" },
                 new DateTimeOffset(2025, 09, 26, 12, 34, 56, TimeSpan.Zero));
 
@@ -32,7 +32,7 @@ namespace UnitTests.RecentFiles
             back.Count.ShouldBe(1);
             var item = back[0];
             item.FilePath.ShouldBe(original.FilePath);
-            item.FileType.ShouldBe(RecentFileType.Md);
+            item.FileType.ShouldBe(RecentFileType.AllSourceMd);
             item.GeneratedAt.ShouldBe(original.GeneratedAt);
             item.SourceFolders.ShouldContain(Path.GetDirectoryName(tmp.Path));
             item.FileSizeBytes.ShouldBeGreaterThan(0);
@@ -55,7 +55,7 @@ namespace UnitTests.RecentFiles
             var item = items[0];
 
             item.FilePath.ShouldContain("doesnotexist.docx");
-            item.FileType.ShouldBe(RecentFileType.Docx);
+            item.FileType.ShouldBe(RecentFileType.AllSourceDocx);
             item.SourceFolders.Count.ShouldBe(0);
             item.FileSizeBytes.ShouldBe(0);
             item.GeneratedAt.ShouldNotBe(default(DateTimeOffset));
@@ -65,7 +65,7 @@ namespace UnitTests.RecentFiles
         public void Exists_Property_Should_Reflect_File_System()
         {
             using var tmp = new TempFile(".pdf", "dummy");
-            var info = RecentFileInfo.FromPath(tmp.Path, RecentFileType.Pdf, Array.Empty<string>());
+            var info = RecentFileInfo.FromPath(tmp.Path, RecentFileType.AllSourcePdf, Array.Empty<string>());
 
             info.Exists.ShouldBeTrue();
 

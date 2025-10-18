@@ -41,12 +41,12 @@ namespace UnitTests.RecentFiles
             File.WriteAllText(testFile, "# Git Changes\n\nSome changes...");
 
             // Act
-            manager.RegisterGeneratedFile(testFile, RecentFileType.Md, new[] { testDirectory });
+            manager.RegisterGeneratedFile(testFile, RecentFileType.AllSourceMd, new[] { testDirectory });
 
             // Assert
             var recent = manager.GetRecentFiles();
             recent.Count.ShouldBe(1);
-            recent[0].FileType.ShouldBe(RecentFileType.Md);
+            recent[0].FileType.ShouldBe(RecentFileType.AllSourceMd);
         }
 
         [Test]
@@ -62,9 +62,9 @@ namespace UnitTests.RecentFiles
             File.WriteAllText(mdFile, "md");
 
             // Act - Register in sequence
-            manager.RegisterGeneratedFile(docxFile, RecentFileType.Docx, new[] { testDirectory });
-            manager.RegisterGeneratedFile(pdfFile, RecentFileType.Pdf, new[] { testDirectory });
-            manager.RegisterGeneratedFile(mdFile, RecentFileType.Md, new[] { testDirectory });
+            manager.RegisterGeneratedFile(docxFile, RecentFileType.AllSourceDocx, new[] { testDirectory });
+            manager.RegisterGeneratedFile(pdfFile, RecentFileType.AllSourcePdf, new[] { testDirectory });
+            manager.RegisterGeneratedFile(mdFile, RecentFileType.AllSourceMd, new[] { testDirectory });
 
             // Assert - Most recent should be first
             var recent = manager.GetRecentFiles();

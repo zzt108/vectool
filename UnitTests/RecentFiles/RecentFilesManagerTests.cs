@@ -21,7 +21,7 @@ namespace UnitTests.RecentFiles
             var manager = new RecentFilesManager(TestConfig(), new InMemoryRecentFilesStore());
 
             // Act
-            manager.RegisterGeneratedFile("C:\\test.docx", RecentFileType.Docx, new[] { "C:\\Src" });
+            manager.RegisterGeneratedFile("C:\\test.docx", RecentFileType.AllSourceDocx, new[] { "C:\\Src" });
             var files = manager.GetRecentFiles();
 
             // Assert
@@ -35,10 +35,10 @@ namespace UnitTests.RecentFiles
             // Arrange
             var manager = new RecentFilesManager(TestConfig(), new InMemoryRecentFilesStore());
             var now = DateTime.Now;
-            manager.RegisterGeneratedFile("C:\\test.docx", RecentFileType.Docx, new[] { "C:\\Src" }, 1, now.AddMinutes(-10));
+            manager.RegisterGeneratedFile("C:\\test.docx", RecentFileType.AllSourceDocx, new[] { "C:\\Src" }, 1, now.AddMinutes(-10));
 
             // Act
-            manager.RegisterGeneratedFile("C:\\test.docx", RecentFileType.Docx, new[] { "C:\\Src" }, 1, now);
+            manager.RegisterGeneratedFile("C:\\test.docx", RecentFileType.AllSourceDocx, new[] { "C:\\Src" }, 1, now);
             var files = manager.GetRecentFiles();
 
             // Assert
@@ -89,7 +89,7 @@ namespace UnitTests.RecentFiles
             // Arrange
             var store = new InMemoryRecentFilesStore();
             var manager1 = new RecentFilesManager(TestConfig(), store);
-            manager1.RegisterGeneratedFile("C:\\file1.pdf", RecentFileType.Pdf, new[] { "C:\\Src1" });
+            manager1.RegisterGeneratedFile("C:\\file1.pdf", RecentFileType.AllSourcePdf, new[] { "C:\\Src1" });
             manager1.Save();
 
             // Act
@@ -98,7 +98,7 @@ namespace UnitTests.RecentFiles
 
             // Assert
             files.Count.ShouldBe(1);
-            files[0].FileType.ShouldBe(RecentFileType.Pdf);
+            files[0].FileType.ShouldBe(RecentFileType.AllSourcePdf);
         }
     }
 }

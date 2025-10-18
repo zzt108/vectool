@@ -9,9 +9,9 @@ using System.Text.Json.Serialization;
 public enum RecentFileType
 {
     Unknown = 0,
-    Docx = 1,
-    Md = 2,
-    Pdf = 3,
+    AllSourceDocx = 1,
+    AllSourceMd = 2,
+    AllSourcePdf = 3,
     GitChanges = 4,
     TestResults = 5
 }

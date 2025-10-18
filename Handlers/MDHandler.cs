@@ -30,7 +30,7 @@ namespace VecTool.Handlers
                     var fileInfo = new FileInfo(outputPath);
                     recentFilesManager.RegisterGeneratedFile(
                         outputPath,
-                        RecentFileType.Md,
+                        RecentFileType.AllSourceMd,
                         folderPaths,
                         fileInfo.Length
                     );
