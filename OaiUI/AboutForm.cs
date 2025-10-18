@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Path: OaiUI/AboutForm.cs
+using System;
 using System.Windows.Forms;
 using Vectool.UI.Versioning;
 
@@ -34,6 +35,12 @@ namespace Vectool.OaiUI
             this.lblCommit.Text = string.IsNullOrWhiteSpace(_versions.CommitShort)
                 ? "Commit: n/a"
                 : $"Commit: {_versions.CommitShort}";
+        }
+
+        // ✅ NEW: Named click-handler for Designer event binding without renaming existing methods
+        private void BtnCloseClick(object? sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

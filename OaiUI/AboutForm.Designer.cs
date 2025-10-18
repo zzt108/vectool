@@ -1,4 +1,6 @@
-﻿using System.Windows.Forms;
+﻿// ✅ FULL FILE VERSION
+// Path: OaiUI/AboutForm.Designer.cs
+using System.Windows.Forms;
 
 namespace Vectool.OaiUI
 {
@@ -92,6 +94,7 @@ namespace Vectool.OaiUI
             this.btnClose.Size = new System.Drawing.Size(90, 28);
             this.btnClose.TabIndex = 6;
             this.btnClose.UseVisualStyleBackColor = true;
+            // Minimal, no renames: wire click to close the dialog
             this.btnClose.Click += (_, __) => this.Close();
 
             // AboutForm

@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// Path: OaiUI/MainForm.Designer.cs
+﻿// Path: OaiUI/MainForm.Designer.cs
 
 using System;
 using System.Drawing;

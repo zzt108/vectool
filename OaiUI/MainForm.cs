@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// Path: OaiUI/MainForm.cs
+﻿// Path: OaiUI/MainForm.cs
 
 using NLog;
 using oaiUI.RecentFiles;
@@ -143,6 +142,12 @@ namespace Vectool.OaiUI
                     exitToolStripMenuItem.Click += ExitToolStripMenuItemClick;
                 }
 
+                // ✅ NEW: Help → About
+                if (aboutToolStripMenuItem != null)
+                {
+                    aboutToolStripMenuItem.Click += aboutToolStripMenuItemClick;
+                }
+
                 // Main tab
                 if (btnSelectFolders != null)
                 {
@@ -229,6 +234,13 @@ namespace Vectool.OaiUI
         private void ExitToolStripMenuItemClick(object? sender, EventArgs e)
         {
             Close();
+        }
+        private void aboutToolStripMenuItemClick(object? sender, EventArgs e)
+        {
+            using (var dlg = new AboutForm())
+            {
+                dlg.ShowDialog(this);
+            }
         }
 
         #endregion
