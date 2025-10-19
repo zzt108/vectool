@@ -154,11 +154,11 @@ namespace Vectool.OaiUI
                 return;
 
             var gitOutputPath = saveFileDialog.FileName;
-            // ✅ NEW: Derive MD output path in same directory
+            // Derive MD output path in same directory
             var mdOutputPath = Path.Combine(Path.GetDirectoryName(gitOutputPath)!,mdExportFileName);
 
-            // ✅ NEW: Check if MD file exists and confirm overwrite once
-            if (File.Exists(mdOutputPath))
+            // ignored for now: Check if MD file exists and confirm overwrite once
+            if (false && File.Exists(mdOutputPath))
             {
                 var overwrite = MessageBox.Show(
                     $"MD export file already exists:\n{mdOutputPath}\n\nOverwrite?",
