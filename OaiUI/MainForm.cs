@@ -140,29 +140,44 @@ namespace Vectool.OaiUI
 
             var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var defaultFileName = $"{vsName}.{branchName}.changes.md";
+            var gitChangesFileName = $"{vsName}.{branchName}.GIT.md";
+            var mdExportFileName = $"{vsName}.{branchName}.md";
 
             using var saveFileDialog = new SaveFileDialog
             {
                 Title = "Save Git Changes As...",
                 Filter = "Markdown files (*.md)|*.md|All files (*.*)|*.*",
-                FileName = defaultFileName
+                FileName = gitChangesFileName
             };
 
             if (saveFileDialog.ShowDialog() != DialogResult.OK)
                 return;
 
-            var outputPath = saveFileDialog.FileName;
+            var gitOutputPath = saveFileDialog.FileName;
+            // ✅ NEW: Derive MD output path in same directory
+            var mdOutputPath = Path.Combine(Path.GetDirectoryName(gitOutputPath)!,mdExportFileName);
+
+            // ✅ NEW: Check if MD file exists and confirm overwrite once
+            if (File.Exists(mdOutputPath))
+            {
+                var overwrite = MessageBox.Show(
+                    $"MD export file already exists:\n{mdOutputPath}\n\nOverwrite?",
+                    "Confirm Overwrite",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+                if (overwrite != DialogResult.Yes) return;
+            }
 
             try
             {
-                userInterface.WorkStart($"Generating Git changes file...", selectedFolders);
-                var handler = new GitChangesHandler(userInterface, recentFilesManager);
-                await Task.Run(() => handler.GetGitChanges(selectedFolders, outputPath)).ConfigureAwait(true);
+                await ExecuteGitChangesAndMdParallelAsync(gitOutputPath, mdOutputPath).ConfigureAwait(true);
 
-                convertToMdToolStripMenuItemClick(sender, e);
-
-                // userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
+                userInterface.ShowMessage(
+                    $"Successfully generated:\n- Git Changes: {gitOutputPath}\n- MD Export: {mdOutputPath}",
+                    "Success",
+                    MessageType.Information
+                );
             }
             catch (Exception ex)
             {
@@ -171,7 +186,32 @@ namespace Vectool.OaiUI
             finally
             {
                 userInterface.WorkFinish();
+                // Refresh Recent Files panel after both operations
+                recentFilesPanel.RefreshList();
             }
+        }
+
+        /// <summary>
+        /// Executes Git changes extraction and MD export in parallel.
+        /// </summary>
+        private async Task ExecuteGitChangesAndMdParallelAsync(string gitOutputPath, string mdOutputPath)
+        {
+            userInterface.WorkStart("Generating Git changes and MD export...", selectedFolders);
+
+            var gitHandler = new GitChangesHandler(userInterface, recentFilesManager);
+            var mdHandler = new MDHandler(userInterface, recentFilesManager);
+
+            var vectorStoreConfig = GetCurrentVectorStoreConfig();
+
+            // ✅ NEW: Execute both operations in parallel
+            var gitTask = Task.Run(async () =>
+                await gitHandler.GetGitChangesAsync(selectedFolders, gitOutputPath).ConfigureAwait(false)
+            );
+
+            var mdTask = mdHandler.ExportSelectedFoldersAsync(selectedFolders, mdOutputPath, vectorStoreConfig);
+            
+
+            await Task.WhenAll(gitTask, mdTask).ConfigureAwait(true);
         }
 
         private async void convertToMdToolStripMenuItemClick(object? sender, EventArgs e)
