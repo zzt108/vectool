@@ -1,6 +1,7 @@
+using NLogShared;
 using System.Linq;
 using System.Windows.Forms;
-using NLogShared;
+using Vectool.UI.Versioning;
 
 namespace Vectool.OaiUI
 {
@@ -23,9 +24,9 @@ namespace Vectool.OaiUI
 
             ApplicationConfiguration.Initialize();
 
-            var mainForm = CreateMainFormOrFallback();
+            var versionProvider = new AssemblyVersionProvider();
+            var mainForm = new MainForm(versionProvider);
 
-            // NEW CODE: apply window icon at runtime even if designer didn’t set it
             try
             {
                 var iconPath = Path.Combine(AppContext.BaseDirectory, "Media", "icon.ico");
@@ -59,12 +60,7 @@ namespace Vectool.OaiUI
         {
             try
             {
-              // OLD:
-              // var formType = typeof(Program).Assembly
-              //     .GetTypes()
-              //     .FirstOrDefault(t => typeof(Form).IsAssignableFrom(t) && string.Equals(t.Name, "MainForm", StringComparison.Ordinal));
 
-                // NEW: Prefer deterministic selection of the designer-backed MainForm
                 var candidateTypes = typeof(Program).Assembly
                     .GetTypes()
                     .Where(t => typeof(Form).IsAssignableFrom(t) && string.Equals(t.Name, "MainForm", StringComparison.Ordinal))

@@ -1,19 +1,18 @@
 ﻿// ✅ FULL FILE VERSION
 // Path: src/VecTool.UI/OaiUI/MainForm.cs
+using oaiUI;
+using oaiUI.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using Vectool.UI.Versioning;
 using VecTool.Configuration;
 using VecTool.Core;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
-
-using oaiUI;
-using oaiUI.Services;
 
 namespace Vectool.OaiUI
 {
@@ -32,8 +31,12 @@ namespace Vectool.OaiUI
         // Persist last vector store selection
         private readonly ILastSelectionService lastSelection = new LastSelectionService();
 
-        public MainForm()
+        private readonly IVersionProvider _versionProvider;
+
+        public MainForm(IVersionProvider versionProvider)
         {
+            _versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
+
             InitializeComponent();
 
             // Initialize UI service wrappers
@@ -51,6 +54,8 @@ namespace Vectool.OaiUI
 
             WireUpEvents();
             LoadVectorStoresIntoComboBox();
+            UpdateFormTitle(); // Will now include version
+
         }
 
         private void WireUpEvents()
@@ -80,7 +85,13 @@ namespace Vectool.OaiUI
         private void UpdateFormTitle()
         {
             var selectedName = comboBoxVectorStores.SelectedItem?.ToString();
-            this.Text = string.IsNullOrEmpty(selectedName) ? "VecTool" : $"VecTool - {selectedName}";
+            //var version = _versionProvider.InformationalVersion ?? _versionProvider.FileVersion;
+            var version = _versionProvider.FileVersion;
+            var baseName = $"VecTool v{version}";
+
+            this.Text = string.IsNullOrEmpty(selectedName)
+                ? baseName
+                : $"{baseName} - {selectedName}";
         }
 
         private static string SanitizeFileName(string input, string replacement = "_")

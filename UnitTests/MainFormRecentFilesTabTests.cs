@@ -1,9 +1,10 @@
 ﻿using NUnit.Framework;
+using oaiUI.RecentFiles;
 using Shouldly;
 using System.Linq;
 using System.Windows.Forms;
-using oaiUI.RecentFiles;
 using Vectool.OaiUI;
+using Vectool.UI.Versioning;
 
 namespace UnitTests.UI
 {
@@ -14,7 +15,7 @@ namespace UnitTests.UI
         public void MainFormShouldHaveRecentFilesTab()
         {
             // Act
-            using var form = new MainForm();
+            using var form = new MainForm(new AssemblyVersionProvider());
 
             // Assert
             var tabControl = form.Controls.OfType<TabControl>().FirstOrDefault();
@@ -27,7 +28,7 @@ namespace UnitTests.UI
         public void RecentFilesTabShouldContainRecentFilesPanel()
         {
             // Act
-            using var form = new MainForm();
+            using var form = new MainForm(new AssemblyVersionProvider());
 
             var tabControl = form.Controls.OfType<TabControl>().FirstOrDefault();
             tabControl.ShouldNotBeNull();
@@ -43,7 +44,7 @@ namespace UnitTests.UI
         public void TabSelectionShouldTriggerPanelRefresh()
         {
             // Arrange
-            using var form = new MainForm();
+            using var form = new MainForm(new AssemblyVersionProvider());
             form.Show(); // events require a visible form
 
             var tabControl = form.Controls.OfType<TabControl>().FirstOrDefault();
