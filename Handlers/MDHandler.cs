@@ -5,6 +5,13 @@ namespace VecTool.Handlers
 {
     public class MDHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager) : FileHandlerBase(ui, recentFilesManager)
     {
+        /// <summary>
+        /// Async wrapper for ExportSelectedFolders to enable better parallelism.
+        /// </summary>
+        public Task ExportSelectedFoldersAsync(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
+        {
+            return Task.Run(() => ExportSelectedFolders(folderPaths, outputPath, vectorStoreConfig));
+        }
 
         public void ExportSelectedFolders(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
         {
