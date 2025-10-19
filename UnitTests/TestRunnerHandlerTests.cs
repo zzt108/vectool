@@ -22,7 +22,7 @@ namespace UnitTests
             IProcessRunner proc = new FakeProcessRunner(exitCode: 0);
             var handler = new TestRunnerHandler(git, proc, ui: null, recentFilesManager: null);
 
-            var result = await handler.RunTestsAsync("C:\\definitely-not-here\\VecTool.sln", "Store", Array.Empty<string>(), CancellationToken.None);
+            var result = await handler.RunTestsAsync("Store", Array.Empty<string>(), CancellationToken.None);
             result.ShouldBeNull();
         }
 
@@ -41,7 +41,7 @@ namespace UnitTests
 
             try
             {
-                var result = await handler.RunTestsAsync(sln, "S", Array.Empty<string>(), CancellationToken.None);
+                var result = await handler.RunTestsAsync("S", Array.Empty<string>(), CancellationToken.None);
                 result.ShouldNotBeNull();
                 File.Exists(result!).ShouldBeTrue();
             }
@@ -65,7 +65,7 @@ namespace UnitTests
 
             try
             {
-                var result = await handler.RunTestsAsync(sln, "S", Array.Empty<string>(), CancellationToken.None);
+                var result = await handler.RunTestsAsync("S", Array.Empty<string>(), CancellationToken.None);
                 result.ShouldBeNull();
             }
             finally

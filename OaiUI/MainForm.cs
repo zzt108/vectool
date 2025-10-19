@@ -300,12 +300,12 @@ namespace Vectool.OaiUI
 
         private async void runTestsToolStripMenuItemClick(object? sender, EventArgs e)
         {
-            var solutionPath = FindSolutionFile();
-            if (solutionPath is null)
-            {
-                userInterface.ShowMessage("Could not find VecTool.sln in parent directories.", "Solution Not Found", MessageType.Error);
-                return;
-            }
+            //var solutionPath = FindSolutionFile();
+            //if (solutionPath is null)
+            //{
+            //    userInterface.ShowMessage("Could not find VecTool.sln in parent directories.", "Solution Not Found", MessageType.Error);
+            //    return;
+            //}
 
             var vsName = comboBoxVectorStores.SelectedItem?.ToString() ?? "default";
             var handler = new TestRunnerHandler(userInterface, recentFilesManager);
@@ -313,7 +313,7 @@ namespace Vectool.OaiUI
             try
             {
                 userInterface.WorkStart("Running unit tests...", selectedFolders);
-                await handler.RunTestsAsync(solutionPath, vsName, selectedFolders).ConfigureAwait(true);
+                await handler.RunTestsAsync(vsName, selectedFolders).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -322,6 +322,7 @@ namespace Vectool.OaiUI
             finally
             {
                 userInterface.WorkFinish();
+                recentFilesPanel.RefreshList();
             }
         }
 

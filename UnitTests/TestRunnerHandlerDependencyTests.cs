@@ -27,12 +27,12 @@ namespace UnitTests
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
-            var sln = Path.Combine(tempDir, "VecTool.sln");
-            await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
+            //var sln = Path.Combine(tempDir, "VecTool.sln");
+            //await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
 
             try
             {
-                var result = await handler.RunTestsAsync(sln, "storeX", Array.Empty<string>(), CancellationToken.None);
+                var result = await handler.RunTestsAsync("storeX", Array.Empty<string>(), CancellationToken.None);
                 result.ShouldBeNull();
             }
             finally
@@ -53,12 +53,12 @@ namespace UnitTests
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
-            var sln = Path.Combine(tempDir, "VecTool.sln");
-            await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
+            //var sln = Path.Combine(tempDir, "VecTool.sln");
+            //await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
 
             try
             {
-                var resultPath = await handler.RunTestsAsync(sln, "S", Array.Empty<string>(), CancellationToken.None);
+                var resultPath = await handler.RunTestsAsync("S", Array.Empty<string>(), CancellationToken.None);
                 resultPath.ShouldNotBeNull();
                 File.Exists(resultPath!).ShouldBeTrue();
             }
