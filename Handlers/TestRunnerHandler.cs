@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// File: Handlers/TestRunnerHandler.cs
+﻿// File: Handlers/TestRunnerHandler.cs
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,22 +49,23 @@ namespace VecTool.Handlers
         /// Returns the path on success; null on failure.
         /// </summary>
         public async Task<string?> RunTestsAsync(
-            string solutionPath,
+//            string solutionPath,
             string storeId,
             IReadOnlyList<string> selectedFolders,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(solutionPath) || !File.Exists(solutionPath))
-            {
-                ui?.ShowMessage("Solution file not found.", "Run Tests", MessageType.Error);
-                return null;
-            }
 
-            var solutionDir = Path.GetDirectoryName(solutionPath) ?? Environment.CurrentDirectory;
+            // var solutionDir = Path.GetDirectoryName(solutionPath) ?? Environment.CurrentDirectory;
 
             // Derive preferred working directory from selected repositories; else solution folder
             var preferred = RepoLocator.ResolvePreferredWorkingDirectory(selectedFolders);
-            var workingDir = string.IsNullOrWhiteSpace(preferred) ? solutionDir : preferred;
+            if (string.IsNullOrWhiteSpace(preferred) || !Directory.Exists(preferred))
+            {
+                ui?.ShowMessage($"{preferred} folder not found.", "Run Tests", MessageType.Error);
+                return null;
+            }
+
+            var workingDir = preferred;
 
             // Get branch, fallback to unknown
             var branch = "unknown";
@@ -80,7 +80,7 @@ namespace VecTool.Handlers
             }
 
             // Execute tests
-            var args = $"test \"{solutionPath}\" --nologo --verbosity minimal";
+            var args = $"test \"{workingDir}\" --nologo --verbosity minimal";
             ProcessResult result;
             try
             {
@@ -98,14 +98,14 @@ namespace VecTool.Handlers
             }
 
             // Write report under Generated
-            var outDir = Path.Combine(workingDir, "Generated");
+            var outDir = Path.Combine(workingDir, "..\\Generated");
             Directory.CreateDirectory(outDir);
-            var fileName = $"test-results.{storeId}.{branch}.{DateTime.UtcNow:yyyyMMdd-HHmmss}.txt";
+            var fileName = $"test-results.{storeId}.{branch}.md";
             var outPath = Path.Combine(outDir, fileName);
 
             var sb = new StringBuilder();
             sb.AppendLine($"# dotnet test results");
-            sb.AppendLine($"Solution: {Path.GetFileName(solutionPath)}");
+            sb.AppendLine($"Solution: {Path.GetFileName(workingDir)}");
             sb.AppendLine($"Branch: {branch}");
             sb.AppendLine($"Store: {storeId}");
             sb.AppendLine($"When (UTC): {DateTime.UtcNow:O}");
