@@ -300,29 +300,48 @@ namespace Vectool.OaiUI
 
         private async void runTestsToolStripMenuItemClick(object? sender, EventArgs e)
         {
-            //var solutionPath = FindSolutionFile();
-            //if (solutionPath is null)
-            //{
-            //    userInterface.ShowMessage("Could not find VecTool.sln in parent directories.", "Solution Not Found", MessageType.Error);
-            //    return;
-            //}
+            // Resolve solution path (existing helper or logic).
+            var solutionPath = FindSolutionFile();
+            if (string.IsNullOrWhiteSpace(solutionPath))
+            {
+                MessageBox.Show(
+                    "Could not find the solution file.",
+                    "Solution Not Found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
 
-            var vsName = comboBoxVectorStores.SelectedItem?.ToString() ?? "default";
-            var handler = new TestRunnerHandler(userInterface, recentFilesManager);
+            // Create the process runner and handler (kept local for MVP; DI-ready).
+            var processRunner = new VecTool.Core.ProcessRunner();
+            var handler = new VecTool.Handlers.TestRunnerHandler(processRunner);
 
             try
             {
-                userInterface.WorkStart("Running unit tests...", selectedFolders);
-                await handler.RunTestsAsync(vsName, selectedFolders).ConfigureAwait(true);
+                // Optional: existing UI busy indicator hooks if available.
+                // userInterface.WorkStart("Running unit tests...", selectedFolders);
+
+                var message = await handler.RunTestsAsync(solutionPath, CancellationToken.None).ConfigureAwait(true);
+
+                var isSuccess = message.StartsWith("All tests passed.", StringComparison.OrdinalIgnoreCase);
+                MessageBox.Show(
+                    message,
+                    "Test Results",
+                    MessageBoxButtons.OK,
+                    isSuccess ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"Test execution failed: {ex.Message}", "Test Error", MessageType.Error);
+                MessageBox.Show(
+                    $"Test execution failed: {ex.Message}",
+                    "Test Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
             finally
             {
-                userInterface.WorkFinish();
-                recentFilesPanel.RefreshList();
+                // userInterface.WorkFinish();
+                // recentFilesPanel.RefreshList();
             }
         }
 

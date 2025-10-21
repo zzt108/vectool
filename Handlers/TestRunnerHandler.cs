@@ -1,147 +1,82 @@
-﻿// File: Handlers/TestRunnerHandler.cs
+﻿// ✅ FULL FILE VERSION
+// File: Handlers/TestRunnerHandler.cs
+
+using LogCtxShared;
+using NLogShared;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NLogShared;
-using VecTool.Core;
 using VecTool.Core.Abstractions;
-using VecTool.RecentFiles;
 
 namespace VecTool.Handlers
 {
     /// <summary>
-    /// Runs 'dotnet test', captures outputs, writes a result file, and registers it in Recent Files.
+    /// Runs test suites and returns a single, human-readable message based on the process exit code.
+    /// Phase 4.3.1 MVP: exit-code only; no parsing of stdout/stderr. 🚫
     /// </summary>
-    public sealed class TestRunnerHandler : FileHandlerBase
+    public sealed class TestRunnerHandler
     {
-        private readonly IGitRunner gitRunner;
         private readonly IProcessRunner processRunner;
 
-        // Canonical DI-friendly constructor
-        public TestRunnerHandler(IGitRunner gitRunner, IProcessRunner processRunner, IUserInterface? ui, IRecentFilesManager? recentFilesManager)
-            : base(ui, recentFilesManager)
+        public TestRunnerHandler(IProcessRunner processRunner)
         {
-            this.gitRunner = gitRunner ?? throw new ArgumentNullException(nameof(gitRunner));
             this.processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
         }
 
-        // ✅ Back-compat: legacy 2-arg ctor used by existing tests
-        public TestRunnerHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
-            : this(
-                new GitRunner(AppDomain.CurrentDomain.BaseDirectory),
-                new ProcessRunner(),
-                ui,
-                recentFilesManager)
+        /// <summary>
+        /// Executes "dotnet test" for the given solution and returns a friendly status message.
+        /// Logs Operation, Solution, ExitCode, and Message via LogCtx for SEQ-friendly diagnostics.
+        /// </summary>
+        public async Task<string> RunTestsAsync(string solutionPath, CancellationToken ct)
         {
-        }
+            if (string.IsNullOrWhiteSpace(solutionPath))
+                throw new ArgumentException("Solution path is required.", nameof(solutionPath));
 
-        // ✅ Back-compat: tests passing UI first, then fake git/proc in this order
-        public TestRunnerHandler(IUserInterface? ui, IRecentFilesManager? recent, IGitRunner git, IProcessRunner proc)
-            : this(git, proc, ui, recent)
-        {
+            using var log = new CtxLogger();
+            log.Ctx.Set(new LogCtxShared.Props()
+                .Add("Operation", "RunTests")
+                .Add("Solution", solutionPath));
+
+            var args = $"test \"{solutionPath}\" --no-build --verbosity minimal";
+
+            var result = await processRunner.RunAsync(
+                fileName: "dotnet",
+                arguments: args,
+                workingDirectory: null,
+                ct: ct).ConfigureAwait(false);
+
+            var message = MapExitCodeToMessage(result.ExitCode);
+
+            log.Ctx.Set(new LogCtxShared.Props()
+                .Add("Operation", "RunTests")
+                .Add("Solution", solutionPath)
+                .Add("ExitCode", result.ExitCode)
+                .Add("Message", message));
+
+            if (result.ExitCode == 0)
+            {
+                log.Info("Tests passed successfully.");
+            }
+            else
+            {
+                log.Warn($"Tests completed with exit code {result.ExitCode}. {message}");
+            }
+
+            return message;
         }
 
         /// <summary>
-        /// Run dotnet test against the solution path and write a structured report to Generated folder.
-        /// Returns the path on success; null on failure.
+        /// Maps known test exit codes to a concise, user-facing message.
         /// </summary>
-        public async Task<string?> RunTestsAsync(
-//            string solutionPath,
-            string storeId,
-            IReadOnlyList<string> selectedFolders,
-            CancellationToken cancellationToken = default)
+        internal static string MapExitCodeToMessage(int code) => code switch
         {
-
-            // var solutionDir = Path.GetDirectoryName(solutionPath) ?? Environment.CurrentDirectory;
-
-            // Derive preferred working directory from selected repositories; else solution folder
-            var preferred = RepoLocator.ResolvePreferredWorkingDirectory(selectedFolders);
-            if (string.IsNullOrWhiteSpace(preferred) || !Directory.Exists(preferred))
-            {
-                ui?.ShowMessage($"{preferred} folder not found.", "Run Tests", MessageType.Error);
-                return null;
-            }
-
-            var workingDir = preferred;
-
-            // Get branch, fallback to unknown
-            var branch = "unknown";
-            try
-            {
-                var b = await gitRunner.GetCurrentBranchAsync(workingDir, cancellationToken).ConfigureAwait(false);
-                if (!string.IsNullOrWhiteSpace(b)) branch = b;
-            }
-            catch
-            {
-                // keep unknown
-            }
-
-            // Execute tests
-            var args = $"test \"{workingDir}\" --nologo --verbosity minimal";
-            ProcessResult result;
-            try
-            {
-                result = await processRunner.RunAsync("dotnet", args, workingDir, cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                ui?.ShowMessage($"Failed to start test run: {ex.Message}", "Run Tests", MessageType.Error);
-                return null;
-            }
-
-            if (result.ExitCode != 0)
-            {
-                ui?.ShowMessage("Tests failed. See report for details.", "Run Tests", MessageType.Warning);
-            }
-
-            // Write report under Generated
-            var outDir = Path.Combine(workingDir, "..\\Generated");
-            Directory.CreateDirectory(outDir);
-            var fileName = $"test-results.{storeId}.{branch}.md";
-            var outPath = Path.Combine(outDir, fileName);
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"# dotnet test results");
-            sb.AppendLine($"Solution: {Path.GetFileName(workingDir)}");
-            sb.AppendLine($"Branch: {branch}");
-            sb.AppendLine($"Store: {storeId}");
-            sb.AppendLine($"When (UTC): {DateTime.UtcNow:O}");
-            sb.AppendLine($"Duration: {result.Duration}");
-            sb.AppendLine();
-            if (!string.IsNullOrEmpty(result.StandardOutput))
-            {
-                sb.AppendLine("## Standard Output");
-                sb.AppendLine(result.StandardOutput);
-            }
-            if (!string.IsNullOrEmpty(result.StandardError))
-            {
-                sb.AppendLine();
-                sb.AppendLine("## Standard Error");
-                sb.AppendLine(result.StandardError);
-            }
-
-            await File.WriteAllTextAsync(outPath, sb.ToString(), cancellationToken).ConfigureAwait(false);
-
-            // Register in Recent Files
-            try
-            {
-                var length = new FileInfo(outPath).Length;
-                recentFilesManager?.RegisterGeneratedFile(
-                    filePath: outPath,
-                    fileType: RecentFileType.TestResults,
-                    sourceFolders: selectedFolders,
-                    fileSizeBytes: length,
-                    generatedAtUtc: DateTime.UtcNow);
-            }
-            catch
-            {
-                // best effort only
-            }
-
-            return result.ExitCode == 0 ? outPath : null;
-        }
+            0 => "All tests passed.",
+            1 => "One or more tests failed (VSTest).",
+            2 => "One or more tests failed (MSTest platform).",
+            3 => "Test run aborted.",
+            8 => "No tests discovered. Check your test project.",
+            10 => "Test adapter/infrastructure failure.",
+            _ => $"Unknown exit code {code}. See output for details."
+        };
     }
 }
