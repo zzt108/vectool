@@ -19,8 +19,8 @@ namespace Vectool.OaiUI
     public partial class MainForm : Form
     {
         // UI services and data
-        private WinFormsUserInterface userInterface;
-        private IRecentFilesManager recentFilesManager;
+        private WinFormsUserInterface _userInterface;
+        private IRecentFilesManager _recentFilesManager;
 
         // Selected folders bound to the listbox
         private readonly List<string> selectedFolders = new();
@@ -40,17 +40,17 @@ namespace Vectool.OaiUI
             InitializeComponent();
 
             // Initialize UI service wrappers
-            userInterface = new WinFormsUserInterface(statusLabel, progressBar);
+            _userInterface = new WinFormsUserInterface(statusLabel, progressBar);
 
             // Initialize Recent Files
             var recentFilesConfig = RecentFilesConfig.FromAppConfig();
             Directory.CreateDirectory(recentFilesConfig.OutputPath);
             var recentFilesStore = new FileRecentFilesStore(recentFilesConfig);
-            recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
-            recentFilesManager.Load();
+            _recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
+            _recentFilesManager.Load();
 
             // Recent files panel created by designer; initialize once controls exist
-            recentFilesPanel.Initialize(recentFilesManager);
+            recentFilesPanel.Initialize(_recentFilesManager);
 
             WireUpEvents();
             LoadVectorStoresIntoComboBox();
@@ -134,7 +134,7 @@ namespace Vectool.OaiUI
         {
             if (selectedFolders.Count == 0)
             {
-                userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
+                _userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
                 return;
             }
 
@@ -173,7 +173,7 @@ namespace Vectool.OaiUI
             {
                 await ExecuteGitChangesAndMdParallelAsync(gitOutputPath, mdOutputPath).ConfigureAwait(true);
 
-                userInterface.ShowMessage(
+                _userInterface.ShowMessage(
                     $"Successfully generated:\n- Git Changes: {gitOutputPath}\n- MD Export: {mdOutputPath}",
                     "Success",
                     MessageType.Information
@@ -181,11 +181,11 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                _userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
-                userInterface.WorkFinish();
+                _userInterface.WorkFinish();
                 // Refresh Recent Files panel after both operations
                 recentFilesPanel.RefreshList();
             }
@@ -196,10 +196,10 @@ namespace Vectool.OaiUI
         /// </summary>
         private async Task ExecuteGitChangesAndMdParallelAsync(string gitOutputPath, string mdOutputPath)
         {
-            userInterface.WorkStart("Generating Git changes and MD export...", selectedFolders);
+            _userInterface.WorkStart("Generating Git changes and MD export...", selectedFolders);
 
-            var gitHandler = new GitChangesHandler(userInterface, recentFilesManager);
-            var mdHandler = new MDHandler(userInterface, recentFilesManager);
+            var gitHandler = new GitChangesHandler(_userInterface, _recentFilesManager);
+            var mdHandler = new MDHandler(_userInterface, _recentFilesManager);
 
             var vectorStoreConfig = GetCurrentVectorStoreConfig();
 
@@ -218,7 +218,7 @@ namespace Vectool.OaiUI
         {
             if (selectedFolders.Count == 0)
             {
-                userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
+                _userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
                 return;
             }
 
@@ -241,18 +241,18 @@ namespace Vectool.OaiUI
 
             try
             {
-                userInterface.WorkStart($"Generating MD file...", selectedFolders);
-                var handler = new MDHandler(userInterface, recentFilesManager);
+                _userInterface.WorkStart($"Generating MD file...", selectedFolders);
+                var handler = new MDHandler(_userInterface, _recentFilesManager);
                 await Task.Run(() => handler.ExportSelectedFolders(selectedFolders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
+                _userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                _userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
-                userInterface.WorkFinish();
+                _userInterface.WorkFinish();
             }
         }
 
@@ -260,7 +260,7 @@ namespace Vectool.OaiUI
         {
             if (selectedFolders.Count == 0)
             {
-                userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
+                _userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
                 return;
             }
 
@@ -283,18 +283,18 @@ namespace Vectool.OaiUI
 
             try
             {
-                userInterface.WorkStart($"Generating file size summary...", selectedFolders);
-                var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
+                _userInterface.WorkStart($"Generating file size summary...", selectedFolders);
+                var handler = new FileSizeSummaryHandler(_userInterface, _recentFilesManager);
                 await Task.Run(() => handler.GenerateFileSizeSummary(selectedFolders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
+                _userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                _userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
-                userInterface.WorkFinish();
+                _userInterface.WorkFinish();
             }
         }
 
@@ -314,12 +314,12 @@ namespace Vectool.OaiUI
 
             // Create the process runner and handler (kept local for MVP; DI-ready).
             var processRunner = new VecTool.Core.ProcessRunner();
-            var handler = new VecTool.Handlers.TestRunnerHandler(processRunner);
+            var handler = new VecTool.Handlers.TestRunnerHandler(processRunner, _userInterface, _recentFilesManager);
 
             try
             {
                 // Optional: existing UI busy indicator hooks if available.
-                // userInterface.WorkStart("Running unit tests...", selectedFolders);
+                // _userInterface.WorkStart("Running unit tests...", selectedFolders);
 
                 var message = await handler.RunTestsAsync(solutionPath, CancellationToken.None).ConfigureAwait(true);
 
@@ -340,7 +340,7 @@ namespace Vectool.OaiUI
             }
             finally
             {
-                // userInterface.WorkFinish();
+                // _userInterface.WorkFinish();
                 // recentFilesPanel.RefreshList();
             }
         }
@@ -498,7 +498,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"Failed to load vector stores: {ex.Message}", "Warning", MessageType.Warning);
+                _userInterface.ShowMessage($"Failed to load vector stores: {ex.Message}", "Warning", MessageType.Warning);
             }
         }
 
@@ -532,13 +532,13 @@ namespace Vectool.OaiUI
             var newName = txtNewVectorStoreName.Text?.Trim();
             if (string.IsNullOrWhiteSpace(newName))
             {
-                userInterface.ShowMessage("Please enter a name for the new vector store.", "Input Required", MessageType.Warning);
+                _userInterface.ShowMessage("Please enter a name for the new vector store.", "Input Required", MessageType.Warning);
                 return;
             }
 
             if (allVectorStoreConfigs.ContainsKey(newName))
             {
-                userInterface.ShowMessage($"A vector store named '{newName}' already exists.", "Duplicate Name", MessageType.Warning);
+                _userInterface.ShowMessage($"A vector store named '{newName}' already exists.", "Duplicate Name", MessageType.Warning);
                 return;
             }
 
@@ -552,7 +552,7 @@ namespace Vectool.OaiUI
             comboBoxVectorStores.SelectedItem = newName;
             txtNewVectorStoreName.Clear();
 
-            userInterface.ShowMessage($"Vector store '{newName}' created.", "Success", MessageType.Information);
+            _userInterface.ShowMessage($"Vector store '{newName}' created.", "Success", MessageType.Information);
             UpdateFormTitle();
         }
 

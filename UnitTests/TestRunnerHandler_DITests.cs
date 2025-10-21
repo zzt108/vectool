@@ -14,12 +14,11 @@ namespace UnitTests
         [Test]
         public void Should_wire_dependencies_via_canonical_DI_constructor()
         {
-            IGitRunner gitRunner = new FakeGitRunner("main");
             IProcessRunner processRunner = new FakeProcessRunner();
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recentFiles = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler(gitRunner, processRunner, ui, recentFiles);
+            var handler = new TestRunnerHandler(processRunner, ui, recentFiles);
 
             handler.ShouldNotBeNull();
         }

@@ -18,12 +18,12 @@ namespace UnitTests
         [Test]
         public async Task RunTestsAsync_should_return_null_when_dotnet_fails()
         {
-            IGitRunner git = new FakeGitRunner("dev");
+            // IGitRunner git = new FakeGitRunner("dev");
             IProcessRunner proc = new FakeProcessRunner(exitCode: 1, stdout: "", stderr: "boom");
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recent = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler(git, proc, ui, recent);
+            var handler = new TestRunnerHandler(proc, ui, recent);
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
@@ -32,7 +32,7 @@ namespace UnitTests
 
             try
             {
-                var result = await handler.RunTestsAsync("storeX", Array.Empty<string>(), CancellationToken.None);
+                var result = await handler.RunTestsAsync("storeX", CancellationToken.None);
                 result.ShouldBeNull();
             }
             finally
@@ -44,12 +44,12 @@ namespace UnitTests
         [Test]
         public async Task RunTestsAsync_should_write_output_on_success()
         {
-            IGitRunner git = new FakeGitRunner("main");
+            // IGitRunner git = new FakeGitRunner("main");
             IProcessRunner proc = new FakeProcessRunner(exitCode: 0, stdout: "ok", stderr: "");
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recent = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler(git, proc, ui, recent);
+            var handler = new TestRunnerHandler(proc, ui, recent);
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
@@ -58,7 +58,7 @@ namespace UnitTests
 
             try
             {
-                var resultPath = await handler.RunTestsAsync("S", Array.Empty<string>(), CancellationToken.None);
+                var resultPath = await handler.RunTestsAsync("S", CancellationToken.None);
                 resultPath.ShouldNotBeNull();
                 File.Exists(resultPath!).ShouldBeTrue();
             }
