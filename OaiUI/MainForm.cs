@@ -358,7 +358,7 @@ namespace Vectool.OaiUI
 
             // Create the process runner and handler (kept local for MVP; DI-ready).
             var processRunner = new VecTool.Core.ProcessRunner();
-            var handler = new VecTool.Handlers.TestRunnerHandler(solutionPath, processRunner, _userInterface, _recentFilesManager);
+            var handler = new VecTool.Handlers.TestRunnerHandler(solutionPath, testResultsOutputPath, processRunner, _userInterface, _recentFilesManager);
 
             try
             {

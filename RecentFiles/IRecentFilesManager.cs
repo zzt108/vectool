@@ -24,7 +24,7 @@ public interface IRecentFilesManager
     void RegisterGeneratedFile(
         string filePath, 
         RecentFileType fileType, 
-        IReadOnlyList<string> sourceFolders, 
+        IReadOnlyList<string>? sourceFolders = null,
         long fileSizeBytes = 0, 
         DateTime? generatedAtUtc = null);
 

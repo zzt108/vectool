@@ -19,7 +19,8 @@ namespace VecTool.Handlers
         private readonly string _solutionPath;
         private readonly IProcessRunner _processRunner;
         private readonly IUserInterface? _ui;
-        private readonly IRecentFilesManager _recentFiles;
+        private readonly IRecentFilesManager _recentFilesManager;
+        readonly string _outputFile;
 
         /// <summary>
         /// Canonical DI constructor expected by unit tests:
@@ -27,14 +28,16 @@ namespace VecTool.Handlers
         /// </summary>
         public TestRunnerHandler(
             string solutionPath,
+            string outputFile,
             IProcessRunner processRunner,
             IUserInterface ui,
             IRecentFilesManager recentFiles)
         {
+            this._outputFile = outputFile;
             this._solutionPath = solutionPath ?? throw new ArgumentNullException(nameof(solutionPath));
             this._processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
             this._ui = ui;
-            this._recentFiles = recentFiles ?? throw new ArgumentNullException(nameof(recentFiles));
+            this._recentFilesManager = recentFiles ?? throw new ArgumentNullException(nameof(recentFiles));
         }
 
         /// <summary>
@@ -93,26 +96,40 @@ namespace VecTool.Handlers
                 .Add("ExitCode", testResult.ExitCode)
                 .Add("Message", message));
 
-            if (testResult.ExitCode != 0)
-            {
-                _ui?.ShowMessage(message, "Test Runner", MessageType.Warning);
+            if (testResult.ExitCode == 0) {
+                _ui?.ShowMessage(message, "Test Runner - No Fails", MessageType.Information);
                 log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
-                return null;
+            }
+            else
+            {
+                //                _ui?.ShowMessage(message, "Test Runner", MessageType.Warning);
+                log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
             }
 
             // On success, persist output to a temp file and return its path (as asserted by tests).
-            var outDir = Path.Combine(Path.GetTempPath(), "VecToolTestResults");
-            Directory.CreateDirectory(outDir);
+            //var outDir = Path.Combine(Path.GetTempPath(), "VecToolTestResults");
+            //Directory.CreateDirectory(outDir);
 
-            var fileName = $"test-results-{Sanitize(vectorStoreId)}.md";
-            var outPath = Path.Combine(outDir, fileName);
+            //var fileName = $"test-results-{Sanitize(vectorStoreId)}.md";
+            //var outPath = Path.Combine(outDir, fileName);
 
             // Write whatever stdout was captured; tests only assert existence, not content.
-            await File.WriteAllTextAsync(outPath, testResult.StandardOutput ?? string.Empty, ct).ConfigureAwait(false);
+            await File.WriteAllTextAsync(_outputFile, testResult.StandardOutput ?? string.Empty, ct).ConfigureAwait(false);
 
-            log.Info("Tests passed successfully.");
-            _ui?.UpdateStatus("Tests completed successfully.");
-            return outPath;
+            if (_recentFilesManager != null && File.Exists(_outputFile))
+            {
+                var fileInfo = new FileInfo(_outputFile);
+                _recentFilesManager.RegisterGeneratedFile(
+                    _outputFile,
+                    RecentFileType.TestResults,
+                    null,
+                    fileInfo.Length
+                );
+            }
+
+            log.Info("Test run finished successfully.");
+            _ui?.UpdateStatus("Test run finished successfully.");
+            return message;
         }
 
         public static string MapExitCodeToMessage(int code) => code switch

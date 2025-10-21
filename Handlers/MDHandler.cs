@@ -32,10 +32,10 @@ namespace VecTool.Handlers
                             WriteFolderName);
                     }
                 }
-                if (recentFilesManager != null && File.Exists(outputPath))
+                if (_recentFilesManager != null && File.Exists(outputPath))
                 {
                     var fileInfo = new FileInfo(outputPath);
-                    recentFilesManager.RegisterGeneratedFile(
+                    _recentFilesManager.RegisterGeneratedFile(
                         outputPath,
                         RecentFileType.AllSourceMd,
                         folderPaths,
