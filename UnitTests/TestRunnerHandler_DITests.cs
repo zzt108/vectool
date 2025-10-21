@@ -18,7 +18,7 @@ namespace UnitTests
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recentFiles = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler(processRunner, ui, recentFiles);
+            var handler = new TestRunnerHandler("Fake.sln", processRunner, ui, recentFiles);
 
             handler.ShouldNotBeNull();
         }

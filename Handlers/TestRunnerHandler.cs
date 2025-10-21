@@ -18,20 +18,24 @@ namespace VecTool.Handlers
     /// </summary>
     public sealed class TestRunnerHandler
     {
-        private readonly IProcessRunner processRunner;
-        private readonly IUserInterface ui;
-        private readonly IRecentFilesManager recentFiles;
+        private readonly string _solutionPath;
+        private readonly IProcessRunner _processRunner;
+        private readonly IUserInterface _ui;
+        private readonly IRecentFilesManager _recentFiles;
 
         // Canonical DI constructor expected by unit tests:
         // new TestRunnerHandler(IGitRunner, IProcessRunner, IUserInterface, IRecentFilesManager)
         public TestRunnerHandler(
+            string solutionPath,
             IProcessRunner processRunner,
             IUserInterface ui,
             IRecentFilesManager recentFiles)
         {
-            this.processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
-            this.ui = ui ?? throw new ArgumentNullException(nameof(ui));
-            this.recentFiles = recentFiles ?? throw new ArgumentNullException(nameof(recentFiles));
+            this._solutionPath = solutionPath;
+            this._processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
+            this._ui = ui ?? throw new ArgumentNullException(nameof(ui));
+            this._recentFiles = recentFiles ?? throw new ArgumentNullException(nameof(recentFiles));
+
         }
 
         /// <summary>
@@ -57,7 +61,7 @@ namespace VecTool.Handlers
             // MVP: exit-code-only invocation; no need to rely on a specific working directory for tests that use FakeProcessRunner.
             var args = "test --no-build --verbosity minimal";
 
-            var result = await processRunner.RunAsync(
+            var result = await _processRunner.RunAsync(
                 fileName: "dotnet",
                 arguments: args,
                 workingDirectory: null,
@@ -65,22 +69,22 @@ namespace VecTool.Handlers
 
             var message = MapExitCodeToMessage(result.ExitCode);
 
-            log.Ctx.Set(new LogCtxShared.Props()
+            using var ctx = log.Ctx.Set(new LogCtxShared.Props()
                 .Add("ExitCode", result.ExitCode)
                 .Add("Message", message));
 
-            if (result.ExitCode != 0)
-            {
-                ui?.ShowMessage(message, "Test Runner", MessageType.Warning);
-                log.Warn($"Tests completed with exit code {result.ExitCode}. {message}");
-                return null;
-            }
+            //if (result.ExitCode != 0)
+            //{
+            //    _ui?.ShowMessage(message, "Test Runner", MessageType.Warning);
+            //    log.Warn($"Tests completed with exit code {result.ExitCode}. {message}");
+            //    return null;
+            //}
 
             // On success, persist output to a temp file and return its path (as asserted by tests).
             var outDir = Path.Combine(Path.GetTempPath(), "VecToolTestResults");
             Directory.CreateDirectory(outDir);
 
-            var fileName = $"test-results-{Sanitize(vectorStoreId)}-{DateTime.UtcNow:yyyyMMddHHmmssfff}.txt";
+            var fileName = $"test-results-{Sanitize(vectorStoreId)}.md";
             var outPath = Path.Combine(outDir, fileName);
 
             // Write whatever stdout was captured; tests only assert existence, not content.

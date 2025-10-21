@@ -1,13 +1,8 @@
-﻿// ✅ FULL FILE VERSION
-// Path: src/VecTool.UI/OaiUI/MainForm.cs
+﻿// Path: src/VecTool.UI/OaiUI/MainForm.cs
 using oaiUI;
 using oaiUI.Services;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using Vectool.UI.Versioning;
 using VecTool.Configuration;
 using VecTool.Core;
@@ -300,9 +295,15 @@ namespace Vectool.OaiUI
 
         private async void runTestsToolStripMenuItemClick(object? sender, EventArgs e)
         {
-            // Resolve solution path (existing helper or logic).
-            var solutionPath = FindSolutionFile();
-            if (string.IsNullOrWhiteSpace(solutionPath))
+            var currentVectorStore = GetCurrentVectorStoreConfig();
+            if (currentVectorStore.FolderPaths.Count == 0)
+            {
+                _userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
+                return;
+            }
+
+            var solutionPaths = Utilities.FindSolutionFiles(currentVectorStore);
+            if (solutionPaths.Length == 0)
             {
                 MessageBox.Show(
                     "Could not find the solution file.",
@@ -312,9 +313,52 @@ namespace Vectool.OaiUI
                 return;
             }
 
+            // ✅ NEW: If multiple solutions found, let user choose
+            string solutionPath;
+            if (solutionPaths.Length > 1)
+            {
+                using var openFileDialog = new OpenFileDialog
+                {
+                    Title = "Select Solution File",
+                    Filter = "Solution files (*.sln)|*.sln|All files (*.*)|*.*",
+                    InitialDirectory = Path.GetDirectoryName(solutionPaths[0]),
+                    Multiselect = false
+                };
+
+                // Pre-populate with first found solution
+                openFileDialog.FileName = Path.GetFileName(solutionPaths[0]);
+
+                if (openFileDialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                solutionPath = openFileDialog.FileName;
+            }
+            else
+            {
+                solutionPath = solutionPaths[0];
+            }
+
+
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
+            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
+            var testResultsFileName = $"{vsName}.{branchName}.TestResults.md";
+
+            using var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Save Git Changes As...",
+                Filter = "Markdown files (*.md)|*.md|All files (*.*)|*.*",
+                FileName = testResultsFileName
+            };
+
+            if (saveFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            var testResultsOutputPath = saveFileDialog.FileName;
+
+
             // Create the process runner and handler (kept local for MVP; DI-ready).
             var processRunner = new VecTool.Core.ProcessRunner();
-            var handler = new VecTool.Handlers.TestRunnerHandler(processRunner, _userInterface, _recentFilesManager);
+            var handler = new VecTool.Handlers.TestRunnerHandler(solutionPath, processRunner, _userInterface, _recentFilesManager);
 
             try
             {
@@ -323,12 +367,23 @@ namespace Vectool.OaiUI
 
                 var message = await handler.RunTestsAsync(solutionPath, CancellationToken.None).ConfigureAwait(true);
 
-                var isSuccess = message.StartsWith("All tests passed.", StringComparison.OrdinalIgnoreCase);
-                MessageBox.Show(
+                var isSuccess = message?.StartsWith("All tests passed.", StringComparison.OrdinalIgnoreCase);
+                if (isSuccess.HasValue && isSuccess.Value)
+                {
+                    MessageBox.Show(
                     message,
                     "Test Results",
                     MessageBoxButtons.OK,
-                    isSuccess ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+                    MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(
+                    message,
+                    "Test Results",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                }
             }
             catch (Exception ex)
             {
@@ -340,8 +395,8 @@ namespace Vectool.OaiUI
             }
             finally
             {
-                // _userInterface.WorkFinish();
-                // recentFilesPanel.RefreshList();
+                _userInterface.WorkFinish();
+                recentFilesPanel.RefreshList();
             }
         }
 
@@ -350,7 +405,7 @@ namespace Vectool.OaiUI
             try
             {
                 // Prefer deriving branch from the selected vector store folders' repo, not the app repo.
-                var preferredWorkingDir = ResolvePreferredWorkingDirectory(selectedFolders);
+                var preferredWorkingDir = Utilities.ResolvePreferredWorkingDirectory(selectedFolders);
                 if (!string.IsNullOrWhiteSpace(preferredWorkingDir))
                 {
                     var git = new GitRunner(preferredWorkingDir);
@@ -359,7 +414,7 @@ namespace Vectool.OaiUI
                 }
 
                 // Fallback to previous behavior: solution directory
-                var solutionPath = FindSolutionFile();
+                var solutionPath = Utilities.FindSolutionFiles(GetCurrentVectorStoreConfig()).FirstOrDefault();
                 var solutionDir = solutionPath is null
                     ? AppDomain.CurrentDomain.BaseDirectory
                     : Path.GetDirectoryName(solutionPath)!;
@@ -372,59 +427,6 @@ namespace Vectool.OaiUI
             {
                 return "unknown";
             }
-        }
-
-        private static string? ResolvePreferredWorkingDirectory(IReadOnlyList<string> folders)
-        {
-            if (folders == null || folders.Count == 0)
-                return null;
-
-            string? firstExisting = null;
-            foreach (var folder in folders)
-            {
-                if (string.IsNullOrWhiteSpace(folder))
-                    continue;
-
-                if (firstExisting is null && Directory.Exists(folder))
-                    firstExisting = folder;
-
-                var root = FindRepoRoot(folder);
-                if (!string.IsNullOrWhiteSpace(root))
-                    return root;
-            }
-
-            return firstExisting;
-        }
-
-        private static string? FindRepoRoot(string? startPath)
-        {
-            if (string.IsNullOrWhiteSpace(startPath))
-                return null;
-
-            var dir = new DirectoryInfo(startPath);
-            while (dir != null)
-            {
-                var gitDir = Path.Combine(dir.FullName, ".git");
-                if (Directory.Exists(gitDir) || File.Exists(gitDir))
-                    return dir.FullName;
-
-                dir = dir.Parent;
-            }
-            return null;
-        }
-
-        private string? FindSolutionFile()
-        {
-            var currentDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
-            while (currentDir != null)
-            {
-                var solutionFile = Path.Combine(currentDir.FullName, "VecTool.sln");
-                if (File.Exists(solutionFile))
-                    return solutionFile;
-
-                currentDir = currentDir.Parent;
-            }
-            return null;
         }
 
         private void btnSelectFoldersClick(object? sender, EventArgs e)
