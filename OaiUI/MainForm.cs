@@ -405,7 +405,7 @@ namespace Vectool.OaiUI
             try
             {
                 // Prefer deriving branch from the selected vector store folders' repo, not the app repo.
-                var preferredWorkingDir = Utilities.ResolvePreferredWorkingDirectory(selectedFolders);
+                var preferredWorkingDir = Utilities.ResolvePreferredWorkingDirectory(GetCurrentVectorStoreConfig().FolderPaths);
                 if (!string.IsNullOrWhiteSpace(preferredWorkingDir))
                 {
                     var git = new GitRunner(preferredWorkingDir);
