@@ -32,7 +32,7 @@ namespace UnitTests
 
             try
             {
-                var result = await handler.RunTestsAsync("storeX", CancellationToken.None);
+                var result = await handler.RunTestsAsync("storeX", "test-branch", CancellationToken.None);
                 result.ShouldBeNull();
             }
             finally
@@ -58,7 +58,7 @@ namespace UnitTests
 
             try
             {
-                var resultPath = await handler.RunTestsAsync("S", CancellationToken.None);
+                var resultPath = await handler.RunTestsAsync("S", "main", CancellationToken.None);
                 resultPath.ShouldNotBeNull();
                 File.Exists(resultPath!).ShouldBeTrue();
             }

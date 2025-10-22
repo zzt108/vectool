@@ -365,7 +365,8 @@ namespace Vectool.OaiUI
                 // Optional: existing UI busy indicator hooks if available.
                 // _userInterface.WorkStart("Running unit tests...", selectedFolders);
 
-                var message = await handler.RunTestsAsync(solutionPath, CancellationToken.None).ConfigureAwait(true);
+                // 🔄 MODIFY - Pass computed branch name
+                var message = await handler.RunTestsAsync(solutionPath, branchName, CancellationToken.None).ConfigureAwait(true);
 
                 var isSuccess = message?.StartsWith("All tests passed.", StringComparison.OrdinalIgnoreCase);
                 if (isSuccess.HasValue && isSuccess.Value)

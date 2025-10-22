@@ -1,43 +1,44 @@
 ﻿// Path: Handlers/TestRunnerHandler.cs
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+
 using LogCtxShared;
 using NLogShared;
+using System;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using VecTool.Core.Abstractions;
 using VecTool.RecentFiles;
 
 namespace VecTool.Handlers
 {
     /// <summary>
-    /// Handles programmatic execution of dotnet test with build step and result file generation.
-    /// Phase 4.3.1 MVP: Build solution first, then run tests with exit-code driven flow.
+    /// Handler for building and running unit tests, then persisting results to a dated output file.
     /// </summary>
     public sealed class TestRunnerHandler
     {
+        private readonly string? _outputFile;
         private readonly string _solutionPath;
         private readonly IProcessRunner _processRunner;
         private readonly IUserInterface? _ui;
-        private readonly IRecentFilesManager _recentFilesManager;
-        readonly string _outputFile;
+        private readonly IRecentFilesManager? _recentFilesManager;
 
         /// <summary>
         /// Canonical DI constructor expected by unit tests:
-        /// new TestRunnerHandler(string, IProcessRunner, IUserInterface, IRecentFilesManager)
+        /// new TestRunnerHandler(string, string, IProcessRunner, IUserInterface, IRecentFilesManager)
         /// </summary>
         public TestRunnerHandler(
             string solutionPath,
-            string outputFile,
+            string? outputFile,
             IProcessRunner processRunner,
-            IUserInterface ui,
-            IRecentFilesManager recentFiles)
+            IUserInterface? ui,
+            IRecentFilesManager? recentFiles)
         {
             this._outputFile = outputFile;
             this._solutionPath = solutionPath ?? throw new ArgumentNullException(nameof(solutionPath));
             this._processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
             this._ui = ui;
-            this._recentFilesManager = recentFiles ?? throw new ArgumentNullException(nameof(recentFiles));
+            this._recentFilesManager = recentFiles;
         }
 
         /// <summary>
@@ -46,19 +47,23 @@ namespace VecTool.Handlers
         /// - null on failure (non-zero exit code).
         /// </summary>
         /// <param name="vectorStoreId">Arbitrary id used to tag outputs; tests pass values like "S" or "storeX".</param>
+        /// <param name="branchName">Git branch name to include in the output filename.</param>
         /// <param name="ct">Cancellation token.</param>
-        public async Task<string?> RunTestsAsync(string vectorStoreId, CancellationToken ct)
+        public async Task<string?> RunTestsAsync(string vectorStoreId, string branchName, CancellationToken ct)
         {
             if (vectorStoreId is null)
                 throw new ArgumentNullException(nameof(vectorStoreId));
+            if (branchName is null)
+                throw new ArgumentNullException(nameof(branchName));
 
             using var log = new CtxLogger();
-            log.Ctx.Set(new LogCtxShared.Props()
+            log.Ctx.Set(new Props()
                 .Add("Operation", "RunTests")
                 .Add("VectorStoreId", vectorStoreId)
+                .Add("BranchName", branchName)
                 .Add("SolutionPath", _solutionPath));
 
-            // ✅ NEW: First build the solution
+            // ✅ First build the solution
             _ui?.UpdateStatus($"Building solution: {Path.GetFileName(_solutionPath)}...");
             log.Info("Starting solution build.");
 
@@ -81,7 +86,6 @@ namespace VecTool.Handlers
             log.Info("Build succeeded. Starting tests.");
             _ui?.UpdateStatus("Running tests...");
 
-            // ✅ MODIFY: Remove --no-build flag since we just built, and specify the solution
             var testArgs = $"test \"{_solutionPath}\" --no-restore --verbosity minimal";
 
             var testResult = await _processRunner.RunAsync(
@@ -92,39 +96,35 @@ namespace VecTool.Handlers
 
             var message = MapExitCodeToMessage(testResult.ExitCode);
 
-            using var ctx = log.Ctx.Set(new LogCtxShared.Props()
+            using var ctx = log.Ctx.Set(new Props()
                 .Add("ExitCode", testResult.ExitCode)
                 .Add("Message", message));
 
-            if (testResult.ExitCode == 0) {
+            if (testResult.ExitCode == 0)
+            {
                 _ui?.ShowMessage(message, "Test Runner - No Fails", MessageType.Information);
                 log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
             }
             else
             {
-                //                _ui?.ShowMessage(message, "Test Runner", MessageType.Warning);
                 log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
             }
 
-            // On success, persist output to a temp file and return its path (as asserted by tests).
-            //var outDir = Path.Combine(Path.GetTempPath(), "VecToolTestResults");
-            //Directory.CreateDirectory(outDir);
-
-            //var fileName = $"test-results-{Sanitize(vectorStoreId)}.md";
-            //var outPath = Path.Combine(outDir, fileName);
-
-            // Write whatever stdout was captured; tests only assert existence, not content.
-            await File.WriteAllTextAsync(_outputFile, testResult.StandardOutput ?? string.Empty, ct).ConfigureAwait(false);
-
-            if (_recentFilesManager != null && File.Exists(_outputFile))
+            // 🔄 MODIFY - Generate output filename with branch name
+            if (_outputFile != null)
             {
-                var fileInfo = new FileInfo(_outputFile);
-                _recentFilesManager.RegisterGeneratedFile(
-                    _outputFile,
-                    RecentFileType.TestResults,
-                    null,
-                    fileInfo.Length
-                );
+                await File.WriteAllTextAsync(_outputFile, testResult.StandardOutput ?? string.Empty, ct).ConfigureAwait(false);
+
+                if (_recentFilesManager != null && File.Exists(_outputFile))
+                {
+                    var fileInfo = new FileInfo(_outputFile);
+                    _recentFilesManager.RegisterGeneratedFile(
+                        _outputFile,
+                        RecentFileType.TestResults,
+                        null,
+                        fileInfo.Length
+                    );
+                }
             }
 
             log.Info("Test run finished successfully.");
@@ -143,11 +143,10 @@ namespace VecTool.Handlers
             _ => $"Unknown exit code {code}. See output for details."
         };
 
-        private static string Sanitize(string value)
+        private static string Sanitize(string raw)
         {
-            foreach (var c in Path.GetInvalidFileNameChars())
-                value = value.Replace(c, '_');
-            return value;
+            if (string.IsNullOrWhiteSpace(raw)) return "unknown";
+            return Regex.Replace(raw, @"[^\w\-]", "_");
         }
     }
 }

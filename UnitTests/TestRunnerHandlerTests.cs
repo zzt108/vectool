@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// Path: UnitTests/TestRunnerHandlerTests.cs
+﻿// Path: UnitTests/TestRunnerHandlerTests.cs
 
 using NUnit.Framework;
 using Shouldly;
