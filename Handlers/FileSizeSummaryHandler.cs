@@ -48,10 +48,10 @@ namespace VecTool.Handlers
             finally
             {
                 ui?.WorkFinish();
-                if (recentFilesManager != null && File.Exists(outputPath))
+                if (_recentFilesManager != null && File.Exists(outputPath))
                 {
                     var fileInfo = new FileInfo(outputPath);
-                    recentFilesManager.RegisterGeneratedFile(outputPath, RecentFileType.AllSourceMd, folderPaths, fileInfo.Length);
+                    _recentFilesManager.RegisterGeneratedFile(outputPath, RecentFileType.AllSourceMd, folderPaths, fileInfo.Length);
                 }
             }
         }

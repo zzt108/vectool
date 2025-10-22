@@ -32,9 +32,9 @@ namespace VecTool.RecentFiles
             }
         }
 
-        public void RegisterGeneratedFile(string filePath, RecentFileType fileType, IReadOnlyList<string> sourceFolders, long fileSizeBytes = 0, DateTime? generatedAtUtc = null)
+        public void RegisterGeneratedFile(string filePath, RecentFileType fileType, IReadOnlyList<string>? sourceFolders, long fileSizeBytes = 0, DateTime? generatedAtUtc = null)
         {
-            var newItem = new RecentFileInfo(filePath, generatedAtUtc?.ToLocalTime() ?? DateTime.Now, fileType, sourceFolders.ToList(), fileSizeBytes);
+            var newItem = new RecentFileInfo(filePath, generatedAtUtc?.ToLocalTime() ?? DateTime.Now, fileType, sourceFolders?.ToList(), fileSizeBytes);
 
             lock (_gate)
             {
