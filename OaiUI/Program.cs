@@ -7,7 +7,7 @@ namespace Vectool.OaiUI
 {
     internal static class Program
     {
-        public static NLogShared.CtxLogger Log { get; private set; } = new CtxLogger();
+        public static NLogShared.CtxLogger Log { get; private set; } = new CtxLogger("Config/LogConfig.xml");
 
         [STAThread]
         private static void Main()

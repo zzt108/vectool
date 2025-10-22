@@ -16,14 +16,14 @@ public abstract class FileHandlerBase
     protected static readonly CtxLogger log = new(); // renamed from _log to match AI faulti code generation logic
     
     protected readonly IUserInterface? ui; // renamed from _ui to match AI faulti code generation logic
-    protected readonly IRecentFilesManager? recentFilesManager; // renamed from _recentFilesManager to match AI faulti code generation logic
+    protected readonly IRecentFilesManager? _recentFilesManager; // renamed from _recentFilesManager to match AI faulti code generation logic
     protected readonly AiContextGenerator _aiContextGenerator;
     protected readonly FileSystemTraverser _fileSystemTraverser;
 
     protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
     {
         this.ui = ui;
-        this.recentFilesManager = recentFilesManager;
+        this._recentFilesManager = recentFilesManager;
         _aiContextGenerator = new AiContextGenerator();
         _fileSystemTraverser = new FileSystemTraverser(ui);
     }

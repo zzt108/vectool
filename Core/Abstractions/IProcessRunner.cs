@@ -1,5 +1,5 @@
-﻿// ✅ FULL FILE VERSION
-// File: Core/Abstractions/IProcessRunner.cs
+﻿// File: Core/Abstractions/IProcessRunner.cs
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,17 +12,14 @@ namespace VecTool.Core.Abstractions
     public interface IProcessRunner
     {
         /// <summary>
-        /// Executes an external process asynchronously and returns the result.
+        /// Runs a process with the given filename and arguments and returns execution details.
         /// </summary>
-        /// <param name="fileName">Executable to run (e.g., "dotnet", "git").</param>
-        /// <param name="arguments">Command-line arguments for the executable.</param>
-        /// <param name="workingDirectory">Optional working directory for the process.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        Task<ProcessResult> RunAsync(
-            string fileName,
-            string arguments,
-            string? workingDirectory = null,
-            CancellationToken cancellationToken = default);
+        /// <param name="fileName">Executable to run (e.g., "dotnet").</param>
+        /// <param name="arguments">Command-line arguments.</param>
+        /// <param name="workingDirectory">Optional working directory; null uses current directory.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>ProcessResult with exit code, captured output, and duration.</returns>
+        Task<ProcessResult> RunAsync(string fileName, string arguments, string? workingDirectory, CancellationToken ct);
     }
 
     /// <summary>
@@ -51,18 +48,17 @@ namespace VecTool.Core.Abstractions
         public TimeSpan Duration { get; set; } = TimeSpan.Zero;
 
         /// <summary>
-        /// Convenience constructor used by existing tests; Duration defaults to zero.
+        /// Convenience constructor used by tests or simple call sites.
         /// </summary>
         public ProcessResult(int exitCode, string standardOutput, string standardError)
         {
             ExitCode = exitCode;
             StandardOutput = standardOutput ?? string.Empty;
             StandardError = standardError ?? string.Empty;
-            Duration = TimeSpan.Zero;
         }
 
         /// <summary>
-        /// Parameterless constructor for property-initializer usage in production paths.
+        /// Parameterless constructor for property-initializer usage.
         /// </summary>
         public ProcessResult()
         {

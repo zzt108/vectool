@@ -66,10 +66,10 @@ public sealed class GitChangesHandler : FileHandlerBase
             await File.WriteAllTextAsync(outputPath, allChanges.ToString());
 
             // Register generated file
-            if (recentFilesManager != null)
+            if (_recentFilesManager != null)
             {
                 var fi = new FileInfo(outputPath);
-                recentFilesManager.RegisterGeneratedFile(
+                _recentFilesManager.RegisterGeneratedFile(
                     outputPath,
                     RecentFileType.GitChanges,
                     folderPaths,

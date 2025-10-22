@@ -1,13 +1,8 @@
-﻿// ✅ FULL FILE VERSION
-// Path: src/VecTool.UI/OaiUI/MainForm.cs
+﻿// Path: src/VecTool.UI/OaiUI/MainForm.cs
 using oaiUI;
 using oaiUI.Services;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using Vectool.UI.Versioning;
 using VecTool.Configuration;
 using VecTool.Core;
@@ -19,8 +14,8 @@ namespace Vectool.OaiUI
     public partial class MainForm : Form
     {
         // UI services and data
-        private WinFormsUserInterface userInterface;
-        private IRecentFilesManager recentFilesManager;
+        private WinFormsUserInterface _userInterface;
+        private IRecentFilesManager _recentFilesManager;
 
         // Selected folders bound to the listbox
         private readonly List<string> selectedFolders = new();
@@ -40,17 +35,17 @@ namespace Vectool.OaiUI
             InitializeComponent();
 
             // Initialize UI service wrappers
-            userInterface = new WinFormsUserInterface(statusLabel, progressBar);
+            _userInterface = new WinFormsUserInterface(statusLabel, progressBar);
 
             // Initialize Recent Files
             var recentFilesConfig = RecentFilesConfig.FromAppConfig();
             Directory.CreateDirectory(recentFilesConfig.OutputPath);
             var recentFilesStore = new FileRecentFilesStore(recentFilesConfig);
-            recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
-            recentFilesManager.Load();
+            _recentFilesManager = new RecentFilesManager(recentFilesConfig, recentFilesStore);
+            _recentFilesManager.Load();
 
             // Recent files panel created by designer; initialize once controls exist
-            recentFilesPanel.Initialize(recentFilesManager);
+            recentFilesPanel.Initialize(_recentFilesManager);
 
             WireUpEvents();
             LoadVectorStoresIntoComboBox();
@@ -134,7 +129,7 @@ namespace Vectool.OaiUI
         {
             if (selectedFolders.Count == 0)
             {
-                userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
+                _userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
                 return;
             }
 
@@ -173,7 +168,7 @@ namespace Vectool.OaiUI
             {
                 await ExecuteGitChangesAndMdParallelAsync(gitOutputPath, mdOutputPath).ConfigureAwait(true);
 
-                userInterface.ShowMessage(
+                _userInterface.ShowMessage(
                     $"Successfully generated:\n- Git Changes: {gitOutputPath}\n- MD Export: {mdOutputPath}",
                     "Success",
                     MessageType.Information
@@ -181,11 +176,11 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                _userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
-                userInterface.WorkFinish();
+                _userInterface.WorkFinish();
                 // Refresh Recent Files panel after both operations
                 recentFilesPanel.RefreshList();
             }
@@ -196,10 +191,10 @@ namespace Vectool.OaiUI
         /// </summary>
         private async Task ExecuteGitChangesAndMdParallelAsync(string gitOutputPath, string mdOutputPath)
         {
-            userInterface.WorkStart("Generating Git changes and MD export...", selectedFolders);
+            _userInterface.WorkStart("Generating Git changes and MD export...", selectedFolders);
 
-            var gitHandler = new GitChangesHandler(userInterface, recentFilesManager);
-            var mdHandler = new MDHandler(userInterface, recentFilesManager);
+            var gitHandler = new GitChangesHandler(_userInterface, _recentFilesManager);
+            var mdHandler = new MDHandler(_userInterface, _recentFilesManager);
 
             var vectorStoreConfig = GetCurrentVectorStoreConfig();
 
@@ -218,7 +213,7 @@ namespace Vectool.OaiUI
         {
             if (selectedFolders.Count == 0)
             {
-                userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
+                _userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
                 return;
             }
 
@@ -241,18 +236,18 @@ namespace Vectool.OaiUI
 
             try
             {
-                userInterface.WorkStart($"Generating MD file...", selectedFolders);
-                var handler = new MDHandler(userInterface, recentFilesManager);
+                _userInterface.WorkStart($"Generating MD file...", selectedFolders);
+                var handler = new MDHandler(_userInterface, _recentFilesManager);
                 await Task.Run(() => handler.ExportSelectedFolders(selectedFolders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
+                _userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                _userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
-                userInterface.WorkFinish();
+                _userInterface.WorkFinish();
             }
         }
 
@@ -260,7 +255,7 @@ namespace Vectool.OaiUI
         {
             if (selectedFolders.Count == 0)
             {
-                userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
+                _userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
                 return;
             }
 
@@ -283,45 +278,125 @@ namespace Vectool.OaiUI
 
             try
             {
-                userInterface.WorkStart($"Generating file size summary...", selectedFolders);
-                var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
+                _userInterface.WorkStart($"Generating file size summary...", selectedFolders);
+                var handler = new FileSizeSummaryHandler(_userInterface, _recentFilesManager);
                 await Task.Run(() => handler.GenerateFileSizeSummary(selectedFolders, outputPath, config)).ConfigureAwait(true);
-                userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
+                _userInterface.ShowMessage($"Successfully generated file at\r\n{outputPath}", "Success", MessageType.Information);
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                _userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
-                userInterface.WorkFinish();
+                _userInterface.WorkFinish();
             }
         }
 
         private async void runTestsToolStripMenuItemClick(object? sender, EventArgs e)
         {
-            //var solutionPath = FindSolutionFile();
-            //if (solutionPath is null)
-            //{
-            //    userInterface.ShowMessage("Could not find VecTool.sln in parent directories.", "Solution Not Found", MessageType.Error);
-            //    return;
-            //}
+            var currentVectorStore = GetCurrentVectorStoreConfig();
+            if (currentVectorStore.FolderPaths.Count == 0)
+            {
+                _userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
+                return;
+            }
 
-            var vsName = comboBoxVectorStores.SelectedItem?.ToString() ?? "default";
-            var handler = new TestRunnerHandler(userInterface, recentFilesManager);
+            var solutionPaths = Utilities.FindSolutionFiles(currentVectorStore);
+            if (solutionPaths.Length == 0)
+            {
+                MessageBox.Show(
+                    "Could not find the solution file.",
+                    "Solution Not Found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            // ✅ NEW: If multiple solutions found, let user choose
+            string solutionPath;
+            if (solutionPaths.Length > 1)
+            {
+                using var openFileDialog = new OpenFileDialog
+                {
+                    Title = "Select Solution File",
+                    Filter = "Solution files (*.sln)|*.sln|All files (*.*)|*.*",
+                    InitialDirectory = Path.GetDirectoryName(solutionPaths[0]),
+                    Multiselect = false
+                };
+
+                // Pre-populate with first found solution
+                openFileDialog.FileName = Path.GetFileName(solutionPaths[0]);
+
+                if (openFileDialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                solutionPath = openFileDialog.FileName;
+            }
+            else
+            {
+                solutionPath = solutionPaths[0];
+            }
+
+
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
+            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
+            var testResultsFileName = $"{vsName}.{branchName}.TestResults.md";
+
+            using var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Save Git Changes As...",
+                Filter = "Markdown files (*.md)|*.md|All files (*.*)|*.*",
+                FileName = testResultsFileName
+            };
+
+            if (saveFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            var testResultsOutputPath = saveFileDialog.FileName;
+
+
+            // Create the process runner and handler (kept local for MVP; DI-ready).
+            var processRunner = new VecTool.Core.ProcessRunner();
+            var handler = new VecTool.Handlers.TestRunnerHandler(solutionPath, testResultsOutputPath, processRunner, _userInterface, _recentFilesManager);
 
             try
             {
-                userInterface.WorkStart("Running unit tests...", selectedFolders);
-                await handler.RunTestsAsync(vsName, selectedFolders).ConfigureAwait(true);
+                // Optional: existing UI busy indicator hooks if available.
+                // _userInterface.WorkStart("Running unit tests...", selectedFolders);
+
+                // 🔄 MODIFY - Pass computed branch name
+                var message = await handler.RunTestsAsync(solutionPath, branchName, CancellationToken.None).ConfigureAwait(true);
+
+                var isSuccess = message?.StartsWith("All tests passed.", StringComparison.OrdinalIgnoreCase);
+                if (isSuccess.HasValue && isSuccess.Value)
+                {
+                    MessageBox.Show(
+                    message,
+                    "Test Results",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(
+                    message,
+                    "Test Results",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                }
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"Test execution failed: {ex.Message}", "Test Error", MessageType.Error);
+                MessageBox.Show(
+                    $"Test execution failed: {ex.Message}",
+                    "Test Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
             finally
             {
-                userInterface.WorkFinish();
+                _userInterface.WorkFinish();
                 recentFilesPanel.RefreshList();
             }
         }
@@ -331,7 +406,7 @@ namespace Vectool.OaiUI
             try
             {
                 // Prefer deriving branch from the selected vector store folders' repo, not the app repo.
-                var preferredWorkingDir = ResolvePreferredWorkingDirectory(selectedFolders);
+                var preferredWorkingDir = Utilities.ResolvePreferredWorkingDirectory(GetCurrentVectorStoreConfig().FolderPaths);
                 if (!string.IsNullOrWhiteSpace(preferredWorkingDir))
                 {
                     var git = new GitRunner(preferredWorkingDir);
@@ -340,7 +415,7 @@ namespace Vectool.OaiUI
                 }
 
                 // Fallback to previous behavior: solution directory
-                var solutionPath = FindSolutionFile();
+                var solutionPath = Utilities.FindSolutionFiles(GetCurrentVectorStoreConfig()).FirstOrDefault();
                 var solutionDir = solutionPath is null
                     ? AppDomain.CurrentDomain.BaseDirectory
                     : Path.GetDirectoryName(solutionPath)!;
@@ -353,59 +428,6 @@ namespace Vectool.OaiUI
             {
                 return "unknown";
             }
-        }
-
-        private static string? ResolvePreferredWorkingDirectory(IReadOnlyList<string> folders)
-        {
-            if (folders == null || folders.Count == 0)
-                return null;
-
-            string? firstExisting = null;
-            foreach (var folder in folders)
-            {
-                if (string.IsNullOrWhiteSpace(folder))
-                    continue;
-
-                if (firstExisting is null && Directory.Exists(folder))
-                    firstExisting = folder;
-
-                var root = FindRepoRoot(folder);
-                if (!string.IsNullOrWhiteSpace(root))
-                    return root;
-            }
-
-            return firstExisting;
-        }
-
-        private static string? FindRepoRoot(string? startPath)
-        {
-            if (string.IsNullOrWhiteSpace(startPath))
-                return null;
-
-            var dir = new DirectoryInfo(startPath);
-            while (dir != null)
-            {
-                var gitDir = Path.Combine(dir.FullName, ".git");
-                if (Directory.Exists(gitDir) || File.Exists(gitDir))
-                    return dir.FullName;
-
-                dir = dir.Parent;
-            }
-            return null;
-        }
-
-        private string? FindSolutionFile()
-        {
-            var currentDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
-            while (currentDir != null)
-            {
-                var solutionFile = Path.Combine(currentDir.FullName, "VecTool.sln");
-                if (File.Exists(solutionFile))
-                    return solutionFile;
-
-                currentDir = currentDir.Parent;
-            }
-            return null;
         }
 
         private void btnSelectFoldersClick(object? sender, EventArgs e)
@@ -479,7 +501,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"Failed to load vector stores: {ex.Message}", "Warning", MessageType.Warning);
+                _userInterface.ShowMessage($"Failed to load vector stores: {ex.Message}", "Warning", MessageType.Warning);
             }
         }
 
@@ -513,13 +535,13 @@ namespace Vectool.OaiUI
             var newName = txtNewVectorStoreName.Text?.Trim();
             if (string.IsNullOrWhiteSpace(newName))
             {
-                userInterface.ShowMessage("Please enter a name for the new vector store.", "Input Required", MessageType.Warning);
+                _userInterface.ShowMessage("Please enter a name for the new vector store.", "Input Required", MessageType.Warning);
                 return;
             }
 
             if (allVectorStoreConfigs.ContainsKey(newName))
             {
-                userInterface.ShowMessage($"A vector store named '{newName}' already exists.", "Duplicate Name", MessageType.Warning);
+                _userInterface.ShowMessage($"A vector store named '{newName}' already exists.", "Duplicate Name", MessageType.Warning);
                 return;
             }
 
@@ -533,7 +555,7 @@ namespace Vectool.OaiUI
             comboBoxVectorStores.SelectedItem = newName;
             txtNewVectorStoreName.Clear();
 
-            userInterface.ShowMessage($"Vector store '{newName}' created.", "Success", MessageType.Information);
+            _userInterface.ShowMessage($"Vector store '{newName}' created.", "Success", MessageType.Information);
             UpdateFormTitle();
         }
 
