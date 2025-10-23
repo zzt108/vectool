@@ -185,7 +185,7 @@ namespace Vectool.OaiUI
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             aboutToolStripMenuItem.Size = new Size(180, 22);
             aboutToolStripMenuItem.Text = "&About";
-            aboutToolStripMenuItem.Click += aboutToolStripMenuItemClick;
+            aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
             // tabControl1
             // 
