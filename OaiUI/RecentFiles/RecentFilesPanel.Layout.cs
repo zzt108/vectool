@@ -3,182 +3,75 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
-using System.Text.Json;
-using VecTool.Core.RecentFiles;
+using System.Linq;
+using System.Windows.Forms;
+using VecTool.Configuration;
 
-namespace VecTool.Configuration
+namespace oaiUI.RecentFiles
 {
     /// <summary>
-    /// Persists simple UI state such as the last selected vector store name and Recent Files layout.
-    /// Stored as JSON next to vectorStoreFolders.json if configured, otherwise under the app "Generated" folder.
-    /// Also exposes legacy Recent Files getters/setters backed by an ISettingsStore for tests/in-memory usage.
+    /// RecentFilesPanel partial: Layout persistence (column widths, row height).
     /// </summary>
-    public sealed class UiStateConfig
+    public sealed partial class RecentFilesPanel : UserControl
     {
-        // Legacy per-key settings for Recent Files filter/specific store/last selection.
-        private const string KEY_RECENT_FILTER = "ui.recentFiles.filter";
-        private const string KEY_RECENT_STORE = "ui.recentFiles.storeId";
-        private const string KEY_RECENT_LAST = "ui.recentFiles.lastSelection";
+        // Layout Persistence
 
-        private readonly ISettingsStore store;
-
-        /// <summary>
-        /// Construct with an <see cref="ISettingsStore"/> implementation, typically an app-level or in-memory store.
-        /// </summary>
-        public UiStateConfig(ISettingsStore store)
+        private void OnColumnWidthChanged(object? sender, ColumnWidthChangedEventArgs e)
         {
-            this.store = store ?? throw new ArgumentNullException(nameof(store));
+            // Debounce - restart timer on each change
+            saveDebounceTimer.Stop();
+            saveDebounceTimer.Start();
         }
 
         /// <summary>
-        /// Get the persisted Recent Files filter; defaults to <see cref="VectorStoreLinkFilter.All"/>.
+        /// 🔄 MODIFY - Load layout settings (column widths) from disk using base header keys.
         /// </summary>
-        public VectorStoreLinkFilter GetRecentFilesFilter()
+        private void LoadLayout()
         {
-            var raw = store.Get(KEY_RECENT_FILTER);
-            return Enum.TryParse<VectorStoreLinkFilter>(raw, out var parsed) ? parsed : VectorStoreLinkFilter.All;
-        }
+            if (lvRecentFiles is null) return;
 
-        /// <summary>
-        /// Persist the Recent Files filter.
-        /// </summary>
-        public void SetRecentFilesFilter(VectorStoreLinkFilter filter)
-        {
-            store.Set(KEY_RECENT_FILTER, filter.ToString());
-        }
+            var state = UiStateConfig.Load(uiStateDirectory);
+            var widths = state.RecentFilesColumnWidths;
 
-        /// <summary>
-        /// Get the specific store id used by the Recent Files filter, if any.
-        /// </summary>
-        public string? GetRecentFilesSpecificStoreId()
-        {
-            return store.Get(KEY_RECENT_STORE);
-        }
-
-        /// <summary>
-        /// Persist the specific store id used by the Recent Files filter, or null/empty to clear.
-        /// </summary>
-        public void SetRecentFilesSpecificStoreId(string? storeId)
-        {
-            store.Set(KEY_RECENT_STORE, string.IsNullOrWhiteSpace(storeId) ? null : storeId);
-        }
-
-        /// <summary>
-        /// Get the last selected Recent File path, if any.
-        /// </summary>
-        public string? GetLastSelectedRecentFilePath()
-        {
-            return store.Get(KEY_RECENT_LAST);
-        }
-
-        /// <summary>
-        /// Persist the last selected Recent File path, or null/empty to clear.
-        /// </summary>
-        public void SetLastSelectedRecentFilePath(string? path)
-        {
-            store.Set(KEY_RECENT_LAST, string.IsNullOrWhiteSpace(path) ? null : path);
-        }
-
-        /// <summary>
-        /// JSON-backed UI state for Recent Files grid layout.
-        /// </summary>
-        public sealed class UiState
-        {
-            /// <summary>
-            /// Map from column header text to width in pixels.
-            /// </summary>
-            public Dictionary<string, int> RecentFilesColumnWidths { get; set; } = new Dictionary<string, int>(StringComparer.Ordinal);
-
-            /// <summary>
-            /// Optional row-height scale to apply on load; null means use default scale.
-            /// </summary>
-            public double? RecentFilesRowHeightScale { get; set; }
-
-            /// <summary>
-            /// ✅ NEW - Configurable font size (in points) for the Recent Files grid; null means use default.
-            /// </summary>
-            public double? RecentFilesFontSize { get; set; }
-        }
-
-        /// <summary>
-        /// Load UI state from uiState.json in the resolved directory.
-        /// </summary>
-        public static UiState Load(string? directory = null)
-        {
-            try
+            if (widths is null || widths.Count == 0)
             {
-                var path = ResolveUiStatePath(directory);
-                if (File.Exists(path))
+                // First run - leave designer-defined widths
+                return;
+            }
+
+            foreach (ColumnHeader col in lvRecentFiles.Columns)
+            {
+                // ✅ NEW - Use Tag as stable key (set by SetupListView)
+                var baseKey = (string?)(col.Tag) ?? col.Text;
+
+                if (widths.TryGetValue(baseKey, out var w) && w > 0)
                 {
-                    var json = File.ReadAllText(path);
-                    var state = JsonSerializer.Deserialize<UiState>(json);
-                    return state ?? new UiState();
-                }
-                return new UiState();
-            }
-            catch
-            {
-                // Defensive: never crash UI on corrupt/missing file, return defaults.
-                return new UiState();
-            }
-        }
-
-        /// <summary>
-        /// Save UI state to uiState.json in the resolved directory.
-        /// </summary>
-        public static void Save(UiState state, string? directory = null)
-        {
-            if (state is null)
-                throw new ArgumentNullException(nameof(state));
-
-            try
-            {
-                var path = ResolveUiStatePath(directory);
-                var dir = Path.GetDirectoryName(path);
-                if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
-                {
-                    Directory.CreateDirectory(dir);
-                }
-
-                var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(path, json);
-            }
-            catch
-            {
-                // Defensive: swallow to avoid UI disruption during resize drags; consider logging via LogCtx if desired.
-            }
-        }
-
-        private static string ResolveUiStatePath(string? directory)
-        {
-            string baseDir = directory ?? InferConfigDirectory() ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Generated");
-            if (!Directory.Exists(baseDir))
-            {
-                Directory.CreateDirectory(baseDir);
-            }
-            return Path.Combine(baseDir, "uiState.json");
-        }
-
-        private static string? InferConfigDirectory()
-        {
-            // If vectorStoreFoldersPath is configured, place uiState.json alongside it.
-            var configured = ConfigurationManager.AppSettings["vectorStoreFoldersPath"];
-            if (!string.IsNullOrWhiteSpace(configured))
-            {
-                try
-                {
-                    var dir = Path.GetDirectoryName(configured);
-                    if (!string.IsNullOrWhiteSpace(dir))
-                        return dir!;
-                }
-                catch
-                {
-                    // Ignore and use default.
+                    col.Width = w;
                 }
             }
-            return null;
+        }
+
+        /// <summary>
+        /// 🔄 MODIFY - Save layout settings (column widths) to disk using base header keys.
+        /// </summary>
+        private void SaveLayout()
+        {
+            if (lvRecentFiles is null) return;
+
+            var current = UiStateConfig.Load(uiStateDirectory);
+            var map = new Dictionary<string, int>(StringComparer.Ordinal);
+
+            foreach (ColumnHeader col in lvRecentFiles.Columns)
+            {
+                // ✅ NEW - Use Tag (base name) as key, not Text (which may have ▲/▼)
+                var baseKey = (string?)(col.Tag) ?? col.Text;
+                map[baseKey] = col.Width;
+            }
+
+            current.RecentFilesColumnWidths = map;
+            current.RecentFilesRowHeightScale = DefaultRowHeightScale;
+
+            UiStateConfig.Save(current, uiStateDirectory);
         }
     }
 }
