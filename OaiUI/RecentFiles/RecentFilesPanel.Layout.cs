@@ -1,4 +1,6 @@
-﻿#nullable enable
+﻿// ✅ FULL FILE VERSION
+
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,17 +14,17 @@ namespace oaiUI.RecentFiles
     /// </summary>
     public sealed partial class RecentFilesPanel : UserControl
     {
-        // ==================== Layout Persistence ====================
+        // Layout Persistence
 
         private void OnColumnWidthChanged(object? sender, ColumnWidthChangedEventArgs e)
         {
-            // Debounce: restart timer on each change
+            // Debounce - restart timer on each change
             saveDebounceTimer.Stop();
             saveDebounceTimer.Start();
         }
 
         /// <summary>
-        /// Load layout settings (column widths) from disk.
+        /// 🔄 MODIFY - Load layout settings (column widths) from disk using base header keys.
         /// </summary>
         private void LoadLayout()
         {
@@ -39,13 +41,18 @@ namespace oaiUI.RecentFiles
 
             foreach (ColumnHeader col in lvRecentFiles.Columns)
             {
-                if (widths.TryGetValue(col.Text, out var w) && w > 0)
+                // ✅ NEW - Use Tag as stable key (set by SetupListView)
+                var baseKey = (string?)(col.Tag) ?? col.Text;
+
+                if (widths.TryGetValue(baseKey, out var w) && w > 0)
+                {
                     col.Width = w;
+                }
             }
         }
 
         /// <summary>
-        /// Save layout settings (column widths) to disk.
+        /// 🔄 MODIFY - Save layout settings (column widths) to disk using base header keys.
         /// </summary>
         private void SaveLayout()
         {
@@ -55,7 +62,11 @@ namespace oaiUI.RecentFiles
             var map = new Dictionary<string, int>(StringComparer.Ordinal);
 
             foreach (ColumnHeader col in lvRecentFiles.Columns)
-                map[col.Text] = col.Width;
+            {
+                // ✅ NEW - Use Tag (base name) as key, not Text (which may have ▲/▼)
+                var baseKey = (string?)(col.Tag) ?? col.Text;
+                map[baseKey] = col.Width;
+            }
 
             current.RecentFilesColumnWidths = map;
             current.RecentFilesRowHeightScale = DefaultRowHeightScale;

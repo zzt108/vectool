@@ -96,6 +96,11 @@ namespace VecTool.Configuration
             /// Optional row-height scale to apply on load; null means use default scale.
             /// </summary>
             public double? RecentFilesRowHeightScale { get; set; }
+
+            /// <summary>
+            /// Configurable font size (in points) for the Recent Files grid; null means use default.
+            /// </summary>
+            public double? RecentFilesFontSize { get; set; }
         }
 
         /// <summary>
