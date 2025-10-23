@@ -1,66 +1,184 @@
-﻿#nullable enable
+﻿// ✅ FULL FILE VERSION
+
+#nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
-using VecTool.Configuration;
+using System.Configuration;
+using System.IO;
+using System.Text.Json;
+using VecTool.Core.RecentFiles;
 
-namespace oaiUI.RecentFiles
+namespace VecTool.Configuration
 {
     /// <summary>
-    /// RecentFilesPanel partial: Layout persistence (column widths, row height).
+    /// Persists simple UI state such as the last selected vector store name and Recent Files layout.
+    /// Stored as JSON next to vectorStoreFolders.json if configured, otherwise under the app "Generated" folder.
+    /// Also exposes legacy Recent Files getters/setters backed by an ISettingsStore for tests/in-memory usage.
     /// </summary>
-    public sealed partial class RecentFilesPanel : UserControl
+    public sealed class UiStateConfig
     {
-        // ==================== Layout Persistence ====================
+        // Legacy per-key settings for Recent Files filter/specific store/last selection.
+        private const string KEY_RECENT_FILTER = "ui.recentFiles.filter";
+        private const string KEY_RECENT_STORE = "ui.recentFiles.storeId";
+        private const string KEY_RECENT_LAST = "ui.recentFiles.lastSelection";
 
-        private void OnColumnWidthChanged(object? sender, ColumnWidthChangedEventArgs e)
+        private readonly ISettingsStore store;
+
+        /// <summary>
+        /// Construct with an <see cref="ISettingsStore"/> implementation, typically an app-level or in-memory store.
+        /// </summary>
+        public UiStateConfig(ISettingsStore store)
         {
-            // Debounce: restart timer on each change
-            saveDebounceTimer.Stop();
-            saveDebounceTimer.Start();
+            this.store = store ?? throw new ArgumentNullException(nameof(store));
         }
 
         /// <summary>
-        /// Load layout settings (column widths) from disk.
+        /// Get the persisted Recent Files filter; defaults to <see cref="VectorStoreLinkFilter.All"/>.
         /// </summary>
-        private void LoadLayout()
+        public VectorStoreLinkFilter GetRecentFilesFilter()
         {
-            if (lvRecentFiles is null) return;
+            var raw = store.Get(KEY_RECENT_FILTER);
+            return Enum.TryParse<VectorStoreLinkFilter>(raw, out var parsed) ? parsed : VectorStoreLinkFilter.All;
+        }
 
-            var state = UiStateConfig.Load(uiStateDirectory);
-            var widths = state.RecentFilesColumnWidths;
+        /// <summary>
+        /// Persist the Recent Files filter.
+        /// </summary>
+        public void SetRecentFilesFilter(VectorStoreLinkFilter filter)
+        {
+            store.Set(KEY_RECENT_FILTER, filter.ToString());
+        }
 
-            if (widths is null || widths.Count == 0)
+        /// <summary>
+        /// Get the specific store id used by the Recent Files filter, if any.
+        /// </summary>
+        public string? GetRecentFilesSpecificStoreId()
+        {
+            return store.Get(KEY_RECENT_STORE);
+        }
+
+        /// <summary>
+        /// Persist the specific store id used by the Recent Files filter, or null/empty to clear.
+        /// </summary>
+        public void SetRecentFilesSpecificStoreId(string? storeId)
+        {
+            store.Set(KEY_RECENT_STORE, string.IsNullOrWhiteSpace(storeId) ? null : storeId);
+        }
+
+        /// <summary>
+        /// Get the last selected Recent File path, if any.
+        /// </summary>
+        public string? GetLastSelectedRecentFilePath()
+        {
+            return store.Get(KEY_RECENT_LAST);
+        }
+
+        /// <summary>
+        /// Persist the last selected Recent File path, or null/empty to clear.
+        /// </summary>
+        public void SetLastSelectedRecentFilePath(string? path)
+        {
+            store.Set(KEY_RECENT_LAST, string.IsNullOrWhiteSpace(path) ? null : path);
+        }
+
+        /// <summary>
+        /// JSON-backed UI state for Recent Files grid layout.
+        /// </summary>
+        public sealed class UiState
+        {
+            /// <summary>
+            /// Map from column header text to width in pixels.
+            /// </summary>
+            public Dictionary<string, int> RecentFilesColumnWidths { get; set; } = new Dictionary<string, int>(StringComparer.Ordinal);
+
+            /// <summary>
+            /// Optional row-height scale to apply on load; null means use default scale.
+            /// </summary>
+            public double? RecentFilesRowHeightScale { get; set; }
+
+            /// <summary>
+            /// ✅ NEW - Configurable font size (in points) for the Recent Files grid; null means use default.
+            /// </summary>
+            public double? RecentFilesFontSize { get; set; }
+        }
+
+        /// <summary>
+        /// Load UI state from uiState.json in the resolved directory.
+        /// </summary>
+        public static UiState Load(string? directory = null)
+        {
+            try
             {
-                // First run - leave designer-defined widths
-                return;
+                var path = ResolveUiStatePath(directory);
+                if (File.Exists(path))
+                {
+                    var json = File.ReadAllText(path);
+                    var state = JsonSerializer.Deserialize<UiState>(json);
+                    return state ?? new UiState();
+                }
+                return new UiState();
             }
-
-            foreach (ColumnHeader col in lvRecentFiles.Columns)
+            catch
             {
-                if (widths.TryGetValue(col.Text, out var w) && w > 0)
-                    col.Width = w;
+                // Defensive: never crash UI on corrupt/missing file, return defaults.
+                return new UiState();
             }
         }
 
         /// <summary>
-        /// Save layout settings (column widths) to disk.
+        /// Save UI state to uiState.json in the resolved directory.
         /// </summary>
-        private void SaveLayout()
+        public static void Save(UiState state, string? directory = null)
         {
-            if (lvRecentFiles is null) return;
+            if (state is null)
+                throw new ArgumentNullException(nameof(state));
 
-            var current = UiStateConfig.Load(uiStateDirectory);
-            var map = new Dictionary<string, int>(StringComparer.Ordinal);
+            try
+            {
+                var path = ResolveUiStatePath(directory);
+                var dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
 
-            foreach (ColumnHeader col in lvRecentFiles.Columns)
-                map[col.Text] = col.Width;
+                var json = JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(path, json);
+            }
+            catch
+            {
+                // Defensive: swallow to avoid UI disruption during resize drags; consider logging via LogCtx if desired.
+            }
+        }
 
-            current.RecentFilesColumnWidths = map;
-            current.RecentFilesRowHeightScale = DefaultRowHeightScale;
+        private static string ResolveUiStatePath(string? directory)
+        {
+            string baseDir = directory ?? InferConfigDirectory() ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Generated");
+            if (!Directory.Exists(baseDir))
+            {
+                Directory.CreateDirectory(baseDir);
+            }
+            return Path.Combine(baseDir, "uiState.json");
+        }
 
-            UiStateConfig.Save(current, uiStateDirectory);
+        private static string? InferConfigDirectory()
+        {
+            // If vectorStoreFoldersPath is configured, place uiState.json alongside it.
+            var configured = ConfigurationManager.AppSettings["vectorStoreFoldersPath"];
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                try
+                {
+                    var dir = Path.GetDirectoryName(configured);
+                    if (!string.IsNullOrWhiteSpace(dir))
+                        return dir!;
+                }
+                catch
+                {
+                    // Ignore and use default.
+                }
+            }
+            return null;
         }
     }
 }
