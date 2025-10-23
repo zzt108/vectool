@@ -49,15 +49,48 @@ namespace oaiUI.RecentFiles
                 }
             }
 
-            // ✅ NEW - Apply row height scale if available
-            var rowScale = state.RecentFilesRowHeightScale ?? DefaultRowHeightScale;
-            if (rowScale > 0 && lvRecentFiles.Font != null)
+            // ✅ NEW: First-run font from App.config if UiState has no font
+            if (!state.RecentFilesFontSize.HasValue)
             {
-                // Calculate row height based on font and scale
-                var baseHeight = lvRecentFiles.Font.Height;
-                // ListView uses native control; manually adjust via Owner Draw if needed
-                // For now, store for SaveLayout consistency
+                var fontSizeStr = System.Configuration.ConfigurationManager.AppSettings["recentFilesFontSize"];
+                if (double.TryParse(fontSizeStr, out var points) && points > 6.0 && points <= 48.0)
+                {
+                    lvRecentFiles.Font = new System.Drawing.Font(lvRecentFiles.Font.FontFamily, (float)points, lvRecentFiles.Font.Style);
+                    state.RecentFilesFontSize = points;
+                    UiStateConfig.Save(state, uiStateDirectory);
+                }
             }
+            else
+            {
+                // Existing behavior: apply UiState font size
+                lvRecentFiles.Font = new System.Drawing.Font(
+                    lvRecentFiles.Font.FontFamily,
+                    (float)state.RecentFilesFontSize.Value,
+                    lvRecentFiles.Font.Style);
+            }
+
+
+            // ✅ NEW: Apply row height scale (UiState or default)
+            var rowScale = state.RecentFilesRowHeightScale ?? DefaultRowHeightScale;
+            if (rowScale <= 0) rowScale = DefaultRowHeightScale;
+
+            // ListView row height is max(Font.Height, SmallImageList.ImageSize.Height)
+            var baseHeight = lvRecentFiles.Font.Height;
+            var targetHeight = Math.Max(baseHeight + 2, (int)Math.Round(baseHeight * rowScale));
+            if (lvRecentFiles.SmallImageList == null ||
+                lvRecentFiles.SmallImageList.ImageSize.Height != targetHeight)
+            {
+                var imgList = new ImageList
+                {
+                    ColorDepth = ColorDepth.Depth8Bit,
+                    ImageSize = new System.Drawing.Size(1, targetHeight),
+                    TransparentColor = System.Drawing.Color.Transparent
+                };
+                lvRecentFiles.SmallImageList = imgList;
+            }
+
+            // Track what we actually applied so SaveLayout can persist it
+            appliedRowHeightScale = rowScale;
         }
 
         /// <summary>
@@ -78,7 +111,8 @@ namespace oaiUI.RecentFiles
             }
 
             current.RecentFilesColumnWidths = map;
-            current.RecentFilesRowHeightScale = DefaultRowHeightScale;
+            current.RecentFilesRowHeightScale = appliedRowHeightScale;
+            current.RecentFilesFontSize = lvRecentFiles.Font.Size;
 
             UiStateConfig.Save(current, uiStateDirectory);
         }
