@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION - Skeleton partial
-namespace oaiUI.RecentFiles;
+﻿namespace oaiUI.RecentFiles;
 public sealed partial class RecentFilesPanel : UserControl
 {
     // All implementation moved to focused partial classes for maintainability.
