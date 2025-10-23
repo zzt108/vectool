@@ -51,6 +51,9 @@ namespace oaiUI.RecentFiles
                 DefaultRowHeightScale = scale;
             }
 
+            // Setup ListView columns BEFORE wiring runtime events
+            SetupListView();
+
             // Setup timer and watcher
             refreshDebounceTimer = new System.Windows.Forms.Timer { Interval = 500 };
             SetupFileWatcher();
@@ -61,6 +64,7 @@ namespace oaiUI.RecentFiles
 
             // Initial refresh
             RefreshList();
+            ApplyThemeDark();
             return this;
         }
 
@@ -121,7 +125,6 @@ namespace oaiUI.RecentFiles
                 refreshDebounceTimer.Stop();
                 RefreshList();
             };
-            ApplyThemeDark();
         }
 
         /// <summary>
@@ -143,13 +146,31 @@ namespace oaiUI.RecentFiles
             lvRecentFiles.GridLines = true;
             lvRecentFiles.MultiSelect = true;
 
-            // Add columns if not already defined by Designer
+            // Always ensure columns exist (Designer doesn't define them)
             if (lvRecentFiles.Columns.Count == 0)
             {
                 lvRecentFiles.Columns.Add("File", 300);
                 lvRecentFiles.Columns.Add("Type", 100);
                 lvRecentFiles.Columns.Add("Size", 80);
                 lvRecentFiles.Columns.Add("Generated", 140);
+            }
+            // If columns exist but have no width, reset them
+            else
+            {
+                for (int i = 0; i < lvRecentFiles.Columns.Count; i++)
+                {
+                    if (lvRecentFiles.Columns[i].Width == 0)
+                    {
+                        lvRecentFiles.Columns[i].Width = i switch
+                        {
+                            0 => 300, // File
+                            1 => 100, // Type
+                            2 => 80,  // Size
+                            3 => 140, // Generated
+                            _ => 100
+                        };
+                    }
+                }
             }
         }
 
