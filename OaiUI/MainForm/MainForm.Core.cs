@@ -93,7 +93,7 @@ namespace Vectool.OaiUI
         private void UpdateFormTitle()
         {
             var selectedName = comboBoxVectorStores.SelectedItem?.ToString();
-            var version = versionProvider.InformationalVersion ?? versionProvider.FileVersion;
+            var version = versionProvider.FileVersion;
             var baseName = $"VecTool v{version}";
 
             this.Text = string.IsNullOrEmpty(selectedName)
