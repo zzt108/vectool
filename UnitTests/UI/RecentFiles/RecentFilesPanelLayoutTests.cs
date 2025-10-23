@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
 using System;
 using System.IO;
@@ -49,7 +48,7 @@ namespace UnitTests.UI.RecentFiles
 
             try
             {
-                using var panel = new RecentFilesPanel(mgr, tmp);
+                using var panel = new RecentFilesPanel().Initialize(mgr, tmp);
 
                 var lv = GetListView(panel);
 
@@ -64,9 +63,9 @@ namespace UnitTests.UI.RecentFiles
                 if (lv.Columns.Count > 0) lv.Columns[0].Width = 123;
                 if (lv.Columns.Count > 1) lv.Columns[1].Width = 222;
 
-                panel.SaveLayoutForTesting();
+                panel.SaveLayout();
 
-                using var panel2 = new RecentFilesPanel(mgr, tmp);
+                using var panel2 = new RecentFilesPanel().Initialize(mgr, tmp);
                 var lv2 = GetListView(panel2);
 
                 // Assert
@@ -85,7 +84,7 @@ namespace UnitTests.UI.RecentFiles
         {
             // Arrange
             var mgr = new MockRecentFilesManager();
-            using var panel = new RecentFilesPanel(mgr, null);
+            using var panel = new RecentFilesPanel().Initialize(mgr, null);
 
             // Act
             var lv = GetListView(panel);

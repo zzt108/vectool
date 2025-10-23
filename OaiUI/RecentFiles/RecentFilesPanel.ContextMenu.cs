@@ -1,21 +1,21 @@
-﻿// Path: OaiUI/RecentFiles/RecentFilesPanel.ContextMenu.cs
-
+﻿// ✅ FULL FILE VERSION
+// Path: OaiUI/RecentFiles/RecentFilesPanel.ContextMenu.cs
 #nullable enable
+
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 using VecTool.RecentFiles;
 
 namespace oaiUI.RecentFiles
 {
     /// <summary>
-    /// RecentFilesPanel partial: Right-click context menu operations.
+    /// RecentFilesPanel partial: Context menu initialization and handlers.
     /// </summary>
     public sealed partial class RecentFilesPanel : UserControl
     {
-        // Context menu components (instantiated in WireRuntime)
+        // Context menu controls
         private ContextMenuStrip? contextMenu;
         private ToolStripMenuItem? menuOpenFile;
         private ToolStripMenuItem? menuShowInExplorer;
@@ -50,8 +50,11 @@ namespace oaiUI.RecentFiles
             // Dynamically enable/disable menu items based on selection
             contextMenu.Opening += OnContextMenuOpening;
 
-            // Attach to ListView
-            lvRecentFiles.ContextMenuStrip = contextMenu;
+            // ✅ NEW - Attach to ListView explicitly
+            if (lvRecentFiles is not null)
+            {
+                lvRecentFiles.ContextMenuStrip = contextMenu;
+            }
         }
 
         /// <summary>
@@ -172,24 +175,6 @@ namespace oaiUI.RecentFiles
             try
             {
                 Clipboard.SetText(file.FilePath);
-
-                // Optional: Brief visual feedback
-                if (lblStatus is not null)
-                {
-                    var originalText = lblStatus.Text;
-                    lblStatus.Text = "✓ Path copied to clipboard";
-
-                    // Reset after 2 seconds
-                    var resetTimer = new System.Windows.Forms.Timer { Interval = 2000 };
-                    resetTimer.Tick += (s, args) =>
-                    {
-                        if (lblStatus is not null)
-                            lblStatus.Text = originalText;
-                        resetTimer.Stop();
-                        resetTimer.Dispose();
-                    };
-                    resetTimer.Start();
-                }
             }
             catch (Exception ex)
             {
@@ -202,7 +187,7 @@ namespace oaiUI.RecentFiles
         }
 
         /// <summary>
-        /// Remove the selected file from the recent list.
+        /// Remove the selected file from the recent files list.
         /// </summary>
         private void OnRemoveFromList(object? sender, EventArgs e)
         {
@@ -210,49 +195,22 @@ namespace oaiUI.RecentFiles
             if (file is null || string.IsNullOrWhiteSpace(file.FilePath))
                 return;
 
-            var result = MessageBox.Show(
-                $"Remove from recent files list?\n\n{Path.GetFileName(file.FilePath)}",
-                "Confirm Remove",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
-
-            if (result != DialogResult.Yes)
-                return;
-
             try
             {
-                // Remove from manager and refresh
-                recentFilesManager?.RemoveFile(file.FilePath);
-                recentFilesManager?.Save();
-                RefreshList();
+                if (recentFilesManager is not null)
+                {
+                    recentFilesManager.RemoveFile(file.FilePath);
+                    RefreshList();
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Failed to remove file:\n{ex.Message}",
+                    $"Failed to remove file from list:\n{ex.Message}",
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
-        }
-
-        /// <summary>
-        /// Cleanup context menu resources on disposal.
-        /// </summary>
-        private void DisposeContextMenu()
-        {
-            if (contextMenu is not null)
-            {
-                contextMenu.Opening -= OnContextMenuOpening;
-                contextMenu.Dispose();
-                contextMenu = null;
-            }
-
-            menuOpenFile = null;
-            menuShowInExplorer = null;
-            menuCopyPath = null;
-            menuSeparator = null;
-            menuRemove = null;
         }
     }
 }

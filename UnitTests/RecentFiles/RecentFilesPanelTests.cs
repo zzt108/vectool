@@ -20,7 +20,8 @@ namespace UnitTests.UI.RecentFiles
         public void SetUp()
         {
             mockManager = new MockRecentFilesManager();
-            panel = new RecentFilesPanel(mockManager);
+            panel = new RecentFilesPanel().Initialize(mockManager, null);
+
         }
 
         [TearDown]
