@@ -13,5 +13,7 @@ public enum RecentFileType
     AllSourceMd = 2,
     AllSourcePdf = 3,
     GitChanges = 4,
-    TestResults = 5
+    TestResults = 5,
+    Plan,
+    Guide
 }

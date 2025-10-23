@@ -44,8 +44,10 @@ namespace oaiUI.RecentFiles
                     var item = new ListViewItem(f.FileName) { Tag = f };
 
                     // Columns: File, Type, Size in KB, Generated
-                    item.SubItems.Add(f.FileType.ToString());
-                    item.SubItems.Add($"{f.FileSizeBytes / 1024.0:0.0} KB");
+                    var typeDisplay = f.FileType == RecentFileType.Unknown
+                        ? MapExtensionToType(Path.GetExtension(f.FileName), f.FileName).ToString()
+                        : f.FileType.ToString();
+                    item.SubItems.Add(typeDisplay); item.SubItems.Add($"{f.FileSizeBytes / 1024.0:0.0} KB");
                     item.SubItems.Add(f.GeneratedAt.ToString("yyyy-MM-dd HH:mm"));
 
                     if (!f.Exists)
@@ -87,9 +89,21 @@ namespace oaiUI.RecentFiles
             }
         }
 
-        private static RecentFileType MapExtensionToType(string? ext)
+        private static RecentFileType MapExtensionToType(string? ext, string? fileName = null)
         {
-            var e = (ext ?? string.Empty).Trim().ToLowerInvariant();
+            var e = ext ?? string.Empty.Trim().ToLowerInvariant();
+
+            // ✅ NEW - Check filename patterns first (case-insensitive)
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                var fn = fileName.ToUpperInvariant();
+                if (fn.Contains("PLAN-") || fn.StartsWith("PLAN") || fn.Contains("PLAN "))
+                    return RecentFileType.Plan;
+                if (fn.Contains("GUIDE-") || fn.StartsWith("GUIDE"))
+                    return RecentFileType.Guide;
+            }
+
+            // Fallback to extension-based detection
             return e switch
             {
                 ".docx" => RecentFileType.AllSourceDocx,
