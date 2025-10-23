@@ -79,35 +79,48 @@ namespace oaiUI.RecentFiles
         /// <summary>
         /// Wire up runtime events and configurations not handled by the Designer.
         /// </summary>
+        /// <summary>
+        /// 🔄 MODIFY - Wire up all runtime event handlers after InitializeComponent.
+        /// </summary>
         private void WireRuntime()
         {
-            SetupListView();
-            ApplyRowHeightScale();
+            if (lvRecentFiles is null) return;
 
-            // ✅ NEW - Apply font size from config/UiState
-            ApplyFontSizeFromConfig();
+            // ✅ NEW - Initialize context menu
+            InitializeContextMenu();
 
-            ApplyThemeDark();
-            WireDragDrop();
-
-            // 🔄 MODIFY - Wire FileSystemWatcher for output directory
-            WireFileSystemWatcher();
-
-            // Column resize tracking for layout persistence
-            if (lvRecentFiles != null)
+            // Existing event handlers
+            Load += RecentFilesPanelLoad;
+            if (txtFilter is not null)
+                txtFilter.TextChanged += txtFilterTextChanged;
+            if (btnRefresh is not null)
+                btnRefresh.Click += btnRefreshClick;
+            if (lvRecentFiles is not null)
             {
                 lvRecentFiles.ColumnWidthChanged += OnColumnWidthChanged;
-
-                // ✅ NEW - Wire column click for sorting
+                lvRecentFiles.DragEnter += OnListViewDragEnter;
+                lvRecentFiles.DragDrop += OnListViewDragDrop;
+                lvRecentFiles.ItemDrag += OnListViewItemDrag;
                 lvRecentFiles.ColumnClick += OnColumnClick;
             }
 
-            // Debounce timer for layout saves
-            saveDebounceTimer.Tick += (_, _) =>
+            refreshDebounceTimer.Tick += (s, e) =>
+            {
+                refreshDebounceTimer.Stop();
+                RefreshList();
+            };
+
+            saveDebounceTimer.Tick += (s, e) =>
             {
                 saveDebounceTimer.Stop();
                 SaveLayout();
             };
+
+            SetupListView();
+            ApplyRowHeightScale();
+            ApplyFontSizeFromConfig();
+            ApplyThemeDark();
+            WireFileSystemWatcher();
         }
 
         /// <summary>
@@ -358,7 +371,7 @@ namespace oaiUI.RecentFiles
             {
                 try
                 {
-                    if (lvRecentFiles != null)
+                    if (lvRecentFiles is not null)
                     {
                         lvRecentFiles.ColumnWidthChanged -= OnColumnWidthChanged;
                         lvRecentFiles.DragEnter -= OnListViewDragEnter;
@@ -372,21 +385,25 @@ namespace oaiUI.RecentFiles
                     saveDebounceTimer.Dispose();
 
                     // 🔄 MODIFY - Cleanup FileSystemWatcher
-                    if (fileWatcher != null)
+                    if (fileWatcher is not null)
                     {
                         fileWatcher.EnableRaisingEvents = false;
                         fileWatcher.Created -= OnFileSystemChanged;
                         fileWatcher.Changed -= OnFileSystemChanged;
-                        fileWatcher.Renamed -= OnFileSystemChanged;
                         fileWatcher.Dispose();
+                        fileWatcher = null;
                     }
 
                     refreshDebounceTimer.Dispose();
+
+                    // ✅ NEW - Cleanup context menu
+                    DisposeContextMenu();
+
                     components?.Dispose();
                 }
                 catch
                 {
-                    // Defensive - never crash during Dispose
+                    // Defensive - swallow disposal errors
                 }
             }
 
