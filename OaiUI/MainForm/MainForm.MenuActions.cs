@@ -1,5 +1,4 @@
-﻿// File: OaiUI/MainForm.MenuActions.cs
-
+﻿// ✅ FULL FILE VERSION
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -17,7 +16,7 @@ namespace Vectool.OaiUI
         /// <summary>
         /// Handler for "Convert to MD" menu item (Ctrl+M).
         /// </summary>
-        private async void convertToMdToolStripMenuItemClick(object? sender, EventArgs e)
+        private async void convertToMdToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             if (selectedFolders.Count == 0)
             {
@@ -25,7 +24,7 @@ namespace Vectool.OaiUI
                 return;
             }
 
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? default);
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
             var defaultFileName = $"{vsName}.{branchName}.md";
 
@@ -48,6 +47,9 @@ namespace Vectool.OaiUI
                 var handler = new MDHandler(userInterface, recentFilesManager);
                 await Task.Run(() => handler.ExportSelectedFolders(selectedFolders, outputPath, config)).ConfigureAwait(true);
                 userInterface.ShowMessage($"Successfully generated file at:\n{outputPath}", "Success", MessageType.Information);
+
+                // 🔄 MODIFY - Refresh recent files after MD generation
+                recentFilesPanel.RefreshList();
             }
             catch (Exception ex)
             {
@@ -62,7 +64,7 @@ namespace Vectool.OaiUI
         /// <summary>
         /// Handler for "Get Git Changes" menu item (Ctrl+G).
         /// </summary>
-        private async void getGitChangesToolStripMenuItemClick(object? sender, EventArgs e)
+        private async void getGitChangesToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             if (selectedFolders.Count == 0)
             {
@@ -70,7 +72,7 @@ namespace Vectool.OaiUI
                 return;
             }
 
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? default);
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
             var gitChangesFileName = $"{vsName}.{branchName}.GIT.md";
             var mdExportFileName = $"{vsName}.{branchName}.md";
@@ -86,17 +88,19 @@ namespace Vectool.OaiUI
                 return;
 
             var gitOutputPath = saveFileDialog.FileName;
-            // ✅ Derive MD output path in same directory
+
+            // Derive MD output path in same directory
             var mdOutputPath = Path.Combine(Path.GetDirectoryName(gitOutputPath)!, mdExportFileName);
 
-            // ✅ Check if MD file exists and confirm overwrite once (ignored for now)
+            // Check if MD file exists and confirm overwrite (once - ignored for now)
             if (false && File.Exists(mdOutputPath))
             {
                 var overwrite = MessageBox.Show(
-                    $"MD export file already exists:\n{mdOutputPath}?",
+                    $"MD export file already exists:\n{mdOutputPath}",
                     "Confirm Overwrite",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question);
+
                 if (overwrite != DialogResult.Yes)
                     return;
             }
@@ -118,14 +122,14 @@ namespace Vectool.OaiUI
                 userInterface.WorkFinish();
             }
 
-            // ✅ Refresh Recent Files panel after both operations
+            // Refresh Recent Files panel after both operations
             recentFilesPanel.RefreshList();
         }
 
         /// <summary>
         /// Handler for "File Size Summary" menu item (Ctrl+F).
         /// </summary>
-        private async void fileSizeSummaryToolStripMenuItemClick(object? sender, EventArgs e)
+        private async void fileSizeSummaryToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             if (selectedFolders.Count == 0)
             {
@@ -133,7 +137,7 @@ namespace Vectool.OaiUI
                 return;
             }
 
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? default);
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
             var defaultFileName = $"{vsName}.{branchName}.summary.txt";
 
@@ -156,6 +160,9 @@ namespace Vectool.OaiUI
                 var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
                 await Task.Run(() => handler.GenerateFileSizeSummary(selectedFolders, outputPath, config)).ConfigureAwait(true);
                 userInterface.ShowMessage($"Successfully generated file at:\n{outputPath}", "Success", MessageType.Information);
+
+                // 🔄 MODIFY - Refresh recent files after file size summary
+                recentFilesPanel.RefreshList();
             }
             catch (Exception ex)
             {
@@ -170,9 +177,10 @@ namespace Vectool.OaiUI
         /// <summary>
         /// Handler for "Run Tests" menu item (Ctrl+T).
         /// </summary>
-        private async void runTestsToolStripMenuItemClick(object? sender, EventArgs e)
+        private async void runTestsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             var currentVectorStore = GetCurrentVectorStoreConfig();
+
             if (currentVectorStore.FolderPaths.Count == 0)
             {
                 userInterface.ShowMessage("Please select one or more folders first.", "No Folders Selected", MessageType.Warning);
@@ -180,13 +188,14 @@ namespace Vectool.OaiUI
             }
 
             var solutionPaths = Utilities.FindSolutionFiles(currentVectorStore);
+
             if (solutionPaths.Length == 0)
             {
                 MessageBox.Show("Could not find the solution file.", "Solution Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            // ✅ If multiple solutions found, let user choose
+            // If multiple solutions found, let user choose
             string solutionPath;
             if (solutionPaths.Length > 1)
             {
@@ -197,7 +206,8 @@ namespace Vectool.OaiUI
                     InitialDirectory = Path.GetDirectoryName(solutionPaths[0]),
                     Multiselect = false
                 };
-                // ✅ Pre-populate with first found solution
+
+                // Pre-populate with first found solution
                 openFileDialog.FileName = Path.GetFileName(solutionPaths[0]);
 
                 if (openFileDialog.ShowDialog() != DialogResult.OK)
@@ -210,7 +220,7 @@ namespace Vectool.OaiUI
                 solutionPath = solutionPaths[0];
             }
 
-            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? default);
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
             var testResultsFileName = $"{vsName}.{branchName}.TestResults.md";
 
@@ -226,7 +236,7 @@ namespace Vectool.OaiUI
 
             var testResultsOutputPath = saveFileDialog.FileName;
 
-            // ✅ Create the process runner and handler (kept local for MVP; DI-ready).
+            // Create the process runner and handler (kept local for MVP; DI-ready).
             var processRunner = new VecTool.Core.ProcessRunner();
             var handler = new VecTool.Handlers.TestRunnerHandler(
                 solutionPath,
@@ -237,13 +247,14 @@ namespace Vectool.OaiUI
 
             try
             {
-                // ✅ Optional: existing UI busy indicator hooks if available.
+                // Optional: existing UI busy indicator hooks if available.
                 userInterface.WorkStart("Running unit tests...", selectedFolders);
 
-                // ✅ MODIFY - Pass computed branch name
-                var message = await handler.RunTestsAsync(solutionPath, branchName, CancellationToken.None).ConfigureAwait(true);
+                // 🔄 MODIFY - Pass computed branch name
+                var message = await handler.RunTestsAsync(solutionPath, branchName, System.Threading.CancellationToken.None).ConfigureAwait(true);
 
                 var isSuccess = message?.StartsWith("All tests passed.", StringComparison.OrdinalIgnoreCase);
+
                 if (isSuccess.HasValue && isSuccess.Value)
                 {
                     MessageBox.Show(message, "Test Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -260,14 +271,15 @@ namespace Vectool.OaiUI
             finally
             {
                 userInterface.WorkFinish();
-                recentFilesPanel.RefreshList();
             }
+
+            recentFilesPanel.RefreshList();
         }
 
         /// <summary>
         /// Handler for "Exit" menu item (Alt+F4).
         /// </summary>
-        private void exitToolStripMenuItemClick(object? sender, EventArgs e)
+        private void exitToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             Application.Exit();
         }

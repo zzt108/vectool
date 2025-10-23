@@ -1,6 +1,7 @@
-﻿// ✅ NEW FILE
-#nullable enable
+﻿#nullable enable
+
 using System;
+using System.IO;
 using System.Windows.Forms;
 using VecTool.Configuration;
 using VecTool.RecentFiles;
@@ -12,16 +13,21 @@ namespace oaiUI.RecentFiles
     /// </summary>
     public sealed partial class RecentFilesPanel : UserControl
     {
-        // ==================== Dependencies ====================
+        // Dependencies
         private IRecentFilesManager? recentFilesManager;
         private readonly string? uiStateDirectory;
 
-        // ==================== Internal State ====================
+        // Internal State
         private readonly System.Windows.Forms.Timer saveDebounceTimer = new() { Interval = 300 };
         private ImageList? rowHeightImageList;
+
+        // ✅ NEW - FileSystemWatcher for auto-refresh
+        private FileSystemWatcher? fileWatcher;
+        private readonly System.Windows.Forms.Timer refreshDebounceTimer = new() { Interval = 500 };
+
         private const double DefaultRowHeightScale = 1.10;
 
-        // ==================== Constructors ====================
+        // Constructors
 
         /// <summary>
         /// Parameterless constructor for Designer compatibility.
@@ -39,7 +45,6 @@ namespace oaiUI.RecentFiles
         {
             this.recentFilesManager = recentFilesManager ?? throw new ArgumentNullException(nameof(recentFilesManager));
             this.uiStateDirectory = uiStateDirectory;
-
             InitializeComponent();
             WireRuntime();
         }
@@ -62,7 +67,7 @@ namespace oaiUI.RecentFiles
             SaveLayout();
         }
 
-        // ==================== Initialization Helpers ====================
+        // Initialization Helpers
 
         /// <summary>
         /// Wire up runtime events and configurations not handled by the Designer.
@@ -74,17 +79,75 @@ namespace oaiUI.RecentFiles
             ApplyThemeDark();
             WireDragDrop();
 
+            // ✅ NEW - Wire FileSystemWatcher for output directory
+            WireFileSystemWatcher();
+
             // Column resize tracking for layout persistence
             if (lvRecentFiles != null)
+            {
                 lvRecentFiles.ColumnWidthChanged += OnColumnWidthChanged;
+            }
 
             // Debounce timer for layout saves
-            saveDebounceTimer.Tick += (_, _) => { saveDebounceTimer.Stop(); SaveLayout(); };
+            saveDebounceTimer.Tick += (_, _) =>
+            {
+                saveDebounceTimer.Stop();
+                SaveLayout();
+            };
+        }
+
+        /// <summary>
+        /// ✅ NEW - Wires FileSystemWatcher to monitor the output directory for new files.
+        /// </summary>
+        private void WireFileSystemWatcher()
+        {
+            try
+            {
+                var config = RecentFilesConfig.FromAppConfig();
+                var watchPath = config.OutputPath;
+
+                if (string.IsNullOrWhiteSpace(watchPath) || !Directory.Exists(watchPath))
+                    return;
+
+                fileWatcher = new FileSystemWatcher(watchPath)
+                {
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime,
+                    Filter = "*.*",
+                    IncludeSubdirectories = true,
+                    EnableRaisingEvents = true
+                };
+
+                fileWatcher.Created += OnFileSystemChanged;
+                fileWatcher.Changed += OnFileSystemChanged;
+                fileWatcher.Renamed += OnFileSystemChanged;
+
+                // Debounce timer to avoid excessive refreshes
+                refreshDebounceTimer.Tick += (_, _) =>
+                {
+                    refreshDebounceTimer.Stop();
+                    RefreshList();
+                };
+            }
+            catch
+            {
+                // Defensive - don't crash if watcher fails
+            }
+        }
+
+        /// <summary>
+        /// ✅ NEW - Handles FileSystemWatcher events with debouncing.
+        /// </summary>
+        private void OnFileSystemChanged(object? sender, FileSystemEventArgs e)
+        {
+            // Restart debounce timer on each event
+            refreshDebounceTimer.Stop();
+            refreshDebounceTimer.Start();
         }
 
         private void SetupListView()
         {
-            if (lvRecentFiles is null) return;
+            if (lvRecentFiles is null)
+                return;
 
             lvRecentFiles.View = View.Details;
             lvRecentFiles.FullRowSelect = true;
@@ -103,16 +166,19 @@ namespace oaiUI.RecentFiles
 
         private void ApplyRowHeightScale()
         {
-            if (lvRecentFiles is null) return;
+            if (lvRecentFiles is null)
+                return;
 
             var state = UiStateConfig.Load(uiStateDirectory);
             var scale = state.RecentFilesRowHeightScale ?? DefaultRowHeightScale;
-
             var baseHeight = lvRecentFiles.Font.Height + 6;
             var desired = (int)Math.Ceiling(baseHeight * scale);
 
             rowHeightImageList?.Dispose();
-            rowHeightImageList = new ImageList { ImageSize = new System.Drawing.Size(1, Math.Max(desired, 18)) };
+            rowHeightImageList = new ImageList
+            {
+                ImageSize = new System.Drawing.Size(1, Math.Max(desired, 18))
+            };
             lvRecentFiles.SmallImageList = rowHeightImageList;
         }
 
@@ -165,7 +231,7 @@ namespace oaiUI.RecentFiles
             }
         }
 
-        // ==================== Disposal ====================
+        // Disposal
 
         protected override void Dispose(bool disposing)
         {
@@ -184,6 +250,18 @@ namespace oaiUI.RecentFiles
                     SaveLayout();
                     rowHeightImageList?.Dispose();
                     saveDebounceTimer.Dispose();
+
+                    // 🔄 MODIFY - Cleanup FileSystemWatcher
+                    if (fileWatcher != null)
+                    {
+                        fileWatcher.EnableRaisingEvents = false;
+                        fileWatcher.Created -= OnFileSystemChanged;
+                        fileWatcher.Changed -= OnFileSystemChanged;
+                        fileWatcher.Renamed -= OnFileSystemChanged;
+                        fileWatcher.Dispose();
+                    }
+                    refreshDebounceTimer.Dispose();
+
                     components?.Dispose();
                 }
                 catch
@@ -191,6 +269,7 @@ namespace oaiUI.RecentFiles
                     // Defensive - never crash during Dispose
                 }
             }
+
             base.Dispose(disposing);
         }
     }

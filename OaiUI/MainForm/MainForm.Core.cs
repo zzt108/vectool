@@ -66,11 +66,11 @@ namespace Vectool.OaiUI
         private void WireUpEvents()
         {
             // ✅ Menu items
-            convertToMdToolStripMenuItem.Click += convertToMdToolStripMenuItemClick;
-            getGitChangesToolStripMenuItem.Click += getGitChangesToolStripMenuItemClick;
-            fileSizeSummaryToolStripMenuItem.Click += fileSizeSummaryToolStripMenuItemClick;
-            runTestsToolStripMenuItem.Click += runTestsToolStripMenuItemClick;
-            exitToolStripMenuItem.Click += exitToolStripMenuItemClick;
+            convertToMdToolStripMenuItem.Click += convertToMdToolStripMenuItem_Click;
+            getGitChangesToolStripMenuItem.Click += getGitChangesToolStripMenuItem_Click;
+            fileSizeSummaryToolStripMenuItem.Click += fileSizeSummaryToolStripMenuItem_Click;
+            runTestsToolStripMenuItem.Click += runTestsToolStripMenuItem_Click;
+            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
 
             // ✅ Form controls
             btnSelectFolders.Click += btnSelectFoldersClick;
