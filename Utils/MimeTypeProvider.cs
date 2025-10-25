@@ -49,9 +49,13 @@ public class MimeTypeProvider
         return newExtension;
     }
 
-    public static string? GetMdTag(string fileExtension)
+    public static string? GetMdTag(string? fileExtension)
     {
+        if (string.IsNullOrEmpty(fileExtension))
+            return string.Empty;
+
         _mdTags.TryGetValue(fileExtension, out string? mdTag);
+
         if (mdTag == null)
         {
             mdTag = fileExtension.TrimStart('.'); // Use the extension itself as the tag if not found in mdTags.json

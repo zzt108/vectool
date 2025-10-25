@@ -23,6 +23,7 @@ namespace oaiUI.RecentFiles
         private string? uiStateDirectory;
         private string? watchPath;
         private double DefaultRowHeightScale = 1.10;
+        private double appliedRowHeightScale = 1.10;
 
         public RecentFilesPanel()
         {
@@ -49,6 +50,8 @@ namespace oaiUI.RecentFiles
             if (double.TryParse(rowHeightScaleStr, out var scale) && scale > 0 && scale <= 3.0)
             {
                 DefaultRowHeightScale = scale;
+                appliedRowHeightScale = scale; // start with the configured value
+
             }
 
             // Setup ListView columns BEFORE wiring runtime events

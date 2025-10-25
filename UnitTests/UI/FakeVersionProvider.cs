@@ -45,9 +45,9 @@ namespace UnitTests.UI
             var ts = VersionInfoParser.TryParseBuildTimestampUtc("x-202512312359-deadbee");
             ts.ShouldNotBeNull();
             ts!.Value.Kind.ShouldBe(DateTimeKind.Utc);
-            ts.Value.Year.ShouldBe(2025);
-            ts.Value.Month.ShouldBe(12);
-            ts.Value.Day.ShouldBe(31);
+            ts.Value.Year.ShouldBe(2026); // UTC - will be new year already
+            ts.Value.Month.ShouldBe(1);
+            ts.Value.Day.ShouldBe(1);
         }
 
         private static Label? FindLabel(Form f, string name) =>

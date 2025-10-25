@@ -1,5 +1,4 @@
-﻿<!-- ✅ FULL FILE VERSION -->
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -29,8 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- ✅ NEW: reference the UI project so tests can compile types like MainForm -->
-    <ProjectReference Include="..\OaiUI\vectool.UI.csproj" />
+    <ProjectReference Include="..\OaiUI\Vectool.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,6 +42,30 @@
     <PackageReference Update="Serilog.Extensions.Logging" Version="9.0.2" />
     <PackageReference Update="Serilog.Settings.Configuration" Version="9.0.0" />
     <PackageReference Update="Serilog.Sinks.Seq" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Config\nlog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Config\NLogConfig.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\SeriLogConfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\SeriLogConfig.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\testhost.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Config\testhost.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

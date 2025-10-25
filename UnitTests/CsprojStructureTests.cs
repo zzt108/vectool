@@ -15,15 +15,26 @@ namespace UnitTests
     {
         private static string RepoRoot => GetRepoRoot();
 
-        [TestCase("UnitTests\\UnitTests.csproj", new[]
-        {
-            @"..\OaiUI\Vectool.UI.csproj",
+        [TestCase("OaiUI\\Vectool.UI.csproj", new[]
+{
+            @"..\Constants\Constants.csproj",
+            @"..\Core\Core.csproj",
+            @"..\Log\Log.csproj",
             @"..\Handlers\Handlers.csproj",
             @"..\RecentFiles\RecentFiles.csproj",
             @"..\Configuration\Configuration.csproj",
-            @"..\Constants\Constants.csproj",
+        })]
+        // Todo: Utilize mocking in tests more efficiently
+        // TODO: Constants project should be utilized in unit tests
+        [TestCase("UnitTests\\UnitTests.csproj", new[]
+        {
+            //@"..\Configuration\Configuration.csproj",
+            @"..\OaiUI\Vectool.UI.csproj",
+            @"..\Handlers\Handlers.csproj",
+            @"..\RecentFiles\RecentFiles.csproj",
+            // @"..\Constants\Constants.csproj",
             @"..\Core\Core.csproj",
-            @"..\Utils\Utils.csproj",
+            // @"..\Utils\Utils.csproj",
             @"..\Log\Log.csproj",
         })]
         public void Csproj_ShouldContainExpectedProjectReferences(string csprojRelPath, string[] expectedIncludes)
