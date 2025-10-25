@@ -73,10 +73,9 @@ namespace UnitTests
             result.ShouldBe(expectedMdTag);
         }
 
-        // 🔄 MODIFY: instrument parameterized test for GetMimeType
-        [TestCase("", "application/octet-stream")]
-        [TestCase(null, "application/octet-stream")]
-        [TestCase(".verylongextensionthatshouldbehandledproperly", "application/octet-stream")]
+        [TestCase("", "application/binary")]
+        [TestCase(null, "application/binary")]
+        [TestCase(".verylongextensionthatshouldbehandledproperly", "application/binary")]
         [TestCase(".json", "application/json")]
         public void GetMimeTypeInvalidOrEdgeCasesReturnsCorrectMimeType(string? extension, string expectedMimeType)
         {
@@ -100,7 +99,7 @@ namespace UnitTests
             _log.Debug($"Arrange: setting up test for extension {extension}");
             _log.Debug($"Arrange: setting up test for extension {extension}");
 
-            var result = FileValidator.IsBinaryExtension(extension);
+            var result = FileValidator.IsBinary(extension, null);
 
             _log.Ctx.Set(new LogCtxShared.Props("Actual", result));
             _log.Info($"Assert: comparing expected vs actual for {extension}");
