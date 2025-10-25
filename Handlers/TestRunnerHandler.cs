@@ -110,7 +110,7 @@ namespace VecTool.Handlers
                 log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
             }
 
-            // 🔄 MODIFY - Generate output filename with branch name
+            // Generate output filename with branch name
             if (_outputFile != null)
             {
                 await File.WriteAllTextAsync(_outputFile, testResult.StandardOutput ?? string.Empty, ct).ConfigureAwait(false);
@@ -129,7 +129,11 @@ namespace VecTool.Handlers
 
             log.Info("Test run finished successfully.");
             _ui?.UpdateStatus("Test run finished successfully.");
-            return message;
+            if (testResult.ExitCode == 0 && _outputFile != null)
+            {
+                return _outputFile;
+            }
+            return null;
         }
 
         public static string MapExitCodeToMessage(int code) => code switch

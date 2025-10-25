@@ -4,6 +4,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using VecTool.Configuration;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
@@ -98,12 +99,41 @@ namespace UnitTests
 
             // Assert
             var content = File.ReadAllText(outputPath);
-            content.ShouldContain(".cs");
-            content.ShouldContain("2");
-            content.ShouldContain("600.00 B");
-            content.ShouldContain(".txt");
-            content.ShouldContain("2");
-            content.ShouldContain("400.00 B");
+            content.ShouldContain("File Size Summary - Exported Files");   
+            content.ShouldContain("Analyzed Folders");
+
+
+            // Find the .cs row (robust to spacing)
+            var line = content
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+                .FirstOrDefault(l => l.TrimStart().Contains(".cs", StringComparison.OrdinalIgnoreCase));
+
+            line.ShouldNotBeNull();
+
+            // Count must be 2 (avoid strict column/whitespace coupling)
+            line.ShouldContain("2");
+
+            // Culture/format tolerant totals and averages:
+            // Accept either bytes or KB with comma or dot decimal separators.
+            var totalPattern = @"(600(?:[.,]00)?\s?B|0[.,]59\s?KB)";
+            var avgPattern = @"(300(?:[.,]00)?\s?B|0[.,]29\s?KB)";
+
+            line.ShouldMatch(totalPattern);
+            line.ShouldMatch(avgPattern);
+            
+            line = content
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+                .FirstOrDefault(l => l.TrimStart().Contains(".txt", StringComparison.OrdinalIgnoreCase));
+
+            line.ShouldNotBeNull();
+
+            // Count must be 2 (avoid strict column/whitespace coupling)
+            line.ShouldContain("2");
+            totalPattern = @"(400(?:[.,]00)?\s?B|0[.,]39\s?KB)";
+            avgPattern = @"(200(?:[.,]00)?\s?B|0[.,]19\s?KB)";
+
+            line.ShouldMatch(totalPattern);
+            line.ShouldMatch(avgPattern);
         }
 
         [Test]
