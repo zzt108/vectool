@@ -100,7 +100,7 @@ namespace UnitTests
             _log.Debug($"Arrange: setting up test for extension {extension}");
             _log.Debug($"Arrange: setting up test for extension {extension}");
 
-            var result = FileValidator.IsBinaryExtension(extension);
+            var result = FileValidator.IsBinary(extension, null);
 
             _log.Ctx.Set(new LogCtxShared.Props("Actual", result));
             _log.Info($"Assert: comparing expected vs actual for {extension}");

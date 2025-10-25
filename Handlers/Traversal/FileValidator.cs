@@ -75,7 +75,7 @@
                     return false;
 
                 var ext = Path.GetExtension(path);
-                if (MimeTypeProvider.IsBinary(ext, path))
+                if (IsBinary(ext, path))
                 {
                     log.Trace($"File marked as binary by MimeTypeProvider: {path}");
                     return false;
@@ -93,14 +93,75 @@
         /// Determines if a file extension is binary.
         /// ✅ Uses MimeTypeProvider (loads from mdTags.json).
         /// </summary>
-        public static bool IsBinaryExtension(string extension)
-        {
-            if (string.IsNullOrWhiteSpace(extension))
-                return false;
+        //private static bool IsBinaryExtension(string extension)
+        //{
+        //    if (string.IsNullOrWhiteSpace(extension))
+        //        return false;
 
-            // ✅ Use MimeTypeProvider.IsBinary (loads from Config/mdTags.json)
-            return MimeTypeProvider.IsBinary(extension);
+        //    // ✅ Use MimeTypeProvider.IsBinary (loads from Config/mdTags.json)
+        //    return IsBinary(extension);
+        //}
+
+        /// <summary>
+        /// Determines if a file is binary by checking mdTags.json first, 
+        /// then falling back to heuristic detection for unknown extensions.
+        /// </summary>
+        /// <param name="fileExtension">The file extension (e.g., ".ttf", ".bin")</param>
+        /// <param name="filePath">The full path to the file for content inspection if needed</param>
+        /// <returns>True if the file is binary, false if it's text</returns>
+        public static bool IsBinary(string fileExtension, string? filePath)
+        {
+            // First check mdTags.json (authoritative)
+             var mimeType = MimeTypeProvider.GetMimeType(fileExtension);
+
+            if (mimeType != null)
+            {
+                // Known extension - use mdTags.json value
+                return mimeType.Equals("application/octet-stream", StringComparison.OrdinalIgnoreCase);
+            }
+
+            // Unknown extension - use heuristic detection
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+            {
+                // Cannot probe file - assume binary 
+                return true;
+            }
+
+            return DetectBinaryByContent(filePath);
         }
+
+        /// <summary>
+        /// Heuristic binary detection: reads first 8KB and checks for null bytes.
+        /// </summary>
+        private static bool DetectBinaryByContent(string filePath)
+        {
+            try
+            {
+                const int bufferSize = 8192; // 8KB sample
+                var buffer = new byte[bufferSize];
+
+                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                int bytesRead = fs.Read(buffer, 0, bufferSize);
+
+                // Check for null bytes (0x00) - strong indicator of binary content
+                for (int i = 0; i < bytesRead; i++)
+                {
+                    if (buffer[i] == 0x00)
+                    {
+                        return true; // Found null byte = binary
+                    }
+                }
+
+                // No null bytes found = likely text
+                return false;
+            }
+            catch
+            {
+                // Cannot read file - assume text (safer fallback)
+                return false;
+            }
+        }
+
 
         /// <summary>
         /// Determines if a file should be included in export (MD/DOCX) based on:

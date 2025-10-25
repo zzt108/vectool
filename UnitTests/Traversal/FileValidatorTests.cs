@@ -79,8 +79,8 @@ namespace UnitTests.Traversal
             // Arrange - Files that should pass MimeTypeProvider.IsBinary check
             var files = new[]
             {
-                CreateTestFile("Program.cs", "class Program {}"),
                 CreateTestFile("App.config", "<configuration/>"),
+                CreateTestFile("Program.cs", "class Program {}"),
                 CreateTestFile("README.md", "# Title"),
                 CreateTestFile("data.json", "{}"),
                 CreateTestFile("Project.csproj", "<Project/>"),
@@ -130,14 +130,14 @@ namespace UnitTests.Traversal
             // Act & Assert - Binary extensions
             foreach (var ext in binaryExtensions)
             {
-                var result = FileValidator.IsBinaryExtension(ext);
+                var result = FileValidator.IsBinary(ext, filePath: null);
                 result.ShouldBeTrue($"{ext} should be binary per mdTags.json");
             }
 
             // Act & Assert - Text extensions
             foreach (var ext in textExtensions)
             {
-                var result = FileValidator.IsBinaryExtension(ext);
+                var result = FileValidator.IsBinary(ext, filePath: null);
                 result.ShouldBeFalse($"{ext} should NOT be binary per mdTags.json");
             }
         }
@@ -151,7 +151,7 @@ namespace UnitTests.Traversal
             // Act & Assert
             foreach (var ext in fontExtensions)
             {
-                var isBinary = MimeTypeProvider.IsBinary(ext);
+                var isBinary = FileValidator.IsBinary(ext, null);
                 isBinary.ShouldBeTrue($"{ext} should be marked as binary in mdTags.json");
             }
         }
