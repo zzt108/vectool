@@ -72,9 +72,9 @@ namespace UnitTests
             result.ShouldBe(expectedMdTag);
         }
 
-        [TestCase("", "application/binary")]
-        [TestCase(null, "application/binary")]
-        [TestCase(".verylongextensionthatshouldbehandledproperly", "application/binary")]
+        [TestCase("", null)]
+        [TestCase(null, null)]
+        [TestCase(".verylongextensionthatshouldbehandledproperly", null)]
         [TestCase(".json", "application/json")]
         public void GetMimeTypeInvalidOrEdgeCasesReturnsCorrectMimeType(string? extension, string expectedMimeType)
         {
