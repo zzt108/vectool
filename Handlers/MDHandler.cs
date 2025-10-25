@@ -1,5 +1,6 @@
 ﻿using VecTool.Configuration;
 using VecTool.RecentFiles;
+using VecTool.Utils;
 
 namespace VecTool.Handlers
 {
@@ -52,7 +53,6 @@ namespace VecTool.Handlers
 
         protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
-            // ✅ Use centralized filter (ensures consistency with summary statistics)
             if (!Traversal.FileValidator.ShouldIncludeInExport(file, vectorStoreConfig))
             {
                 log.Trace($"Skipping file (excluded by centralized filter): {file}");
@@ -63,7 +63,11 @@ namespace VecTool.Handlers
             DateTime lastModified = File.GetLastWriteTime(file);
 
             writer.WriteLine($"## File: {Path.GetFileName(file)} (Time:{lastModified})");
+            writer.WriteLine($"``` {MimeTypeProvider.GetMdTag(Path.GetExtension(file))}");
             writer.WriteLine(content);
+            writer.WriteLine("```");
+        
+            writer.WriteLine(); 
         }
 
         protected override void WriteFolderName(StreamWriter writer, string folderName)

@@ -90,19 +90,6 @@
         }
 
         /// <summary>
-        /// Determines if a file extension is binary.
-        /// ✅ Uses MimeTypeProvider (loads from mdTags.json).
-        /// </summary>
-        //private static bool IsBinaryExtension(string extension)
-        //{
-        //    if (string.IsNullOrWhiteSpace(extension))
-        //        return false;
-
-        //    // ✅ Use MimeTypeProvider.IsBinary (loads from Config/mdTags.json)
-        //    return IsBinary(extension);
-        //}
-
-        /// <summary>
         /// Determines if a file is binary by checking mdTags.json first, 
         /// then falling back to heuristic detection for unknown extensions.
         /// </summary>
@@ -117,7 +104,7 @@
             if (mimeType != null)
             {
                 // Known extension - use mdTags.json value
-                return mimeType.Equals("application/octet-stream", StringComparison.OrdinalIgnoreCase);
+                return mimeType.Equals("application/binary", StringComparison.OrdinalIgnoreCase);
             }
 
             // Unknown extension - use heuristic detection
@@ -169,14 +156,17 @@
         /// 2. MimeTypeProvider binary detection (from mdTags.json)
         /// 3. File system validity checks
         /// </summary>
-        /// <remarks>
-        /// ✅ USE THIS for both export handlers AND summary generators to ensure consistency.
-        /// ✅ NO HARDCODED STRINGS - uses VectorStoreConfig + MimeTypeProvider.
-        /// </remarks>
         public static bool ShouldIncludeInExport(string filePath, VectorStoreConfig config)
         {
             if (string.IsNullOrWhiteSpace(filePath))
                 return false;
+
+            var folderPath = Path.GetDirectoryName(filePath) ?? string.Empty;
+
+            if (IsFolderExcluded(folderPath, config))
+            {
+                return false;
+            }
 
             var fileName = Path.GetFileName(filePath);
 

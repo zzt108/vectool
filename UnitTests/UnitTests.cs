@@ -73,10 +73,9 @@ namespace UnitTests
             result.ShouldBe(expectedMdTag);
         }
 
-        // 🔄 MODIFY: instrument parameterized test for GetMimeType
-        [TestCase("", "application/octet-stream")]
-        [TestCase(null, "application/octet-stream")]
-        [TestCase(".verylongextensionthatshouldbehandledproperly", "application/octet-stream")]
+        [TestCase("", "application/binary")]
+        [TestCase(null, "application/binary")]
+        [TestCase(".verylongextensionthatshouldbehandledproperly", "application/binary")]
         [TestCase(".json", "application/json")]
         public void GetMimeTypeInvalidOrEdgeCasesReturnsCorrectMimeType(string? extension, string expectedMimeType)
         {
