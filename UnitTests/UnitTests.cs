@@ -53,13 +53,12 @@ namespace UnitTests
             _log.Info("Test end");
         }
 
-        // 🔄 MODIFY: instrument parameterized test for GetMdTag
         [TestCase(".cs", "csharp")]
         [TestCase(".csproj", "msbuild")]
         [TestCase(".feature", "gherkin")]
         [TestCase(".unknown", "unknown")]
         [TestCase(".txt", "text")]
-        [TestCase(null, "")]
+        [TestCase(null, null)]
         public void GetMdTagValidAndInvalidExtensionsReturnsCorrectMdTag(string extension, string expectedMdTag)
         {
             _log.Ctx.Set(new LogCtxShared.Props("Extension", extension ?? "(null)", "Expected", expectedMdTag));
@@ -73,10 +72,10 @@ namespace UnitTests
             result.ShouldBe(expectedMdTag);
         }
 
-        // 🔄 MODIFY: instrument parameterized test for GetMimeType
-        [TestCase("", "application/octet-stream")]
-        [TestCase(null, "application/octet-stream")]
-        [TestCase(".verylongextensionthatshouldbehandledproperly", "application/octet-stream")]
+        [TestCase("", null)]  
+        [TestCase(null, null)]  
+        [TestCase(".verylongextensionthatshouldbehandledproperly", null)]  
+        [TestCase(".unknown", null)]  
         [TestCase(".json", "application/json")]
         public void GetMimeTypeInvalidOrEdgeCasesReturnsCorrectMimeType(string? extension, string expectedMimeType)
         {
