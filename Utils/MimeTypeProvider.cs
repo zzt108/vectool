@@ -28,11 +28,11 @@ public class MimeTypeProvider
                ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     }
 
-    public static string GetMimeType(string? fileExtension)
+    public static string? GetMimeType(string? fileExtension)
     {
         if (string.IsNullOrEmpty(fileExtension))
         {
-            return "application/octet-stream";
+            return null;
         }
 
         if (!fileExtension.StartsWith("."))
@@ -40,7 +40,7 @@ public class MimeTypeProvider
             fileExtension = $".{fileExtension}";
         }
 
-        return _mimeTypes.TryGetValue(fileExtension, out var mimeType) ? mimeType : "application/octet-stream";
+        return _mimeTypes.TryGetValue(fileExtension, out var mimeType) ? mimeType : null;
     }
 
     public static string? GetNewExtension(string fileExtension)
@@ -52,7 +52,7 @@ public class MimeTypeProvider
     public static string? GetMdTag(string? fileExtension)
     {
         if (string.IsNullOrEmpty(fileExtension))
-            return string.Empty;
+            return null;
 
         _mdTags.TryGetValue(fileExtension, out string? mdTag);
 
@@ -64,10 +64,12 @@ public class MimeTypeProvider
         return mdTag;
     }
 
-    public static bool IsBinary(string fileExtension)
+    private static string? GetExtension(string fileExtension)
     {
         _mdTags.TryGetValue(fileExtension, out string? mdTag);
-        // all known binary files are in mdTags, so if it is not in mdTags, it is text 
-        return mdTag is null ? false : mdTag.Equals("application/binary");
+        return mdTag;
     }
+
 }
+
+
