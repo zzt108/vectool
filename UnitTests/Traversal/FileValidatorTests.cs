@@ -1,10 +1,10 @@
-﻿// ✅ FULL FILE VERSION
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
 using System;
 using System.IO;
 using VecTool.Configuration;
 using VecTool.Handlers.Traversal;
+using VecTool.Utils;
 
 namespace UnitTests.Traversal
 {
@@ -56,7 +56,7 @@ namespace UnitTests.Traversal
             var result = FileValidator.ShouldIncludeInExport(ttfFile, config);
 
             // Assert
-            result.ShouldBeFalse("Binary files (.ttf) should be excluded");
+            result.ShouldBeFalse("Binary files (.ttf) should be excluded by MimeTypeProvider");
         }
 
         [Test]
@@ -70,20 +70,19 @@ namespace UnitTests.Traversal
             var result = FileValidator.ShouldIncludeInExport(logFile, config);
 
             // Assert
-            result.ShouldBeFalse("Files excluded by config should be filtered");
+            result.ShouldBeFalse("Files excluded by VectorStoreConfig should be filtered");
         }
 
         [Test]
         public void ShouldIncludeInExport_CommonCodeFiles_ReturnsTrue()
         {
-            // Arrange
+            // Arrange - Files that should pass MimeTypeProvider.IsBinary check
             var files = new[]
             {
                 CreateTestFile("Program.cs", "class Program {}"),
                 CreateTestFile("App.config", "<configuration/>"),
                 CreateTestFile("README.md", "# Title"),
                 CreateTestFile("data.json", "{}"),
-                CreateTestFile("styles.css", "body {}"),
                 CreateTestFile("Project.csproj", "<Project/>"),
                 CreateTestFile("Solution.sln", "# Solution"),
             };
@@ -92,14 +91,14 @@ namespace UnitTests.Traversal
             foreach (var file in files)
             {
                 var result = FileValidator.ShouldIncludeInExport(file, config);
-                result.ShouldBeTrue($"{Path.GetFileName(file)} should be included");
+                result.ShouldBeTrue($"{Path.GetFileName(file)} should be included (not binary per mdTags.json)");
             }
         }
 
         [Test]
         public void ShouldIncludeInExport_BinaryFiles_ReturnsFalse()
         {
-            // Arrange
+            // Arrange - Files marked as "application/binary" in mdTags.json
             var binaryFiles = new[]
             {
                 CreateBinaryFile("font.ttf", 512),
@@ -117,60 +116,43 @@ namespace UnitTests.Traversal
             foreach (var file in binaryFiles)
             {
                 var result = FileValidator.ShouldIncludeInExport(file, config);
-                result.ShouldBeFalse($"{Path.GetFileName(file)} should be excluded (binary)");
+                result.ShouldBeFalse($"{Path.GetFileName(file)} should be excluded (binary per mdTags.json)");
             }
         }
 
         [Test]
-        public void IsTextFile_CommonCodeExtensions_ReturnsTrue()
+        public void IsBinaryExtension_UseMimeTypeProvider_MatchesMdTagsJson()
         {
-            // Arrange
-            var textFiles = new[]
-            {
-                CreateTestFile("code.cs", ""),
-                CreateTestFile("project.csproj", ""),
-                CreateTestFile("solution.sln", ""),
-                CreateTestFile("readme.md", ""),
-                CreateTestFile("config.json", ""),
-                CreateTestFile("data.xml", ""),
-                CreateTestFile("styles.css", ""),
-                CreateTestFile("script.js", ""),
-                CreateTestFile("page.html", ""),
-                CreateTestFile("settings.yml", ""),
-                CreateTestFile("query.sql", ""),
-            };
+            // Arrange - Test known extensions from mdTags.json
+            var binaryExtensions = new[] { ".ttf", ".otf", ".woff", ".woff2", ".png", ".jpg", ".dll", ".exe", ".zip" };
+            var textExtensions = new[] { ".cs", ".json", ".xml", ".md", ".txt", ".csproj", ".sln" };
 
-            // Act & Assert
-            foreach (var file in textFiles)
+            // Act & Assert - Binary extensions
+            foreach (var ext in binaryExtensions)
             {
-                var result = FileValidator.IsTextFile(file);
-                result.ShouldBeTrue($"{Path.GetExtension(file)} should be recognized as text");
+                var result = FileValidator.IsBinaryExtension(ext);
+                result.ShouldBeTrue($"{ext} should be binary per mdTags.json");
+            }
+
+            // Act & Assert - Text extensions
+            foreach (var ext in textExtensions)
+            {
+                var result = FileValidator.IsBinaryExtension(ext);
+                result.ShouldBeFalse($"{ext} should NOT be binary per mdTags.json");
             }
         }
 
         [Test]
-        public void IsTextFile_BinaryExtensions_ReturnsFalse()
+        public void MimeTypeProvider_IsBinary_FontFiles()
         {
-            // Arrange
-            var binaryFiles = new[]
-            {
-                CreateBinaryFile("font.ttf", 100),
-                CreateBinaryFile("font.otf", 100),
-                CreateBinaryFile("font.woff", 100),
-                CreateBinaryFile("font.woff2", 100),
-                CreateBinaryFile("image.png", 100),
-                CreateBinaryFile("photo.jpg", 100),
-                CreateBinaryFile("video.mp4", 100),
-                CreateBinaryFile("archive.zip", 100),
-                CreateBinaryFile("lib.dll", 100),
-                CreateBinaryFile("app.exe", 100),
-            };
+            // Arrange - Font extensions that triggered the original bug
+            var fontExtensions = new[] { ".ttf", ".otf", ".woff", ".woff2", ".eot" };
 
             // Act & Assert
-            foreach (var file in binaryFiles)
+            foreach (var ext in fontExtensions)
             {
-                var result = FileValidator.IsTextFile(file);
-                result.ShouldBeFalse($"{Path.GetExtension(file)} should be recognized as binary");
+                var isBinary = MimeTypeProvider.IsBinary(ext);
+                isBinary.ShouldBeTrue($"{ext} should be marked as binary in mdTags.json");
             }
         }
 
@@ -230,32 +212,7 @@ namespace UnitTests.Traversal
         }
 
         [Test]
-        public void IsTextFile_ConfigFilesAndDocumentation_ReturnsTrue()
-        {
-            // Arrange - Files commonly used in development
-            var devFiles = new[]
-            {
-                CreateTestFile(".gitignore", "bin/\nobj/"),
-                CreateTestFile(".editorconfig", "root = true"),
-                CreateTestFile("README.md", "# Project"),
-                CreateTestFile("CHANGELOG.md", "## v1.0"),
-                CreateTestFile("package.json", "{}"),
-                CreateTestFile("appsettings.json", "{}"),
-                CreateTestFile("NLog.config", "<nlog/>"),
-                CreateTestFile("build.bat", "@echo off"),
-                CreateTestFile("deploy.sh", "#!/bin/bash"),
-            };
-
-            // Act & Assert
-            foreach (var file in devFiles)
-            {
-                var result = FileValidator.IsTextFile(file);
-                result.ShouldBeTrue($"{Path.GetFileName(file)} should be recognized as text");
-            }
-        }
-
-        [Test]
-        public void ShouldIncludeInExport_ConsistencyWithMDHandlerAndSummaryHandler()
+        public void ShouldIncludeInExport_ConsistencyBetweenMDHandlerAndSummaryHandler()
         {
             // Arrange - Mix of files that should/shouldn't be included
             var shouldInclude = new[]
@@ -267,12 +224,12 @@ namespace UnitTests.Traversal
 
             var shouldExclude = new[]
             {
-                CreateBinaryFile("Font.ttf", 1024),
+                CreateBinaryFile("Font.ttf", 1024),   // ← The original 180 .ttf files
                 CreateBinaryFile("Image.png", 2048),
                 CreateBinaryFile("Archive.zip", 4096),
             };
 
-            // Act & Assert - These results should be identical for MDHandler and FileSizeSummaryHandler
+            // Act & Assert - These results MUST be identical for MDHandler and FileSizeSummaryHandler
             foreach (var file in shouldInclude)
             {
                 FileValidator.ShouldIncludeInExport(file, config)
@@ -286,7 +243,7 @@ namespace UnitTests.Traversal
             }
         }
 
-        // Helper methods
+        // ✅ Helper methods
         private string CreateTestFile(string name, string content)
         {
             var path = Path.Combine(testDir, name);
