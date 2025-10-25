@@ -139,12 +139,12 @@ namespace Vectool.OaiUI
 
             var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var defaultFileName = $"{vsName}.{branchName}.summary.txt";
+            var defaultFileName = $"{vsName}.{branchName}.summary.md";
 
             using var saveFileDialog = new SaveFileDialog
             {
                 Title = "Save File Size Summary As...",
-                Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
+                Filter = "Text files (*.md)|*.txt|All files (*.*)|*.*",
                 FileName = defaultFileName
             };
 
