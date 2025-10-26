@@ -96,11 +96,11 @@ namespace oaiUI.RecentFiles
             {
                 RecentFileType.Plan => Color.Goldenrod,
                 RecentFileType.Guide => Color.SteelBlue,
-                RecentFileType.GitChanges => Color.OrangeRed,
-                RecentFileType.TestResults => Color.MediumSeaGreen,
-                RecentFileType.AllSourceMd => Color.MediumPurple,
-                RecentFileType.AllSourceDocx => Color.LightSkyBlue,
-                RecentFileType.AllSourcePdf => Color.LightCoral,
+                RecentFileType.Git_Md => Color.OrangeRed,
+                RecentFileType.TestResults_Md => Color.MediumSeaGreen,
+                RecentFileType.Codebase_Md => Color.MediumPurple,
+                RecentFileType.Codebase_Docx => Color.LightSkyBlue,
+                RecentFileType.Codebase_Pdf => Color.LightCoral,
                 RecentFileType.Unknown => Color.Gainsboro,
                 _ => Color.Gainsboro
             };
@@ -148,12 +148,12 @@ namespace oaiUI.RecentFiles
             return e switch
             {
                 "md" or "markdown" when fileName?.ToUpperInvariant().Contains(".GIT.") == true
-                    => RecentFileType.GitChanges,
+                    => RecentFileType.Git_Md,
                 "md" or "markdown" when fileName?.ToUpperInvariant().Contains("TESTRESULTS") == true
-                    => RecentFileType.TestResults,
-                "md" or "markdown" => RecentFileType.AllSourceMd,
-                "docx" => RecentFileType.AllSourceDocx,
-                "pdf" => RecentFileType.AllSourcePdf,
+                    => RecentFileType.TestResults_Md,
+                "md" or "markdown" => RecentFileType.Codebase_Md,
+                "docx" => RecentFileType.Codebase_Docx,
+                "pdf" => RecentFileType.Codebase_Pdf,
                 _ => RecentFileType.Unknown
             };
         }

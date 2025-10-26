@@ -151,7 +151,7 @@ namespace UnitTests
             mockRecentFilesManager.RegisteredFiles.Count.ShouldBe(1);
             var record = mockRecentFilesManager.RegisteredFiles[0];
             record.FilePath.ShouldBe(outputPath);
-            record.FileType.ShouldBe(RecentFileType.TestResults); // The handler uses a summary/report type; adjust if the handler uses another enum
+            record.FileType.ShouldBe(RecentFileType.TestResults_Md); // The handler uses a summary/report type; adjust if the handler uses another enum
             record.SourceFolders.ShouldBe(folders);
             record.FileSizeBytes.ShouldBeGreaterThan(0);
         }

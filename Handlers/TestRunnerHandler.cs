@@ -120,7 +120,7 @@ namespace VecTool.Handlers
                     var fileInfo = new FileInfo(_outputFile);
                     _recentFilesManager.RegisterGeneratedFile(
                         _outputFile,
-                        RecentFileType.TestResults,
+                        RecentFileType.TestResults_Md,
                         null,
                         fileInfo.Length
                     );
