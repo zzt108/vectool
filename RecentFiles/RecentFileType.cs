@@ -37,6 +37,7 @@ public static class RecentFileTypeExtensions
             RecentFileType.Codebase_Pdf => "_codebase.pdf",
             RecentFileType.Git_Md => "_git.md",
             RecentFileType.TestResults_Md => "_test-results.md",
+            RecentFileType.Summary_Md => "_summary.md",
             RecentFileType.Plan => "_plan.md",
             RecentFileType.Guide => "_guide.md",
             RecentFileType.Unknown => ".txt",
@@ -77,7 +78,7 @@ public static class RecentFileTypeExtensions
 
             // Git: support "git", "git-changes", "gitchanges"
             var gitBase = Path.GetFileNameWithoutExtension(RecentFileType.Git_Md.ToFileSuffix());
-            if (last.Equals(gitBase, StringComparison.OrdinalIgnoreCase) || last.Equals("git-changes", StringComparison.OrdinalIgnoreCase) || last.Equals("gitchanges", StringComparison.OrdinalIgnoreCase))
+            if (last.Equals(gitBase, StringComparison.OrdinalIgnoreCase) || last.Equals("git-changes", StringComparison.OrdinalIgnoreCase) || last.Equals("git", StringComparison.OrdinalIgnoreCase))
             {
                 return RecentFileType.Git_Md;
             }
