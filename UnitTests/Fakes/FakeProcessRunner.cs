@@ -1,6 +1,7 @@
 ﻿// ✅ FULL FILE VERSION
 // File: UnitTests/Fakes/FakeProcessRunner.cs
 
+using LogCtxShared;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

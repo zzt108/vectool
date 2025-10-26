@@ -273,5 +273,69 @@ namespace Vectool.OaiUI
         {
             Application.Exit();
         }
+        /// <summary>Handler for Export to Repomix menu item (Ctrl+R).</summary>
+        private async void exportToRepomixToolStripMenuItemClick(object? sender, EventArgs e)
+        {
+            if (selectedFolders.Count == 0)
+            {
+                userInterface.ShowMessage(
+                    "Please select one or more folders first.",
+                    "No Folders Selected",
+                    MessageType.Warning);
+                return;
+            }
+
+            var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
+            var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
+
+            var defaultFileName = RecentFilesOutputManager.Factory().BuildOutputPath(
+                $"{vsName}_{branchName}",
+                RecentFileType.Repomix_Xml);
+
+            // ✅ Repomix expects to run in the target directory, so use first selected folder as target
+            var targetDirectory = selectedFolders.First();
+
+            using var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Save Repomix Export As...",
+                Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*",
+                FileName = defaultFileName
+            };
+
+            if (saveFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            var outputPath = saveFileDialog.FileName;
+            var config = GetCurrentVectorStoreConfig();
+
+            try
+            {
+                var handler = new RepomixHandler(userInterface, recentFilesManager);
+                var result = await handler.RunRepomixAsync(
+                    targetDirectory,
+                    outputPath,
+                    config,
+                    CancellationToken.None).ConfigureAwait(true);
+
+                if (result != null)
+                {
+                    userInterface.ShowMessage(
+                        $"Successfully generated Repomix export at:\n{result}",
+                        "Success",
+                        MessageType.Information);
+
+                    // ✅ Refresh recent files panel
+                    recentFilesPanel.RefreshList();
+                }
+            }
+            catch (Exception ex)
+            {
+                userInterface.ShowMessage(
+                    $"An error occurred: {ex.Message}",
+                    "Error",
+                    MessageType.Error);
+            }
+        }
+
     }
 }
