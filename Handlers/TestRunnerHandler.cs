@@ -100,14 +100,21 @@ namespace VecTool.Handlers
                 .Add("ExitCode", testResult.ExitCode)
                 .Add("Message", message));
 
-            if (testResult.ExitCode == 0)
+            switch (testResult.ExitCode)
             {
-                _ui?.ShowMessage(message, "Test Runner - No Fails", MessageType.Information);
-                log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
-            }
-            else
-            {
-                log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                case 0:
+                    _ui?.ShowMessage(message, "Test Runner - No Fails", MessageType.Information);
+                    log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                    break;
+                case 1 :
+                case 2 :
+                    _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - With issues", MessageType.Warning);
+                    log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                    break;
+                default:
+                    _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - Error", MessageType.Error);
+                    log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                    break;
             }
 
             // Generate output filename with branch name

@@ -252,18 +252,7 @@ namespace Vectool.OaiUI
                 userInterface.WorkStart("Running unit tests...", selectedFolders);
 
                 // 🔄 MODIFY - Pass computed branch name
-                var message = await handler.RunTestsAsync(solutionPath, branchName, System.Threading.CancellationToken.None).ConfigureAwait(true);
-
-                var isSuccess = message?.StartsWith("All tests passed.", StringComparison.OrdinalIgnoreCase);
-
-                if (isSuccess.HasValue && isSuccess.Value)
-                {
-                    MessageBox.Show(message, "Test Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show(message, "Test Results", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+                var outputFile = await handler.RunTestsAsync(solutionPath, branchName, System.Threading.CancellationToken.None).ConfigureAwait(true);
             }
             catch (Exception ex)
             {

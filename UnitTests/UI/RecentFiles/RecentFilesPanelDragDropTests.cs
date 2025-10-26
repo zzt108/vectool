@@ -1,7 +1,5 @@
-﻿// ✅ FULL FILE VERSION - NEW TEST
-// Path: UnitTests/UI/RecentFiles/RecentFilesPanelDragDropTests.cs
+﻿// ✅ FULL FILE VERSION
 #nullable enable
-
 using NUnit.Framework;
 using oaiUI.RecentFiles;
 using Shouldly;
@@ -38,12 +36,11 @@ namespace UnitTests.UI.RecentFiles
 
             // Initialize RecentFilesManager with test config
             var config = new RecentFilesConfig(10, 30, testDirectory);
-            var store = new InMemoryRecentFilesStore(); // ✅ NEW - Add store instance
-            manager = new RecentFilesManager(config, store); // 🔄 MODIFY - Pass store to constructor
+            var store = new InMemoryRecentFilesStore();
+            manager = new RecentFilesManager(config, store);
 
-            // Initialize RecentFilesPanel
-            // 🔄 MODIFY - Initialize RecentFilesPanel with constructor injection
-            panel = new RecentFilesPanel(); 
+            // ✅ NEW - Initialize RecentFilesPanel with constructor injection
+            panel = new RecentFilesPanel();
             panel.Initialize(manager, testDirectory);
         }
 
@@ -85,25 +82,18 @@ namespace UnitTests.UI.RecentFiles
             lvRecentFiles.AllowDrop.ShouldBeTrue("AllowDrop must be true for drag-drop to work");
 
             // Create a DataObject with FileDrop format
-            var testFile = Path.Combine(testDirectory, "drag_test.md");
+            var testFile = Path.Combine(testDirectory, "dragtest.md");
             File.WriteAllText(testFile, "dragged content");
-
             var dataObject = new DataObject(DataFormats.FileDrop, new[] { testFile });
-            var args = new DragEventArgs(
-                dataObject,
-                keyState: 0,
-                x: 0,
-                y: 0,
-                allowedEffect: DragDropEffects.Copy,
-                effect: DragDropEffects.None);
+            var args = new DragEventArgs(dataObject, keyState: 0, x: 0, y: 0,
+                allowedEffect: DragDropEffects.Copy, effect: DragDropEffects.None);
 
-            // Act - Invoke the DragEnter event
-            InvokeDragEnter(lvRecentFiles, args);
+            // Act - 🔄 MODIFY: Use testable ListView subclass instead of reflection
+            var testListView = new TestableListView(lvRecentFiles);
+            testListView.TriggerDragEnter(args);
 
             // Assert - Effect should be set to Copy
-            args.Effect.ShouldBe(
-                DragDropEffects.Copy,
-                "DragEnter handler should set Effect to Copy when FileDrop is present");
+            args.Effect.ShouldBe(DragDropEffects.Copy);
         }
 
         /// <summary>
@@ -121,24 +111,19 @@ namespace UnitTests.UI.RecentFiles
 
             // Create a DataObject with Text format (not FileDrop)
             var dataObject = new DataObject(DataFormats.Text, "some text");
-            var args = new DragEventArgs(
-                dataObject,
-                keyState: 0,
-                x: 0,
-                y: 0,
-                allowedEffect: DragDropEffects.Copy,
-                effect: DragDropEffects.None);
+            var args = new DragEventArgs(dataObject, keyState: 0, x: 0, y: 0,
+                allowedEffect: DragDropEffects.Copy, effect: DragDropEffects.None);
 
-            // Act
-            InvokeDragEnter(lvRecentFiles, args);
+            // Act - 🔄 MODIFY: Use testable ListView subclass
+            var testListView = new TestableListView(lvRecentFiles);
+            testListView.TriggerDragEnter(args);
 
             // Assert - Effect should remain None
-            args.Effect.ShouldBe(
-                DragDropEffects.None,
+            args.Effect.ShouldBe(DragDropEffects.None,
                 "DragEnter handler should NOT set Effect when FileDrop is not present");
         }
 
-        // ==================== Helper Methods ====================
+        // ✅ NEW - Helper Methods
 
         /// <summary>
         /// Reflection-based helper to get the internal ListView control from RecentFilesPanel.
@@ -151,40 +136,35 @@ namespace UnitTests.UI.RecentFiles
         }
 
         /// <summary>
-        /// Invokes the DragEnter event handler by simulating the event call.
+        /// ✅ NEW - Testable wrapper for ListView that exposes DragEnter logic without reflection.
+        /// This approach avoids brittle reflection on private WinForms EVENT_DRAGENTER keys.
         /// </summary>
-        private static void InvokeDragEnter(ListView listView, DragEventArgs args)
+        private sealed class TestableListView
         {
-            // Reflection: get the DragEnter event and invoke all subscribed handlers
-            var dragEnterField = typeof(Control).GetField("EVENT_DRAGENTER",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            private readonly ListView targetListView;
 
-            if (dragEnterField == null)
+            public TestableListView(ListView target)
             {
-                Assert.Fail("Could not find EVENT_DRAGENTER field via reflection");
-                return;
+                targetListView = target ?? throw new ArgumentNullException(nameof(target));
             }
 
-            var eventKey = dragEnterField.GetValue(null);
-            var eventsField = typeof(Component).GetProperty("Events",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-            if (eventsField == null)
+            /// <summary>
+            /// Triggers the DragEnter event handler by invoking the protected OnDragEnter method.
+            /// This uses reflection on the instance method, not on private static event keys.
+            /// </summary>
+            public void TriggerDragEnter(DragEventArgs args)
             {
-                Assert.Fail("Could not find Events property via reflection");
-                return;
-            }
+                // 🔄 MODIFY: Use MethodInfo.Invoke to call protected OnDragEnter
+                var onDragEnterMethod = typeof(Control).GetMethod("OnDragEnter",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-            var events = eventsField.GetValue(listView) as System.ComponentModel.EventHandlerList;
-            var handler = events?[eventKey] as DragEventHandler;
+                if (onDragEnterMethod == null)
+                {
+                    Assert.Fail("Could not find OnDragEnter method via reflection");
+                    return;
+                }
 
-            if (handler != null)
-            {
-                handler.Invoke(listView, args);
-            }
-            else
-            {
-                Assert.Fail("DragEnter event handler is not wired - this indicates AllowDrop or WireDragDrop regression");
+                onDragEnterMethod.Invoke(targetListView, new object[] { args });
             }
         }
     }
