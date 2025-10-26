@@ -46,11 +46,11 @@ namespace VecTool.Handlers
             VectorStoreConfig? vectorStoreConfig = null,
             CancellationToken cancellationToken = default)
         {
-            using var _ = log.Scope();
+            using var _ = log.Ctx.Set();
 
             if (!Directory.Exists(targetDirectory))
             {
-                log.Error($"Target directory does not exist: {targetDirectory}");
+                log.Warn($"Target directory does not exist: {targetDirectory}");
                 userInterface.ShowMessage(
                     $"Target directory not found:\n{targetDirectory}",
                     "Directory Not Found",
@@ -78,7 +78,7 @@ namespace VecTool.Handlers
                 log.Debug($"Repomix args: {args}");
 
                 // ✅ Step 3: Execute repomix
-                var result = await processRunner.RunProcessAsync(
+                var result = await processRunner.RunAsync(
                     command,
                     args,
                     targetDirectory,
@@ -97,7 +97,7 @@ namespace VecTool.Handlers
                 // ✅ Step 4: Verify output file was created
                 if (!File.Exists(outputPath))
                 {
-                    log.Error($"Repomix completed but output file not found: {outputPath}");
+                    log.Warn($"Repomix completed but output file not found: {outputPath}");
                     userInterface.ShowMessage(
                         $"Output file was not created:\n{outputPath}",
                         "Output Missing",
@@ -111,7 +111,7 @@ namespace VecTool.Handlers
                 // ✅ Step 5: Register in recent files
                 recentFilesManager.RegisterGeneratedFile(
                     filePath: outputPath,
-                    fileType: RecentFileType.RepomixXml,
+                    fileType: RecentFileType.Repomix_Xml,
                     sourceFolders: new[] { targetDirectory },
                     fileSizeBytes: fileInfo.Length,
                     generatedAtUtc: DateTime.UtcNow);
@@ -145,7 +145,7 @@ namespace VecTool.Handlers
             // ✅ Try npx repomix first (recommended)
             try
             {
-                var npxResult = await processRunner.RunProcessAsync(
+                var npxResult = await processRunner.RunAsync(
                     "npx",
                     "--version",
                     Directory.GetCurrentDirectory(),
