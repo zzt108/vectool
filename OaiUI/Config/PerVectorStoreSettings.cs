@@ -46,8 +46,14 @@ namespace oaiUI.Config
             var perFiles = (perOrNull?.ExcludedFiles ?? new List<string>()).Select(Normalize).ToList();
             var perFolders = (perOrNull?.ExcludedFolders ?? new List<string>()).Select(Normalize).ToList();
 
-            bool filesDiffer = !SequenceEqualIgnoreOrder(perFiles, globalFiles);
-            bool foldersDiffer = !SequenceEqualIgnoreOrder(perFolders, globalFolders);
+            bool filesDiffer = false;
+            bool foldersDiffer = false;
+
+            if (perOrNull is not null)
+            {
+                filesDiffer = !SequenceEqualIgnoreOrder(perFiles, globalFiles);
+                foldersDiffer = !SequenceEqualIgnoreOrder(perFolders, globalFolders);
+            }
 
             return new PerVectorStoreSettings(
                 name,

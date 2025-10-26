@@ -71,7 +71,7 @@ public sealed class GitChangesHandler : FileHandlerBase
                 var fi = new FileInfo(outputPath);
                 _recentFilesManager.RegisterGeneratedFile(
                     outputPath,
-                    RecentFileType.GitChanges,
+                    RecentFileType.Git_Md,
                     folderPaths,
                     fi.Exists ? fi.Length : 0);
             }

@@ -13,6 +13,12 @@ public sealed class RecentFilesOutputManager
 {
     private readonly RecentFilesConfig _config;
 
+    public static RecentFilesOutputManager Factory()
+    {
+        var _config = RecentFilesConfig.FromAppConfig();
+        return new RecentFilesOutputManager(_config);
+    }
+
     public RecentFilesOutputManager(RecentFilesConfig config)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
@@ -60,17 +66,25 @@ public sealed class RecentFilesOutputManager
     }
 
     /// <summary>
-    /// Builds a safe output file path under the dated directory.
-    /// The caller is responsible for writing the actual file.
+    /// Builds a safe output file path under the dated directory with enum-derived suffix.
     /// </summary>
-    public string BuildOutputPath(string fileName, DateTimeOffset when)
+    public string BuildOutputPath(string fileName, RecentFileType fileType, DateTimeOffset? when = null)
     {
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("fileName is required.", nameof(fileName));
 
-        var datedDir = EnsureDatedDirectory(when);
-        var safeName = SanitizeFileName(fileName);
-        return Path.Combine(datedDir, safeName);
+        
+        string? datedDir = null;
+        if (when.HasValue)
+            EnsureDatedDirectory(when.Value);
+
+        // ✅ NEW: Append enum suffix/extension
+        var baseNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+        var enumSuffix = fileType.ToFileSuffix(); // converts TestResultsMd -> _test-results.md
+        var finalName = $"{baseNameWithoutExt}{enumSuffix}";
+
+        var safeName = SanitizeFileName(finalName);
+        return Path.Combine(datedDir?? string.Empty, safeName);
     }
 
     /// <summary>

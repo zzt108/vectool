@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using VecTool.Core;
 using VecTool.Handlers;
+using VecTool.RecentFiles;
 
 namespace Vectool.OaiUI
 {
@@ -74,8 +75,9 @@ namespace Vectool.OaiUI
 
             var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var gitChangesFileName = $"{vsName}.{branchName}.GIT.md";
-            var mdExportFileName = $"{vsName}.{branchName}.md";
+            // var gitChangesFileName = $"{vsName}.{branchName}.GIT.md";
+            var gitChangesFileName = RecentFilesOutputManager.Factory().BuildOutputPath( $"{vsName}_{branchName}", RecentFileType.Git_Md);
+            var mdExportFileName = RecentFilesOutputManager.Factory().BuildOutputPath($"{vsName}_{branchName}", RecentFileType.Codebase_Md);
 
             using var saveFileDialog = new SaveFileDialog
             {
@@ -222,7 +224,7 @@ namespace Vectool.OaiUI
 
             var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var testResultsFileName = $"{vsName}.{branchName}.TestResults.md";
+            var testResultsFileName = $"{vsName}.{branchName}.TestResults_Md.md";
 
             using var saveFileDialog = new SaveFileDialog
             {

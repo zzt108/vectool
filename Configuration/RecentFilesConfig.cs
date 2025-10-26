@@ -20,7 +20,7 @@ namespace VecTool.Configuration
 
         public int MaxCount { get; }
         public int RetentionDays { get; }
-        public string OutputPath { get; }
+        public string OutputPath { get; set; }
         public string StorageFilePath { get; }
 
         /// <summary>
