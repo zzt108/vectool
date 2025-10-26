@@ -12,8 +12,8 @@ namespace DocXHandlerTests
     [TestFixture]
     public class TocGenerationTests
     {
-        private string root;
-        private string outDocx;
+        private string root = null!;
+        private string outDocx = null!;
         private VectorStoreConfig config = new();
 
         [SetUp]
