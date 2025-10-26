@@ -1,4 +1,5 @@
-﻿using NLogShared;
+﻿using LogCtxShared;
+using NLogShared;
 using System;
 using System.IO;
 using System.Linq;
@@ -74,7 +75,7 @@ namespace VecTool.Handlers
                 userInterface.WorkStart($"Exporting codebase with Repomix...", new[] { targetDirectory });
 
                 // ✅ Step 2: Build repomix command arguments
-                var args = BuildRepomixArguments(targetDirectory, outputPath, vectorStoreConfig);
+                var args = BuildRepomixArguments(targetDirectory, outputPath, vectorStoreConfig, command);
                 log.Debug($"Repomix args: {args}");
 
                 // ✅ Step 3: Execute repomix
@@ -136,76 +137,190 @@ namespace VecTool.Handlers
         }
 
         /// <summary>
-        /// Checks if repomix is available via npx or global install.
+        /// Checks if repomix is available via global install or npx.
         /// Returns (isAvailable, command to use).
         /// </summary>
+        /// <remarks>
+        /// ✅ NEW - Try global install first (more reliable on Windows).
+        /// Fallback to npx if global install not found.
+        /// Uses full path resolution to handle PATH inconsistencies.
+        /// </remarks>
         private async Task<(bool isAvailable, string command)> IsRepomixAvailableAsync(
             CancellationToken cancellationToken)
         {
-            // ✅ Try npx repomix first (recommended)
-            try
-            {
-                var npxResult = await processRunner.RunAsync(
-                    "npx",
-                    "--version",
-                    Directory.GetCurrentDirectory(),
-                    cancellationToken);
+            using var _ = log.Ctx.Set(new Props().Add("Method", "IsRepomixAvailableAsync"));
 
-                if (npxResult.ExitCode == 0)
+            // ✅ Step 1: Try global repomix install first (more reliable on Windows)
+            log.Debug("Checking for global 'repomix' installation...");
+            var repomixPath = DetermineExecutablePath("repomix");
+
+            if (!string.IsNullOrEmpty(repomixPath))
+            {
+                try
                 {
-                    log.Debug("npx available, using: npx repomix");
-                    return (true, "npx");
+                    var repomixResult = await processRunner.RunAsync(
+                        repomixPath,
+                        "--version",
+                        Directory.GetCurrentDirectory(),
+                        cancellationToken);
+
+                    if (repomixResult.ExitCode == 0)
+                    {
+                        log.Info($"Global 'repomix' found at: {repomixPath}");
+                        return (true, repomixPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex, $"Global 'repomix' found but --version check failed: {repomixPath}");
                 }
             }
-            catch
+            else
             {
-                // npx not available, try global install
+                log.Debug("Global 'repomix' not found in PATH");
             }
 
-            // ✅ Try global repomix install
-            try
-            {
-                var repomixResult = await processRunner.RunAsync(
-                    "repomix",
-                    "--version",
-                    Directory.GetCurrentDirectory(),
-                    cancellationToken);
+            // ✅ Step 2: Try npx as fallback
+            log.Debug("Checking for 'npx' availability...");
+            var npxPath = DetermineExecutablePath("npx");
 
-                if (repomixResult.ExitCode == 0)
+            if (!string.IsNullOrEmpty(npxPath))
+            {
+                try
                 {
-                    log.Debug("repomix globally installed");
-                    return (true, "repomix");
+                    var npxResult = await processRunner.RunAsync(
+                        npxPath,
+                        "--version",
+                        Directory.GetCurrentDirectory(),
+                        cancellationToken);
+
+                    if (npxResult.ExitCode == 0)
+                    {
+                        log.Info($"npx found at: {npxPath}");
+                        return (true, npxPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex, $"npx found but --version check failed: {npxPath}");
                 }
             }
-            catch
+            else
             {
-                // Neither available
+                log.Debug("npx not found in PATH");
             }
 
+            log.Warn("Neither 'repomix' nor 'npx' found in PATH");
             return (false, string.Empty);
         }
 
         /// <summary>
-        /// Builds repomix CLI arguments with proper escaping.
+        /// Resolves the full path of an executable in the system PATH.
         /// </summary>
+        /// <param name="executableName">Name of executable (e.g., "repomix", "npx")</param>
+        /// <returns>Full path if found, or null if not in PATH</returns>
+        /// <remarks>
+        /// ✅ NEW - Handles Windows .exe/.cmd extensions and Unix executables.
+        /// Uses 'where' (Windows) or 'which' (Unix) to resolve paths.
+        /// </remarks>
+        private string? DetermineExecutablePath(string executableName)
+        {
+            using var _ = log.Ctx.Set(new Props().Add("Executable", executableName));
+
+            try
+            {
+                var isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
+
+                if (isWindows)
+                {
+                    // On Windows, try common extensions
+                    var extensions = new[] { ".cmd", ".exe", "" };
+
+                    foreach (var ext in extensions)
+                    {
+                        var fullName = executableName + ext;
+                        var pathValue = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+                        var paths = pathValue.Split(Path.PathSeparator);
+
+                        foreach (var dir in paths)
+                        {
+                            if (string.IsNullOrWhiteSpace(dir)) continue;
+
+                            var candidatePath = Path.Combine(dir, fullName);
+                            if (File.Exists(candidatePath))
+                            {
+                                log.Debug($"Found executable: {candidatePath}");
+                                return candidatePath;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // On Unix, use 'which' command
+                    var pathValue = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+                    var paths = pathValue.Split(Path.PathSeparator);
+
+                    foreach (var dir in paths)
+                    {
+                        if (string.IsNullOrWhiteSpace(dir)) continue;
+
+                        var candidatePath = Path.Combine(dir, executableName);
+                        if (File.Exists(candidatePath))
+                        {
+                            log.Debug($"Found executable: {candidatePath}");
+                            return candidatePath;
+                        }
+                    }
+                }
+
+                log.Debug($"Executable '{executableName}' not found in PATH");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex, $"Error resolving executable path for '{executableName}'");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Builds repomix CLI arguments with proper escaping and command-aware prefix.
+        /// </summary>
+        /// <param name="command">The command being used (npx path or repomix path)</param>
+        /// <remarks>
+        /// 🔄 MODIFY - Only include "repomix" subcommand when using npx.
+        /// For direct repomix executable, skip the subcommand prefix.
+        /// </remarks>
         private string BuildRepomixArguments(
             string targetDirectory,
             string outputPath,
-            VectorStoreConfig? config)
+            VectorStoreConfig? config,
+            string command)
         {
-            var args = "repomix "; // For npx, include subcommand
+            using var _ = log.Ctx.Set(new Props()
+                .Add("Command", command)
+                .Add("TargetDirectory", targetDirectory)
+                .Add("OutputPath", outputPath));
+
+            // ✅ NEW - Only include "repomix" subcommand for npx
+            var isNpx = command.Contains("npx", StringComparison.OrdinalIgnoreCase);
+            var args = isNpx ? "repomix " : "";
 
             // ✅ Explicit XML output style (default, but be explicit)
             args += "--style xml ";
 
-            // ✅ Output file
-            args += $"--output \"{outputPath}\" ";
+            // ✅ Output file - use forward slashes for cross-platform compatibility
+            var normalizedOutputPath = outputPath.Replace("\\", "/");
+            args += $"--output \"{normalizedOutputPath}\" ";
 
-            // ✅ Target directory
-            args += $"\"{targetDirectory}\"";
+            // ✅ Target directory - use forward slashes
+            var normalizedTargetDir = targetDirectory.Replace("\\", "/");
+            args += $"\"{normalizedTargetDir}\"";
 
             // TODO: Future enhancement - map VectorStoreConfig exclusions to repomix --ignore patterns
 
+            log.Debug($"Built args: {args}");
             return args.Trim();
         }
 

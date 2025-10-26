@@ -1,6 +1,8 @@
 ﻿// ✅ FULL FILE VERSION
 // File: Core/ProcessRunner.cs
 
+using LogCtxShared;
+using NLogShared;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -40,25 +42,57 @@ namespace VecTool.Core
 
             var startedAt = DateTime.UtcNow;
 
-            if (!process.Start())
-                throw new InvalidOperationException("Failed to start process.");
+            var log = new CtxLogger();
 
-            // Start reading before waiting to avoid deadlocks
-            var stdoutTask = process.StandardOutput.ReadToEndAsync(ct);
-            var stderrTask = process.StandardError.ReadToEndAsync(ct);
-
-            await process.WaitForExitAsync(ct).ConfigureAwait(false);
-
-            var stdout = await stdoutTask.ConfigureAwait(false);
-            var stderr = await stderrTask.ConfigureAwait(false);
-
-            return new ProcessResult
+            try
             {
-                ExitCode = process.ExitCode,
-                StandardOutput = stdout,
-                StandardError = stderr,
-                Duration = DateTime.UtcNow - startedAt
-            };
+
+                log?.Debug($"Starting process: FileName='{fileName}', Args='{arguments}', WorkDir='{workingDirectory}'");
+
+                try
+                {
+                    process.Start(); // Line 47
+                }
+                catch (System.ComponentModel.Win32Exception ex)
+                {
+                    log?.Error(ex, $"Failed to start process '{fileName}'. Error code: {ex.NativeErrorCode}. " +
+                                   $"Possible causes: (1) File not found in PATH, (2) Invalid executable, (3) Permissions issue.");
+                    throw; // Re-throw with logged context
+                }
+
+                // Start reading before waiting to avoid deadlocks
+                var stdoutTask = process.StandardOutput.ReadToEndAsync(ct);
+                var stderrTask = process.StandardError.ReadToEndAsync(ct);
+
+                await process.WaitForExitAsync(ct).ConfigureAwait(false);
+
+                var stdout = await stdoutTask.ConfigureAwait(false);
+                var stderr = await stderrTask.ConfigureAwait(false);
+
+                return new ProcessResult
+                {
+                    ExitCode = process.ExitCode,
+                    StandardOutput = stdout,
+                    StandardError = stderr,
+                    Duration = DateTime.UtcNow - startedAt
+                };
+            }
+            catch (Exception ex)
+            {
+                using var _ = log?.Ctx.Set()
+                    .Add("FileName", fileName)
+                    .Add("Arguments", arguments)
+                    .Add("WorkingDirectory", workingDirectory)
+                    //.Add("ExitCode", process.ExitCode)
+                    .Add("Duration", (DateTime.UtcNow - startedAt).TotalMilliseconds);
+                log?.Error(ex, $"ProcessRunner.RunAsync failed. Command: '{fileName}', Args: '{arguments}', WorkDir: '{workingDirectory}'");
+                throw; // Re-throw with logged context
+
+            }
+            finally
+            {
+                
+            }
         }
     }
 }
