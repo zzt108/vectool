@@ -86,9 +86,9 @@ namespace VecTool.Handlers
 
                 if (result.ExitCode != 0)
                 {
-                    log.Error($"Repomix failed with exit code {result.ExitCode}:\n{result.StdErr}");
+                    log.Warn($"Repomix failed with exit code {result.ExitCode}:\n{result.StandardError}");
                     userInterface.ShowMessage(
-                        $"Repomix execution failed:\n{result.StdErr}",
+                        $"Repomix execution failed:\n{result.StandardError}",
                         "Repomix Error",
                         MessageType.Error);
                     return null;
@@ -165,7 +165,7 @@ namespace VecTool.Handlers
             // ✅ Try global repomix install
             try
             {
-                var repomixResult = await processRunner.RunProcessAsync(
+                var repomixResult = await processRunner.RunAsync(
                     "repomix",
                     "--version",
                     Directory.GetCurrentDirectory(),
@@ -214,8 +214,14 @@ namespace VecTool.Handlers
         /// </summary>
         private void ShowInstallationHelp()
         {
-            using var helpForm = new RepomixInstallHelpForm();
-            helpForm.ShowDialog();
+            var msg =
+                "Repomix was not found.\n\n" +
+                "Options:\n" +
+                "1) NPX (recommended): ensure Node.js 18+ is installed, then run via 'npx repomix'.\n" +
+                "2) Global: 'npm install -g repomix' then 'repomix --version'.\n" +
+                "3) macOS/Linux: 'brew install repomix'.\n\n" +
+                "Troubleshooting: verify 'npx --version' or 'repomix --version' in a new terminal, and ensure PATH is updated.";
+            userInterface.ShowMessage(msg, "Repomix Not Found", MessageType.Warning);
         }
     }
 }

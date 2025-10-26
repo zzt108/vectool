@@ -23,11 +23,11 @@ namespace UnitTests.Fakes
             LastType = type;
         }
 
-        public void WorkStart(string status, List<string> selectedFolders)
+        public void WorkStart(string status, IEnumerable<string> selectedFolders)
         {
             LastStatus = status;
-            LastFolders = selectedFolders;
-            TotalWork = selectedFolders?.Count ?? 0;
+            LastFolders = selectedFolders.ToList();
+            TotalWork = LastFolders?.Count ?? 0;
         }
 
         public void WorkFinish()
