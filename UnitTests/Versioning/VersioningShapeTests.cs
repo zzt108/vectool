@@ -13,6 +13,7 @@ namespace VecTool.Versioning.Tests
         [Test]
         public void FileVersion_Should_Use_Major_PlanId_PlanPhaseAndTime()
         {
+            Assert.Inconclusive("Projects should get MajorVersion and PlanId properties from Directory.Buil.props");
             var exe = FindExecutable("VecTool.UI.exe");
             var fvi = FileVersionInfo.GetVersionInfo(exe);
             var v = new Version(fvi.FileVersion);

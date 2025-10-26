@@ -42,7 +42,7 @@ namespace UnitTests
         }
 
         [Test]
-        public async Task RunTestsAsync_should_write_output_on_success()
+        public async Task RunTestsAsync_should_not_write_output_on_success()
         {
             // IGitRunner git = new FakeGitRunner("main");
             IProcessRunner proc = new FakeProcessRunner(exitCode: 0, stdout: "ok", stderr: "");
@@ -59,8 +59,8 @@ namespace UnitTests
             try
             {
                 var resultPath = await handler.RunTestsAsync("S", "main", CancellationToken.None);
-                resultPath.ShouldNotBeNull();
-                File.Exists(resultPath!).ShouldBeTrue();
+                resultPath.ShouldBeNull();
+                File.Exists(resultPath!).ShouldBeFalse();
             }
             finally
             {

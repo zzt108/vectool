@@ -17,7 +17,7 @@
     <ApplicationIcon>..\Media\icon.ico</ApplicationIcon>
 
     <!-- Versioning (kept from repo pattern) -->
-    <MajorVersion>4</MajorVersion>
+    <!--<MajorVersion>4</MajorVersion>
     <PlanId>3</PlanId>
     <PlanPhase>2</PlanPhase>
     <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
@@ -27,7 +27,7 @@
 
     <AssemblyVersion>$(MajorVersion).0.0.0</AssemblyVersion>
     <FileVersion>$(MajorVersion).$(PlanId).$(BuildPart).$(HHmm)</FileVersion>
-    <ApplicationDisplayVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)</ApplicationDisplayVersion>-->
 
     <!-- CI metadata and SourceLink -->
     <CommitSha>$([System.Environment]::GetEnvironmentVariable('GITHUB_SHA'))</CommitSha>
