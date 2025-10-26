@@ -34,6 +34,7 @@ namespace UnitTests.Config
             var vm = PerVectorStoreSettings.From(vsA, global, null);
 
             // Assert
+            // <<confirmed expectations>>
             vm.Name.ShouldBe(vsA);
             vm.UseCustomExcludedFiles.ShouldBeFalse();
             vm.UseCustomExcludedFolders.ShouldBeFalse();
