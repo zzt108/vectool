@@ -8,6 +8,7 @@ using System.IO;
 using System.Windows.Forms;
 using VecTool.Configuration;
 using VecTool.RecentFiles;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace oaiUI.RecentFiles
 {
@@ -33,6 +34,14 @@ namespace oaiUI.RecentFiles
         public RecentFilesPanel(IRecentFilesManager manager, string? uiStateDir = null, string? watchDirectory = null) :this()
         { 
             Initialize(manager, uiStateDir, watchDirectory);
+        }
+
+        private void InitializeRowHeight()
+        {
+            // Create dummy ImageList to control row height
+            var dummyImageList = new ImageList();
+            dummyImageList.ImageSize = new Size(1, (int)(lvRecentFiles.Font.Height * 1.5)); // 50% bigger
+            lvRecentFiles.SmallImageList = dummyImageList;
         }
 
         // ==================== Public API ====================
@@ -64,6 +73,7 @@ namespace oaiUI.RecentFiles
             // Wire runtime events and restore UI state
             WireRuntime();
             LoadUiState();
+            InitializeRowHeight();
 
             // Initial refresh
             RefreshList();

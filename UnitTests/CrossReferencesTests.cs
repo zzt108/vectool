@@ -13,8 +13,8 @@ namespace DocXHandlerTests
     [TestFixture]
     public class CrossReferencesTests
     {
-        private string root;
-        private string outDocx;
+        private string root = null!;
+        private string outDocx = null!;
 
         [SetUp]
         public void Setup()

@@ -1,6 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -52,7 +50,7 @@ namespace oaiUI.RecentFiles
                     // Columns: File, Type, Size in KB, Generated
                     var typeDisplay = f.FileType != RecentFileType.Unknown
                         ? f.FileType.ToString()
-                        : MapExtensionToType(Path.GetExtension(f.FileName), f.FileName).ToString();
+                        : f.FileType.MapExtensionToType(Path.GetExtension(f.FileName), f.FileName).ToString();
 
                     item.SubItems.Add(typeDisplay);
                     item.SubItems.Add($"{f.FileSizeBytes / 1024.0:0.0} KB");
@@ -61,7 +59,7 @@ namespace oaiUI.RecentFiles
                     // 🔄 MODIFY - Apply type-based color coding BEFORE missing-file check
                     var fileType = f.FileType != RecentFileType.Unknown
                         ? f.FileType
-                        : MapExtensionToType(Path.GetExtension(f.FileName), f.FileName);
+                        : f.FileType.MapExtensionToType(Path.GetExtension(f.FileName), f.FileName);
 
                     item.ForeColor = GetColorForType(fileType);
                     item.UseItemStyleForSubItems = true;
@@ -125,37 +123,6 @@ namespace oaiUI.RecentFiles
             {
                 return Array.Empty<string>();
             }
-        }
-
-        /// <summary>
-        /// 🔄 MODIFY - Map file extension or filename pattern to RecentFileType.
-        /// </summary>
-        private static RecentFileType MapExtensionToType(string? ext, string? fileName = null)
-        {
-            var e = (ext ?? string.Empty).Trim('.').ToLowerInvariant();
-
-            // ✅ NEW - Check filename patterns first (case-insensitive)
-            if (!string.IsNullOrWhiteSpace(fileName))
-            {
-                var fn = fileName.ToUpperInvariant();
-                if (fn.Contains("PLAN-") || fn.StartsWith("PLAN") || fn.Contains("PLAN"))
-                    return RecentFileType.Plan;
-                if (fn.Contains("GUIDE-") || fn.StartsWith("GUIDE"))
-                    return RecentFileType.Guide;
-            }
-
-            // Fallback to extension-based detection
-            return e switch
-            {
-                "md" or "markdown" when fileName?.ToUpperInvariant().Contains(".GIT.") == true
-                    => RecentFileType.Git_Md,
-                "md" or "markdown" when fileName?.ToUpperInvariant().Contains("TESTRESULTS") == true
-                    => RecentFileType.TestResults_Md,
-                "md" or "markdown" => RecentFileType.Codebase_Md,
-                "docx" => RecentFileType.Codebase_Docx,
-                "pdf" => RecentFileType.Codebase_Pdf,
-                _ => RecentFileType.Unknown
-            };
         }
     }
 }

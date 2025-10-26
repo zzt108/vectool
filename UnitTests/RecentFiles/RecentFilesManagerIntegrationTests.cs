@@ -10,9 +10,9 @@ namespace UnitTests.RecentFiles
     [TestFixture]
     public class RecentFilesManagerIntegrationTests
     {
-        private string testDirectory;
-        private IRecentFilesManager manager;
-        private InMemoryRecentFilesStore store;
+        private string testDirectory = null!;
+        private IRecentFilesManager manager = null!;
+        private InMemoryRecentFilesStore store = null!;
 
         [SetUp]
         public void SetUp()

@@ -1,6 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,17 +14,9 @@ namespace oaiUI.RecentFiles
     {
         // Layout Persistence
 
-        //private void OnColumnWidthChanged(object? sender, ColumnWidthChangedEventArgs e)
-        //{
-        //    // Debounce - restart timer on each change
-        //    saveDebounceTimer.Stop();
-        //    saveDebounceTimer.Start();
-        //}
-
         /// <summary>
         /// Load layout settings (column widths) from disk using base header keys.
         /// </summary>
-        // 🔄 MODIFY - Apply row height scale
         private void LoadLayout()
         {
             if (lvRecentFiles is null) return;
@@ -70,13 +60,14 @@ namespace oaiUI.RecentFiles
             }
 
 
-            // ✅ NEW: Apply row height scale (UiState or default)
+            // Apply row height scale (UiState or default)
             var rowScale = state.RecentFilesRowHeightScale ?? DefaultRowHeightScale;
             if (rowScale <= 0) rowScale = DefaultRowHeightScale;
 
             // ListView row height is max(Font.Height, SmallImageList.ImageSize.Height)
             var baseHeight = lvRecentFiles.Font.Height;
-            var targetHeight = Math.Max(baseHeight + 2, (int)Math.Round(baseHeight * rowScale));
+            // Use Ceiling to guarantee "at least X% bigger" contract
+            var targetHeight = Math.Max(baseHeight + 2, (int)Math.Ceiling(baseHeight * rowScale));
             if (lvRecentFiles.SmallImageList == null ||
                 lvRecentFiles.SmallImageList.ImageSize.Height != targetHeight)
             {

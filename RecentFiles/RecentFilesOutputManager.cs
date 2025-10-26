@@ -78,7 +78,7 @@ public sealed class RecentFilesOutputManager
         if (when.HasValue)
             EnsureDatedDirectory(when.Value);
 
-        // ✅ NEW: Append enum suffix/extension
+        // Append enum suffix/extension
         var baseNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
         var enumSuffix = fileType.ToFileSuffix(); // converts TestResultsMd -> _test-results.md
         var finalName = $"{baseNameWithoutExt}{enumSuffix}";

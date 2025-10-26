@@ -1,11 +1,12 @@
 ﻿// ✅ FULL FILE VERSION
 using NUnit.Framework;
+using oaiUI.RecentFiles;
 using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using oaiUI.RecentFiles;
+using UnitTests.RecentFiles;
 using VecTool.RecentFiles;
 
 namespace UnitTests.UI.RecentFiles
@@ -162,10 +163,9 @@ namespace UnitTests.UI.RecentFiles
                 files.Add(new MockFileInfo(path, type, size, exists));
             }
 
-            public IReadOnlyList<RecentFileInfo> GetRecentFiles()
-            {
-                return files.Select(f => new RecentFileInfo(f.Path, DateTimeOffset.UtcNow, f.Type, new List<string>(), f.Size)).ToList();
-            }
+            public IReadOnlyList<RecentFileInfo> GetRecentFiles() =>
+                files.Select(f => new MockRecentFileInfo(f.Path, f.Type, f.Size, f.Exists))
+                     .ToList();
 
             public void RegisterGeneratedFile(string filePath, RecentFileType fileType, IReadOnlyList<string> sourceFolders, long fileSizeBytes = 0, DateTime? generatedAtUtc = null)
             {

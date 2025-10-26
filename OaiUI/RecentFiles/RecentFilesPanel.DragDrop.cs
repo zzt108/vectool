@@ -58,7 +58,7 @@ namespace oaiUI.RecentFiles
                     if (string.IsNullOrWhiteSpace(path)) continue;
                     if (!File.Exists(path)) continue;
 
-                    var type = MapExtensionToType(Path.GetExtension(path), Path.GetFileName(path));
+                    var type = new RecentFileType().MapExtensionToType(Path.GetExtension(path), Path.GetFileName(path));
                     long size = 0;
 
                     try { size = new FileInfo(path).Length; }
