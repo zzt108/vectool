@@ -21,6 +21,7 @@ namespace Vectool.OaiUI
         private ToolStripMenuItem getGitChangesToolStripMenuItem;
         private ToolStripMenuItem fileSizeSummaryToolStripMenuItem;
         private ToolStripMenuItem runTestsToolStripMenuItem;
+        private ToolStripMenuItem exportToRepomixToolStripMenuItem;
         private ToolStripMenuItem helpToolStripMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
 
@@ -78,6 +79,7 @@ namespace Vectool.OaiUI
             getGitChangesToolStripMenuItem = new ToolStripMenuItem();
             fileSizeSummaryToolStripMenuItem = new ToolStripMenuItem();
             runTestsToolStripMenuItem = new ToolStripMenuItem();
+            exportToRepomixToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             tabControl1 = new TabControl();
@@ -135,7 +137,13 @@ namespace Vectool.OaiUI
             // 
             // actionsToolStripMenuItem
             // 
-            actionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { convertToMdToolStripMenuItem, toolStripSeparator1, getGitChangesToolStripMenuItem, fileSizeSummaryToolStripMenuItem, runTestsToolStripMenuItem });
+            actionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] {
+    convertToMdToolStripMenuItem,
+    toolStripSeparator1,
+    getGitChangesToolStripMenuItem,
+    fileSizeSummaryToolStripMenuItem,
+    runTestsToolStripMenuItem,
+    exportToRepomixToolStripMenuItem }); 
             actionsToolStripMenuItem.Name = "actionsToolStripMenuItem";
             actionsToolStripMenuItem.Size = new Size(59, 20);
             actionsToolStripMenuItem.Text = "&Actions";
@@ -172,6 +180,11 @@ namespace Vectool.OaiUI
             runTestsToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.T;
             runTestsToolStripMenuItem.Size = new Size(209, 22);
             runTestsToolStripMenuItem.Text = "Run &Tests";
+            // exportToRepomixToolStripMenuItem
+            exportToRepomixToolStripMenuItem.Name = "exportToRepomixToolStripMenuItem";
+            exportToRepomixToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.R;
+            exportToRepomixToolStripMenuItem.Size = new Size(209, 22);
+            exportToRepomixToolStripMenuItem.Text = "Export to Repomix";
             // 
             // helpToolStripMenuItem
             // 

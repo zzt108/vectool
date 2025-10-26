@@ -15,6 +15,7 @@ public enum RecentFileType
     Git_Md = 4,
     TestResults_Md = 5,
     Summary_Md = 6,
+    Repomix_Xml = 7,
     Plan,
     Guide
 }

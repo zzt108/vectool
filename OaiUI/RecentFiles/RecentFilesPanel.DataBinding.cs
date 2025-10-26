@@ -99,6 +99,7 @@ namespace oaiUI.RecentFiles
                 RecentFileType.Codebase_Md => Color.MediumPurple,
                 RecentFileType.Codebase_Docx => Color.LightSkyBlue,
                 RecentFileType.Codebase_Pdf => Color.LightCoral,
+                RecentFileType.Repomix_Xml => Color.DeepSkyBlue, 
                 RecentFileType.Unknown => Color.Gainsboro,
                 _ => Color.Gainsboro
             };

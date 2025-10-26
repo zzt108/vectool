@@ -70,6 +70,7 @@ namespace Vectool.OaiUI
             getGitChangesToolStripMenuItem.Click += getGitChangesToolStripMenuItem_Click;
             fileSizeSummaryToolStripMenuItem.Click += fileSizeSummaryToolStripMenuItem_Click;
             runTestsToolStripMenuItem.Click += runTestsToolStripMenuItem_Click;
+            exportToRepomixToolStripMenuItem.Click += exportToRepomixToolStripMenuItemClick;
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
 
             // ✅ Form controls
