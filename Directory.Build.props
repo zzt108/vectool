@@ -2,6 +2,21 @@
 <!-- File: ./Directory.Build.props -->
 <Project>
   <PropertyGroup>
+    <!-- Versioning (kept from repo pattern) -->
+    <MajorVersion>4</MajorVersion>
+    <PlanId>3</PlanId>
+    <PlanPhase>3</PlanPhase>
+    <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
+    <HHmm>$([System.DateTime]::UtcNow.ToString('HHmm'))</HHmm>
+    <DayOfYear>$([System.DateTime]::UtcNow.DayOfYear)</DayOfYear>
+    <BuildPart>$([MSBuild]::Add($([MSBuild]::Multiply($(PlanPhase), 1000)),$(DayOfYear)))</BuildPart>
+
+    <AssemblyVersion>$(MajorVersion).0.0.0</AssemblyVersion>
+    <FileVersion>$(MajorVersion).$(PlanId).$(BuildPart).$(HHmm)</FileVersion>
+    <ApplicationDisplayVersion>$(MajorVersion).$(PlanId).p$(PlanPhase)</ApplicationDisplayVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <!-- Centralize implicit usings + nullable for all projects -->
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>

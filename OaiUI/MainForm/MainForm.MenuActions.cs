@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -27,7 +26,7 @@ namespace Vectool.OaiUI
 
             var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var defaultFileName = $"{vsName}.{branchName}.md";
+            var defaultFileName = RecentFilesOutputManager.Factory().BuildOutputPath($"{vsName}_{branchName}", RecentFileType.Codebase_Md);
 
             using var saveFileDialog = new SaveFileDialog
             {
@@ -75,7 +74,6 @@ namespace Vectool.OaiUI
 
             var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            // var gitChangesFileName = $"{vsName}.{branchName}.GIT.md";
             var gitChangesFileName = RecentFilesOutputManager.Factory().BuildOutputPath( $"{vsName}_{branchName}", RecentFileType.Git_Md);
             var mdExportFileName = RecentFilesOutputManager.Factory().BuildOutputPath($"{vsName}_{branchName}", RecentFileType.Codebase_Md);
 
@@ -141,7 +139,7 @@ namespace Vectool.OaiUI
 
             var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var defaultFileName = $"{vsName}.{branchName}.summary.md";
+            var defaultFileName = RecentFilesOutputManager.Factory().BuildOutputPath($"{vsName}_{branchName}", RecentFileType.Summary_Md);
 
             using var saveFileDialog = new SaveFileDialog
             {
@@ -224,7 +222,8 @@ namespace Vectool.OaiUI
 
             var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var testResultsFileName = $"{vsName}.{branchName}.TestResults_Md.md";
+            var testResultsFileName = RecentFilesOutputManager.Factory().BuildOutputPath($"{vsName}_{branchName}", RecentFileType.TestResults_Md);
+
 
             using var saveFileDialog = new SaveFileDialog
             {

@@ -14,6 +14,7 @@ public enum RecentFileType
     Codebase_Pdf = 3,
     Git_Md = 4,
     TestResults_Md = 5,
+    Summary_Md = 6,
     Plan,
     Guide
 }

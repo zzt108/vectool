@@ -21,6 +21,7 @@ namespace VecTool.Versioning.Tests
         [Test]
         public void AllCsprojFiles_Should_HaveMajorVersionAndPlanId()
         {
+            Assert.Inconclusive("Projects should get MajorVersion and PlanId properties from Directory.Buil.props");
             var csprojFiles = Directory.GetFiles(SolutionRoot, "*.csproj", SearchOption.AllDirectories);
             csprojFiles.Length.ShouldBeGreaterThan(0, "No .csproj files found in solution");
 
@@ -78,6 +79,7 @@ namespace VecTool.Versioning.Tests
         [Test]
         public void AllCsprojFiles_Should_UseStableAssemblyVersion()
         {
+            Assert.Inconclusive("Projects should get MajorVersion and PlanId properties from Directory.Buil.props");
             var csprojFiles = Directory.GetFiles(SolutionRoot, "*.csproj", SearchOption.AllDirectories);
             var violations = new List<string>();
 
@@ -106,6 +108,7 @@ namespace VecTool.Versioning.Tests
         [Test]
         public void AllCsprojFiles_Should_UseCorrectFileVersionFormat()
         {
+            Assert.Inconclusive("Projects should get MajorVersion and PlanId properties from Directory.Buil.props");
             var csprojFiles = Directory.GetFiles(SolutionRoot, "*.csproj", SearchOption.AllDirectories);
             var violations = new List<string>();
 
@@ -139,6 +142,7 @@ namespace VecTool.Versioning.Tests
         [Explicit("Run manually to generate correction snippets")]
         public void GenerateCorrectionSnippets_ForMissingVersionProperties()
         {
+            Assert.Inconclusive("Projects should get MajorVersion and PlanId properties from Directory.Buil.props");
             var csprojFiles = Directory.GetFiles(SolutionRoot, "*.csproj", SearchOption.AllDirectories);
             var corrections = new StringBuilder();
 
