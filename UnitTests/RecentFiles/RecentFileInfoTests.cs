@@ -45,7 +45,7 @@ namespace UnitTests.RecentFiles
             var json = @"[
               {
                 ""filePath"": ""C:/nope/doesnotexist.docx"",
-                ""fileType"": ""Docx"",
+                ""fileType"": ""AllSourceDocx"",
                 ""fileSizeBytes"": -123
               }
             ]";

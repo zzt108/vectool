@@ -98,7 +98,12 @@ namespace UnitTests.UI.RecentFiles
 
             // Assert
             var listView = GetListView(panel);
+
+            // Verify existing file is NOT gray (normal styling applies)
             listView.Items[0].ForeColor.ShouldNotBe(System.Drawing.Color.Gray);
+            listView.Items[0].Font.Italic.ShouldBeFalse();
+
+            // Verify missing file IS gray and italic
             listView.Items[1].ForeColor.ShouldBe(System.Drawing.Color.Gray);
             listView.Items[1].Font.Italic.ShouldBeTrue();
         }
