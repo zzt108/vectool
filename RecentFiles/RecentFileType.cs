@@ -39,6 +39,7 @@ public static class RecentFileTypeExtensions
             RecentFileType.Git_Md => "_git.md",
             RecentFileType.TestResults_Md => "_test-results.md",
             RecentFileType.Summary_Md => "_summary.md",
+            RecentFileType.Repomix_Xml => "_repomix.xml",
             RecentFileType.Plan => "_plan.md",
             RecentFileType.Guide => "_guide.md",
             RecentFileType.Unknown => ".txt",
