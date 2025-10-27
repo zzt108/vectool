@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// File: Core/ProcessRunner.cs
+﻿// File: Core/ProcessRunner.cs
 
 using LogCtxShared;
 using NLogShared;

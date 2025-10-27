@@ -308,7 +308,7 @@ namespace VecTool.Handlers
             var args = isNpx ? "repomix " : "";
 
             // ✅ Explicit XML output style (default, but be explicit)
-            args += "--style xml ";
+            args += "--style xml --compress ";
 
             // ✅ Output file - use forward slashes for cross-platform compatibility
             var normalizedOutputPath = outputPath.Replace("\\", "/");
