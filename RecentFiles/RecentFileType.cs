@@ -85,7 +85,7 @@ public static class RecentFileTypeExtensions
 
             // Codebase family: pick exact type by extension
             var codebaseBase = Path.GetFileNameWithoutExtension(RecentFileType.Codebase_Md.ToFileSuffix());
-            if (last.Equals(codebaseBase, StringComparison.OrdinalIgnoreCase))
+            if (codebaseBase.EndsWith(last, StringComparison.OrdinalIgnoreCase))
             {
                 return e switch
                 {
@@ -122,7 +122,7 @@ public static class RecentFileTypeExtensions
                 return RecentFileType.Guide;
             }
 
-            return RecentFileType.Codebase_Md;
+            return RecentFileType.Unknown;
         }
 
         if (e == "docx")

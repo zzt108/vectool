@@ -279,13 +279,13 @@ namespace UnitTests.RecentFiles
         }
 
         [Test]
-        public void MapExtensionToType_MdWithoutKeywords_ReturnsCodebase_Md()
+        public void MapExtensionToType_MdWithoutKeywords_ReturnsUnknownMd()
         {
             // Act
             var result = RecentFileType.Unknown.MapExtensionToType(".md", "VecTool_random_file");
 
             // Assert
-            result.ShouldBe(RecentFileType.Codebase_Md);
+            result.ShouldBe(RecentFileType.Unknown);
         }
 
         #endregion
@@ -353,7 +353,7 @@ namespace UnitTests.RecentFiles
             var result = RecentFileType.Unknown.MapExtensionToType(".md", null);
 
             // Assert
-            result.ShouldBe(RecentFileType.Codebase_Md);
+            result.ShouldBe(RecentFileType.Unknown);
         }
 
         [Test]
@@ -363,7 +363,7 @@ namespace UnitTests.RecentFiles
             var result = RecentFileType.Unknown.MapExtensionToType(".md", "");
 
             // Assert
-            result.ShouldBe(RecentFileType.Codebase_Md);
+            result.ShouldBe(RecentFileType.Unknown);
         }
 
         [Test]
@@ -503,23 +503,23 @@ namespace UnitTests.RecentFiles
         }
 
         [Test]
-        public void GetLastToken_EmptyString_ReturnsCodebase_Md()
+        public void GetLastToken_EmptyString_ReturnsUnknownMd()
         {
             // Arrange & Act
             var result = RecentFileType.Unknown.MapExtensionToType(".md", "");
 
             // Assert - fallback to Codebase_Md when no token found
-            result.ShouldBe(RecentFileType.Codebase_Md);
+            result.ShouldBe(RecentFileType.Unknown);
         }
 
         [Test]
-        public void GetLastToken_OnlySeparators_ReturnsCodebase_Md()
+        public void GetLastToken_OnlySeparators_ReturnsUnknownMd()
         {
             // Arrange & Act
             var result = RecentFileType.Unknown.MapExtensionToType(".md", "___---   ");
 
             // Assert - fallback to Codebase_Md when no meaningful token
-            result.ShouldBe(RecentFileType.Codebase_Md);
+            result.ShouldBe(RecentFileType.Unknown);
         }
 
         #endregion
