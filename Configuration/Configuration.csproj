@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="GitignoreParserNet" Version="0.2.0.14" />
+    <PackageReference Include="MAB.DotIgnore" Version="3.0.2" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.10" />
   </ItemGroup>
 
