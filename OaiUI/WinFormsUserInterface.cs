@@ -39,9 +39,9 @@ namespace oaiUI
             });
         }
 
-        public void WorkStart(string workText, List<string> selectedFolders)
+        public void WorkStart(string workText, IEnumerable<string> selectedFolders)
         {
-            TotalWork = GetTotalFolders(selectedFolders);
+            TotalWork = GetTotalFolders(selectedFolders.ToList());
             InvokeOnUi(() =>
             {
                 _statusLabel.Text = workText;
