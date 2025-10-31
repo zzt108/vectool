@@ -53,11 +53,11 @@ namespace VecTool.Handlers
 
         protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
-            if (!Traversal.FileValidator.ShouldIncludeInExport(file, vectorStoreConfig))
-            {
-                log.Trace($"Skipping file (excluded by centralized filter): {file}");
-                return;
-            }
+            //if (!Traversal.FileValidator.ShouldIncludeInExport(file, vectorStoreConfig))
+            //{
+            //    log.Trace($"Skipping file (excluded by centralized filter): {file}");
+            //    return;
+            //}
 
             string content = GetFileContent(file);
             DateTime lastModified = File.GetLastWriteTime(file);
@@ -66,8 +66,8 @@ namespace VecTool.Handlers
             writer.WriteLine($"``` {MimeTypeProvider.GetMdTag(Path.GetExtension(file))}");
             writer.WriteLine(content);
             writer.WriteLine("```");
-        
-            writer.WriteLine(); 
+
+            writer.WriteLine();
         }
 
         protected override void WriteFolderName(StreamWriter writer, string folderName)

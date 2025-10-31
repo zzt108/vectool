@@ -1,147 +1,236 @@
-namespace VecTool.Handlers.Traversal;
+﻿// ✅ FULL FILE VERSION - CORRECTED
 
-using global::VecTool.Configuration;
-using NLogShared;
-using System;
-using System.Collections.Generic;
-using System.IO;
-
-/// <summary>
-/// Handles folder traversal and file enumeration with exclusion support.
-/// </summary>
-public sealed class FileSystemTraverser
+namespace VecTool.Handlers.Traversal
 {
-    private static readonly CtxLogger _log = new();
-    private readonly IUserInterface? _ui;
-
-    public FileSystemTraverser(IUserInterface? ui)
-    {
-        _ui = ui;
-    }
+    using NLogShared;
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using VecTool.Configuration;
+    using VecTool.Configuration.Exclusion;
 
     /// <summary>
-    /// Recursively processes folders with custom processing logic.
+    /// Handles folder traversal and file enumeration with exclusion support.
     /// </summary>
-    public void ProcessFolder<T>(
-        string folderPath,
-        T context,
-        VectorStoreConfig vectorStoreConfig,
-        Action<string, T, VectorStoreConfig> processFile,
-        Action<T, string> writeFolderName,
-        Action<T>? writeFolderEnd = null)
+    public sealed class FileSystemTraverser
     {
-        if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
-            return;
+        private static readonly CtxLogger log = new();
+        private readonly IUserInterface? ui;
+        private readonly string _rootPath;
+        private IIgnorePatternMatcher? _matcher;
 
-        var folderName = new DirectoryInfo(folderPath).Name;
-
-        if (FileValidator.IsFolderExcluded(folderName, vectorStoreConfig))
+        /// <summary>
+        /// Initializes the traverser with repo root for pattern detection.
+        /// Lazy-initializes the pattern matcher on first use.
+        /// </summary>
+        public FileSystemTraverser(IUserInterface? ui = null, string? rootPath = null)
         {
-            _log.Trace($"Skipping excluded folder: {folderPath}");
-            return;
+            this.ui = ui;
+            _rootPath = rootPath ?? Environment.CurrentDirectory;
+            _matcher = null; // Lazy-initialized
         }
 
-        _ui?.UpdateStatus($"Processing folder: {folderPath}");
-        _log.Debug($"Processing folder: {folderPath}");
-
-        writeFolderName(context, folderName);
-
-        // Process files
-        string[] files = Array.Empty<string>();
-        try { files = Directory.GetFiles(folderPath); } 
-        catch (Exception ex) 
-        { 
-            _log.Error(ex, $"Failed to enumerate files in: {folderPath}");
-        }
-
-        foreach (var file in files)
+        /// <summary>
+        /// Initializes the exclusion pattern matcher lazily.
+        /// Creates matcher on first call to ProcessFolder or EnumerateFilesRespectingExclusions.
+        /// </summary>
+        private void EnsureMatcherInitialized()
         {
+            if (_matcher != null)
+                return;
+
             try
             {
-                processFile(file, context, vectorStoreConfig);
+                _matcher = IgnoreMatcherFactory.Create(IgnoreLibraryType.MabDotIgnore, _rootPath);
+                using var _ = new CtxLogger().Ctx.Set()
+                    .Add("root_path", _rootPath)
+                    .Add("library", "MabDotIgnore");
+                log.Info($"Pattern matcher initialized for root: {_rootPath}");
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Error processing file: {file}");
-                throw;
+                log.Error(ex, $"Failed to initialize pattern matcher at {_rootPath}");
+                _matcher = null; // Fall back to legacy-only mode
             }
         }
 
-        // Process subfolders recursively
-        string[] subfolders = Array.Empty<string>();
-        try { subfolders = Directory.GetDirectories(folderPath); } 
-        catch (Exception ex) 
-        { 
-            _log.Error(ex, $"Failed to enumerate subdirectories in: {folderPath}");
-        }
-
-        foreach (var sub in subfolders)
+        /// <summary>
+        /// Recursively processes folders with custom processing logic.
+        /// Pre-filters based on patterns BEFORE calling processFile delegate.
+        /// </summary>
+        public void ProcessFolder<T>(
+            string folderPath,
+            T context,
+            VectorStoreConfig vectorStoreConfig,
+            Action<string, T, VectorStoreConfig> processFile,
+            Action<T, string> writeFolderName,
+            Action<T>? writeFolderEnd = null)
         {
-            ProcessFolder(sub, context, vectorStoreConfig, processFile, writeFolderName, writeFolderEnd);
-        }
+            if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
+                return;
 
-        writeFolderEnd?.Invoke(context);
-    }
+            var folderName = new DirectoryInfo(folderPath).Name;
 
-    /// <summary>
-    /// Enumerates all files in a folder tree respecting exclusions.
-    /// </summary>
-    public IEnumerable<string> EnumerateFilesRespectingExclusions(
-        string root, 
-        VectorStoreConfig config)
-    {
-        if (string.IsNullOrWhiteSpace(root))
-            yield break;
+            // Pattern check FIRST (Layer 1) - before legacy config
+            EnsureMatcherInitialized();
+            if (_matcher != null && _matcher.IsIgnored(folderPath, isDirectory: true))
+            {
+                log.Trace($"Skipping excluded folder (pattern): {folderPath}");
+                return;
+            }
 
-        var stack = new Stack<string>();
-        stack.Push(root);
+            // Legacy config fallback (Layer 1 fallback)
+            if (FileValidator.IsFolderExcluded(folderName, vectorStoreConfig))
+            {
+                log.Trace($"Skipping excluded folder (legacy config): {folderPath}");
+                return;
+            }
 
-        while (stack.Count > 0)
-        {
-            var current = stack.Pop();
-            var folderName = new DirectoryInfo(current).Name;
+            ui?.UpdateStatus($"Processing folder: {folderPath}");
+            log.Debug($"Processing folder: {folderPath}");
 
-            if (FileValidator.IsFolderExcluded(folderName, config))
-                continue;
+            writeFolderName(context, folderName);
 
-            // Enumerate files
+            // Process files - delegate has full responsibility
             string[] files = Array.Empty<string>();
-            try 
-            { 
-                files = Directory.GetFiles(current); 
+            try
+            {
+                files = Directory.GetFiles(folderPath);
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Failed to enumerate files in: {current}");
-                continue;
+                log.Error(ex, $"Failed to enumerate files in {folderPath}");
             }
 
-            foreach (var f in files)
+            foreach (var file in files)
             {
-                var fileName = Path.GetFileName(f);
-                if (FileValidator.IsFileExcluded(fileName, config))
-                    continue;
+                try
+                {
+                    // Pattern check for file (Layer 1)
+                    if (_matcher != null && _matcher.IsIgnored(file, isDirectory: false))
+                    {
+                        log.Trace($"Skipping excluded file (pattern): {file}");
+                        continue;
+                    }
 
-                if (!FileValidator.IsFileValid(f, null))
-                    continue;
-
-                yield return f;
+                    // Invoke handler with pre-filtered file
+                    processFile(file, context, vectorStoreConfig);
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex, $"Error processing file: {file}");
+                }
             }
 
-            // Enumerate subdirectories
+            // Process subfolders recursively
             string[] subfolders = Array.Empty<string>();
-            try 
-            { 
-                subfolders = Directory.GetDirectories(current); 
+            try
+            {
+                subfolders = Directory.GetDirectories(folderPath);
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Failed to enumerate subdirectories in: {current}");
-                continue;
+                log.Error(ex, $"Failed to enumerate subdirectories in {folderPath}");
             }
 
             foreach (var sub in subfolders)
-                stack.Push(sub);
+            {
+                ProcessFolder(sub, context, vectorStoreConfig, processFile, writeFolderName, writeFolderEnd);
+            }
+
+            writeFolderEnd?.Invoke(context);
+        }
+
+        /// <summary>
+        /// Enumerates all files in a folder tree respecting exclusions.
+        /// Pre-filters patterns and legacy config BEFORE returning files.
+        /// </summary>
+        public IEnumerable<string> EnumerateFilesRespectingExclusions(string root, VectorStoreConfig config)
+        {
+            if (string.IsNullOrWhiteSpace(root))
+                yield break;
+
+            EnsureMatcherInitialized();
+
+            var stack = new Stack<string>();
+            stack.Push(root);
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                var folderName = new DirectoryInfo(current).Name;
+
+                // Pattern check FIRST
+                if (_matcher != null && _matcher.IsIgnored(current, isDirectory: true))
+                {
+                    log.Trace($"Skipping excluded folder (pattern): {current}");
+                    continue;
+                }
+
+                // Legacy config fallback
+                if (FileValidator.IsFolderExcluded(folderName, config))
+                {
+                    log.Trace($"Skipping excluded folder (legacy): {current}");
+                    continue;
+                }
+
+                // Enumerate files
+                string[] files = Array.Empty<string>();
+                try
+                {
+                    files = Directory.GetFiles(current);
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex, $"Failed to enumerate files in {current}");
+                    continue;
+                }
+
+                foreach (var f in files)
+                {
+                    var fileName = Path.GetFileName(f);
+
+                    // Pattern check for file
+                    if (_matcher != null && _matcher.IsIgnored(f, isDirectory: false))
+                    {
+                        log.Trace($"Skipping excluded file (pattern): {f}");
+                        continue;
+                    }
+
+                    // Legacy config check
+                    if (FileValidator.IsFileExcluded(fileName, config))
+                    {
+                        log.Trace($"Skipping excluded file (legacy): {f}");
+                        continue;
+                    }
+
+                    // File system validity check
+                    if (!FileValidator.IsFileValid(f, null))
+                    {
+                        log.Trace($"Invalid or binary file: {f}");
+                        continue;
+                    }
+
+                    yield return f;
+                }
+
+                // Enumerate subdirectories
+                string[] subdirs = Array.Empty<string>();
+                try
+                {
+                    subdirs = Directory.GetDirectories(current);
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex, $"Failed to enumerate subdirectories in {current}");
+                    continue;
+                }
+
+                foreach (var sub in subdirs)
+                {
+                    stack.Push(sub);
+                }
+            }
         }
     }
 }

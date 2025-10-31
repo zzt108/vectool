@@ -67,8 +67,8 @@ namespace VecTool.Handlers
             Dictionary<string, long> fileSizesByType,
             Dictionary<string, int> fileCountByType)
         {
-            if (IsFolderExcluded(Path.GetFileName(folderPath), config))
-                return;
+            //if (IsFolderExcluded(Path.GetFileName(folderPath), config))
+            //    return;
 
             try
             {
