@@ -1,6 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
 using VecTool.Configuration.Exclusion;
 
@@ -23,6 +21,8 @@ public class MabDotIgnoreAdapterTests
     [TearDown]
     public void Teardown()
     {
+        _adapter?.Dispose();
+
         if (Directory.Exists(_testRepoPath))
         {
             Directory.Delete(_testRepoPath, recursive: true);

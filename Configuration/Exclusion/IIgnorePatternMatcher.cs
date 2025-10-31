@@ -4,7 +4,7 @@
 /// Facade interface for .gitignore/.vtignore pattern matching.
 /// Allows swappable implementations (GitignoreParserNet, MAB.DotIgnore).
 /// </summary>
-public interface IIgnorePatternMatcher
+public interface IIgnorePatternMatcher : IDisposable
 {
     /// <summary>
     /// Loads ignore patterns from .gitignore and .vtignore files in the root path.

@@ -13,6 +13,7 @@ public sealed class GitignoreParserNetAdapter : IIgnorePatternMatcher
     private static readonly CtxLogger _log = new();
     private GitignoreParser? _parser;
     private string? _loadedRootPath;
+    private string? _tempFilePath; // Track temp file for cleanup
 
     public void LoadFromRoot(string rootPath)
     {
@@ -71,20 +72,30 @@ public sealed class GitignoreParserNetAdapter : IIgnorePatternMatcher
 
         try
         {
-            // GitignoreParserNet expects file-based input, so write to temp file
-            var tempFile = Path.GetTempFileName();
-            File.WriteAllLines(tempFile, patternsToLoad);
+            // Create persistent temp file (library needs it to exist for parsing)
+            // Clean up any previous temp file
+            if (_tempFilePath != null && File.Exists(_tempFilePath))
+            {
+                File.Delete(_tempFilePath);
+            }
 
-            _parser = new GitignoreParser(tempFile);
-            _log.Info($"GitignoreParserNet loaded with {patternsToLoad.Count} patterns");
+            _tempFilePath = Path.GetTempFileName();
+            File.WriteAllLines(_tempFilePath, patternsToLoad);
 
-            // Clean up temp file
-            File.Delete(tempFile);
+            _parser = new GitignoreParser(_tempFilePath);
+            _log.Info($"GitignoreParserNet loaded {patternsToLoad.Count} patterns from temp file: {_tempFilePath}");
         }
         catch (Exception ex)
         {
             _log.Error(ex, $"Failed to initialize GitignoreParserNet: {ex.Message}");
             _parser = null;
+
+            // Clean up temp file on error
+            if (_tempFilePath != null && File.Exists(_tempFilePath))
+            {
+                try { File.Delete(_tempFilePath); } catch { /* Ignore cleanup errors */ }
+                _tempFilePath = null;
+            }
         }
     }
 
@@ -105,6 +116,9 @@ public sealed class GitignoreParserNetAdapter : IIgnorePatternMatcher
             // Normalize path separators to forward slashes (Git convention)
             var normalizedPath = relativePath.Replace(Path.DirectorySeparatorChar, '/');
 
+            // 🔄 MODIFY: Remove leading slashes if present (GitignoreParserNet expects relative paths)
+            normalizedPath = normalizedPath.TrimStart('/');
+
             // GitignoreParserNet requires directory paths to end with /
             if (isDirectory && !normalizedPath.EndsWith('/'))
             {
@@ -115,7 +129,11 @@ public sealed class GitignoreParserNetAdapter : IIgnorePatternMatcher
 
             if (result)
             {
-                _log.Trace($"Ignored by GitignoreParserNet: {relativePath}");
+                _log.Trace($"Ignored by GitignoreParserNet: {relativePath} (normalized: {normalizedPath})");
+            }
+            else
+            {
+                _log.Trace($"NOT ignored by GitignoreParserNet: {relativePath} (normalized: {normalizedPath})");
             }
 
             return result;
@@ -125,5 +143,30 @@ public sealed class GitignoreParserNetAdapter : IIgnorePatternMatcher
             _log.Error(ex, $"Error checking ignore status for {relativePath}: {ex.Message}");
             return false; // Fail open - don't exclude on error
         }
+    }
+
+    /// <summary>
+    /// Cleans up the temporary .gitignore file used by GitignoreParserNet.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_tempFilePath != null && File.Exists(_tempFilePath))
+        {
+            try
+            {
+                File.Delete(_tempFilePath);
+                _log.Debug($"Cleaned up temp gitignore file: {_tempFilePath}");
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, $"Failed to delete temp file {_tempFilePath}: {ex.Message}");
+            }
+            finally
+            {
+                _tempFilePath = null;
+            }
+        }
+
+        _parser = null;
     }
 }

@@ -1,6 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
 using VecTool.Configuration.Exclusion;
 
@@ -23,6 +21,8 @@ public class GitignoreParserNetAdapterTests
     [TearDown]
     public void Teardown()
     {
+        _adapter?.Dispose();
+
         if (Directory.Exists(_testRepoPath))
         {
             Directory.Delete(_testRepoPath, recursive: true);
@@ -55,8 +55,38 @@ public class GitignoreParserNetAdapterTests
         _adapter.LoadFromRoot(_testRepoPath);
 
         // Assert
-        _adapter.IsIgnored("bin", true).ShouldBeTrue();
-        _adapter.IsIgnored("src", true).ShouldBeFalse();
+        _adapter.IsIgnored("bin", true).ShouldBeTrue("bin/ pattern should match 'bin' directory");
+        _adapter.IsIgnored("bin/", true).ShouldBeTrue("bin/ pattern should match 'bin/' directory");
+        _adapter.IsIgnored("bin/Debug", false).ShouldBeTrue("bin/ pattern should match files under bin/");
+        _adapter.IsIgnored("src", true).ShouldBeFalse("src directory should not be ignored");
+        _adapter.IsIgnored("bin", false).ShouldBeFalse("bin/ pattern should NOT match 'bin' file");
+    }
+
+    [Test]
+    public void Debug_GitignoreParserNet_Behavior()
+    {
+        // Arrange
+        var vtignorePath = Path.Combine(_testRepoPath, ".vtignore");
+        File.WriteAllLines(vtignorePath, new[] { "bin/" });
+
+        _adapter.LoadFromRoot(_testRepoPath);
+
+        // Act & Debug
+        var testPaths = new[]
+        {
+        ("bin", true),
+        ("bin/", true),
+        ("/bin", true),
+        ("/bin/", true),
+        ("bin/Debug", false),
+        ("src", true)
+    };
+
+        foreach (var (path, isDir) in testPaths)
+        {
+            var result = _adapter.IsIgnored(path, isDir);
+            Console.WriteLine($"Path: '{path}' | IsDir: {isDir} | Ignored: {result}");
+        }
     }
 
     [Test]

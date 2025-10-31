@@ -120,4 +120,13 @@ public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
             return false; // Fail open - don't exclude on error
         }
     }
+
+    /// <summary>
+    /// MAB.DotIgnore uses in-memory patterns, no cleanup needed.
+    /// </summary>
+    public void Dispose()
+    {
+        _ignoreList = null;
+        _loadedRootPath = null;
+    }
 }

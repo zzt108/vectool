@@ -45,6 +45,7 @@ public class IgnoreMatcherFactoryTests
         // Arrange
         var testRepoPath = Path.Combine(Path.GetTempPath(), $"test-repo-{Guid.NewGuid()}");
         Directory.CreateDirectory(testRepoPath);
+        IIgnorePatternMatcher? matcher = null;
 
         try
         {
@@ -52,7 +53,7 @@ public class IgnoreMatcherFactoryTests
             File.WriteAllLines(vtignorePath, new[] { "*.dll" });
 
             // Act
-            var matcher = IgnoreMatcherFactory.Create(
+            matcher = IgnoreMatcherFactory.Create(
                 IgnoreLibraryType.MabDotIgnore,
                 testRepoPath);
 
@@ -61,6 +62,8 @@ public class IgnoreMatcherFactoryTests
         }
         finally
         {
+            matcher?.Dispose();
+
             if (Directory.Exists(testRepoPath))
             {
                 Directory.Delete(testRepoPath, recursive: true);
