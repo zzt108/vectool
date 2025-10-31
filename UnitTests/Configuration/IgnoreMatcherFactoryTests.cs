@@ -36,7 +36,7 @@ public class IgnoreMatcherFactoryTests
     {
         // Act & Assert
         Should.Throw<ArgumentException>(() =>
-            IgnoreMatcherFactory.Create((IgnoreLibraryType)999));
+            IgnoreMatcherFactory.Create((IgnoreLibraryType)9998));
     }
 
     [Test]

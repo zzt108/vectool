@@ -13,5 +13,7 @@ public enum IgnoreLibraryType
     /// <summary>
     /// MAB.DotIgnore - Simpler alternative parser.
     /// </summary>
-    MabDotIgnore = 1
+    MabDotIgnore = 1,
+
+    Auto = 999
 }

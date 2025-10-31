@@ -1,4 +1,7 @@
-﻿using GitignoreParserNet;
+﻿// ✅ FULL FILE VERSION
+// File: Configuration/Exclusion/GitignoreParserNetAdapter.cs
+
+using GitignoreParserNet;
 using LogCtxShared;
 using NLogShared;
 
@@ -99,6 +102,7 @@ public sealed class GitignoreParserNetAdapter : IIgnorePatternMatcher
         }
     }
 
+    // ✅ DUAL-PATH DIRECTORY TESTING for robust pattern matching
     public bool IsIgnored(string relativePath, bool isDirectory)
     {
         if (_parser == null)
@@ -116,27 +120,46 @@ public sealed class GitignoreParserNetAdapter : IIgnorePatternMatcher
             // Normalize path separators to forward slashes (Git convention)
             var normalizedPath = relativePath.Replace(Path.DirectorySeparatorChar, '/');
 
-            // 🔄 MODIFY: Remove leading slashes if present (GitignoreParserNet expects relative paths)
+            // ✅ Remove leading slashes if present (GitignoreParserNet expects relative paths)
             normalizedPath = normalizedPath.TrimStart('/');
 
-            // GitignoreParserNet requires directory paths to end with /
-            if (isDirectory && !normalizedPath.EndsWith('/'))
+            // ✅ Dual-path testing for directories
+            // Test BOTH "bin/" and "bin" forms to handle all GitignoreParserNet pattern edge cases
+            if (isDirectory)
             {
-                normalizedPath += '/';
+                var withSlash = normalizedPath.EndsWith('/') ? normalizedPath : normalizedPath + '/';
+                var withoutSlash = normalizedPath.TrimEnd('/');
+
+                // Test both forms; pattern matches if EITHER form matches
+                var result = _parser.Denies(withSlash) || _parser.Denies(withoutSlash);
+
+                if (result)
+                {
+                    _log.Trace($"Ignored by GitignoreParserNet: {relativePath} (normalized: {withSlash} | alt: {withoutSlash})");
+                }
+                else
+                {
+                    _log.Trace($"NOT ignored by GitignoreParserNet: {relativePath} (normalized: {withSlash} | alt: {withoutSlash})");
+                }
+
+                return result;
             }
 
-            var result = _parser.Denies(normalizedPath);
+            // File semantics (no trailing slash)
+            var filePath = normalizedPath.TrimEnd('/');
 
-            if (result)
+            var fileResult = _parser.Denies(filePath);
+
+            if (fileResult)
             {
-                _log.Trace($"Ignored by GitignoreParserNet: {relativePath} (normalized: {normalizedPath})");
+                _log.Trace($"Ignored by GitignoreParserNet: {relativePath} (normalized: {filePath})");
             }
             else
             {
-                _log.Trace($"NOT ignored by GitignoreParserNet: {relativePath} (normalized: {normalizedPath})");
+                _log.Trace($"NOT ignored by GitignoreParserNet: {relativePath} (normalized: {filePath})");
             }
 
-            return result;
+            return fileResult;
         }
         catch (Exception ex)
         {
