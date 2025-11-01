@@ -2,6 +2,7 @@
 
 namespace VecTool.Handlers.Traversal
 {
+    using LogCtxShared;
     using MAB.DotIgnore;
     using NLogShared;
     using System;
@@ -19,8 +20,8 @@ namespace VecTool.Handlers.Traversal
         private static readonly CtxLogger log = new();
         private readonly IUserInterface? ui;
         private readonly string _rootPath;
-        private IIgnorePatternMatcher? _primaryMatcher;
-        private IIgnorePatternMatcher? _fallbackMatcher;
+        private IIgnorePatternMatcher? _primaryMatcher = null;
+        private IIgnorePatternMatcher? _fallbackMatcher = null;
 
         /// <summary>
         /// Initializes the traverser with repo root for pattern detection.
@@ -30,7 +31,6 @@ namespace VecTool.Handlers.Traversal
         {
             this.ui = ui;
             _rootPath = rootPath ?? Environment.CurrentDirectory;
-            _primaryMatcher = null; // Lazy-initialized
         }
 
         /// <summary>
@@ -49,6 +49,14 @@ namespace VecTool.Handlers.Traversal
                     .Add("root_path", _rootPath)
                     .Add("library", "MabDotIgnore");
                 log.Info($"Pattern matcher initialized for root: {_rootPath}");
+
+                // LAYER 2 FALLBACK: Create fallback matcher for legacy config
+                _fallbackMatcher = new LegacyConfigAdapter(config);
+                using var __ = new CtxLogger().Ctx.Set()
+                        .Add("primary", _primaryMatcher?.GetType().Name ?? "null")
+                        .Add("fallback", _fallbackMatcher?.GetType().Name ?? "null");
+
+                log.Info("Exclusion matcher chain ready");
             }
             catch (Exception ex)
             {
@@ -57,7 +65,7 @@ namespace VecTool.Handlers.Traversal
                 // Create fallback matcher that matches nothing (only legacy config filters)
                 _fallbackMatcher = new LegacyConfigAdapter(config);
                 _primaryMatcher = _fallbackMatcher;
-                log.Info($"Exclusion matcher chain ready: primary={_primaryMatcher?.GetType().Name ?? "null"}, fallback={_fallbackMatcher?.GetType().Name ?? "null"}");
+                log.Info($"Exclusion matcher chain ready (Fallback only): primary={_primaryMatcher?.GetType().Name ?? "null"}");
             }
         }
 
@@ -176,7 +184,7 @@ namespace VecTool.Handlers.Traversal
                 var current = stack.Pop();
                 var folderName = new DirectoryInfo(current).Name;
 
-                // Pattern check FIRST
+                // Layer 1 Pattern check FIRST
                 if (_primaryMatcher!.IsIgnored(current, isDirectory: true))
                 {
                     log.Trace($"Skipping excluded folder (pattern): {current}");
