@@ -2,10 +2,12 @@
 
 namespace VecTool.Handlers.Traversal
 {
+    using MAB.DotIgnore;
     using NLogShared;
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Text.RegularExpressions;
     using VecTool.Configuration;
     using VecTool.Configuration.Exclusion;
 
@@ -18,6 +20,7 @@ namespace VecTool.Handlers.Traversal
         private readonly IUserInterface? ui;
         private readonly string _rootPath;
         private IIgnorePatternMatcher? _matcher;
+        private IIgnorePatternMatcher? _fallbackMatcher;
 
         /// <summary>
         /// Initializes the traverser with repo root for pattern detection.
@@ -49,8 +52,11 @@ namespace VecTool.Handlers.Traversal
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Failed to initialize pattern matcher at {_rootPath}");
-                _matcher = null; // Fall back to legacy-only mode
+                log.Error(ex, $"Pattern matcher initialization failed, falling back to legacy config only: {_rootPath}");
+
+                // Create fallback matcher that matches nothing (only legacy config filters)
+                _fallbackMatcher = new LegacyOnlyIgnoreMatcher();
+                _matcher = _fallbackMatcher;
             }
         }
 
@@ -161,7 +167,7 @@ namespace VecTool.Handlers.Traversal
                 var folderName = new DirectoryInfo(current).Name;
 
                 // Pattern check FIRST
-                if (_matcher != null && _matcher.IsIgnored(current, isDirectory: true))
+                if (_matcher!.IsIgnored(current, isDirectory: true))
                 {
                     log.Trace($"Skipping excluded folder (pattern): {current}");
                     continue;
