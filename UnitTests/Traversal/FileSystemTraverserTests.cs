@@ -13,7 +13,7 @@ namespace UnitTests.Traversal
     {
         private string testDir = default!;
         private VectorStoreConfig config = default!;
-        private readonly CtxLogger ctx = new("Config/nlog.config");
+        private readonly CtxLogger _ctxLogger = new("Config/nlog.config");
 
         [SetUp]
         public void Setup()
@@ -109,6 +109,8 @@ namespace UnitTests.Traversal
         {
             // Arrange
             config.ExcludedFiles.Add("*.log");
+            _ctxLogger.Ctx.Set();
+            _ctxLogger.Debug($"Excluded files: {config.ExcludedFiles}");
             var csFile = Path.Combine(testDir, "Test.cs");
             var logFile = Path.Combine(testDir, "App.log");
 

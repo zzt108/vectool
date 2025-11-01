@@ -119,6 +119,14 @@ namespace VecTool.Handlers.Traversal
                         continue;
                     }
 
+                    // Legacy config fallback
+                    var fileName = Path.GetFileName(file);
+                    if (FileValidator.IsFileExcluded(fileName, vectorStoreConfig))
+                    {
+                        log.Trace($"Skipping excluded file (legacy config): {file}");
+                        continue;
+                    }
+
                     // Invoke handler with pre-filtered file
                     processFile(file, context, vectorStoreConfig);
                 }
