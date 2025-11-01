@@ -25,10 +25,10 @@ namespace Vectool.OaiUI
 
             var gitHandler = new GitChangesHandler(userInterface, recentFilesManager);
             var mdHandler = new MDHandler(userInterface, recentFilesManager);
-            var vectorStoreConfig = GetCurrentVectorStoreConfig(); // ✅ NEW
+            var vectorStoreConfig = GetCurrentVectorStoreConfig();
 
-            // ✅ Execute both operations in parallel
-            var gitTask = Task.Run(async () => await gitHandler.GetGitChangesAsync(selectedFolders, gitOutputPath).ConfigureAwait(false));
+            // Execute both operations in parallel
+            var gitTask = Task.Run(async () => await gitHandler.GetGitChangesAsync(selectedFolders, gitOutputPath, vectorStoreConfig).ConfigureAwait(false));
             var mdTask = mdHandler.ExportSelectedFoldersAsync(selectedFolders, mdOutputPath, vectorStoreConfig);
 
             await Task.WhenAll(gitTask, mdTask).ConfigureAwait(true);
