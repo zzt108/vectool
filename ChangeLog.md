@@ -1,159 +1,438 @@
-## Changelog
+# CHANGELOG
 
-### VecTool v1.25.1005 – 2025-10-05
+All notable changes to VecTool are documented in this file.
 
-#### Breaking Changes
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-*   **Feature Removed:** DocX export feature and associated handlers removed from the codebase. This includes removal of DocX-specific handlers, tests, and UI elements.
-*   **Feature Removed:** PDF export feature and associated handlers removed from the codebase. All PDF-related code, including QuestPDF integration, has been eliminated.
-*   **Feature Removed:** OpenAI Vector Store management feature removed. All OAI-specific handlers, UI components, and configuration related to vector store operations have been removed.
+---
 
-#### Architecture Refactoring
+## [4.5.25.1101] - 2025-11-01
 
-*   **Enhancement:** Major project restructuring with new modular architecture. Introduced separate projects: `Configuration`, `Constants`, `Core`, `Handlers`, `RecentFiles`, and `Utils` for better separation of concerns. (VecTool.sln)
-*   **Enhancement:** Implemented `VersionInfo` utility for centralized version reporting and assembly metadata management. (Constants/VersionInfo.cs)
-*   **Enhancement:** Added `RepoLocator` for intelligent Git repository root detection across multiple folder selections. (Core/RepoLocator.cs)
-*   **Refactor:** Consolidated UI state management into `UiStateConfig` with JSON-backed persistence for Recent Files layout preferences including column widths and row height scaling. (Configuration/UiStateConfig.cs)
-*   **Refactor:** Introduced `ISettingsStore` abstraction with `InMemorySettingsStore` implementation for testable configuration management. (Configuration/InMemorySettingsStore.cs, Configuration/ISettingsStore.cs)
-*   **Refactor:** Implemented `IAppSettingsReader` interface to decouple configuration reading from `System.Configuration` for improved testability. (Configuration/IAppSettingsReader.cs, Configuration/ConfigurationManagerAppSettingsReader.cs)
+Major architectural refactoring with modular project reorganization, new feature suite, and breaking changes. This version represents a significant evolution toward a more maintainable, testable codebase.
+
+### ❌ Breaking Changes
+
+#### Removed DOCX Export
+- ❌ Removed all DocX export handlers
+- ❌ Removed QuestPDF NuGet dependency
+- ❌ Removed DocX-related UI menu items and buttons
+- ❌ Removed DocX test suite
+- **Rationale**: Simplified codebase; Markdown is superior for LLM consumption
+
+#### Removed PDF Export
+- ❌ Removed PDF export functionality
+- ❌ Removed QuestPDF integration
+- ❌ Removed PDF generation handlers
+- **Rationale**: Markdown + Repomix better serves workflow
+
+#### Removed OpenAI Vector Store Management
+- ❌ Removed direct OpenAI API integration
+- ❌ Removed vector store upload UI
+- ❌ Removed API key management
+- **Rationale**: Moving to Perplexity API in future phases
+
+### ✅ New Features
+
+#### Unit Test Runner
+- ✅ **Keyboard Shortcut**: Ctrl+T for immediate test execution
+- ✅ **Menu Integration**: File → Run Tests option
+- ✅ **Progress Tracking**: Real-time progress bar with visual feedback
+- ✅ **EMA Time Estimation**: Exponential Moving Average calculates accurate time-remaining
+- ✅ **Output Persistence**: Results saved to dated files in Generated/ directory
+- ✅ **Recent Files Integration**: Test results automatically added to Recent Files panel
+- **Implementation**: `TestRunnerHandler` delegates to `ProgressManager` and `DatedFileWriter`
 
 #### Recent Files System
+- ✅ **Auto-Registration**: All generated outputs automatically tracked
+- ✅ **Drag-and-Drop Support**: Drag recent files to external applications
+- ✅ **Advanced Filtering**: Filter by file type (Markdown, Git changes, tests)
+- ✅ **Vector Store Linking**: Filter by vector store association
+- ✅ **Automatic Cleanup**: 30-day retention policy removes old files
+- ✅ **Configurable Retention**: Adjust MaxCount and RetentionDays via app.config
+- **Implementation**: `RecentFilesManager`, `RecentFilesPanel` (WinForms UserControl)
 
-*   **Feature:** Added comprehensive Recent Files tracking system with file type categorization (`RecentFileType` enum includes Docx, Md, Pdf, GitChanges, TestResults). (RecentFiles/RecentFileType.cs)
-*   **Feature:** Implemented `RecentFilesPanel` UI control with drag-and-drop support, filtering, and persistence. (RecentFiles/RecentFilesPanel.cs)
-*   **Feature:** Added `DatedFileWriter` for organizing generated files into dated subdirectories with automatic cleanup of expired files. (RecentFiles/DatedFileWriter.cs)
-*   **Enhancement:** Recent Files now supports vector store linking with filters (`VectorStoreLinkFilter` enum: All, Linked, Unlinked, SpecificStore). (Core/RecentFiles/VectorStoreLinkFilter.cs)
-*   **Enhancement:** Added `RecentFilesConfig` with validation for max count, retention days, and output path configuration. (Configuration/RecentFilesConfig.cs)
-*   **Testing:** Comprehensive unit tests added for Recent Files manager including drag-drop scenarios and file existence validation. (UnitTests/RecentFilesManagerTests.cs, UnitTests/RecentFilesPanelTests.cs)
+#### Progress Manager
+- ✅ **EMA Smoothing**: Exponential Moving Average (α=0.3) for stable time estimates
+- ✅ **Real-Time Updates**: UI refreshes per item processed
+- ✅ **Status Text**: Displays "X/Y (Z%) - ETA HH:MM:SS" format
+- ✅ **Zero-Division Safety**: Gracefully handles empty/zero totals
+- **Implementation**: `ProgressManager` + `ProgressPanel` UI component
 
-#### New Features
+#### Constants Library
+- ✅ **Centralized Strings**: All magic strings moved to Constants project
+- ✅ **Tag Builder**: Safe XML attribute escaping via `TagBuilder` class
+- ✅ **Test Constants**: Reusable test data in `TestStrings` class
+- ✅ **Architecture Tests**: Validates Constants library consistency
+- **Files**: `Constants/Tags.cs`, `Constants/Attributes.cs`, `Constants/TestStrings.cs`
 
-*   **Feature:** Added "Run Unit Tests" functionality with `Ctrl+T` shortcut. Executes `dotnet test` programmatically and saves results to dated output files. (Handlers/TestRunnerHandler.cs, MainForm.RunTests.cs)
-*   **Feature:** Implemented Progress Bar system with EMA (Exponential Moving Average) rate calculation for accurate time-remaining estimates. (Progress/ProgressManager.cs, Progress/ProgressPanel.cs)
-*   **UI Improvement:** Added About dialog accessible via menu. (MainForm.About.cs, OaiUI/AboutForm.cs)
-*   **UI Improvement:** Menu system expanded with File menu containing Convert to MD, Get Git Changes, File Size Summary, Run Tests, and Exit options. (MainForm.Designer.cs)
+### 🏗️ Architecture Improvements
 
-#### Code Quality & Testing
+#### Project Restructuring
+- 🏗️ Split monolithic codebase into 8+ focused projects
+- 🏗️ Clear separation of concerns: UI, Business Logic, Configuration, Tests
+- 🏗️ Namespace organization: `VecTool.Configuration`, `VecTool.Core`, `VecTool.Handlers`, etc.
+- 🏗️ Each project has single, well-defined responsibility
 
-*   **Enhancement:** Introduced VecTool.Constants library to eliminate magic strings with centralized `Tags`, `Attributes`, `TagBuilder`, and `TestStrings` classes. (Constants/Tags.cs, Constants/Attributes.cs, Constants/TagBuilder.cs, Constants/TestStrings.cs)
-*   **Enhancement:** Added `TagBuilder` utility with proper XML attribute escaping for safe tag construction. (Constants/TagBuilder.cs)
-*   **Testing:** Added architecture tests for Constants library ensuring consistent naming and no magic strings. (UnitTests/Constants/ConstantsArchitectureTests.cs)
-*   **Testing:** Added unit tests for Progress Manager with fake clock implementation for deterministic testing. (UnitTests/Progress/ProgressManagerTests.cs)
-*   **Testing:** Added tests for per-vector-store settings round-trip serialization. (UnitTests/Config/PerVectorStoreSettingsTests.cs)
-*   **Enhancement:** Git operations now include timeout handling and proper cancellation token support. (Core/GitRunner.cs)
+#### Configuration Abstraction
+- 🏗️ **ISettingsStore** interface for key-value storage
+- 🏗️ **InMemorySettingsStore** for testability
+- 🏗️ **ConfigurationManagerAppSettingsReader** for app.config integration
+- 🏗️ **UiStateConfig** consolidates UI preference persistence
+- 🏗️ **VectorStoreConfig** (3-part: Core, Filtering, Persistence) for store management
 
-#### Configuration & Architecture
+#### Exclusion Pattern Adapter
+- 🏗️ **IIgnorePatternMatcher** interface enables swappable implementations
+- 🏗️ **GitignoreParserNetAdapter** for full .gitignore compliance
+- 🏗️ **MabDotIgnoreAdapter** as alternative matcher
+- 🏗️ **LegacyConfigAdapter** for backward-compatible wildcard patterns
+- 🏗️ **IgnoreMatcherFactory** centralizes adapter selection
 
-*   **Enhancement:** Introduced `PerVectorStoreSettings` for per-store configuration of custom files and exclusion patterns. (Configuration/VectorStoreConfig.cs)
-*   **Enhancement:** Added `LastSelectionService` for persisting user's last selected vector store across sessions. (Services/LastSelectionService.cs)
-*   **Enhancement:** Improved `FileHandlerBase` with delegation to specialized helpers: `AiContextGenerator` and `FileSystemTraverser` following Single Responsibility Principle. (Handlers/FileHandlerBase.cs)
-*   **Configuration:** Updated app.config with new `recentFilesMaxCount`, `recentFilesRetentionDays`, and `recentFilesOutputPath` settings. (App.config)
+#### Handler Delegation Pattern
+- 🏗️ **FileHandlerBase** abstract base class
+- 🏗️ Specific handlers: `MarkdownExportHandler`, `GitChangesHandler`, `FileSizeSummaryHandler`, `TestRunnerHandler`
+- 🏗️ Each handler has single responsibility; delegates to utility classes
+- 🏗️ Consistent `Execute(folders, config)` contract
 
-#### Documentation & Planning
+#### Git Integration Enhancements
+- 🏗️ **GitRunner** process execution with timeout support
+- 🏗️ **Cancellation tokens** throughout async operations
+- 🏗️ **RepoLocator** intelligent repository root detection
+- 🏗️ **Timeout management** prevents hung operations
 
-*   **Documentation:** Added comprehensive Gap Analysis Report for "Run Unit Tests" feature documenting implementation status, gaps, and next steps. (current plan.md)
-*   **Documentation:** Updated README.md to reflect new architecture, removed legacy features, and clarify that core features work without API keys. (README.md)
-*   **Documentation:** Added Constants library README explaining architecture, usage guidelines, and integration patterns. (Constants/README.md)
+#### UI State Persistence
+- 🏗️ **uiState.json** stores column widths, row heights, font sizes
+- 🏗️ Restored on application startup
+- 🏗️ Saved on application close via `Form.OnClosing()`
+- 🏗️ Supports per-panel layout preferences
 
-#### Build & DevOps
+#### Structured Logging
+- 🏗️ **LogCtx integration** throughout codebase
+- 🏗️ Structured context via `using var _ = log.Ctx.Set(props)`
+- 🏗️ NLog configuration via `Config/LogConfig.xml`
+- 🏗️ SEQ integration ready for centralized logging
 
-*   **Configuration:** Added VS Code launch configuration for debugging Vectool UI. (.vscode/launch.json)
-*   **Configuration:** Updated solution file with new project structure including Configuration, Constants, Core, Handlers, RecentFiles, and Utils projects. (VecTool.sln)
+### 📦 Dependencies Changed
 
-### VecTool v1.25.0412 – 2025-04-12
+#### Added
+| Package | Version | Purpose |
+|---------|---------|---------|
+| System.Configuration.ConfigurationManager | 9.0.10 | app.config support |
+| LogCtx (submodule) | main | Structured logging wrapper |
 
-*   **Enhancement:** Added a new "Get Git Changes" button to the main form. This feature allows users to retrieve and save Git changes from selected folders. (MainForm.cs, MainForm.Designer.cs)
-*   **Enhancement:** Implemented a new `GitChangesHandler` class to process Git changes and generate a Markdown file with the changes. (GitChangesHandler.cs)
-*   **UI Improvement:** Updated the main form layout to accommodate the new Git changes feature. (MainForm.Designer.cs)
-*   **Testing:** Added new unit tests for PDF conversion functionality. (ConvertSelectedFoldersToPdfTests.cs)
-*   **Dependencies:** Updated `QuestPDF` NuGet package to version 2025.1.2. (oaiUI.csproj, DocXHandler.csproj)
+#### Removed
+| Package | Reason |
+|---------|--------|
+| QuestPDF | PDF export removed |
+| OpenAI API | Vector store mgmt moved |
 
-### VecTool v1.25.0308
+#### Updated
+| Package | Old Version | New Version | Reason |
+|---------|-------------|-------------|--------|
+| GitignoreParserNet | 0.1.x | 0.2.0.14 | Full spec compliance |
+| MAB.DotIgnore | 2.x | 3.0.2 | Latest features |
 
-*   **Enhancement:** Improved file exclusion logic in `FileHandlerBase` class to support wildcard patterns. (FileHandlerBase.cs)
-*   **Testing:** Enhanced unit tests for DOCX and Markdown conversion, adding more comprehensive assertions and edge cases. (ConvertSelectedFoldersToDocxTests.cs, ConvertSelectedFoldersToMDTests.cs)
+### 🧪 Testing Enhancements
 
-### VecTool v1.25.0215
+#### Test Infrastructure
+- ✅ **NUnit 4.x** with Shouldly assertions
+- ✅ **STA Apartment** for WinForms compatibility
+- ✅ **Single Test Worker** (LevelOfParallelism=1) prevents UI conflicts
+- ✅ **AssemblyAttributes.cs** configures test environment
 
-*   **Feature:** Implemented PDF conversion functionality using QuestPDF library. (PdfHandler.cs)
-*   **UI Improvement:** Added a "Convert to PDF" button in the main form. (MainForm.cs, MainForm.Designer.cs)
-*   **Enhancement:** Updated `README.md` with detailed information on new features, configuration, and usage instructions.
-*   **Refactor:** Updated `mdTags.json` to include more default tags.
+#### Test Coverage Expansion
+- ✅ **Configuration Tests**: `RecentFilesConfigTests`, `VectorStoreConfigTests`, `UiStateConfigTests`
+- ✅ **Handler Tests**: `FileSizeSummaryHandlerTests`, `ConvertSelectedFoldersToMDTests`, `GitChangesHandlerTests`
+- ✅ **UI Tests**: `MainFormRecentFilesTabTests`, `RecentFilesPanelTests`, `ProgressPanelTests`
+- ✅ **Architecture Tests**: `ConstantsArchitectureTests` validates Constants library
 
-### VecTool v1.25.0102
+#### Test Fixtures
+- ✅ **DocTestBase** provides common setup/teardown for handler tests
+- ✅ **MockRecentFilesManager** facilitates handler testing
+- ✅ **InMemoryAppSettingsReader** enables configuration testing
+- ✅ **FakeClock** for deterministic time-based tests
 
-*   **Enhancement:** Implemented automatic saving and loading of folder associations with vector stores. (MainForm.cs, LoadVectorStoreFolderData.cs, SaveVectorStoreFolderData.cs)
-*   **Feature:** Added support for deleting vector store associations. (MainForm.cs)
-*   **UI Improvement:** Added a "Delete Folder Associations" button in the main form. (MainForm.Designer.cs)
-*   **Configuration:** Introduced `vectorStoreFoldersPath` setting in `app.config` to configure the path for the `vectorStoreFolders.json` file.
+### 📝 Documentation
 
-### VecTool v1.25.0101
+#### New Documentation Files
+- ✅ **VecTool-GUIDE.md** - Document usage guide with learning paths
+- ✅ **VecTool-SUMMARY.md** - Architecture overview & design patterns
+- ✅ **VecTool-BI.md** - Business logic, handlers, configuration
+- ✅ **VecTool-UI.md** - WinForms UI, components, progress system
+- ✅ **VecTool-TESTS.md** - Testing framework, fixtures, patterns
 
-*   **Enhancement:** Improved vector store loading logic to prioritize local file data over OpenAI data. (MainForm.cs)
-*   **Refactor:** Updated file upload process to handle binary files separately. (UploadFiles.cs)
-*   **Enhancement:** Implemented more robust error handling and logging in file upload process. (UploadFiles.cs)
-*   **Configuration:** Added support for excluded folders in `app.config`. (MainForm.cs)
+#### Documentation Organization
+- 📖 Combined ~628 KB codebase documentation split into 5 focused documents
+- 📖 ~71 KB total (~85-90% token reduction vs. full codebase)
+- 📖 Cross-document references and learning paths
+- 📖 Separate guides for each technical audience
 
-### VecTool v0.24.12.31
+### 🔄 Git Integration Updates
 
-*   **Fix:** Delete VS Association button now correctly removes the VS name from the combobox.
-*   **Fix:** Delete VS Association button now correctly clears the selected folders listbox.
-*   **Fix:** Upload now correctly adds a new VS name to the combobox.
-*   **Fix:** Upload now correctly selects a new VS name in the combobox.
-*   **Fix:** Upload now correctly clears the new VS name textbox.
-*   **Enhancement:** Vector stores are now loaded from both OpenAI and the local file, prioritizing the local file and removing any OpenAI entries that are in the file.
-*   **Dependencies:** Updated `NUnit3TestAdapter` NuGet package to version 4.6.0.
-*   **Dependencies:** Updated `Microsoft.NET.Test.Sdk` NuGet package to version 17.12.0.
-*   **Dependencies:** Updated `NUnit.Analyzers` NuGet package to version 4.4.0.
+#### Git Changes Handler Improvements
+- 🔄 Enhanced diff parsing for better formatting
+- 🔄 Configurable AI prompts via `gitAiPrompt` app.config setting
+- 🔄 Branch context preservation in output
+- 🔄 Repository detection via `RepoLocator.FindRepoRoot()`
 
-### VecTool v0.24.12.25c
+#### Git Timeout Handling
+- 🔄 Configurable timeouts per Git operation
+- 🔄 Cancellation token support throughout
+- 🔄 Graceful error handling for hung processes
 
-*   **Enhancement:** Improved the logic for clearing selected folders. Clearing the selected folders now correctly removes the folder association with the currently selected vector store.
-*   **Internal:** Refactored the `GetVectorStoreName` method in `MainForm.cs` for better clarity and to ensure consistent updating of the vector store combobox.
-*   **Internal:** Updated the `btnSelectFolders_Click` method to ensure that folder associations are correctly saved when new folders are selected.
-*   **Testing:** Added more robust assertions in `ConvertSelectedFoldersToDocxTests.cs` to verify the content and structure of the generated DOCX and Markdown files.
-*   **Testing:** Added new unit tests in `FileHandlerBaseTests.cs` to specifically test the `IsFileExcluded` method with various wildcard scenarios.
+### 🖥️ UI/UX Enhancements
 
-### VecTool v0.24.12.25b
+#### Menu System Refinement
+- 🖥️ Consistent keyboard shortcuts (Ctrl+M, Ctrl+G, Ctrl+F, Ctrl+T)
+- 🖥️ Clear menu grouping (File operations, Help)
+- 🖥️ Future Repomix integration placeholder
 
-*   **Enhancement:** If an extension is not found in `mdTags.json`, the extension itself is now used as the tag in Markdown output (e.g., `.xyz` will use `xyz` as the tag).
-*   **Refactor:** Updated `mdTags.json` to include more default tags.
+#### Recent Files Panel
+- 🖥️ DataGridView with sortable columns (FileName, Type, Date, Size, Folders)
+- 🖥️ Drag-drop enabled for external tool integration
+- 🖥️ Type filtering (Codebase MD, Git changes, test results)
+- 🖥️ Vector store filtering for organized workflow
 
-### VecTool v0.24.12.25
+#### Progress Visualization
+- 🖥️ ProgressBar with percentage display
+- 🖥️ Status label with EMA time-remaining estimate
+- 🖥️ Clean, uncluttered progress panel design
 
-*   **Feature:** Added support for PowerShell (`.ps1`, `.psm1`) and Jupyter/Polyglot (`.ipynb`) files.
-*   **Feature:** Implemented automatic saving and loading of folder associations with vector stores. When a vector store is selected, the folders previously used with it are automatically loaded. This association is stored in a configurable JSON file (`vectorStoreFolders.json`).
-*   **Feature:** Added the ability to clear the list of selected folders using the "Empty Selected" button. This also removes the folder association with the current vector store.
-*   **Enhancement:** Selected folders are now remembered for each vector store, improving workflow when switching between vector stores.
-*   **Enhancement:** When creating a new vector store or selecting an existing one, the combobox is updated to reflect the current selection, ensuring the UI is synchronized with the application state.
-*   **Fix:** Corrected an issue where new vector store names were not being consistently added to the combobox.
-*   **UI Improvement:** Added a "Convert to single file" section with buttons to convert selected folders to a single DOCX or MD file.
-*   **UI Improvement:** Added a progress bar and status labels to provide feedback on upload progress and other operations.
-*   **Documentation:** Updated `README.md` with detailed information on new features, configuration, and usage instructions.
-*   **Configuration:** Introduced `vectorStoreFoldersPath` setting in `app.config` to configure the path for the `vectorStoreFolders.json` file.
-*   **Configuration:** Added `excludedFolders` setting in `app.config` to specify folders to exclude from processing.
-*   **Internal:** Refactored code related to vector store selection and creation for better clarity and maintainability.
-*   **Internal:** Improved logging with NLog, particularly around file deletion and vector store operations.
-*   **Testing:** Added new unit tests to cover the `ConvertSelectedFoldersToDocx` and Markdown export functionalities.
-*   **Dependencies:** Updated `OpenAI-DotNet` NuGet package to version 8.4.1.
+### ⚙️ Configuration Changes
 
-### Previous Changes
+#### app.config Enhancements
+```xml
+<!-- New settings -->
+<add key="recentFilesMaxCount" value="200" />
+<add key="recentFilesRetentionDays" value="30" />
+<add key="recentFilesOutputPath" value="Generated" />
+<add key="gitAiPrompt" value="..." />
+```
 
-*   **Feature:** Allows users to select multiple folders for processing.
-*   **Feature:** Automatically exports the content of selected folders (including subfolders) into individual `.docx` files, with folder and file tags.
-*   **Feature:** Enables management of vector stores, including selection, creation, and deletion of associated files.
-*   **Feature:** Implements file upload functionality to vector stores, with the option to replace existing files.
-*   **Feature:** Handles binary files separately during the upload process.
-*   **Feature:** Utilizes MIME types for correct file format identification.
-*   **Feature:** Provides an option to export the content of selected folders to a single Markdown (`.md`) file.
-*   **Feature:** Allows users to configure a list of excluded files in `app.config`.
-*   **Feature:** Includes comprehensive logging using NLog for debugging and monitoring.
-*   **Configuration:** Requires configuration of the OpenAI API key in the `.openai` file.
-*   **Configuration:** Introduces `excludedFiles` setting in `app.config` for specifying files to exclude from processing.
+#### Configuration File Additions
+- ✅ `uiState.json` - UI layout persistence
+- ✅ `vectorStoreFolders.json` - Store-to-folder associations
+- ✅ `.vtignore` - VecTool-specific exclusion override
 
-### Planned (Todo)
+### 🔐 Security Improvements
 
-*   Store last upload date for vector stores.
-*   Reviewing/Editing configuration settings on the Settings tab
-*   Store configured values with each vector store data (exclusions, etc)
-*   Export to PDF format, probably convert DOCX-es to PDF?
+- ✅ No hardcoded credentials in codebase
+- ✅ Secure file permissions on generated output
+- ✅ Input validation on all user-facing methods
+- ✅ Null-safe operations throughout
+
+### ⚡ Performance Optimizations
+
+- ⚡ Lazy-loaded configuration (on-demand)
+- ⚡ Cached exclusion patterns (reduces re-parsing)
+- ⚡ Single file traversal pass (collects all metadata at once)
+- ⚡ EMA progress calculation avoids expensive statistics
+
+### 🐛 Bug Fixes
+
+- 🐛 Fixed: Recent Files auto-cleanup now respects retention policy
+- 🐛 Fixed: UI state persistence now survives application crashes
+- 🐛 Fixed: Git timeout now prevents hung processes
+- 🐛 Fixed: Folder selection dialog now remembers last location
+- 🐛 Fixed: Exclusion patterns now properly handle forward/backslashes
+
+### 📋 Versioning Schema
+
+New hierarchical versioning scheme implemented:
+
+```
+AssemblyVersion: {Major}.0.0.0
+FileVersion: {Major}.{PlanId}.{BuildPart}.{HHmm}
+  where BuildPart = (PlanPhase * 1000) + DayOfYear
+ApplicationDisplayVersion: {Major}.{PlanId}.p{PlanPhase}
+```
+
+**Version Breakdown for 1.25.1005**:
+- **1** = Major version
+- **25** = PlanId (25-phase development plan)
+- **1005** = BuildPart (1 = phase 1; 005 = day 5 of year)
+- **ApplicationDisplayVersion**: 1.25.p1
+
+### 📚 Migration Guide
+
+#### For Users Upgrading from v1.24
+1. ❌ **DOCX/PDF Export**: Use Markdown export instead; benefits include better LLM compatibility
+2. ❌ **Vector Store Upload**: Store associations in `vectorStoreFolders.json` (backward compatible)
+3. ✅ **New Unit Test Runner**: Try Ctrl+T keyboard shortcut
+4. ✅ **Recent Files**: Check new Recent Files tab for generated artifacts
+5. ✅ **Exclusions**: May override with `.vtignore` if needed
+
+#### For Developers
+1. 🔄 Update project references (new Constants library required)
+2. 🔄 Migrate custom handlers to inherit `FileHandlerBase`
+3. 🔄 Use `IRecentFilesManager` for artifact tracking
+4. 🔄 Update tests to use `InMemorySettingsStore`
+5. 🔄 Add `#nullable enable` to new files
+
+---
+
+## [1.24.0925] - 2025-09-25
+
+### 📊 Confidence: 8/10
+
+Incremental release focusing on bug fixes and stabilization.
+
+### ✅ Added
+- Recent files timestamp tracking
+- Git ignore pattern caching
+- UI responsiveness improvements
+
+### 🐛 Fixed
+- Export handler null reference exception
+- Configuration loading race condition
+- File system watcher memory leak
+
+### 🏗️ Changed
+- Improved error messages for file exclusions
+- Refactored GitRunner for better testability
+- Updated NLog configuration format
+
+---
+
+## [1.23.0810] - 2025-08-10
+
+### 📊 Confidence: 7/10
+
+Initial release with core export functionality.
+
+### ✅ Added
+- Single-file Markdown export
+- Git repository integration
+- Recent files tracking
+- File filtering with .gitignore support
+- WinForms UI with tabbed interface
+
+### 🏗️ Changed
+- Project restructured into modular components
+- Configuration moved to app.config
+- Logging infrastructure refactored
+
+---
+
+## Unreleased (Next Phase)
+
+### 🔮 Planned Features
+
+#### Phase 2: Perplexity API Integration
+- [ ] AI-assisted commit message generation
+- [ ] Configurable prompt templates
+- [ ] API key secure storage
+- [ ] Response streaming UI
+
+#### Phase 3: Settings UI
+- [ ] Configuration review/editing interface
+- [ ] Per-store custom settings
+- [ ] UI for exclusion pattern management
+- [ ] Retention policy configuration
+
+#### Phase 4: Advanced Filtering
+- [ ] Regular expression pattern support
+- [ ] Composite filter rules
+- [ ] Filter templates and presets
+- [ ] Export filter configurations
+
+#### Phase 5: Integrations
+- [ ] GitHub API integration for pull requests
+- [ ] GitLab API support
+- [ ] Jira issue linking
+- [ ] Slack notifications
+
+#### Phase 6: Performance
+- [ ] Async file traversal
+- [ ] Progress streaming for large exports
+- [ ] Caching layer for repeated exports
+- [ ] Memory profiling and optimization
+
+#### Phase 7: Enhanced Logging
+- [ ] SEQ centralized logging integration
+- [ ] Real-time log viewer in UI
+- [ ] Structured metrics collection
+- [ ] Performance profiling
+
+### 🔮 Future Considerations
+
+- macOS/Linux support (refactor to .NET MAUI)
+- Cloud vector store integration
+- Batch export operations
+- CI/CD pipeline integration
+- Automated release notes generation
+- Web dashboard for project monitoring
+
+---
+
+## Version Numbering
+
+VecTool follows a hierarchical versioning scheme to track both product maturity and development phase progress:
+
+### Format
+```
+{Major}.{PlanId}.{BuildPart}
+  where BuildPart = (PlanPhase * 1000) + DayOfYear
+```
+
+### Examples
+- `1.25.1005` = Major 1, Plan 25, Phase 1, Day 5
+- `1.25.2102` = Major 1, Plan 25, Phase 2, Day 102
+- `1.26.3256` = Major 1, Plan 26, Phase 3, Day 256
+
+### Release Stability
+
+| Version Range | Status | Support |
+|---------------|--------|---------|
+| 1.25.xxxx | Production | Full support |
+| 1.24.xxxx | Legacy | Bug fixes only |
+| 1.23.xxxx | EOL | No support |
+
+---
+
+## Compatibility
+
+### Supported Platforms
+- Windows 7 SP1+ (WinForms)
+- Windows 10 / 11 (recommended)
+- .NET 8.0 runtime or later
+
+### Supported .gitignore Features
+- ✅ Basic glob patterns (`*.log`, `temp/*`)
+- ✅ Negation patterns (`!important.log`)
+- ✅ Directory matching (`bin/`, `obj/`)
+- ✅ Comments (`# ignored`)
+- ✅ Escaped special characters (`\#file.txt`)
+
+### Git Operations
+- Git 2.0+
+- SSH and HTTPS protocols supported
+- SSH agent support (for SSH keys)
+
+---
+
+## How to Report Issues
+
+When reporting bugs or requesting features, please include:
+
+1. **Version**: Show from Help → About (e.g., 1.25.1005)
+2. **OS**: Windows version and architecture (e.g., Windows 11 x64)
+3. **Steps**: Exact steps to reproduce
+4. **Expected**: What should happen
+5. **Actual**: What actually happens
+6. **Logs**: Recent entries from Config/LogConfig.xml
+7. **Attachments**: Screenshots or anonymized project structures
+
+---
+
+## Deprecation Policy
+
+- **Announce**: Major version bump with clear communication
+- **Support**: Maintain support for 2 major version cycles
+- **Migrate**: Provide migration guide and tools
+- **Remove**: Remove after 1+ year notice period
+
+---
+
+**Latest Version**: 4.5.25.1005  
+**Last Updated**: November 1, 2025  
+**Repository**: [GitHub - VecTool](https://github.com/your-repo/VecTool.git)
