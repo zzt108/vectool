@@ -64,9 +64,10 @@ public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
 
         if (patternsToLoad.Count == 0)
         {
-            _log.Info("No ignore patterns found in .gitignore or .vtignore");
+            var ex = new InvalidOperationException("No ignore patterns found in .gitignore or .vtignore");
+            _log.Error(ex, "No ignore patterns found in .gitignore or .vtignore");
             _ignoreList = null;
-            return;
+            throw ex;
         }
 
         try

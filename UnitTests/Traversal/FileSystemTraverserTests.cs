@@ -107,6 +107,7 @@ namespace UnitTests.Traversal
         [Test]
         public void ProcessFolder_ShouldNotInvokeProcessFileForExcludedFiles()
         {
+            // this test fails bcs the matcher is already initialized by other tests
             // Arrange
             config.ExcludedFiles.Add("*.log");
             _ctxLogger.Ctx.Set();

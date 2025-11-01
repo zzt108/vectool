@@ -4,7 +4,7 @@ using NUnit.Framework;
 using Shouldly;
 using VecTool.Configuration.Exclusion;
 
-namespace VecTool.UnitTests.Configuration.Exclusion;
+namespace UnitTests.Configuration.Exclusion;
 
 [TestFixture]
 public class IgnoreMatcherFactoryTests

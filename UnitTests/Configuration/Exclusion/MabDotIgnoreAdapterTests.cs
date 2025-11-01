@@ -5,21 +5,17 @@ using VecTool.Configuration.Exclusion;
 namespace VecTool.UnitTests.Configuration.Exclusion;
 
 [TestFixture]
-[Ignore("⚠️ GitignoreParserNet v0.2.0.14 is immature; tests quarantined. Upgrade to v0.3+ or switch to MAB.DotIgnore.")]
-public class GitignoreParserNetAdapterTests
+public class MabDotIgnoreAdapterTests
 {
-    // ❌ All test methods remain unchanged but will skip execution
-    // Rationale: Library reliability is questionable; MabDotIgnoreAdapterTests cover exclusion logic
-
     private string _testRepoPath = null!;
-    private GitignoreParserNetAdapter _adapter = null!;
+    private MabDotIgnoreAdapter _adapter = null!;
 
     [SetUp]
     public void Setup()
     {
         _testRepoPath = Path.Combine(Path.GetTempPath(), $"test-repo-{Guid.NewGuid()}");
         Directory.CreateDirectory(_testRepoPath);
-        _adapter = new GitignoreParserNetAdapter();
+        _adapter = new MabDotIgnoreAdapter();
     }
 
     [TearDown]
@@ -59,38 +55,8 @@ public class GitignoreParserNetAdapterTests
         _adapter.LoadFromRoot(_testRepoPath);
 
         // Assert
-        _adapter.IsIgnored("bin", true).ShouldBeTrue("bin/ pattern should match 'bin' directory");
-        _adapter.IsIgnored("bin/", true).ShouldBeTrue("bin/ pattern should match 'bin/' directory");
-        _adapter.IsIgnored("bin/Debug", false).ShouldBeTrue("bin/ pattern should match files under bin/");
-        _adapter.IsIgnored("src", true).ShouldBeFalse("src directory should not be ignored");
-        _adapter.IsIgnored("bin", false).ShouldBeFalse("bin/ pattern should NOT match 'bin' file");
-    }
-
-    [Test]
-    public void Debug_GitignoreParserNet_Behavior()
-    {
-        // Arrange
-        var vtignorePath = Path.Combine(_testRepoPath, ".vtignore");
-        File.WriteAllLines(vtignorePath, new[] { "bin/" });
-
-        _adapter.LoadFromRoot(_testRepoPath);
-
-        // Act & Debug
-        var testPaths = new[]
-        {
-        ("bin", true),
-        ("bin/", true),
-        ("/bin", true),
-        ("/bin/", true),
-        ("bin/Debug", false),
-        ("src", true)
-    };
-
-        foreach (var (path, isDir) in testPaths)
-        {
-            var result = _adapter.IsIgnored(path, isDir);
-            Console.WriteLine($"Path: '{path}' | IsDir: {isDir} | Ignored: {result}");
-        }
+        _adapter.IsIgnored("bin", true).ShouldBeTrue();
+        _adapter.IsIgnored("src", true).ShouldBeFalse();
     }
 
     [Test]
@@ -110,30 +76,29 @@ public class GitignoreParserNetAdapterTests
     }
 
     [Test]
-    public void Should_Return_False_When_No_Patterns_Loaded()
+    public void Should_Throw_When_No_Patterns_Loaded()
     {
         // Act - don't load any patterns
-        _adapter.LoadFromRoot(_testRepoPath);
-
-        // Assert
-        _adapter.IsIgnored("anything.dll", false).ShouldBeFalse();
+        Action loadFromRoot = () => _adapter.LoadFromRoot(_testRepoPath);
+        loadFromRoot.ShouldThrow<InvalidOperationException>().Message.ShouldContain("No ignore patterns found in .gitignore or .vtignore");
     }
 
     [Test]
-    public void Should_Prioritize_VtIgnore_Over_Gitignore()
+    public void Should_Load_Both_Gitignore_And_VtIgnore()
     {
         // Arrange
         var gitignorePath = Path.Combine(_testRepoPath, ".gitignore");
         File.WriteAllLines(gitignorePath, new[] { "*.dll" });
 
         var vtignorePath = Path.Combine(_testRepoPath, ".vtignore");
-        File.WriteAllLines(vtignorePath, new[] { "!important.dll" });
+        File.WriteAllLines(vtignorePath, new[] { "*.exe" });
 
         // Act
         _adapter.LoadFromRoot(_testRepoPath);
 
-        // Assert - .vtignore negation should override .gitignore
-        // Note: Actual behavior depends on library implementation
-        _adapter.IsIgnored("random.dll", false).ShouldBeTrue();
+        // Assert
+        _adapter.IsIgnored("app.dll", false).ShouldBeTrue();
+        _adapter.IsIgnored("app.exe", false).ShouldBeTrue();
+        _adapter.IsIgnored("app.cs", false).ShouldBeFalse();
     }
 }

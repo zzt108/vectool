@@ -16,13 +16,13 @@ public static class IgnoreMatcherFactory
     /// <param name="libraryType">Which library to use.</param>
     /// <param name="rootPath">Repository root to load patterns from (optional - can call LoadFromRoot later).</param>
     /// <returns>Configured matcher instance.</returns>
-    public static IIgnorePatternMatcher Create(IgnoreLibraryType libraryType, string? rootPath = null)
+    public static IIgnorePatternMatcher? Create(IgnoreLibraryType libraryType, string? rootPath = null)
     {
         using var ctx = _log.Ctx.Set(new Props()
             .Add("LibraryType", libraryType.ToString())
             .Add("RootPath", rootPath ?? "deferred"));
 
-        // 🔄 MODIFY: Default to MAB.DotIgnore when libraryType is unspecified
+        // Default to MAB.DotIgnore when libraryType is unspecified
         if (libraryType == IgnoreLibraryType.Auto)  // Placeholder for "auto" selection
         {
             libraryType = IgnoreLibraryType.MabDotIgnore;
@@ -46,7 +46,8 @@ public static class IgnoreMatcherFactory
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Failed to load patterns from {rootPath}; matcher will return false for all paths");
+                _log.Error(ex, $"Failed to load patterns from {rootPath}; matcher will not be used");
+                throw;
             }
         }
 
