@@ -104,7 +104,7 @@ namespace UnitTests.Handlers
             handler.GenerateFileSizeSummary(new List<string> { folderA, folderB }, output, config);
 
             // Assert
-            mockTraverser.Received(1).EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>());
+            mockTraverser.Received(2).EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>());
             File.Exists(output).ShouldBeTrue();
         }
 
