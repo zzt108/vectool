@@ -24,15 +24,29 @@ namespace VecTool.Handlers
 
                 using StreamWriter writer = new StreamWriter(outputPath);
 
+                // ✅ NEW: Use FileSystemTraverser for exclusion-aware enumeration
                 foreach (string folderPath in folderPaths)
                 {
-                    ui?.UpdateProgress(work++);
-                    ProcessFolder(
-                        folderPath,
-                        writer,
-                        vectorStoreConfig,
-                        ProcessFile,
-                        WriteFolderName);
+                    ui?.UpdateStatus($"Enumerating files in {folderPath}");
+
+                    var files = EnumerateFilesRespectingExclusions(folderPath, vectorStoreConfig).ToList();
+
+                    log.Info($"Found {files.Count} files to export in {folderPath}");
+
+                    // Group files by folder for structured output
+                    var filesByFolder = files
+                        .GroupBy(f => Path.GetDirectoryName(f) ?? string.Empty)
+                        .OrderBy(g => g.Key);
+
+                    foreach (var folderGroup in filesByFolder)
+                    {
+                        WriteFolderName(writer, new DirectoryInfo(folderGroup.Key).Name);
+
+                        foreach (var file in folderGroup.OrderBy(f => Path.GetFileName(f)))
+                        {
+                            ProcessFile(file, writer, vectorStoreConfig);
+                        }
+                    }
                 }
 
                 if (recentFilesManager != null && File.Exists(outputPath))
@@ -53,12 +67,6 @@ namespace VecTool.Handlers
 
         protected override void ProcessFile(string file, StreamWriter writer, VectorStoreConfig vectorStoreConfig)
         {
-            //if (!Traversal.FileValidator.ShouldIncludeInExport(file, vectorStoreConfig))
-            //{
-            //    log.Trace($"Skipping file (excluded by centralized filter): {file}");
-            //    return;
-            //}
-
             string content = GetFileContent(file);
             DateTime lastModified = File.GetLastWriteTime(file);
 
