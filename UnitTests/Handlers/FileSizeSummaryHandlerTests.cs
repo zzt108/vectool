@@ -24,14 +24,14 @@ namespace VecTool.Handlers
         /// <summary>
         /// Lazy-initialized traverser for exclusion-aware file enumeration.
         /// </summary>
-        private readonly FileSystemTraverser _traverser;
+        private readonly IFileSystemTraverser _traverser;
 
         private readonly string _rootPath;
 
         public FileSizeSummaryHandler(
             IUserInterface? ui,
             IRecentFilesManager? recentFilesManager,
-            FileSystemTraverser? traverser = null,
+            IFileSystemTraverser? traverser = null,
             string? rootPath = null)
             : base(ui, recentFilesManager)
         {
