@@ -1,16 +1,30 @@
-﻿using LogCtxShared;
+﻿// ✅ FULL FILE VERSION
+using LogCtxShared;
+
 using NSubstitute;
+
 using NSubstitute.ExceptionExtensions;
+
 using NUnit.Framework;
+
 using NLogShared;
+
 using Shouldly;
+
 using System;
+
 using System.Collections.Generic;
+
 using System.IO;
+
 using System.Linq;
+
 using VecTool.Configuration;
+
 using VecTool.Handlers;
+
 using VecTool.Handlers.Traversal;
+
 using VecTool.RecentFiles;
 
 namespace UnitTests.Handlers
@@ -41,7 +55,10 @@ namespace UnitTests.Handlers
             config = new VectorStoreConfig();
             mockUi = Substitute.For<IUserInterface>();
             mockRecentFilesManager = Substitute.For<IRecentFilesManager>();
-            mockTraverser = Substitute.For<IFileSystemTraverser>(null, testDir);
+
+            // 🔄 FIXED: Remove constructor arguments from interface substitute
+            // Interfaces have no constructors - configure behavior post-creation instead
+            mockTraverser = Substitute.For<IFileSystemTraverser>();
         }
 
         [TearDown]
@@ -196,8 +213,9 @@ namespace UnitTests.Handlers
                 .RegisterGeneratedFile(
                     outputPath,
                     RecentFileType.Codebase_Md,
-                    Arg.Any<IReadOnlyList<string>>(),
-                    Arg.Any<long>());
+                    Arg.Any<List<string>>(),
+                    Arg.Any<int>(),
+                    Arg.Any<DateTime>());
         }
 
         /// <summary>
@@ -222,7 +240,7 @@ namespace UnitTests.Handlers
             handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
 
             // Assert
-            mockUi.Received(1).WorkStart(Arg.Any<string>(), Arg.Any<IEnumerable<string>>());
+            mockUi.Received(1).WorkStart(Arg.Any<string>(), Arg.Any<List<string>>());
             mockUi.Received(1).WorkFinish();
         }
 
@@ -405,7 +423,7 @@ namespace UnitTests.Handlers
             var invalidPath = Path.Combine(testDir, "invalid?output.md");
 
             // Act & Assert
-            Should.Throw<Exception>(() =>
+            Should.Throw<ArgumentException>(() =>
                 handler.ExportSelectedFolders(new List<string> { testDir }, invalidPath, config));
         }
 
