@@ -42,11 +42,6 @@ namespace VecTool.Configuration
                     return true;
                 }
             }
-            //bool isExcluded = ExcludedFolders.Contains(folderName);
-            //if (isExcluded)
-            //{
-            //    log.Trace($"Folder {folderName} is in excluded list");
-            //}
             return false;
         }
     }

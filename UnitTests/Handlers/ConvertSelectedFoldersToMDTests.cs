@@ -4,8 +4,9 @@ using VecTool.Handlers;
 using VecTool.Configuration;
 using System.IO;
 using System.Collections.Generic;
+using DocXHandlerTests;
 
-namespace DocXHandlerTests
+namespace UnitTests.Handlers
 {
     [TestFixture]
     public class ConvertSelectedFoldersToMDTests : DocTestBase

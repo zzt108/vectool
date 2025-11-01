@@ -15,7 +15,7 @@ namespace VecTool.Handlers.Traversal
     /// <summary>
     /// Handles folder traversal and file enumeration with exclusion support.
     /// </summary>
-    public sealed class FileSystemTraverser
+    public class FileSystemTraverser : IFileSystemTraverser
     {
         private static readonly CtxLogger log = new();
         private readonly IUserInterface? ui;
@@ -37,7 +37,7 @@ namespace VecTool.Handlers.Traversal
         /// Initializes the exclusion pattern matcher lazily.
         /// Creates matcher on first call to ProcessFolder or EnumerateFilesRespectingExclusions.
         /// </summary>
-        private void EnsureMatchersInitialized(VectorStoreConfig config)
+        private void EnsureMatchersInitialized(IVectorStoreConfig config)
         {
             if (_primaryMatcher != null)
                 return;
@@ -70,7 +70,7 @@ namespace VecTool.Handlers.Traversal
         }
 
         // Single validation check replaces dual code path:
-        private bool ShouldExcludePath(string path, bool isDirectory, VectorStoreConfig config)
+        private bool ShouldExcludePath(string path, bool isDirectory, IVectorStoreConfig config)
         {
             EnsureMatchersInitialized(config);
 
@@ -96,8 +96,8 @@ namespace VecTool.Handlers.Traversal
         /// Pre-filters based on patterns BEFORE calling processFile delegate.
         /// </summary>
         public void ProcessFolder<T>(
-            string folderPath, T context, VectorStoreConfig vectorStoreConfig,
-            Action<string, T, VectorStoreConfig> processFile,
+            string folderPath, T context, IVectorStoreConfig vectorStoreConfig,
+            Action<string, T, IVectorStoreConfig> processFile,
             Action<T, string> writeFolderName,
             Action<T>? writeFolderEnd = null)
         {
@@ -169,7 +169,7 @@ namespace VecTool.Handlers.Traversal
         /// Enumerates all files in a folder tree respecting exclusions.
         /// Pre-filters patterns and legacy config BEFORE returning files.
         /// </summary>
-        public IEnumerable<string> EnumerateFilesRespectingExclusions(string root, VectorStoreConfig config)
+        public IEnumerable<string> EnumerateFilesRespectingExclusions(string root, IVectorStoreConfig config)
         {
             if (string.IsNullOrWhiteSpace(root))
                 yield break;

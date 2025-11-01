@@ -10,7 +10,7 @@ using VecTool.Core.Abstractions;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
 
-namespace UnitTests
+namespace UnitTests.Handlers
 {
     [TestFixture]
     public class TestRunnerHandlerDependencyTests
@@ -23,7 +23,7 @@ namespace UnitTests
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recent = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler("Fake.sln", null,proc, ui, recent);
+            var handler = new TestRunnerHandler("Fake.sln", null, proc, ui, recent);
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
@@ -49,7 +49,7 @@ namespace UnitTests
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recent = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler("Fake.sln",null, proc, ui, recent);
+            var handler = new TestRunnerHandler("Fake.sln", null, proc, ui, recent);
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);

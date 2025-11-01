@@ -12,10 +12,10 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
 {
     private static readonly CtxLogger log = new();
 
-    private VectorStoreConfig? _config;
+    private IVectorStoreConfig? _config;
     private string? _loadedRootPath;
 
-    public LegacyConfigAdapter(VectorStoreConfig config)
+    public LegacyConfigAdapter(IVectorStoreConfig config)
     {
         SetConfig(config);
     }
@@ -58,7 +58,7 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
     /// <summary>
     /// Sets config directly (alternative to LoadFromRoot for testing/DI).
     /// </summary>
-    private void SetConfig(VectorStoreConfig config)
+    private void SetConfig(IVectorStoreConfig config)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
         log.Debug($"Legacy config set directly: {_config.ExcludedFiles?.Count ?? 0} file rules, {_config.ExcludedFolders?.Count ?? 0} folder rules");

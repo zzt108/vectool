@@ -7,7 +7,7 @@ namespace VecTool.Configuration
     /// <summary>
     /// Core properties and basic operations for VectorStoreConfig.
     /// </summary>
-    public partial class VectorStoreConfig
+    public partial class VectorStoreConfig : IVectorStoreConfig
     {
         public List<string> FolderPaths { get; set; } = new List<string>();
         public List<string> ExcludedFiles { get; set; } = new List<string>();

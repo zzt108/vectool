@@ -67,7 +67,7 @@ public abstract class FileHandlerBase
         string folderPath,
         T context,
         VectorStoreConfig vectorStoreConfig,
-        Action<string, T, VectorStoreConfig> processFile,
+        Action<string, T, IVectorStoreConfig> processFile,
         Action<T, string> writeFolderName,
         Action<T>? writeFolderEnd = null)
     {
