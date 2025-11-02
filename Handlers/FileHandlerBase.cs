@@ -4,6 +4,7 @@ using global::VecTool.Configuration;
 using global::VecTool.Handlers.Analysis;
 using global::VecTool.Handlers.Traversal;
 using global::VecTool.RecentFiles;
+using LogCtxShared;
 using NLogShared;
 using System;
 
@@ -25,8 +26,7 @@ public abstract class FileHandlerBase
         this.Ui = ui;
         this.RecentFilesManager = recentFilesManager;
         AiContextGenerator = new AiContextGenerator();
-        if (traverser != null) 
-            FileSystemTraverser = new FileSystemTraverser(ui);
+        FileSystemTraverser = (traverser as FileSystemTraverser) ?? new FileSystemTraverser(ui, null);
     }
 
     // ============================================================================
@@ -78,7 +78,18 @@ public abstract class FileHandlerBase
     }
 
     protected IEnumerable<string> EnumerateFilesRespectingExclusions(string root, VectorStoreConfig config)
-        => FileSystemTraverser.EnumerateFilesRespectingExclusions(root, config);
+    {
+        if (FileSystemTraverser == null)
+        {
+            using var ctx = log.Ctx.Set(new Props()
+                .Add(nameof(root), root)
+                .Add("reason", "null_traverser"));
+            log.Warn("FileSystemTraverser not initialized");
+            return Enumerable.Empty<string>();
+        }
+
+        return FileSystemTraverser.EnumerateFilesRespectingExclusions(root, config);
+    }
 
     // ============================================================================
     // Validation - Virtual for derived overrides
