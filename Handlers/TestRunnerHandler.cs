@@ -1,9 +1,8 @@
-﻿// Path: Handlers/TestRunnerHandler.cs
-
-using LogCtxShared;
+﻿using LogCtxShared;
 using NLogShared;
 using System;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,8 @@ using VecTool.RecentFiles;
 namespace VecTool.Handlers
 {
     /// <summary>
-    /// Handler for building and running unit tests, then persisting results to a dated output file.
+    /// Handler for building and running unit tests, then persisting results 
+    /// to a dated output file with structured markdown formatting.
     /// </summary>
     public sealed class TestRunnerHandler
     {
@@ -22,9 +22,11 @@ namespace VecTool.Handlers
         private readonly IProcessRunner _processRunner;
         private readonly IUserInterface? _ui;
         private readonly IRecentFilesManager? _recentFilesManager;
+        private readonly string _branchName;
+        private readonly string _vectorStoreId;
 
         /// <summary>
-        /// Canonical DI constructor expected by unit tests:
+        /// Canonical DI constructor expected by unit tests.
         /// new TestRunnerHandler(string, string, IProcessRunner, IUserInterface, IRecentFilesManager)
         /// </summary>
         public TestRunnerHandler(
@@ -32,115 +34,107 @@ namespace VecTool.Handlers
             string? outputFile,
             IProcessRunner processRunner,
             IUserInterface? ui,
-            IRecentFilesManager? recentFiles)
+            IRecentFilesManager? recentFiles,
+            string branchName ,
+            string vectorStoreId )
         {
-            this._outputFile = outputFile;
-            this._solutionPath = solutionPath ?? throw new ArgumentNullException(nameof(solutionPath));
-            this._processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
-            this._ui = ui;
-            this._recentFilesManager = recentFiles;
+            _outputFile = outputFile;
+            _solutionPath = solutionPath ?? throw new ArgumentNullException(nameof(solutionPath));
+            _processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
+            _ui = ui;
+            _recentFilesManager = recentFiles;
+            _branchName = branchName ;
+            _vectorStoreId = vectorStoreId ;
         }
 
         /// <summary>
-        /// Builds the solution, then executes tests and returns:
-        /// - a file path containing test output on success (exit code 0)
-        /// - null on failure (non-zero exit code).
+        /// Runs dotnet test command against the solution and captures results.
         /// </summary>
-        /// <param name="vectorStoreId">Arbitrary id used to tag outputs; tests pass values like "S" or "storeX".</param>
-        /// <param name="branchName">Git branch name to include in the output filename.</param>
-        /// <param name="ct">Cancellation token.</param>
-        public async Task<string?> RunTestsAsync(string vectorStoreId, string branchName, CancellationToken ct)
+        public async Task<string?> RunTestsAsync(CancellationToken ct)
         {
-            if (vectorStoreId is null)
-                throw new ArgumentNullException(nameof(vectorStoreId));
-            if (branchName is null)
-                throw new ArgumentNullException(nameof(branchName));
-
             using var log = new CtxLogger();
-            log.Ctx.Set(new Props()
-                .Add("Operation", "RunTests")
-                .Add("VectorStoreId", vectorStoreId)
-                .Add("BranchName", branchName)
-                .Add("SolutionPath", _solutionPath));
+            using var _ = log.Ctx.Set()
+                .Add("Operation", "RunTestsAsync")
+                .Add("SolutionPath", _solutionPath);
 
-            // ✅ First build the solution
-            _ui?.UpdateStatus($"Building solution: {Path.GetFileName(_solutionPath)}...");
-            log.Info("Starting solution build.");
-
-            var solutionDir = Path.GetDirectoryName(_solutionPath);
-            var buildArgs = $"build \"{_solutionPath}\" --configuration Release";
-            var buildResult = await _processRunner.RunAsync(
-                fileName: "dotnet",
-                arguments: buildArgs,
-                workingDirectory: solutionDir,
-                ct: ct).ConfigureAwait(false);
-
-            if (buildResult.ExitCode != 0)
+            try
             {
-                var buildMessage = $"Build failed with exit code {buildResult.ExitCode}.";
-                _ui?.ShowMessage(buildMessage, "Build Error", MessageType.Error);
-                log.Warn($"Build failed. ExitCode={buildResult.ExitCode}");
+                //var testResult = await _processRunner.RunAsync("dotnet", $"test { _solutionPath}",string.Empty, ct)
+                //    .ConfigureAwait(false);
+
+                //await WriteTestResult(testResult, ct).ConfigureAwait(false);
+
+                //if (testResult.ExitCode == 0)
+                //{
+                //    log.Info("Tests completed successfully");
+                //}
+                //else
+                //{
+                //    _.Add("ExitCode", testResult.ExitCode);
+                //    log.Warn("Tests completed with failures");
+                //}
+
+                //return testResult;
+                var testArgs = $"test \"{_solutionPath}\" --no-restore --verbosity minimal";
+
+                var testResult = await _processRunner.RunAsync(
+                    fileName: "dotnet",
+                    arguments: testArgs,
+                    workingDirectory: Path.GetDirectoryName(_solutionPath),
+                    ct: ct).ConfigureAwait(false);
+
+                var message = MapExitCodeToMessage(testResult.ExitCode);
+
+                using var ctx = log.Ctx.Set(new Props()
+                    .Add("ExitCode", testResult.ExitCode)
+                    .Add("Message", message));
+
+                switch (testResult.ExitCode)
+                {
+                    case 0:
+                        _ui?.ShowMessage(message, "Test Runner - No Fails", MessageType.Information);
+                        log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                        break;
+                    case 1:
+                    case 2:
+                        _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - With issues", MessageType.Warning);
+                        log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                        break;
+                    default:
+                        _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - Error", MessageType.Error);
+                        log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                        break;
+                }
+
+                // Generate output filename with branch name
+                if (_outputFile != null)
+                {
+                    await WriteTestResult(testResult, ct).ConfigureAwait(false);
+
+                    if (_recentFilesManager != null && File.Exists(_outputFile))
+                    {
+                        var fileInfo = new FileInfo(_outputFile);
+                        _recentFilesManager.RegisterGeneratedFile(
+                            _outputFile,
+                            RecentFileType.TestResults_Md,
+                            null,
+                            fileInfo.Length
+                        );
+                    }
+                }
+                log.Info("Test run finished successfully.");
+                _ui?.UpdateStatus("Test run finished successfully.");
+                if (testResult.ExitCode == 0 && _outputFile != null)
+                {
+                    return _outputFile;
+                }
                 return null;
             }
-
-            log.Info("Build succeeded. Starting tests.");
-            _ui?.UpdateStatus("Running tests...");
-
-            var testArgs = $"test \"{_solutionPath}\" --no-restore --verbosity minimal";
-
-            var testResult = await _processRunner.RunAsync(
-                fileName: "dotnet",
-                arguments: testArgs,
-                workingDirectory: solutionDir,
-                ct: ct).ConfigureAwait(false);
-
-            var message = MapExitCodeToMessage(testResult.ExitCode);
-
-            using var ctx = log.Ctx.Set(new Props()
-                .Add("ExitCode", testResult.ExitCode)
-                .Add("Message", message));
-
-            switch (testResult.ExitCode)
+            catch (Exception ex)
             {
-                case 0:
-                    _ui?.ShowMessage(message, "Test Runner - No Fails", MessageType.Information);
-                    log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
-                    break;
-                case 1 :
-                case 2 :
-                    _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - With issues", MessageType.Warning);
-                    log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
-                    break;
-                default:
-                    _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - Error", MessageType.Error);
-                    log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
-                    break;
+                log.Error(ex, "Test execution failed");
+                throw;
             }
-
-            // Generate output filename with branch name
-            if (_outputFile != null)
-            {
-                await File.WriteAllTextAsync(_outputFile, testResult.StandardOutput ?? string.Empty, ct).ConfigureAwait(false);
-
-                if (_recentFilesManager != null && File.Exists(_outputFile))
-                {
-                    var fileInfo = new FileInfo(_outputFile);
-                    _recentFilesManager.RegisterGeneratedFile(
-                        _outputFile,
-                        RecentFileType.TestResults_Md,
-                        null,
-                        fileInfo.Length
-                    );
-                }
-            }
-
-            log.Info("Test run finished successfully.");
-            _ui?.UpdateStatus("Test run finished successfully.");
-            if (testResult.ExitCode == 0 && _outputFile != null)
-            {
-                return _outputFile;
-            }
-            return null;
         }
 
         public static string MapExitCodeToMessage(int code) => code switch
@@ -154,10 +148,173 @@ namespace VecTool.Handlers
             _ => $"Unknown exit code {code}. See output for details."
         };
 
-        private static string Sanitize(string raw)
+        /// <summary>
+        /// Writes test results to file as structured markdown with headers, instructions, 
+        /// test summary, fenced output block, and recommendations.
+        /// </summary>
+        private async Task WriteTestResult(ProcessResult testResult, CancellationToken ct)
         {
-            if (string.IsNullOrWhiteSpace(raw)) return "unknown";
-            return Regex.Replace(raw, @"[^\w\-]", "_");
+            if (string.IsNullOrWhiteSpace(_outputFile))
+                return;
+
+            using var log = new CtxLogger();
+            using var _ = log.Ctx.Set()
+                .Add("Operation", "WriteTestResult")
+                .Add("OutputFile", _outputFile)
+                .Add("ExitCode", testResult.ExitCode);
+
+            try
+            {
+                // Extract test metadata from output
+                var output = testResult.StandardOutput ?? string.Empty;
+                var metadata = ParseTestMetadata(output);
+
+                // Build markdown content with proper structure
+                var markdownContent = BuildMarkdownReport(metadata, output, testResult.ExitCode);
+
+                // Write to file asynchronously
+                await File.WriteAllTextAsync(_outputFile, markdownContent, ct).ConfigureAwait(false);
+                _.Add("FileSize", markdownContent.Length);
+                log.Info("Test testResult markdown written successfully");
+            }
+            catch (Exception ex)
+            {
+                using var __ = log.Ctx.Set()
+                    .Add("Operation", "WriteTestResult")
+                    .Add("ErrorType", ex.GetType().Name)
+                    .Add("OutputFile", _outputFile);
+                log.Error(ex, "Failed to write test testResult markdown");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Constructs a professional markdown report with headers, instructions, 
+        /// test summary, fenced code blocks, reference tables, and recommendations.
+        /// </summary>
+        private string BuildMarkdownReport(TestMetadata metadata, string testOutput, int exitCode)
+        {
+            var sb = new StringBuilder();
+
+            // Header with metadata
+            sb.AppendLine("# Test Execution Report");
+            sb.AppendLine();
+            sb.AppendLine($"**Date:** {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"**Branch:** {_branchName}");
+            sb.AppendLine($"**Vector Store ID:** {_vectorStoreId}");
+            sb.AppendLine();
+
+            // Instructions section
+            sb.AppendLine("## Instructions");
+            sb.AppendLine();
+            sb.AppendLine("1. Review test results below");
+            sb.AppendLine("2. Check for failures and categorize by type");
+            sb.AppendLine("3. Investigate failed tests in detailed output");
+            sb.AppendLine("4. Update documentation if standard behavior changed");
+            sb.AppendLine();
+
+            // Test Summary with key metrics
+            sb.AppendLine("## Test Summary");
+            sb.AppendLine();
+            sb.AppendLine($"- **Exit Code:** {exitCode}");
+            sb.AppendLine($"- **Total Tests:** {metadata.TotalTests}");
+            sb.AppendLine($"- **Passed:** {metadata.PassedTests}");
+            sb.AppendLine($"- **Failed:** {metadata.FailedTests}");
+            sb.AppendLine($"- **Skipped:** {metadata.SkippedTests}");
+            sb.AppendLine($"- **Duration:** {metadata.Duration}");
+            sb.AppendLine();
+
+            // Status badge with emoji
+            var statusEmoji = exitCode == 0 ? "✅" : "❌";
+            var statusText = exitCode == 0 ? "PASSED" : "FAILED";
+            sb.AppendLine($"**Status:** {statusEmoji} {statusText}");
+            sb.AppendLine();
+
+            // Test Output in properly fenced code block
+            sb.AppendLine("## Detailed Test Output");
+            sb.AppendLine();
+            sb.AppendLine("```");
+            sb.AppendLine(testOutput);
+            sb.AppendLine("```");
+            sb.AppendLine();
+
+            // Exit code reference table
+            sb.AppendLine("## Exit Code Reference");
+            sb.AppendLine();
+            sb.AppendLine("| Code | Meaning |");
+            sb.AppendLine("|------|---------|");
+            sb.AppendLine("| 0 | All tests passed |");
+            sb.AppendLine("| 1 | One or more tests failed (VSTest) |");
+            sb.AppendLine("| 2 | One or more tests failed (MSTest platform) |");
+            sb.AppendLine("| 3 | Test run aborted |");
+            sb.AppendLine("| 8 | No tests discovered |");
+            sb.AppendLine("| 10 | Test adapter/infrastructure failure |");
+            sb.AppendLine();
+
+            // Actionable recommendations
+            sb.AppendLine("## Recommendations");
+            sb.AppendLine();
+            if (exitCode == 0)
+            {
+                sb.AppendLine("✅ All tests passed. Ready for next phase.");
+            }
+            else
+            {
+                sb.AppendLine("⚠️ Tests failed. Review detailed output and:");
+                sb.AppendLine("- Fix failing unit tests");
+                sb.AppendLine("- Check for integration test issues");
+                sb.AppendLine("- Verify test environment configuration");
+                sb.AppendLine("- Re-run tests to confirm fixes");
+            }
+            sb.AppendLine();
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Parses test metadata from VSTest-format output using regex patterns.
+        /// Extracts test counts, duration, and failure information.
+        /// </summary>
+        private TestMetadata ParseTestMetadata(string output)
+        {
+            var metadata = new TestMetadata
+            {
+                TotalTests = 0,
+                PassedTests = 0,
+                FailedTests = 0,
+                SkippedTests = 0,
+                Duration = "Unknown"
+            };
+
+            if (string.IsNullOrWhiteSpace(output))
+                return metadata;
+
+            // Parse test counts from VSTest output format
+            var totalMatch = Regex.Match(output, @"Total tests:\s*(\d+)", RegexOptions.IgnoreCase);
+            var passedMatch = Regex.Match(output, @"Passed:\s*(\d+)", RegexOptions.IgnoreCase);
+            var failedMatch = Regex.Match(output, @"Failed:\s*(\d+)", RegexOptions.IgnoreCase);
+            var skippedMatch = Regex.Match(output, @"Skipped:\s*(\d+)", RegexOptions.IgnoreCase);
+            var durationMatch = Regex.Match(output, @"Total time:\s*([\d:.]+)", RegexOptions.IgnoreCase);
+
+            if (totalMatch.Success) metadata.TotalTests = int.Parse(totalMatch.Groups[1].Value);
+            if (passedMatch.Success) metadata.PassedTests = int.Parse(passedMatch.Groups[1].Value);
+            if (failedMatch.Success) metadata.FailedTests = int.Parse(failedMatch.Groups[1].Value);
+            if (skippedMatch.Success) metadata.SkippedTests = int.Parse(skippedMatch.Groups[1].Value);
+            if (durationMatch.Success) metadata.Duration = durationMatch.Groups[1].Value;
+
+            return metadata;
+        }
+
+        /// <summary>
+        /// Data structure holding parsed test execution statistics.
+        /// </summary>
+        internal class TestMetadata
+        {
+            public int TotalTests { get; set; }
+            public int PassedTests { get; set; }
+            public int FailedTests { get; set; }
+            public int SkippedTests { get; set; }
+            public string Duration { get; set; } = "Unknown";
         }
     }
 }

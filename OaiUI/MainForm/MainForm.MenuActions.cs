@@ -244,7 +244,9 @@ namespace Vectool.OaiUI
                 testResultsOutputPath,
                 processRunner,
                 userInterface,
-                recentFilesManager);
+                recentFilesManager,
+                branchName,
+                vsName);
 
             try
             {
@@ -252,7 +254,7 @@ namespace Vectool.OaiUI
                 userInterface.WorkStart("Running unit tests...", selectedFolders);
 
                 // 🔄 MODIFY - Pass computed branch name
-                var outputFile = await handler.RunTestsAsync(solutionPath, branchName, System.Threading.CancellationToken.None).ConfigureAwait(true);
+                var outputFile = await handler.RunTestsAsync(System.Threading.CancellationToken.None).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
