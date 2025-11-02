@@ -278,7 +278,7 @@ dist/
             var structure = new[]
             {
                 "src/core/main.cs",
-                "src/ui/window.cs",
+                "src/Ui/window.cs",
                 "bin/debug/app.exe",
                 "build/temp/file.tmp",
                 ".git/config",
@@ -305,7 +305,7 @@ dist/
             // Assert
             folders.ShouldContain(f => f.EndsWith("src"), "src should be included");
             folders.ShouldContain(f => f.EndsWith("core"), "src/core should be included");
-            folders.ShouldContain(f => f.EndsWith("ui"), "src/ui should be included");
+            folders.ShouldContain(f => f.EndsWith("Ui"), "src/Ui should be included");
 
             folders.ShouldNotContain(f => f.EndsWith("bin"), "bin excluded by pattern");
             folders.ShouldNotContain(f => f.EndsWith("build"), "build excluded by pattern");

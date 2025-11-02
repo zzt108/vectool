@@ -15,17 +15,18 @@ public abstract class FileHandlerBase
 {
     protected static readonly CtxLogger log = new(); // renamed from _log to match AI faulti code generation logic
     
-    protected readonly IUserInterface? ui; // renamed from _ui to match AI faulti code generation logic
-    protected readonly IRecentFilesManager? _recentFilesManager; // renamed from _recentFilesManager to match AI faulti code generation logic
-    protected readonly AiContextGenerator _aiContextGenerator;
-    protected readonly FileSystemTraverser _fileSystemTraverser;
+    protected readonly IUserInterface? Ui; // renamed from _ui to match AI faulti code generation logic
+    protected readonly IRecentFilesManager? RecentFilesManager; // renamed from RecentFilesManager to match AI faulti code generation logic
+    protected readonly AiContextGenerator AiContextGenerator;
+    protected readonly FileSystemTraverser FileSystemTraverser;
 
-    protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
+    protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager, IFileSystemTraverser? traverser = null)
     {
-        this.ui = ui;
-        this._recentFilesManager = recentFilesManager;
-        _aiContextGenerator = new AiContextGenerator();
-        _fileSystemTraverser = new FileSystemTraverser(ui);
+        this.Ui = ui;
+        this.RecentFilesManager = recentFilesManager;
+        AiContextGenerator = new AiContextGenerator();
+        if (traverser != null) 
+            FileSystemTraverser = new FileSystemTraverser(ui);
     }
 
     // ============================================================================
@@ -33,13 +34,13 @@ public abstract class FileHandlerBase
     // ============================================================================
 
     protected string GenerateTableOfContentsList(List<string> folderPaths)
-        => _aiContextGenerator.GenerateTableOfContents(folderPaths);
+        => AiContextGenerator.GenerateTableOfContents(folderPaths);
 
     protected string GenerateCrossReferencesList(List<string> folderPaths)
-        => _aiContextGenerator.GenerateCrossReferences(folderPaths);
+        => AiContextGenerator.GenerateCrossReferences(folderPaths);
 
     protected string GenerateCodeMetaInfoList(List<string> folderPaths)
-        => _aiContextGenerator.GenerateCodeMetaInfo(folderPaths);
+        => AiContextGenerator.GenerateCodeMetaInfo(folderPaths);
 
     protected void AddAIOptimizedContext<T>(
         List<string> folderPaths,
@@ -71,13 +72,13 @@ public abstract class FileHandlerBase
         Action<T, string> writeFolderName,
         Action<T>? writeFolderEnd = null)
     {
-        _fileSystemTraverser.ProcessFolder(
+        FileSystemTraverser.ProcessFolder(
             folderPath, context, vectorStoreConfig,
             processFile, writeFolderName, writeFolderEnd);
     }
 
     protected IEnumerable<string> EnumerateFilesRespectingExclusions(string root, VectorStoreConfig config)
-        => _fileSystemTraverser.EnumerateFilesRespectingExclusions(root, config);
+        => FileSystemTraverser.EnumerateFilesRespectingExclusions(root, config);
 
     // ============================================================================
     // Validation - Virtual for derived overrides

@@ -42,7 +42,7 @@ public sealed class GitChangesHandler : FileHandlerBase
 
         try
         {
-            ui?.UpdateStatus("Analyzing Git repositories...");
+            Ui?.UpdateStatus("Analyzing Git repositories...");
             log.Info($"Starting Git changes analysis: {folderPaths.Count} folders");
 
             var allChanges = new StringBuilder();
@@ -83,17 +83,17 @@ public sealed class GitChangesHandler : FileHandlerBase
             await File.WriteAllTextAsync(outputPath, allChanges.ToString());
 
             // Register generated file
-            if (_recentFilesManager != null)
+            if (RecentFilesManager != null)
             {
                 var fi = new FileInfo(outputPath);
-                _recentFilesManager.RegisterGeneratedFile(
+                RecentFilesManager.RegisterGeneratedFile(
                     outputPath,
                     RecentFileType.Git_Md,
                     folderPaths,
                     fi.Exists ? fi.Length : 0);
             }
 
-            ui?.UpdateStatus($"Git changes saved: {outputPath}");
+            Ui?.UpdateStatus($"Git changes saved: {outputPath}");
             log.Info($"Git changes analysis completed: {outputPath}");
 
             return allChanges.ToString();

@@ -1,4 +1,5 @@
-﻿using NLogShared;
+﻿using LogCtxShared;
+using NLogShared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,145 +7,278 @@ using System.Linq;
 using System.Text;
 using VecTool.Configuration;
 using VecTool.Handlers.Analysis;
+using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
 
 namespace VecTool.Handlers
 {
+    /// <summary>
+    /// Generates file size summaries for selected folders using traverser for exclusive file enumeration.
+    /// ✅ Uses FileSystemTraverser.EnumerateFilesRespectingExclusions() for all file access
+    /// </summary>
     public class FileSizeSummaryHandler : FileHandlerBase
     {
         private static readonly CtxLogger log = new();
 
-        public FileSizeSummaryHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
+        // ✅ NEW: Injected traverser for exclusive authority
+        private readonly IFileSystemTraverser _fileSystemTraverser;
+        private readonly string _rootPath;
+
+        /// <summary>
+        /// ✅ NEW: Constructor with dependency injection for traverser
+        /// </summary>
+        /// <param name="ui">Optional UI interface for progress updates</param>
+        /// <param name="recentFilesManager">Optional recent files manager</param>
+        /// <param name="fileSystemTraverser">Traverser for file enumeration (required for exclusive authority)</param>
+        /// <param name="rootPath">Root path for traverser initialization</param>
+        public FileSizeSummaryHandler(
+            IUserInterface? ui,
+            IRecentFilesManager? recentFilesManager,
+            IFileSystemTraverser? fileSystemTraverser = null,
+            string? rootPath = null)
             : base(ui, recentFilesManager)
         {
+            // ✅ DI pattern: accept injection or create default
+            _fileSystemTraverser = fileSystemTraverser ?? new FileSystemTraverser(ui, rootPath);
+            _rootPath = rootPath ?? Environment.CurrentDirectory;
         }
 
-        public void GenerateFileSizeSummary(List<string> folderPaths, string outputPath, VectorStoreConfig config)
+        /// <summary>
+        /// Generates a file size summary report for the specified folders.
+        /// Reports only on files that would be exported (respects exclusions).
+        /// </summary>
+        public void GenerateFileSizeSummary(
+            List<string> folderPaths,
+            string outputPath,
+            VectorStoreConfig config)
         {
+            // ✅ Defensive: Validate inputs
+            if (folderPaths == null || folderPaths.Count == 0)
+                throw new ArgumentException("Folder list cannot be null or empty", nameof(folderPaths));
+
+            if (string.IsNullOrWhiteSpace(outputPath))
+                throw new ArgumentException("Output path cannot be null or empty", nameof(outputPath));
+
             try
             {
-                ui?.WorkStart("Generating file size report...", folderPaths);
+                Ui?.WorkStart("Generating file size report...", folderPaths);
 
                 var fileSizesByType = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
                 var fileCountByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
                 int progress = 0;
+
                 foreach (var folderPath in folderPaths)
                 {
-                    ui?.UpdateProgress(progress++);
-                    ui?.UpdateStatus($"Analyzing folder {folderPath}");
+                    Ui?.UpdateProgress(progress++);
+                    Ui?.UpdateStatus($"Analyzing folder {folderPath}");
 
+                    // ✅ Delegates to method that uses traverser
                     CalculateFolderSizes(folderPath, config, fileSizesByType, fileCountByType);
                 }
 
                 WriteReportToFile(outputPath, folderPaths, fileSizesByType, fileCountByType);
-                ui?.UpdateStatus("File size summary generated successfully.");
+                Ui?.UpdateStatus("File size summary generated successfully.");
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Error generating file size summary: {ex.Message}");
+                using (var ctx = log.Ctx.Set(new Props()
+                    .Add("outputPath", outputPath)
+                    .Add("folderCount", folderPaths.Count)))
+                {
+                    log.Error(ex, "Error generating file size summary");
+                }
                 throw;
             }
             finally
             {
-                ui?.WorkFinish();
+                Ui?.WorkFinish();
 
-                if (_recentFilesManager != null && File.Exists(outputPath))
+                // ✅ Register output with recent files manager if available
+                if (RecentFilesManager != null && File.Exists(outputPath))
                 {
-                    var fileInfo = new FileInfo(outputPath);
-                    _recentFilesManager.RegisterGeneratedFile(
-                        outputPath,
-                        RecentFileType.TestResults_Md,
-                        folderPaths,
-                        fileInfo.Length);
+                    try
+                    {
+                        var fileInfo = new FileInfo(outputPath);
+                        RecentFilesManager.RegisterGeneratedFile(
+                            outputPath,
+                            RecentFileType.Summary_Md,
+                            folderPaths,
+                            fileInfo.Length);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex, "Failed to register generated file in recent files");
+                        // Don't throw—report generation succeeded
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// ✅ REFACTORED: Uses FileSystemTraverser exclusively for file enumeration.
+        /// Traverser already applies:
+        ///   - Pattern matching (.gitignore / .vtignore)
+        ///   - Legacy config exclusions (ExcludedFolders, ExcludedFiles)
+        ///   - FileValidator filters
+        /// Handler just processes what traverser gives us (exclusive authority pattern).
+        /// </summary>
         private void CalculateFolderSizes(
             string folderPath,
             VectorStoreConfig config,
             Dictionary<string, long> fileSizesByType,
             Dictionary<string, int> fileCountByType)
         {
-            //if (IsFolderExcluded(Path.GetFileName(folderPath), config))
-            //    return;
+            // ✅ Validate folder
+            if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
+            {
+                using (var ctx = log.Ctx.Set(new Props()
+                    .Add("folderPath", folderPath)
+                    .Add("exists", Directory.Exists(folderPath))))
+                {
+                    log.Debug($"Skipping invalid folder path");
+                }
+                return;
+            }
 
             try
             {
-                foreach (var file in Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories))
+                // ✅ CRITICAL FIX: Use traverser for ALL file enumeration
+                // This replaces Directory.GetFiles() which was bypassing mock setup in tests
+                var files = _fileSystemTraverser
+                    .EnumerateFilesRespectingExclusions(folderPath, config)
+                    .ToList();
+
+                using (var ctx = log.Ctx.Set(new Props()
+                    .Add("folderPath", folderPath)
+                    .Add("fileCount", files.Count)
+                    .Add("source", "traverser")))
                 {
-                    // ✅ Use centralized filter (ensures summary matches actual export)
-                    if (!Traversal.FileValidator.ShouldIncludeInExport(file, config))
-                        continue;
+                    log.Info($"Enumerating {files.Count} files for size summary");
+                }
 
-                    string extension = Path.GetExtension(file).ToLowerInvariant();
-                    if (string.IsNullOrEmpty(extension))
-                        extension = "no extension";
-
-                    var fileInfo = new FileInfo(file);
-
-                    if (!fileSizesByType.ContainsKey(extension))
+                // ✅ Process all files provided by traverser (already filtered)
+                foreach (var file in files)
+                {
+                    try
                     {
-                        fileSizesByType[extension] = 0;
-                        fileCountByType[extension] = 0;
-                    }
+                        string extension = Path.GetExtension(file).ToLowerInvariant();
+                        if (string.IsNullOrEmpty(extension))
+                            extension = "(no extension)";
 
-                    fileSizesByType[extension] += fileInfo.Length;
-                    fileCountByType[extension]++;
+                        var fileInfo = new FileInfo(file);
+
+                        if (!fileSizesByType.ContainsKey(extension))
+                        {
+                            fileSizesByType[extension] = 0;
+                            fileCountByType[extension] = 0;
+                        }
+
+                        fileSizesByType[extension] += fileInfo.Length;
+                        fileCountByType[extension]++;
+
+                        using (var ctx = log.Ctx.Set(new Props()
+                            .Add("file", Path.GetFileName(file))
+                            .Add("size", fileInfo.Length)
+                            .Add("extension", extension)))
+                        {
+                            log.Debug($"Added to summary: {Path.GetFileName(file)} ({fileInfo.Length:N0} bytes)");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        using (var ctx = log.Ctx.Set(new Props()
+                            .Add("file", file)))
+                        {
+                            log.Error(ex, "Error processing file for summary");
+                        }
+                        // Continue processing other files
+                    }
                 }
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Error processing folder {folderPath}: {ex.Message}");
+                using (var ctx = log.Ctx.Set(new Props()
+                    .Add("folderPath", folderPath)))
+                {
+                    log.Error(ex, "Error calculating folder sizes");
+                }
+                // Continue with other folders
             }
         }
 
+        /// <summary>
+        /// Writes the file size summary as a Markdown report.
+        /// </summary>
         private void WriteReportToFile(
             string outputPath,
             List<string> folderPaths,
             Dictionary<string, long> fileSizesByType,
             Dictionary<string, int> fileCountByType)
         {
-            using var writer = new StreamWriter(outputPath);
-
-            // ✅ Updated header to clarify this is exported files only
-            writer.WriteLine("## File Size Summary - Exported Files");
-            writer.WriteLine();
-            writer.WriteLine($"Generated on {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-            writer.WriteLine();
-
-            writer.WriteLine("### Analyzed Folders");
-            foreach (var folder in folderPaths)
+            try
             {
-                writer.WriteLine($"- {folder}");
+                using var writer = new StreamWriter(outputPath, false, Encoding.UTF8);
+
+                // ✅ Clear header indicating this is exported files only
+                writer.WriteLine("## File Size Summary - Exported Files");
+                writer.WriteLine();
+                writer.WriteLine($"Generated on {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                writer.WriteLine();
+
+                writer.WriteLine("### Analyzed Folders");
+                foreach (var folder in folderPaths)
+                {
+                    writer.WriteLine($"- {folder}");
+                }
+                writer.WriteLine();
+
+                writer.WriteLine("### Size by File Type");
+                writer.WriteLine();
+                writer.WriteLine("| File Type | Files | Total Size | Average Size |");
+                writer.WriteLine("|-----------|-------|------------|-----------------|");
+
+                long totalSize = 0;
+                int totalCount = 0;
+
+                foreach (var kvp in fileSizesByType.OrderByDescending(kv => kv.Value))
+                {
+                    string extension = kvp.Key;
+                    long size = kvp.Value;
+                    int count = fileCountByType[extension];
+                    long avgSize = count > 0 ? size / count : 0;
+
+                    writer.WriteLine($"| {extension} | {count:N0} | {FormatFileSize(size)} | {FormatFileSize(avgSize)} |");
+
+                    totalSize += size;
+                    totalCount += count;
+                }
+
+                writer.WriteLine($"| **Total** | **{totalCount:N0}** | **{FormatFileSize(totalSize)}** | **{FormatFileSize(totalCount > 0 ? totalSize / totalCount : 0)}** |");
+                writer.WriteLine();
+                writer.WriteLine($"*Summary includes {totalCount:N0} files across {fileSizesByType.Count} file types.*");
+
+                using (var ctx = log.Ctx.Set(new Props()
+                    .Add("outputPath", outputPath)
+                    .Add("fileCount", totalCount)
+                    .Add("totalSize", totalSize)))
+                {
+                    log.Info($"File size summary written: {outputPath}");
+                }
             }
-            writer.WriteLine();
-
-            writer.WriteLine("### Size by File Type");
-            writer.WriteLine();
-            writer.WriteLine("| File Type | Files | Total Size | Average Size |");
-            writer.WriteLine("|-----------|-------|------------|--------------|");
-
-            long totalSize = 0;
-            int totalCount = 0;
-
-            foreach (var kvp in fileSizesByType.OrderByDescending(kv => kv.Value))
+            catch (Exception ex)
             {
-                string extension = kvp.Key;
-                long size = kvp.Value;
-                int count = fileCountByType[extension];
-                long avgSize = count > 0 ? size / count : 0;
-
-                writer.WriteLine($"| {extension} | {count:N0} | {FormatFileSize(size)} | {FormatFileSize(avgSize)} |");
-
-                totalSize += size;
-                totalCount += count;
+                using (var ctx = log.Ctx.Set(new Props()
+                    .Add("outputPath", outputPath)))
+                {
+                    log.Error(ex, "Error writing file size summary report");
+                }
+                throw;
             }
-
-            writer.WriteLine($"| **Total** | **{totalCount:N0}** | **{FormatFileSize(totalSize)}** | **{FormatFileSize(totalCount > 0 ? totalSize / totalCount : 0)}** |");
         }
 
+        /// <summary>
+        /// Formats byte size into human-readable format (B, KB, MB, GB, TB).
+        /// </summary>
         private string FormatFileSize(long bytes)
         {
             string[] suffixes = { "B", "KB", "MB", "GB", "TB" };

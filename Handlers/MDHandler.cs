@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using VecTool.Configuration;
+using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
 using VecTool.Utils;
 
@@ -14,9 +15,17 @@ namespace VecTool.Handlers
     /// Markdown export handler for codebase documentation generation.
     /// Added parameter validation guards for null/empty folder lists (QF-003)
     /// </summary>
-    public class MDHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
-        : FileHandlerBase(ui, recentFilesManager)
+    public class MDHandler : FileHandlerBase
     {
+        public MDHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager):base(ui, recentFilesManager)
+        {
+            
+        }
+
+        public MDHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager, IFileSystemTraverser traverser) : base(ui, recentFilesManager, traverser)
+        {
+        }
+
         /// <summary>
         /// Async wrapper for ExportSelectedFolders to enable better parallelism.
         /// </summary>
@@ -50,7 +59,7 @@ namespace VecTool.Handlers
 
             try
             {
-                ui?.WorkStart("Exporting to MD", folderPaths);
+                Ui?.WorkStart("Exporting to MD", folderPaths);
 
                 using StreamWriter writer = new StreamWriter(outputPath);
 
@@ -63,7 +72,7 @@ namespace VecTool.Handlers
                         continue;
                     }
 
-                    ui?.UpdateStatus($"Enumerating files in {folderPath}");
+                    Ui?.UpdateStatus($"Enumerating files in {folderPath}");
 
                     var files = EnumerateFilesRespectingExclusions(folderPath, vectorStoreConfig).ToList();
                     log.Info($"Found {files.Count} files to export in {folderPath}");
@@ -85,10 +94,10 @@ namespace VecTool.Handlers
                 }
 
                 // Register successful export in recent files
-                if (recentFilesManager != null && File.Exists(outputPath))
+                if (RecentFilesManager != null && File.Exists(outputPath))
                 {
                     var fileInfo = new FileInfo(outputPath);
-                    recentFilesManager.RegisterGeneratedFile(
+                    RecentFilesManager.RegisterGeneratedFile(
                         outputPath,
                         RecentFileType.Codebase_Md,
                         folderPaths,
@@ -98,7 +107,7 @@ namespace VecTool.Handlers
             }
             finally
             {
-                ui?.WorkFinish();
+                Ui?.WorkFinish();
             }
         }
 

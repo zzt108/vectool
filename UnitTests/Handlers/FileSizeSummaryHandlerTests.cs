@@ -51,7 +51,7 @@ namespace VecTool.Handlers
         {
             try
             {
-                ui?.WorkStart("Generating file size report...", folderPaths);
+                Ui?.WorkStart("Generating file size report...", folderPaths);
 
                 var fileSizesByType = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
                 var fileCountByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -59,8 +59,8 @@ namespace VecTool.Handlers
 
                 foreach (var folderPath in folderPaths)
                 {
-                    ui?.UpdateProgress(progress);
-                    ui?.UpdateStatus($"Analyzing folder: {folderPath}");
+                    Ui?.UpdateProgress(progress);
+                    Ui?.UpdateStatus($"Analyzing folder: {folderPath}");
 
                     // ✅ REFACTORED: Use traverser instead of direct enumeration
                     CalculateFolderSizes(folderPath, config, fileSizesByType, fileCountByType);
@@ -69,13 +69,13 @@ namespace VecTool.Handlers
 
                 WriteReportToFile(outputPath, folderPaths, fileSizesByType, fileCountByType);
 
-                ui?.UpdateStatus("File size summary generated successfully.");
+                Ui?.UpdateStatus("File size summary generated successfully.");
 
                 // ✅ Register with recent files
-                if (_recentFilesManager != null && File.Exists(outputPath))
+                if (RecentFilesManager != null && File.Exists(outputPath))
                 {
                     var fileInfo = new FileInfo(outputPath);
-                    _recentFilesManager.RegisterGeneratedFile(
+                    RecentFilesManager.RegisterGeneratedFile(
                         outputPath,
                         RecentFileType.Summary_Md,
                         folderPaths,
@@ -90,7 +90,7 @@ namespace VecTool.Handlers
             }
             finally
             {
-                ui?.WorkFinish();
+                Ui?.WorkFinish();
             }
         }
 
