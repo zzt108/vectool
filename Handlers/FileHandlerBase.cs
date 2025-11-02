@@ -19,15 +19,26 @@ public abstract class FileHandlerBase
     protected readonly IUserInterface? Ui; // renamed from _ui to match AI faulti code generation logic
     protected readonly IRecentFilesManager? RecentFilesManager; // renamed from RecentFilesManager to match AI faulti code generation logic
     protected readonly AiContextGenerator AiContextGenerator;
-    protected readonly FileSystemTraverser FileSystemTraverser;
+    protected readonly IFileSystemTraverser FileSystemTraverser;
 
-    protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager, IFileSystemTraverser? traverser = null)
+    protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager,
+        IFileSystemTraverser? traverser = null)
     {
         this.Ui = ui;
         this.RecentFilesManager = recentFilesManager;
+
+        if (traverser != null)
+        {
+            FileSystemTraverser = traverser;
+        }
+        else
+        {
+            FileSystemTraverser = new FileSystemTraverser(ui, null);
+        }
+
         AiContextGenerator = new AiContextGenerator();
-        FileSystemTraverser = (traverser as FileSystemTraverser) ?? new FileSystemTraverser(ui, null);
     }
+
 
     // ============================================================================
     // AI Context - Delegated to AiContextGenerator
