@@ -313,6 +313,14 @@ namespace VecTool.Handlers.Traversal
                 {
                     var fileName = Path.GetFileName(f);
 
+                    // Exclude .gitignore and .vtignore files themselves
+                    if (fileName.Equals(".gitignore", StringComparison.OrdinalIgnoreCase) ||
+                        fileName.Equals(".vtignore", StringComparison.OrdinalIgnoreCase))
+                    {
+                        log.Trace($"Skipping ignore file: {f}");
+                        continue;
+                    }
+
                     // LAYER 1: Pattern check for file
                     if (primaryMatcher != null && primaryMatcher.IsIgnored(f, isDirectory: false))
                     {
