@@ -17,7 +17,7 @@ namespace UnitTests.Traversal
     /// Tests performance, nested structures, and real-world .gitignore patterns.
     /// </summary>
     [TestFixture]
-    public class FileSystemTraverserIntegrationTests
+    public class FileSystemTraverserIntegrationTestsV1
     {
         private string testRoot = default!;
         private readonly CtxLogger _log = new();
