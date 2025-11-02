@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
 using System;
 using System.IO;
@@ -10,7 +9,7 @@ using VecTool.Core.Abstractions;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
 
-namespace UnitTests
+namespace UnitTests.Handlers
 {
     [TestFixture]
     public class TestRunnerHandlerDependencyTests
@@ -23,16 +22,14 @@ namespace UnitTests
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recent = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler("Fake.sln", null,proc, ui, recent);
+            var handler = new TestRunnerHandler("Fake.sln", null,proc, ui, recent, "test-branch", "storeX");
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
-            //var sln = Path.Combine(tempDir, "VecTool.sln");
-            //await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
 
             try
             {
-                var result = await handler.RunTestsAsync("storeX", "test-branch", CancellationToken.None);
+                var result = await handler.RunTestsAsync( CancellationToken.None);
                 result.ShouldBeNull();
             }
             finally
@@ -42,6 +39,7 @@ namespace UnitTests
         }
 
         [Test]
+        //[Ignore("TODO")]
         public async Task RunTestsAsync_should_not_write_output_on_success()
         {
             // IGitRunner git = new FakeGitRunner("main");
@@ -49,16 +47,14 @@ namespace UnitTests
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recent = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler("Fake.sln",null, proc, ui, recent);
+            var handler = new TestRunnerHandler("Fake.sln",null, proc, ui, recent, "main", "S");
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
-            //var sln = Path.Combine(tempDir, "VecTool.sln");
-            //await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
 
             try
             {
-                var resultPath = await handler.RunTestsAsync("S", "main", CancellationToken.None);
+                var resultPath = await handler.RunTestsAsync(CancellationToken.None);
                 resultPath.ShouldBeNull();
                 File.Exists(resultPath!).ShouldBeFalse();
             }

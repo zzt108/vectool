@@ -1,12 +1,11 @@
-﻿// ✅ FULL FILE VERSION
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
 using UnitTests.Fakes;
 using VecTool.Core.Abstractions;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
 
-namespace UnitTests
+namespace UnitTests.Handlers
 {
     [TestFixture]
     public class TestRunnerHandler_DITests
@@ -18,7 +17,7 @@ namespace UnitTests
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recentFiles = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler("Fake.sln",null, processRunner, ui, recentFiles);
+            var handler = new TestRunnerHandler("Fake.sln", null, processRunner, ui, recentFiles, "main", "S");
 
             handler.ShouldNotBeNull();
         }

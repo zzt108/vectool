@@ -15,7 +15,7 @@ namespace UnitTests
         [SetUp]
         public void SetUp()
         {
-            _tempDir = Path.Combine(Path.GetTempPath(), "vectool-ui-" + Guid.NewGuid().ToString("N"));
+            _tempDir = Path.Combine(Path.GetTempPath(), "vectool-Ui-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_tempDir);
         }
 
