@@ -5,24 +5,32 @@ namespace VecTool.Handlers.Traversal
     using MAB.DotIgnore;
     using NLogShared;
     using System;
-    using System.Collections.Concurrent; // ✅ NEW - For thread-safe collections
     using System.Collections.Generic;
+    using System.Collections.Concurrent;
     using System.IO;
     using System.Linq;
     using VecTool.Configuration;
     using VecTool.Configuration.Exclusion;
 
     /// <summary>
-    /// Handles folder traversal and file enumeration with exclusion support.
+    /// Handles folder traversal and file enumeration with exclusion support (Layer 1 + Layer 2).
     /// Thread-safe for concurrent enumeration scenarios.
+    /// Layer 1: Pattern-based exclusions (.gitignore, .vtignore)
+    /// Layer 2: File marker-based exclusions ([VECTOOL:EXCLUDE:...])
     /// </summary>
     public class FileSystemTraverser : IFileSystemTraverser
     {
         private static readonly CtxLogger log = new();
+
         private readonly IUserInterface? ui;
         private readonly string rootPath;
 
-        // ✅ MODIFIED - Removed shared state (no longer a field)
+        /// <summary>
+        /// NEW - Optional Layer 2 file marker extractor (injected via constructor).
+        /// If null, Layer 2 marker checks are skipped.
+        /// </summary>
+        private readonly IFileMarkerExtractor? markerExtractor;
+
         // Thread safety: Each call creates its own result collection
         private IIgnorePatternMatcher? primaryMatcher = null;
         private IIgnorePatternMatcher? fallbackMatcher = null;
@@ -30,11 +38,32 @@ namespace VecTool.Handlers.Traversal
         /// <summary>
         /// Initializes the traverser with repo root for pattern detection.
         /// Lazy-initializes the pattern matcher on first use.
+        /// Constructor WITHOUT Layer 2 support (backward compatible).
         /// </summary>
         public FileSystemTraverser(IUserInterface? ui = null, string? rootPath = null)
         {
             this.ui = ui;
             this.rootPath = rootPath ?? Environment.CurrentDirectory;
+            this.markerExtractor = null;  // Layer 2 disabled
+        }
+
+        /// <summary>
+        /// NEW - Initializes traverser WITH Layer 2 file marker support.
+        /// Optional marker extractor: if provided, enables marker-based exclusions.
+        /// </summary>
+        public FileSystemTraverser(
+            IUserInterface? ui,
+            string? rootPath,
+            IFileMarkerExtractor? markerExtractor)
+        {
+            this.ui = ui;
+            this.rootPath = rootPath ?? Environment.CurrentDirectory;
+            this.markerExtractor = markerExtractor;  // Layer 2 enabled (if provided)
+
+            using var ctx = log.Ctx.Set(new Props()
+                .Add("root_path", this.rootPath)
+                .Add("layer_2_enabled", markerExtractor != null ? "yes" : "no"));
+            log.Info("FileSystemTraverser initialized");
         }
 
         /// <summary>
@@ -43,68 +72,117 @@ namespace VecTool.Handlers.Traversal
         /// </summary>
         private void EnsureMatchersInitialized(IVectorStoreConfig config)
         {
-            if (primaryMatcher != null) return;
+            if (primaryMatcher != null)
+                return;
 
             try
             {
-                // LAYER 1 PRIMARY: Create pattern matcher (.gitignore/.vtignore)
-                primaryMatcher = IgnoreMatcherFactory.Create(IgnoreLibraryType.Auto,rootPath);
+                // LAYER 1: PRIMARY - Create pattern matcher .gitignore/.vtignore
+                primaryMatcher = IgnoreMatcherFactory.Create (
+                    IgnoreLibraryType.Auto,
+                    rootPath
+                );
 
-                using var _ = log.Ctx.Set(new Props()
+                using var ctx = log.Ctx.Set(new Props()
                     .Add("rootpath", rootPath)
                     .Add("library", "MabDotIgnore"));
+                log.Info("Pattern matcher initialized for root");
 
-                log.Info($"Pattern matcher initialized for root: {rootPath}");
-
-                // LAYER 2 FALLBACK: Create fallback matcher for legacy config
+                // LAYER 2: FALLBACK - Create fallback matcher for legacy config
                 fallbackMatcher = new LegacyConfigAdapter(config);
 
-                using var __ = log.Ctx.Set(new Props()
+                using var ctx2 = log.Ctx.Set(new Props()
                     .Add("primary", primaryMatcher?.GetType().Name ?? "null")
                     .Add("fallback", fallbackMatcher?.GetType().Name ?? "null"));
-
                 log.Info("Exclusion matcher chain ready");
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Pattern matcher initialization failed, falling back to legacy config only: {rootPath}");
+                log.Error(ex, $"Pattern matcher initialization failed, falling back to legacy config only {rootPath}");
 
                 // Create fallback matcher that matches nothing - only legacy config filters
                 fallbackMatcher = new LegacyConfigAdapter(config);
                 primaryMatcher = fallbackMatcher;
 
-                log.Info($"Exclusion matcher chain ready (Fallback only): primary={primaryMatcher?.GetType().Name ?? "null"}");
+                log.Info("Exclusion matcher chain ready (Fallback only)");
+            }
+        }
+
+        /// <summary>
+        /// NEW - Checks Layer 2 file marker exclusions.
+        /// Returns true if file contains [VECTOOL:EXCLUDE:...] marker.
+        /// Called AFTER Layer 1 pattern check succeeds.
+        /// </summary>
+        private bool ShouldExcludeByMarker(string filePath, IVectorStoreConfig config)
+        {
+            // Layer 2 only applies to files, not directories
+            if (markerExtractor == null)
+                return false;  // Layer 2 disabled
+
+            try
+            {
+                var marker = markerExtractor.ExtractMarker(filePath);
+
+                if (marker != null)
+                {
+                    // File excluded by marker
+                    using var ctx = log.Ctx.Set(ExclusionProps.CreateMarkerProps(
+                        marker.FilePath,
+                        marker.Reason,
+                        marker.SpaceReference,
+                        marker.LineNumber));
+                    log.Info("File excluded (Layer 2 marker)");
+                    return true;
+                }
+
+                return false;  // No marker found
+            }
+            catch (Exception ex)
+            {
+                using var ctx = log.Ctx.Set(ExclusionProps.CreateMarkerErrorProps(
+                    filePath,
+                    ex.GetType().Name,
+                    ex.Message));
+                log.Warn("Marker extraction error (continuing)");
+                return false;  // Error during extraction: don't exclude
             }
         }
 
         /// <summary>
         /// Single validation check - replaces dual code path.
-        /// Checks both pattern matcher and legacy config.
+        /// Checks both pattern matcher (Layer 1) and legacy config (Layer 1 fallback).
+        /// NEW - Also checks Layer 2 file markers.
         /// </summary>
         private bool ShouldExcludePath(string path, bool isDirectory, IVectorStoreConfig config)
         {
             EnsureMatchersInitialized(config);
 
-            // Layer 1: Try primary matcher (patterns)
+            // LAYER 1: Try primary matcher patterns
             if (primaryMatcher != null && primaryMatcher.IsIgnored(path, isDirectory))
             {
                 log.Trace($"Path excluded by primary matcher: {path}");
                 return true;
             }
 
-            // Layer 1 Fallback: Try legacy config
+            // LAYER 1: Fallback - Try legacy config
             if (fallbackMatcher != null && fallbackMatcher.IsIgnored(path, isDirectory))
             {
                 log.Trace($"Path excluded by fallback matcher: {path}");
                 return true;
             }
 
-            return false; // Not excluded
+            // LAYER 2: NEW - File marker check (files only)
+            if (!isDirectory && ShouldExcludeByMarker(path, config))
+            {
+                return true;  // Already logged inside ShouldExcludeByMarker
+            }
+
+            return false;  // Not excluded
         }
 
         /// <summary>
         /// Recursively processes folders with custom processing logic.
-        /// Pre-filters based on patterns BEFORE calling processFile delegate.
+        /// Pre-filters based on patterns and markers BEFORE calling processFile delegate.
         /// </summary>
         public void ProcessFolder<T>(
             string folderPath,
@@ -126,10 +204,8 @@ namespace VecTool.Handlers.Traversal
                 return;
             }
 
-            ui?.UpdateStatus($"Processing folder: {folderPath}");
+            ui?.UpdateStatus($"Processing folder {folderPath}");
             log.Debug($"Processing folder: {folderPath}");
-
-            writeFolderName(context, folderName);
 
             // Process files
             string[] files = Array.Empty<string>();
@@ -139,14 +215,14 @@ namespace VecTool.Handlers.Traversal
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Failed to enumerate files in: {folderPath}");
+                log.Error(ex, $"Failed to enumerate files in {folderPath}");
             }
 
             foreach (var file in files)
             {
                 try
                 {
-                    // Single check for files - UNIFIED CODE PATH
+                    // Single check for files - UNIFIED CODE PATH (Layer 1 + Layer 2)
                     if (ShouldExcludePath(file, isDirectory: false, vectorStoreConfig))
                     {
                         log.Trace($"Skipping excluded file: {file}");
@@ -157,7 +233,7 @@ namespace VecTool.Handlers.Traversal
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Error processing file: {file}");
+                    log.Error(ex, $"Error processing file {file}");
                 }
             }
 
@@ -169,7 +245,7 @@ namespace VecTool.Handlers.Traversal
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Failed to enumerate subdirectories in: {folderPath}");
+                log.Error(ex, $"Failed to enumerate subdirectories in {folderPath}");
             }
 
             foreach (var subfolder in subfolders)
@@ -181,18 +257,20 @@ namespace VecTool.Handlers.Traversal
         }
 
         /// <summary>
-        /// Enumerates all files in a folder tree respecting exclusions.
-        /// Pre-filters patterns and legacy config BEFORE returning files.
+        /// Enumerates all files in a folder tree respecting exclusions (Layer 1 + Layer 2).
+        /// Pre-filters patterns and markers BEFORE returning files.
         /// THREAD-SAFE: Each call creates its own result collection.
         /// </summary>
-        public IEnumerable<string> EnumerateFilesRespectingExclusions(string root, IVectorStoreConfig config)
+        public IEnumerable<string> EnumerateFilesRespectingExclusions(
+            string root,
+            IVectorStoreConfig config)
         {
             if (string.IsNullOrWhiteSpace(root))
                 yield break;
 
             EnsureMatchersInitialized(config);
 
-            // ✅ THREAD-SAFE: Use stack-based iteration (no shared state)
+            // THREAD-SAFE: Use stack-based iteration, no shared state
             var stack = new Stack<string>();
             stack.Push(root);
 
@@ -200,16 +278,19 @@ namespace VecTool.Handlers.Traversal
             {
                 var current = stack.Pop();
                 var folderName = new DirectoryInfo(current).Name;
-                using var _ = log.Ctx.Set().Add("current", current).Add("folderName", folderName);
 
-                // Layer 1: Pattern check FIRST
-                if (primaryMatcher!.IsIgnored(current, isDirectory: true))
+                using var ctx = log.Ctx.Set(new Props()
+                    .Add("current", current)
+                    .Add("folderName", folderName));
+
+                // LAYER 1: Pattern check FIRST
+                if (primaryMatcher != null && primaryMatcher.IsIgnored(current, isDirectory: true))
                 {
                     log.Trace($"Skipping excluded folder (pattern): {current}");
                     continue;
                 }
 
-                // Legacy config fallback
+                // LAYER 1: Legacy config fallback
                 if (FileValidator.IsFolderExcluded(folderName, config))
                 {
                     log.Trace($"Skipping excluded folder (legacy): {current}");
@@ -224,7 +305,7 @@ namespace VecTool.Handlers.Traversal
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Failed to enumerate files in: {current}");
+                    log.Error(ex, $"Failed to enumerate files in {current}");
                     continue;
                 }
 
@@ -232,14 +313,14 @@ namespace VecTool.Handlers.Traversal
                 {
                     var fileName = Path.GetFileName(f);
 
-                    // Pattern check for file
+                    // LAYER 1: Pattern check for file
                     if (primaryMatcher != null && primaryMatcher.IsIgnored(f, isDirectory: false))
                     {
                         log.Trace($"Skipping excluded file (pattern): {f}");
                         continue;
                     }
 
-                    // Legacy config check
+                    // LAYER 1: Legacy config check
                     if (FileValidator.IsFileExcluded(fileName, config))
                     {
                         log.Trace($"Skipping excluded file (legacy): {f}");
@@ -247,14 +328,21 @@ namespace VecTool.Handlers.Traversal
                     }
 
                     // File system validity check
-                    if (!FileValidator.IsFileValid(f, null))
+                    if (!FileValidator.IsFileValid(f, outputPath: null))
                     {
-                        _.Add("content", f);
-                        log.Trace($"Invalid or binary file: {f}");
+                        using var ctxValid = log.Ctx.Set(new Props()
+                            .Add("content", f));
+                        log.Trace("Invalid or binary file");
                         continue;
                     }
 
-                    // ✅ THREAD-SAFE: yield return (no shared collection)
+                    // LAYER 2: NEW - File marker check
+                    if (ShouldExcludeByMarker(f, config))
+                    {
+                        continue;  // Already logged in ShouldExcludeByMarker
+                    }
+
+                    // THREAD-SAFE: yield return (no shared collection)
                     yield return f;
                 }
 
@@ -266,7 +354,7 @@ namespace VecTool.Handlers.Traversal
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Failed to enumerate subdirectories in: {current}");
+                    log.Error(ex, $"Failed to enumerate subdirectories in {current}");
                     continue;
                 }
 
