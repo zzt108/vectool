@@ -1,5 +1,6 @@
 namespace VecTool.Handlers;
 
+using LogCtxShared;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -7,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VecTool.Configuration;
 using VecTool.Core;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
@@ -17,18 +19,20 @@ using VecTool.RecentFiles;
 public sealed class GitChangesHandler : FileHandlerBase
 {
     private readonly string _aiPrompt;
+    private readonly FileSystemTraverser traverser;
 
-    public GitChangesHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
+    public GitChangesHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager, string? rootPath = null)
         : base(ui, recentFilesManager)
     {
         _aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"]
             ?? "Analyze the following Git changes and provide a concise, descriptive commit message.";
+        traverser = new FileSystemTraverser(ui, rootPath);
     }
 
     /// <summary>
     /// Extracts Git changes from all repositories in the given folders and saves to Markdown.
     /// </summary>
-    public async Task<string> GetGitChangesAsync(List<string> folderPaths, string outputPath)
+    public async Task<string> GetGitChangesAsync(List<string> folderPaths, string outputPath, VectorStoreConfig config)
     {
         if (folderPaths == null || folderPaths.Count == 0)
             throw new ArgumentException("No folders provided", nameof(folderPaths));
@@ -38,7 +42,7 @@ public sealed class GitChangesHandler : FileHandlerBase
 
         try
         {
-            ui?.UpdateStatus("Analyzing Git repositories...");
+            Ui?.UpdateStatus("Analyzing Git repositories...");
             log.Info($"Starting Git changes analysis: {folderPaths.Count} folders");
 
             var allChanges = new StringBuilder();
@@ -53,30 +57,43 @@ public sealed class GitChangesHandler : FileHandlerBase
 
             foreach (var folderPath in folderPaths)
             {
-                if (Core.GitRunner.IsGitRepository(folderPath))
+                // Use traverser to get only non-excluded folders
+                var allowedFolders = traverser
+                    .EnumerateFilesRespectingExclusions(folderPath, config)
+                    .Select(f => Path.GetDirectoryName(f))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                log.Debug($"Found {allowedFolders.Count} non-excluded folders in {folderPath}");
+
+                // Find Git repos ONLY in allowed folders
+                var gitRepos = allowedFolders
+                    .Where(dir => GitRunner.IsGitRepository(dir))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                using var _ = log.Ctx.Set().Add("basePath", folderPath);
+                log.Info($"Found {gitRepos.Count} Git repositories to process");
+
+                foreach (var repoPath in gitRepos)
                 {
-                    await ProcessGitRepositoryAsync(folderPath, outputPath, allChanges, processedRepos);
-                }
-                else
-                {
-                    await FindGitRepositoriesRecursivelyAsync(folderPath, outputPath, allChanges, processedRepos);
+                    await ProcessGitRepositoryAsync(repoPath, outputPath, allChanges, processedRepos);
                 }
             }
 
             await File.WriteAllTextAsync(outputPath, allChanges.ToString());
 
             // Register generated file
-            if (_recentFilesManager != null)
+            if (RecentFilesManager != null)
             {
                 var fi = new FileInfo(outputPath);
-                _recentFilesManager.RegisterGeneratedFile(
+                RecentFilesManager.RegisterGeneratedFile(
                     outputPath,
                     RecentFileType.Git_Md,
                     folderPaths,
                     fi.Exists ? fi.Length : 0);
             }
 
-            ui?.UpdateStatus($"Git changes saved: {outputPath}");
+            Ui?.UpdateStatus($"Git changes saved: {outputPath}");
             log.Info($"Git changes analysis completed: {outputPath}");
 
             return allChanges.ToString();
@@ -91,8 +108,8 @@ public sealed class GitChangesHandler : FileHandlerBase
     /// <summary>
     /// Synchronous wrapper for async method.
     /// </summary>
-    public string GetGitChanges(List<string> folderPaths, string outputPath)
-        => GetGitChangesAsync(folderPaths, outputPath).GetAwaiter().GetResult();
+    public string GetGitChanges(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
+        => GetGitChangesAsync(folderPaths, outputPath, vectorStoreConfig).GetAwaiter().GetResult();
 
     private async Task ProcessGitRepositoryAsync(
         string repoPath,
@@ -101,7 +118,7 @@ public sealed class GitChangesHandler : FileHandlerBase
         HashSet<string> processedRepos)
     {
         var fullPath = Path.GetFullPath(repoPath);
-        
+
         if (!processedRepos.Add(fullPath))
             return;
 
@@ -132,18 +149,18 @@ public sealed class GitChangesHandler : FileHandlerBase
 
             // Submodules
             var submodulesOutput = await gitRunner.GetSubmodulesAsync();
-            
+
             if (!string.IsNullOrWhiteSpace(submodulesOutput))
             {
                 mainChanges.AppendLine("### Submodules");
                 mainChanges.AppendLine();
 
                 var submoduleLines = submodulesOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                
+
                 foreach (var line in submoduleLines)
                 {
                     var parts = line.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    
+
                     if (parts.Length >= 2)
                     {
                         var submodulePath = parts[1];
@@ -162,7 +179,7 @@ public sealed class GitChangesHandler : FileHandlerBase
                             var submoduleRunner = new GitRunner(fullSubmodulePath);
                             var submoduleStatus = await submoduleRunner.GetStatusAsync();
 
-                            if (!string.IsNullOrWhiteSpace(submoduleStatus) && 
+                            if (!string.IsNullOrWhiteSpace(submoduleStatus) &&
                                 !submoduleStatus.Contains("nothing to commit"))
                             {
                                 var submoduleFileName = $"{Path.GetFileNameWithoutExtension(outputPath)}-{Path.GetFileName(repoPath)}-{submodulePath.Replace(Path.DirectorySeparatorChar, '-')}-git-changes.md";
@@ -212,40 +229,5 @@ public sealed class GitChangesHandler : FileHandlerBase
         }
 
         mainChanges.AppendLine();
-    }
-
-    private async Task FindGitRepositoriesRecursivelyAsync(
-        string folderPath,
-        string outputPath,
-        StringBuilder allChanges,
-        HashSet<string> processedRepos)
-    {
-        try
-        {
-            foreach (var subDir in Directory.GetDirectories(folderPath))
-            {
-                var dirName = Path.GetFileName(subDir);
-
-                // Skip common non-repository directories
-                if (dirName.StartsWith(".") || 
-                    dirName == "node_modules" || 
-                    dirName == "bin" || 
-                    dirName == "obj")
-                    continue;
-
-                if (GitRunner.IsGitRepository(subDir))
-                {
-                    await ProcessGitRepositoryAsync(subDir, outputPath, allChanges, processedRepos);
-                }
-                else
-                {
-                    await FindGitRepositoriesRecursivelyAsync(subDir, outputPath, allChanges, processedRepos);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            log.Error(ex, $"Error searching for Git repositories in: {folderPath}");
-        }
     }
 }

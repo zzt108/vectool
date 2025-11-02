@@ -33,12 +33,16 @@ namespace VecTool.Configuration
         /// </summary>
         public bool IsFolderExcluded(string folderName)
         {
-            bool isExcluded = ExcludedFolders.Contains(folderName);
-            if (isExcluded)
+            foreach (var pattern in ExcludedFolders)
             {
-                log.Trace($"Folder {folderName} is in excluded list");
+                string regexPattern = Regex.Escape(pattern).Replace("\\*", ".*");
+                if (Regex.IsMatch(folderName, regexPattern, RegexOptions.IgnoreCase))
+                {
+                    log.Trace($"Folder {folderName} excluded by pattern {pattern}");
+                    return true;
+                }
             }
-            return isExcluded;
+            return false;
         }
     }
 }
