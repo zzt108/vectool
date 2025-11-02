@@ -62,6 +62,10 @@ namespace VecTool.Handlers
                 Ui?.WorkStart("Exporting to MD", folderPaths);
 
                 using StreamWriter writer = new StreamWriter(outputPath);
+                writer.WriteLine($"# Codebase for folder(s):");
+                foreach (string folderPath in folderPaths)
+                    writer.WriteLine($"- {folderPath}");
+                writer.WriteLine();
 
                 // ✅ Use FileSystemTraverser for exclusion-aware enumeration (ARCH-002 compliance)
                 foreach (string folderPath in folderPaths)
@@ -119,7 +123,7 @@ namespace VecTool.Handlers
             string content = GetFileContent(file);
             DateTime lastModified = File.GetLastWriteTime(file);
 
-            writer.WriteLine($"## File: {Path.GetFileName(file)} (Time:{lastModified})");
+            writer.WriteLine($"### File: {Path.GetFileName(file)} (Time:{lastModified})");
             writer.WriteLine($"```");
             writer.WriteLine(content);
             writer.WriteLine("```");
@@ -131,7 +135,7 @@ namespace VecTool.Handlers
         /// </summary>
         protected override void WriteFolderName(StreamWriter writer, string folderName)
         {
-            writer.WriteLine($"# Folder: {folderName}");
+            writer.WriteLine($"## Folder: {folderName}");
         }
     }
 }
