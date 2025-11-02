@@ -22,8 +22,6 @@ namespace UnitTests.Handlers
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recent = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler("Fake.sln", null,proc, ui, recent);
-            var handler = new TestRunnerHandler("Fake.sln", null, proc, ui, recent);
             var handler = new TestRunnerHandler("Fake.sln", null,proc, ui, recent, "test-branch", "storeX");
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
