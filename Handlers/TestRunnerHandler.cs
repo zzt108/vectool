@@ -59,22 +59,6 @@ namespace VecTool.Handlers
 
             try
             {
-                //var testResult = await _processRunner.RunAsync("dotnet", $"test { _solutionPath}",string.Empty, ct)
-                //    .ConfigureAwait(false);
-
-                //await WriteTestResult(testResult, ct).ConfigureAwait(false);
-
-                //if (testResult.ExitCode == 0)
-                //{
-                //    log.Info("Tests completed successfully");
-                //}
-                //else
-                //{
-                //    _.Add("ExitCode", testResult.ExitCode);
-                //    log.Warn("Tests completed with failures");
-                //}
-
-                //return testResult;
                 var testArgs = $"test \"{_solutionPath}\" --no-restore --verbosity minimal";
 
                 var testResult = await _processRunner.RunAsync(
@@ -204,13 +188,27 @@ namespace VecTool.Handlers
             sb.AppendLine($"**Vector Store ID:** {_vectorStoreId}");
             sb.AppendLine();
 
+            var instructions = @"
+Analyze test results and categorize failures by:
+1. Quick fixes (wrong tests, missing files, simple logic)
+2. Medium complexity (config issues, property mismatches)
+3. Architectural problems (design flaws, WinForms testing)
+
+Prioritize low-hanging fruits. Flag suspicious test assertions.
+Include time estimates and impact per fix.
+
+Consequently refer to IDs introduced in Test Failure Analysis in following sections
+
++ Highlight anti-patterns and suggest refactoring opportunities
++ Generate numbered fix list for ""reply with numbers"" workflow
+
+- NO CHARTS!
+Attached: [test output file] + [optional: codebase context file]
+";
             // Instructions section
             sb.AppendLine("## Instructions");
             sb.AppendLine();
-            sb.AppendLine("1. Review test results below");
-            sb.AppendLine("2. Check for failures and categorize by type");
-            sb.AppendLine("3. Investigate failed tests in detailed output");
-            sb.AppendLine("4. Update documentation if standard behavior changed");
+            sb.AppendLine(instructions);
             sb.AppendLine();
 
             // Test Summary with key metrics
@@ -236,36 +234,6 @@ namespace VecTool.Handlers
             sb.AppendLine("```");
             sb.AppendLine(testOutput);
             sb.AppendLine("```");
-            sb.AppendLine();
-
-            // Exit code reference table
-            sb.AppendLine("## Exit Code Reference");
-            sb.AppendLine();
-            sb.AppendLine("| Code | Meaning |");
-            sb.AppendLine("|------|---------|");
-            sb.AppendLine("| 0 | All tests passed |");
-            sb.AppendLine("| 1 | One or more tests failed (VSTest) |");
-            sb.AppendLine("| 2 | One or more tests failed (MSTest platform) |");
-            sb.AppendLine("| 3 | Test run aborted |");
-            sb.AppendLine("| 8 | No tests discovered |");
-            sb.AppendLine("| 10 | Test adapter/infrastructure failure |");
-            sb.AppendLine();
-
-            // Actionable recommendations
-            sb.AppendLine("## Recommendations");
-            sb.AppendLine();
-            if (exitCode == 0)
-            {
-                sb.AppendLine("✅ All tests passed. Ready for next phase.");
-            }
-            else
-            {
-                sb.AppendLine("⚠️ Tests failed. Review detailed output and:");
-                sb.AppendLine("- Fix failing unit tests");
-                sb.AppendLine("- Check for integration test issues");
-                sb.AppendLine("- Verify test environment configuration");
-                sb.AppendLine("- Re-run tests to confirm fixes");
-            }
             sb.AppendLine();
 
             return sb.ToString();
