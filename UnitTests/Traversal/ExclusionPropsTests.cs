@@ -32,11 +32,11 @@ namespace UnitTests.Traversal
         /// <summary>
         /// UNIT TEST 1a - CreatePatternProps Includes All Required Keys
         /// Pattern exclusion Props should contain:
-        /// - exclusionlayer: "layer1pattern"
-        /// - itempath: full file/directory path
+        /// - exclusion_layer: "layer_1_pattern"
+        /// - item_path: full file/directory path
         /// - pattern: matching pattern (e.g., "*.log", ".g.cs")
-        /// - sourcefile: ignore file name (".gitignore" or ".vtignore")
-        /// - timestamputc: ISO 8601 UTC timestamp
+        /// - source_file: ignore file name (".gitignore" or ".vtignore")
+        /// - timestamp_utc: ISO 8601 UTC timestamp
         /// </summary>
         [Test]
         public void CreatePatternPropsIncludesAllRequiredKeys()
@@ -53,24 +53,24 @@ namespace UnitTests.Traversal
             props.ShouldNotBeNull();
             
             // Layer identifier
-            props.Keys.ShouldContain("exclusionlayer");
-            props["exclusionlayer"].ShouldBe("layer1pattern");
+            props.Keys.ShouldContain("exclusion_layer");
+            props["exclusion_layer"].ShouldBe("layer_1_pattern");
 
             // Item path
-            props.Keys.ShouldContain("itempath");
-            props["itempath"].ShouldBe(itemPath);
+            props.Keys.ShouldContain("item_path");
+            props["item_path"].ShouldBe(itemPath);
 
             // Pattern
             props.Keys.ShouldContain("pattern");
             props["pattern"].ShouldBe(pattern);
 
             // Source file
-            props.Keys.ShouldContain("sourcefile");
-            props["sourcefile"].ShouldBe(sourceFile);
+            props.Keys.ShouldContain("source_file");
+            props["source_file"].ShouldBe(sourceFile);
 
             // Timestamp - should be ISO 8601 format
-            props.Keys.ShouldContain("timestamputc");
-            var timestampStr = (string)props["timestamputc"];
+            props.Keys.ShouldContain("timestamp_utc");
+            var timestampStr = (string)props["timestamp_utc"];
             timestampStr.ShouldNotBeNullOrEmpty();
             // Verify it can be parsed back to DateTime
             DateTime.Parse(timestampStr).ShouldNotBe(default(DateTime));
@@ -106,8 +106,8 @@ namespace UnitTests.Traversal
             {
                 var props = ExclusionProps.CreatePatternProps(itemPath, pattern, sourceFile);
                 props["pattern"].ShouldBe(pattern);
-                props["itempath"].ShouldBe(itemPath);
-                props["exclusionlayer"].ShouldBe("layer1pattern");
+                props["item_path"].ShouldBe(itemPath);
+                props["exclusion_layer"].ShouldBe("layer_1_pattern");
             }
 
             using var ctx = log.Ctx.Set(new Props()
@@ -123,12 +123,12 @@ namespace UnitTests.Traversal
         /// <summary>
         /// UNIT TEST 2a - CreateMarkerProps Includes All Required Keys
         /// Marker exclusion Props should contain:
-        /// - exclusionlayer: "layer2marker"
-        /// - filepath: full path to marked file
+        /// - exclusion_layer: "layer_2_marker"
+        /// - file_path: full path to marked file
         /// - reason: marker reason (e.g., "generated_by_xsd")
-        /// - spacereference: optional reference (default: "none")
-        /// - linenumber: 1-indexed line number of marker
-        /// - timestamputc: ISO 8601 UTC timestamp
+        /// - space_reference: optional reference (default: "none")
+        /// - line_number: 1-indexed line number of marker
+        /// - timestamp_utc: ISO 8601 UTC timestamp
         /// </summary>
         [Test]
         public void CreateMarkerPropsIncludesAllRequiredKeys()
@@ -146,28 +146,28 @@ namespace UnitTests.Traversal
             props.ShouldNotBeNull();
 
             // Layer identifier
-            props.Keys.ShouldContain("exclusionlayer");
-            props["exclusionlayer"].ShouldBe("layer2marker");
+            props.Keys.ShouldContain("exclusion_layer");
+            props["exclusion_layer"].ShouldBe("layer_2_marker");
 
             // File path
-            props.Keys.ShouldContain("filepath");
-            props["filepath"].ShouldBe(filePath);
+            props.Keys.ShouldContain("file_path");
+            props["file_path"].ShouldBe(filePath);
 
             // Reason
             props.Keys.ShouldContain("reason");
             props["reason"].ShouldBe(reason);
 
             // Space reference
-            props.Keys.ShouldContain("spacereference");
-            props["spacereference"].ShouldBe(spaceReference);
+            props.Keys.ShouldContain("space_reference");
+            props["space_reference"].ShouldBe(spaceReference);
 
             // Line number
-            props.Keys.ShouldContain("linenumber");
-            ((int)props["linenumber"]).ShouldBe(lineNumber);
+            props.Keys.ShouldContain("line_number");
+            ((int)props["line_number"]).ShouldBe(lineNumber);
 
             // Timestamp
-            props.Keys.ShouldContain("timestamputc");
-            var timestampStr = (string)props["timestamputc"];
+            props.Keys.ShouldContain("timestamp_utc");
+            var timestampStr = (string)props["timestamp_utc"];
             DateTime.Parse(timestampStr).ShouldNotBe(default(DateTime));
 
             using var ctx = log.Ctx.Set(new Props()
@@ -193,13 +193,13 @@ namespace UnitTests.Traversal
             var props = ExclusionProps.CreateMarkerProps(filePath, reason, spaceReference: null, lineNumber);
 
             // Assert
-            props["spacereference"].ShouldBe("none");
+            props["space_reference"].ShouldBe("none");
 
             // Act - Pass whitespace
             props = ExclusionProps.CreateMarkerProps(filePath, reason, "   ", lineNumber);
 
             // Assert
-            props["spacereference"].ShouldBe("none");
+            props["space_reference"].ShouldBe("none");
 
             using var ctx = log.Ctx.Set(new Props()
                 .Add("test", "marker_null_space_reference")
@@ -232,8 +232,8 @@ namespace UnitTests.Traversal
             {
                 var props = ExclusionProps.CreateMarkerProps("/app/file.cs", reason, reference, 1);
                 props["reason"].ShouldBe(reason);
-                props["spacereference"].ShouldBe(reference ?? "none");
-                props["exclusionlayer"].ShouldBe("layer2marker");
+                props["space_reference"].ShouldBe(reference ?? "none");
+                props["exclusion_layer"].ShouldBe("layer_2_marker");
             }
 
             using var ctx = log.Ctx.Set(new Props()
@@ -249,11 +249,11 @@ namespace UnitTests.Traversal
         /// <summary>
         /// UNIT TEST 3a - CreateMarkerErrorProps Includes All Required Keys
         /// Marker error Props should contain:
-        /// - exclusionlayer: "layer2markererror"
-        /// - filepath: path to file where extraction failed
-        /// - errortype: exception type name
-        /// - errormessage: error message for debugging
-        /// - timestamputc: ISO 8601 UTC timestamp
+        /// - exclusion_layer: "layer_2_marker_error"
+        /// - file_path: path to file where extraction failed
+        /// - error_type: exception type name
+        /// - error_message: error message for debugging
+        /// - timestamp_utc: ISO 8601 UTC timestamp
         /// </summary>
         [Test]
         public void CreateMarkerErrorPropsIncludesAllRequiredKeys()
@@ -269,19 +269,19 @@ namespace UnitTests.Traversal
             // Assert
             props.ShouldNotBeNull();
 
-            props.Keys.ShouldContain("exclusionlayer");
-            props["exclusionlayer"].ShouldBe("layer2markererror");
+            props.Keys.ShouldContain("exclusion_layer");
+            props["exclusion_layer"].ShouldBe("layer_2_marker_error");
 
-            props.Keys.ShouldContain("filepath");
-            props["filepath"].ShouldBe(filePath);
+            props.Keys.ShouldContain("file_path");
+            props["file_path"].ShouldBe(filePath);
 
-            props.Keys.ShouldContain("errortype");
-            props["errortype"].ShouldBe(errorType);
+            props.Keys.ShouldContain("error_type");
+            props["error_type"].ShouldBe(errorType);
 
-            props.Keys.ShouldContain("errormessage");
-            props["errormessage"].ShouldBe(errorMessage);
+            props.Keys.ShouldContain("error_message");
+            props["error_message"].ShouldBe(errorMessage);
 
-            props.Keys.ShouldContain("timestamputc");
+            props.Keys.ShouldContain("timestamp_utc");
 
             using var ctx = log.Ctx.Set(new Props()
                 .Add("test", "marker_error_props")
@@ -292,12 +292,12 @@ namespace UnitTests.Traversal
         /// <summary>
         /// UNIT TEST 3b - CreateSummaryProps Aggregates Exclusion Statistics
         /// Summary Props should contain:
-        /// - operation: "foldertraversalsummary"
-        /// - filesprocessed: total files processed
-        /// - filesexcludedlayer1pattern: files excluded by patterns
-        /// - filesexcludedlayer2marker: files excluded by markers
-        /// - markerextractionerrors: count of extraction failures
-        /// - timestamputc: ISO 8601 UTC timestamp
+        /// - operation: "folder_traversal_summary"
+        /// - files_processed: total files processed
+        /// - files_excluded_layer_1_pattern: files excluded by patterns
+        /// - files_excluded_layer_2_marker: files excluded by markers
+        /// - marker_extraction_errors: count of extraction failures
+        /// - timestamp_utc: ISO 8601 UTC timestamp
         /// </summary>
         [Test]
         public void CreateSummaryPropsAggregatesExclusionStatistics()
@@ -319,21 +319,21 @@ namespace UnitTests.Traversal
             props.ShouldNotBeNull();
 
             props.Keys.ShouldContain("operation");
-            props["operation"].ShouldBe("foldertraversalsummary");
+            props["operation"].ShouldBe("folder_traversal_summary");
 
-            props.Keys.ShouldContain("filesprocessed");
-            ((int)props["filesprocessed"]).ShouldBe(filesProcessed);
+            props.Keys.ShouldContain("files_processed");
+            ((int)props["files_processed"]).ShouldBe(filesProcessed);
 
-            props.Keys.ShouldContain("filesexcludedlayer1pattern");
-            ((int)props["filesexcludedlayer1pattern"]).ShouldBe(filesExcludedByPattern);
+            props.Keys.ShouldContain("files_excluded_layer_1_pattern");
+            ((int)props["files_excluded_layer_1_pattern"]).ShouldBe(filesExcludedByPattern);
 
-            props.Keys.ShouldContain("filesexcludedlayer2marker");
-            ((int)props["filesexcludedlayer2marker"]).ShouldBe(filesExcludedByMarker);
+            props.Keys.ShouldContain("files_excluded_layer_2_marker");
+            ((int)props["files_excluded_layer_2_marker"]).ShouldBe(filesExcludedByMarker);
 
-            props.Keys.ShouldContain("markerextractionerrors");
-            ((int)props["markerextractionerrors"]).ShouldBe(markerExtractionErrors);
+            props.Keys.ShouldContain("marker_extraction_errors");
+            ((int)props["marker_extraction_errors"]).ShouldBe(markerExtractionErrors);
 
-            props.Keys.ShouldContain("timestamputc");
+            props.Keys.ShouldContain("timestamp_utc");
 
             // Verify summary math
             int totalExcluded = filesExcludedByPattern + filesExcludedByMarker;
@@ -355,11 +355,11 @@ namespace UnitTests.Traversal
         /// <summary>
         /// UNIT TEST 4a - CreateDirectoryExclusionProps Handles Tree Exclusions
         /// Directory exclusion Props should contain:
-        /// - exclusionlayer: "layer1directory"
-        /// - directorypath: full path to excluded directory
+        /// - exclusion_layer: "layer_1_directory"
+        /// - directory_path: full path to excluded directory
         /// - pattern: matching pattern that excluded it
-        /// - itemsskipped: count of items not enumerated
-        /// - timestamputc: ISO 8601 UTC timestamp
+        /// - items_skipped: count of items not enumerated
+        /// - timestamp_utc: ISO 8601 UTC timestamp
         /// </summary>
         [Test]
         public void CreateDirectoryExclusionPropsHandlesTreeExclusions()
@@ -378,19 +378,19 @@ namespace UnitTests.Traversal
             // Assert
             props.ShouldNotBeNull();
 
-            props.Keys.ShouldContain("exclusionlayer");
-            props["exclusionlayer"].ShouldBe("layer1directory");
+            props.Keys.ShouldContain("exclusion_layer");
+            props["exclusion_layer"].ShouldBe("layer_1_directory");
 
-            props.Keys.ShouldContain("directorypath");
-            props["directorypath"].ShouldBe(directoryPath);
+            props.Keys.ShouldContain("directory_path");
+            props["directory_path"].ShouldBe(directoryPath);
 
             props.Keys.ShouldContain("pattern");
             props["pattern"].ShouldBe(pattern);
 
-            props.Keys.ShouldContain("itemsskipped");
-            ((int)props["itemsskipped"]).ShouldBe(itemsSkipped);
+            props.Keys.ShouldContain("items_skipped");
+            ((int)props["items_skipped"]).ShouldBe(itemsSkipped);
 
-            props.Keys.ShouldContain("timestamputc");
+            props.Keys.ShouldContain("timestamp_utc");
 
             using var ctx = log.Ctx.Set(new Props()
                 .Add("test", "directory_exclusion_props")
@@ -419,9 +419,9 @@ namespace UnitTests.Traversal
             // Act & Assert - Serialize to JSON
             var json = JsonSerializer.Serialize(props);
             json.ShouldNotBeNullOrEmpty();
-            json.ShouldContain("exclusionlayer");
-            json.ShouldContain("layer1pattern");
-            json.ShouldContain("itempath");
+            json.ShouldContain("exclusion_layer");
+            json.ShouldContain("layer_1_pattern");
+            json.ShouldContain("item_path");
             json.ShouldContain("pattern");
 
             // Act - Deserialize back
@@ -438,7 +438,7 @@ namespace UnitTests.Traversal
         /// <summary>
         /// UNIT TEST 5b - Marker Props Serialize To JSON Correctly
         /// Props should serialize with all types preserved for SEQ queries.
-        /// Integer values (linenumber) should remain integers in JSON.
+        /// Integer values (line_number) should remain integers in JSON.
         /// </summary>
         [Test]
         public void MarkerPropsSerializeToJsonCorrectly()
@@ -453,14 +453,14 @@ namespace UnitTests.Traversal
             // Act & Assert - Serialize
             var json = JsonSerializer.Serialize(props);
             json.ShouldNotBeNullOrEmpty();
-            json.ShouldContain("\"linenumber\":3"); // Integer preserved
+            json.ShouldContain("\"line_number\":3"); // Integer preserved
 
             // Act - Deserialize
             var doc = JsonDocument.Parse(json);
-            doc.RootElement.TryGetProperty("exclusionlayer", out var layer);
-            layer.GetString().ShouldBe("layer2marker");
+            doc.RootElement.TryGetProperty("exclusion_layer", out var layer);
+            layer.GetString().ShouldBe("layer_2_marker");
 
-            doc.RootElement.TryGetProperty("linenumber", out var lineNum);
+            doc.RootElement.TryGetProperty("line_number", out var lineNum);
             lineNum.GetInt32().ShouldBe(3);
 
             using var ctx = log.Ctx.Set(new Props()
@@ -472,7 +472,7 @@ namespace UnitTests.Traversal
         /// <summary>
         /// UNIT TEST 5c - Summary Props Serialize With Correct Type Preservation
         /// All numeric fields should serialize as numbers, not strings.
-        /// Enables SEQ queries like: exclusionlayer="foldertraversalsummary" AND filesexcludedlayer2marker > 5
+        /// Enables SEQ queries like: exclusion_layer="folder_traversal_summary" AND files_excluded_layer_2_marker > 5
         /// </summary>
         [Test]
         public void SummaryPropsSerializeWithCorrectTypePreservation()
@@ -486,17 +486,17 @@ namespace UnitTests.Traversal
 
             // Act & Assert - Serialize
             var json = JsonSerializer.Serialize(props);
-            json.ShouldContain("\"filesprocessed\":1500");
-            json.ShouldContain("\"filesexcludedlayer1pattern\":425");
-            json.ShouldContain("\"filesexcludedlayer2marker\":12");
-            json.ShouldContain("\"markerextractionerrors\":2");
+            json.ShouldContain("\"files_processed\":1500");
+            json.ShouldContain("\"files_excluded_layer_1_pattern\":425");
+            json.ShouldContain("\"files_excluded_layer_2_marker\":12");
+            json.ShouldContain("\"marker_extraction_errors\":2");
 
             // Act - Deserialize with type checking
             var doc = JsonDocument.Parse(json);
-            doc.RootElement.TryGetProperty("filesprocessed", out var filesProcessed);
+            doc.RootElement.TryGetProperty("files_processed", out var filesProcessed);
             filesProcessed.GetInt32().ShouldBe(1500);
 
-            doc.RootElement.TryGetProperty("filesexcludedlayer2marker", out var excluded);
+            doc.RootElement.TryGetProperty("files_excluded_layer_2_marker", out var excluded);
             excluded.GetInt32().ShouldBe(12);
 
             using var ctx = log.Ctx.Set(new Props()
@@ -512,9 +512,9 @@ namespace UnitTests.Traversal
         /// <summary>
         /// UNIT TEST 6a - Props Enable SEQ Queries By Layer And Source
         /// Should enable queries like:
-        /// - exclusionlayer = "layer1pattern" AND pattern LIKE "%.g.cs"
-        /// - exclusionlayer = "layer2marker" AND reason = "generated_by_xsd"
-        /// - operation = "foldertraversalsummary" AND filesexcludedlayer2marker > 10
+        /// - exclusion_layer = "layer_1_pattern" AND pattern LIKE "%.g.cs"
+        /// - exclusion_layer = "layer_2_marker" AND reason = "generated_by_xsd"
+        /// - operation = "folder_traversal_summary" AND files_excluded_layer_2_marker > 10
         /// </summary>
         [Test]
         public void PropsEnableSeqQueriesByLayerAndSource()
@@ -525,17 +525,17 @@ namespace UnitTests.Traversal
             var summaryProps = ExclusionProps.CreateSummaryProps(100, 25, 5, 0);
 
             // Act & Verify - Query by layer
-            patternProps["exclusionlayer"].ShouldBe("layer1pattern");
-            markerProps["exclusionlayer"].ShouldBe("layer2marker");
-            summaryProps["operation"].ShouldBe("foldertraversalsummary");
+            patternProps["exclusion_layer"].ShouldBe("layer_1_pattern");
+            markerProps["exclusion_layer"].ShouldBe("layer_2_marker");
+            summaryProps["operation"].ShouldBe("folder_traversal_summary");
 
             // Verify queryable fields are present
             patternProps.Keys.ShouldContain("pattern");
             markerProps.Keys.ShouldContain("reason");
-            summaryProps.Keys.ShouldContain("filesexcludedlayer2marker");
+            summaryProps.Keys.ShouldContain("files_excluded_layer_2_marker");
 
             // Verify source file queries
-            patternProps["sourcefile"].ShouldBe(".gitignore");
+            patternProps["source_file"].ShouldBe(".gitignore");
 
             using var ctx = log.Ctx.Set(new Props()
                 .Add("test", "seq_query_compatibility")
@@ -611,15 +611,15 @@ namespace UnitTests.Traversal
             var props = ExclusionProps.CreatePatternProps(itemPath, pattern, sourceFile);
 
             // Assert - Values should be preserved
-            props["itempath"].ShouldBe(itemPath);
+            props["item_path"].ShouldBe(itemPath);
             props["pattern"].ShouldBe(pattern);
-            props["sourcefile"].ShouldBe(sourceFile);
+            props["source_file"].ShouldBe(sourceFile);
 
             // Arrange - Empty strings
             var props2 = ExclusionProps.CreatePatternProps("", "", "");
 
             // Assert - Empty strings preserved
-            props2["itempath"].ShouldBe("");
+            props2["item_path"].ShouldBe("");
             props2["pattern"].ShouldBe("");
 
             using var ctx = log.Ctx.Set(new Props()
@@ -645,11 +645,11 @@ namespace UnitTests.Traversal
             // Act - Extract all timestamps
             var timestamps = new[]
             {
-                (string)patternProps["timestamputc"],
-                (string)markerProps["timestamputc"],
-                (string)errorProps["timestamputc"],
-                (string)summaryProps["timestamputc"],
-                (string)dirProps["timestamputc"],
+                (string)patternProps["timestamp_utc"],
+                (string)markerProps["timestamp_utc"],
+                (string)errorProps["timestamp_utc"],
+                (string)summaryProps["timestamp_utc"],
+                (string)dirProps["timestamp_utc"],
             };
 
             // Assert - All should parse to valid DateTime
