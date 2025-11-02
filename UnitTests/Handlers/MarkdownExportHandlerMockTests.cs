@@ -396,7 +396,8 @@ namespace UnitTests.Handlers
             // Act & Assert
             // ✅ Should throw ArgumentException OR IOException (both acceptable)
             Should.Throw<ArgumentException>(() =>
-                handler.ExportSelectedFolders(new List<string> { testDir }, invalidPath, config));
+                handler.ExportSelectedFolders(new List<string> { testDir }, invalidPath, config))
+                .ShouldBeOfType<IOException>();
         }
 
         // ═══════════════════════════════════════════════════════════════════════════════
