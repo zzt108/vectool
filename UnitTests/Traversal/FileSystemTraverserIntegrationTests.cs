@@ -441,7 +441,7 @@ dist/
             // Arrange
             for (int i = 0; i < 10; i++)
             {
-                File.WriteAllText(Path.Combine(testRoot, $"file_{i}.cs"), "");
+                File.WriteAllText(Path.Combine(testRoot, $"file_{i}.cs"), $"// Content {i}");
             }
 
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "*.log\n");

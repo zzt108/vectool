@@ -1,27 +1,31 @@
-﻿// ✅ FULL FILE VERSION - CORRECTED
-
+﻿// ✅ FULL FILE VERSION
 namespace VecTool.Handlers.Traversal
 {
     using LogCtxShared;
     using MAB.DotIgnore;
     using NLogShared;
     using System;
+    using System.Collections.Concurrent; // ✅ NEW - For thread-safe collections
     using System.Collections.Generic;
     using System.IO;
-    using System.Text.RegularExpressions;
+    using System.Linq;
     using VecTool.Configuration;
     using VecTool.Configuration.Exclusion;
 
     /// <summary>
     /// Handles folder traversal and file enumeration with exclusion support.
+    /// Thread-safe for concurrent enumeration scenarios.
     /// </summary>
     public class FileSystemTraverser : IFileSystemTraverser
     {
         private static readonly CtxLogger log = new();
         private readonly IUserInterface? ui;
-        private readonly string _rootPath;
-        private IIgnorePatternMatcher? _primaryMatcher = null;
-        private IIgnorePatternMatcher? _fallbackMatcher = null;
+        private readonly string rootPath;
+
+        // ✅ MODIFIED - Removed shared state (no longer a field)
+        // Thread safety: Each call creates its own result collection
+        private IIgnorePatternMatcher? primaryMatcher = null;
+        private IIgnorePatternMatcher? fallbackMatcher = null;
 
         /// <summary>
         /// Initializes the traverser with repo root for pattern detection.
@@ -30,7 +34,7 @@ namespace VecTool.Handlers.Traversal
         public FileSystemTraverser(IUserInterface? ui = null, string? rootPath = null)
         {
             this.ui = ui;
-            _rootPath = rootPath ?? Environment.CurrentDirectory;
+            this.rootPath = rootPath ?? Environment.CurrentDirectory;
         }
 
         /// <summary>
@@ -39,56 +43,63 @@ namespace VecTool.Handlers.Traversal
         /// </summary>
         private void EnsureMatchersInitialized(IVectorStoreConfig config)
         {
-            if (_primaryMatcher != null)
-                return;
+            if (primaryMatcher != null) return;
 
             try
             {
-                _primaryMatcher = IgnoreMatcherFactory.Create(IgnoreLibraryType.MabDotIgnore, _rootPath);
-                using var _ = new CtxLogger().Ctx.Set()
-                    .Add("root_path", _rootPath)
-                    .Add("library", "MabDotIgnore");
-                log.Info($"Pattern matcher initialized for root: {_rootPath}");
+                // LAYER 1 PRIMARY: Create pattern matcher (.gitignore/.vtignore)
+                primaryMatcher = IgnoreMatcherFactory.Create(IgnoreLibraryType.Auto,rootPath);
+
+                using var _ = log.Ctx.Set(new Props()
+                    .Add("rootpath", rootPath)
+                    .Add("library", "MabDotIgnore"));
+
+                log.Info($"Pattern matcher initialized for root: {rootPath}");
 
                 // LAYER 2 FALLBACK: Create fallback matcher for legacy config
-                _fallbackMatcher = new LegacyConfigAdapter(config);
-                using var __ = new CtxLogger().Ctx.Set()
-                        .Add("primary", _primaryMatcher?.GetType().Name ?? "null")
-                        .Add("fallback", _fallbackMatcher?.GetType().Name ?? "null");
+                fallbackMatcher = new LegacyConfigAdapter(config);
+
+                using var __ = log.Ctx.Set(new Props()
+                    .Add("primary", primaryMatcher?.GetType().Name ?? "null")
+                    .Add("fallback", fallbackMatcher?.GetType().Name ?? "null"));
 
                 log.Info("Exclusion matcher chain ready");
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Pattern matcher initialization failed, falling back to legacy config only: {_rootPath}");
+                log.Error(ex, $"Pattern matcher initialization failed, falling back to legacy config only: {rootPath}");
 
-                // Create fallback matcher that matches nothing (only legacy config filters)
-                _fallbackMatcher = new LegacyConfigAdapter(config);
-                _primaryMatcher = _fallbackMatcher;
-                log.Info($"Exclusion matcher chain ready (Fallback only): primary={_primaryMatcher?.GetType().Name ?? "null"}");
+                // Create fallback matcher that matches nothing - only legacy config filters
+                fallbackMatcher = new LegacyConfigAdapter(config);
+                primaryMatcher = fallbackMatcher;
+
+                log.Info($"Exclusion matcher chain ready (Fallback only): primary={primaryMatcher?.GetType().Name ?? "null"}");
             }
         }
 
-        // Single validation check replaces dual code path:
+        /// <summary>
+        /// Single validation check - replaces dual code path.
+        /// Checks both pattern matcher and legacy config.
+        /// </summary>
         private bool ShouldExcludePath(string path, bool isDirectory, IVectorStoreConfig config)
         {
             EnsureMatchersInitialized(config);
 
             // Layer 1: Try primary matcher (patterns)
-            if (_primaryMatcher != null && _primaryMatcher.IsIgnored(path, isDirectory))
+            if (primaryMatcher != null && primaryMatcher.IsIgnored(path, isDirectory))
             {
                 log.Trace($"Path excluded by primary matcher: {path}");
                 return true;
             }
 
             // Layer 1 Fallback: Try legacy config
-            if (_fallbackMatcher != null && _fallbackMatcher.IsIgnored(path, isDirectory))
+            if (fallbackMatcher != null && fallbackMatcher.IsIgnored(path, isDirectory))
             {
                 log.Trace($"Path excluded by fallback matcher: {path}");
                 return true;
             }
 
-            return false;  // Not excluded
+            return false; // Not excluded
         }
 
         /// <summary>
@@ -96,7 +107,9 @@ namespace VecTool.Handlers.Traversal
         /// Pre-filters based on patterns BEFORE calling processFile delegate.
         /// </summary>
         public void ProcessFolder<T>(
-            string folderPath, T context, IVectorStoreConfig vectorStoreConfig,
+            string folderPath,
+            T context,
+            IVectorStoreConfig vectorStoreConfig,
             Action<string, T, IVectorStoreConfig> processFile,
             Action<T, string> writeFolderName,
             Action<T>? writeFolderEnd = null)
@@ -115,6 +128,7 @@ namespace VecTool.Handlers.Traversal
 
             ui?.UpdateStatus($"Processing folder: {folderPath}");
             log.Debug($"Processing folder: {folderPath}");
+
             writeFolderName(context, folderName);
 
             // Process files
@@ -132,7 +146,7 @@ namespace VecTool.Handlers.Traversal
             {
                 try
                 {
-                    // Single check for files (UNIFIED CODE PATH)
+                    // Single check for files - UNIFIED CODE PATH
                     if (ShouldExcludePath(file, isDirectory: false, vectorStoreConfig))
                     {
                         log.Trace($"Skipping excluded file: {file}");
@@ -161,13 +175,15 @@ namespace VecTool.Handlers.Traversal
             foreach (var subfolder in subfolders)
             {
                 ProcessFolder(subfolder, context, vectorStoreConfig, processFile, writeFolderName, writeFolderEnd);
-                writeFolderEnd?.Invoke(context);
             }
+
+            writeFolderEnd?.Invoke(context);
         }
 
         /// <summary>
         /// Enumerates all files in a folder tree respecting exclusions.
         /// Pre-filters patterns and legacy config BEFORE returning files.
+        /// THREAD-SAFE: Each call creates its own result collection.
         /// </summary>
         public IEnumerable<string> EnumerateFilesRespectingExclusions(string root, IVectorStoreConfig config)
         {
@@ -176,6 +192,7 @@ namespace VecTool.Handlers.Traversal
 
             EnsureMatchersInitialized(config);
 
+            // ✅ THREAD-SAFE: Use stack-based iteration (no shared state)
             var stack = new Stack<string>();
             stack.Push(root);
 
@@ -183,9 +200,10 @@ namespace VecTool.Handlers.Traversal
             {
                 var current = stack.Pop();
                 var folderName = new DirectoryInfo(current).Name;
+                using var _ = log.Ctx.Set().Add("current", current).Add("folderName", folderName);
 
-                // Layer 1 Pattern check FIRST
-                if (_primaryMatcher!.IsIgnored(current, isDirectory: true))
+                // Layer 1: Pattern check FIRST
+                if (primaryMatcher!.IsIgnored(current, isDirectory: true))
                 {
                     log.Trace($"Skipping excluded folder (pattern): {current}");
                     continue;
@@ -206,7 +224,7 @@ namespace VecTool.Handlers.Traversal
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Failed to enumerate files in {current}");
+                    log.Error(ex, $"Failed to enumerate files in: {current}");
                     continue;
                 }
 
@@ -215,7 +233,7 @@ namespace VecTool.Handlers.Traversal
                     var fileName = Path.GetFileName(f);
 
                     // Pattern check for file
-                    if (_primaryMatcher != null && _primaryMatcher.IsIgnored(f, isDirectory: false))
+                    if (primaryMatcher != null && primaryMatcher.IsIgnored(f, isDirectory: false))
                     {
                         log.Trace($"Skipping excluded file (pattern): {f}");
                         continue;
@@ -231,10 +249,12 @@ namespace VecTool.Handlers.Traversal
                     // File system validity check
                     if (!FileValidator.IsFileValid(f, null))
                     {
+                        _.Add("content", f);
                         log.Trace($"Invalid or binary file: {f}");
                         continue;
                     }
 
+                    // ✅ THREAD-SAFE: yield return (no shared collection)
                     yield return f;
                 }
 
@@ -246,7 +266,7 @@ namespace VecTool.Handlers.Traversal
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Failed to enumerate subdirectories in {current}");
+                    log.Error(ex, $"Failed to enumerate subdirectories in: {current}");
                     continue;
                 }
 

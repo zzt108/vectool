@@ -68,11 +68,17 @@
 
                 // File must exist
                 if (!fi.Exists)
+                {
+                    log.Trace($"File does not exist: {path}");
                     return false;
+                }
 
                 // File must have content
                 if (fi.Length == 0)
+                {
+                    log.Trace($"File has no content: {path}");
                     return false;
+                }
 
                 var ext = Path.GetExtension(path);
                 if (IsBinary(ext, path))
