@@ -15,6 +15,7 @@ namespace UnitTests.Handlers
         [TestCase(3, "Test run aborted.")]
         [TestCase(8, "No tests discovered. Check your test project.")]
         [TestCase(10, "Test adapter/infrastructure failure.")]
+        //[Ignore("TODO")]
         public void MapExitCodeToMessage_KnownCodes(int code, string expectedStart)
         {
             var msg = TestRunnerHandler.MapExitCodeToMessage(code);
@@ -22,6 +23,7 @@ namespace UnitTests.Handlers
         }
 
         [Test]
+        //[Ignore("TODO")]
         public void MapExitCodeToMessage_UnknownCode_ProducesSafeMessage()
         {
             var msg = TestRunnerHandler.MapExitCodeToMessage(99);
