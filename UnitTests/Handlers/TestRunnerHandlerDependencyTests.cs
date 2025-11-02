@@ -26,8 +26,6 @@ namespace UnitTests.Handlers
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
-            //var sln = Path.Combine(tempDir, "VecTool.sln");
-            //await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
 
             try
             {

@@ -27,7 +27,7 @@ namespace UnitTests.Handlers
         private VectorStoreConfig config = default!;
         private IUserInterface mockUi = default!;
         private IRecentFilesManager mockRecentFilesManager = default!;
-        private FileSystemTraverser mockTraverser = default!;
+        private IFileSystemTraverser mockTraverser = default!;
         private readonly CtxLogger log = new();
 
         [SetUp]
@@ -42,7 +42,7 @@ namespace UnitTests.Handlers
             config = new VectorStoreConfig();
             mockUi = Substitute.For<IUserInterface>();
             mockRecentFilesManager = Substitute.For<IRecentFilesManager>();
-            mockTraverser = Substitute.For<FileSystemTraverser>(null, testDir);
+            mockTraverser = Substitute.For<IFileSystemTraverser>();
         }
 
         [TearDown]
