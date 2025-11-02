@@ -194,6 +194,8 @@ Analyze test results and categorize failures by:
 2. Medium complexity (config issues, property mismatches)
 3. Architectural problems (design flaws, WinForms testing)
 
+! Tests aren't sacred, they can be wrong too !
+
 Prioritize low-hanging fruits. Flag suspicious test assertions.
 Include time estimates and impact per fix.
 
