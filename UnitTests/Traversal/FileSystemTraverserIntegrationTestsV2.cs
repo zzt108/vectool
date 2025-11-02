@@ -336,7 +336,7 @@ public class MarkedClass { }";
             var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: throwingExtractor);
 
             // Act & Assert - Should not throw; should continue processing
-            var ex = Should.NotThrow(() =>
+            Should.NotThrow(() =>
             {
                 var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
                 files.Count.ShouldBe(2); // Both files enumerated despite extractor throwing
@@ -394,7 +394,7 @@ public class Generated { }";
             var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
 
             // Act & Assert
-            var ex = Should.NotThrow(() =>
+            Should.NotThrow(() =>
             {
                 var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
                 files.Count.ShouldBeGreaterThanOrEqualTo(0);
