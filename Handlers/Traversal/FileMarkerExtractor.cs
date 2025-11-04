@@ -24,7 +24,7 @@
         /// Reference: optional @word-word (e.g., "@XSD-Docs", "@AI-Generated")
         /// </summary>
         private static readonly Regex MarkerRegex = new(
-            pattern: @"\[VECTOOL:EXCLUDE:([a-zA-Z0-9_]+):(@[\w\-]+)?\]",
+            pattern: @"\[VECTOOL:EXCLUDE:(?<reason>[a-zA-Z0-9_\-]+)(?::(?<reference>@[\w\-\.]+))?\]",
             options: RegexOptions.Compiled | RegexOptions.IgnoreCase,
             matchTimeout: TimeSpan.FromMilliseconds(100)
         );
@@ -74,12 +74,12 @@
             }
 
             // 5. Validate match groups
-            if (!match.Success || !match.Groups[1].Success)
-                return null;  // No marker found or invalid format
+            if (!match.Success)
+                return null;  
 
             // 6. Extract components
-            var reason = match.Groups[1].Value;
-            var spaceReference = match.Groups[2].Success ? match.Groups[2].Value : null;
+            var reason = match.Groups["reason"]?.Value;
+            var spaceReference = match.Groups["reference"]?.Value;
             var lineNumber = DetermineLineNumber(headerLines, match.Index);
 
             // 7. Create marker pattern

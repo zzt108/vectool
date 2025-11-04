@@ -66,7 +66,7 @@ namespace VecTool.Handlers.Traversal
                 .Add("exclusion_layer", "layer_2_marker")
                 .Add("file_path", filePath)
                 .Add("reason", reason)
-                .Add("space_reference", spaceReference ?? "none")
+                .Add("space_reference", string.IsNullOrWhiteSpace(spaceReference) ? "no space reference" : spaceReference)
                 .Add("line_number", lineNumber)
                 .Add("timestamp_utc", DateTime.UtcNow.ToString("O"));
         }

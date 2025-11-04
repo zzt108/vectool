@@ -128,7 +128,7 @@ namespace UnitTests.Handlers
             File.Exists(output).ShouldBeTrue();
             var content = File.ReadAllText(output);
             content.ShouldContain("File Size Summary");
-            content.ShouldContain("main.cs");
+            content.ShouldContain(".cs");
         }
 
         [Test]

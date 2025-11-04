@@ -1,12 +1,13 @@
-// Phase 4.5.X.2 - ExclusionProps Unit Tests
+﻿// Phase 4.5.X.2 - ExclusionProps Unit Tests
 // Tests LogCtx Props builders for file marker + pattern exclusion audit trail
 
 using LogCtxShared;
-using NUnit.Framework;
 using NLogShared;
+using NUnit.Framework;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using VecTool.Handlers.Traversal;
@@ -51,7 +52,7 @@ namespace UnitTests.Traversal
 
             // Assert - Verify Props structure
             props.ShouldNotBeNull();
-            
+
             // Layer identifier
             props.Keys.ShouldContain("exclusion_layer");
             props["exclusion_layer"].ShouldBe("layer_1_pattern");
@@ -193,13 +194,13 @@ namespace UnitTests.Traversal
             var props = ExclusionProps.CreateMarkerProps(filePath, reason, spaceReference: null, lineNumber);
 
             // Assert
-            props["space_reference"].ShouldBe("none");
+            props["space_reference"].ShouldBe("no space reference");
 
             // Act - Pass whitespace
             props = ExclusionProps.CreateMarkerProps(filePath, reason, "   ", lineNumber);
 
             // Assert
-            props["space_reference"].ShouldBe("none");
+            props["space_reference"].ShouldBe("no space reference");
 
             using var ctx = log.Ctx.Set(new Props()
                 .Add("test", "marker_null_space_reference")
@@ -656,7 +657,11 @@ namespace UnitTests.Traversal
             foreach (var ts in timestamps)
             {
                 ts.ShouldNotBeNullOrEmpty();
-                var parsed = DateTime.Parse(ts);
+                var parsed = DateTime.ParseExact(
+    ts,
+    "O",
+    null,
+    DateTimeStyles.RoundtripKind);  // ← Respects the 'Z' suffix
                 parsed.Kind.ShouldBe(DateTimeKind.Utc);
             }
 
@@ -664,7 +669,11 @@ namespace UnitTests.Traversal
             var now = DateTime.UtcNow;
             foreach (var ts in timestamps)
             {
-                var parsed = DateTime.Parse(ts);
+                var parsed = DateTime.ParseExact(
+                    ts,
+                    "O",
+                    null,
+                    DateTimeStyles.RoundtripKind);  // ← Respects the 'Z' suffix
                 var diff = (now - parsed).TotalSeconds;
                 diff.ShouldBeGreaterThanOrEqualTo(0);
                 diff.ShouldBeLessThan(60); // Within last 60 seconds
