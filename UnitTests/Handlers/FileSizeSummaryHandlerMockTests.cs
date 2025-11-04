@@ -196,8 +196,8 @@ namespace UnitTests.Handlers
             handler.GenerateFileSizeSummary(new List<string> { folder }, output, config);
 
             // Assert
-            mockUi.Received().ShowMessage(Arg.Is<string>(s => s.Contains("Processing", StringComparison.OrdinalIgnoreCase)));
-            mockUi.Received().ShowMessage(Arg.Is<string>(s => s.Contains("Done", StringComparison.OrdinalIgnoreCase)));
+            mockUi.Received().UpdateStatus(Arg.Is<string>(s => s.Contains("Analyzing folder", StringComparison.OrdinalIgnoreCase)));
+            mockUi.Received().UpdateStatus(Arg.Is<string>(s => s.Contains("File size summary generated successfully", StringComparison.OrdinalIgnoreCase)));
         }
     }
 }
