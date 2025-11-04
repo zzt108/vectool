@@ -58,7 +58,7 @@
             var headerLines = string.Join("\n", lines.Take(50));
 
             // 4. Apply regex pattern
-            Match match;
+            Match match = null!;
             try
             {
                 match = MarkerRegex.Match(headerLines);
@@ -86,7 +86,7 @@
             var markerPattern = new FileMarkerPattern
             {
                 FilePath = filePath,
-                Reason = reason,
+                Reason = reason??"unknown",
                 SpaceReference = spaceReference,
                 LineNumber = lineNumber,
                 ExtractedAt = DateTime.UtcNow

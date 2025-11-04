@@ -18,7 +18,7 @@ namespace VecTool.Handlers
     /// </summary>
     public class FileSizeSummaryHandler : FileHandlerBase
     {
-        private static readonly CtxLogger log = new();
+        //private static readonly CtxLogger log = new();
 
         // ✅ NEW: Injected traverser for exclusive authority
         private readonly IFileSystemTraverser _fileSystemTraverser;
