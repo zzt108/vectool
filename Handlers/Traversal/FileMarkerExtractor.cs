@@ -54,7 +54,7 @@
                 return null;  // File doesn't exist or can't be read
 
             // 3. Take only first 50 lines (header section)
-            var lines = header.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
+            var lines = header.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
             var headerLines = string.Join("\n", lines.Take(50));
 
             // 4. Apply regex pattern
