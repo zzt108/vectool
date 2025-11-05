@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-namespace VecTool.Handlers.Traversal
+﻿namespace VecTool.Handlers.Traversal
 {
     using LogCtxShared;
     using MAB.DotIgnore;
@@ -23,7 +22,7 @@ namespace VecTool.Handlers.Traversal
         private static readonly CtxLogger log = new();
 
         private readonly IUserInterface? ui;
-        private readonly string rootPath;
+        // private readonly string rootPath;
 
         /// <summary>
         /// NEW - Optional Layer 2 file marker extractor (injected via constructor).
@@ -33,6 +32,7 @@ namespace VecTool.Handlers.Traversal
 
         // Thread safety: Each call creates its own result collection
         private IIgnorePatternMatcher? primaryMatcher = null;
+
         private IIgnorePatternMatcher? fallbackMatcher = null;
 
         /// <summary>
@@ -40,10 +40,9 @@ namespace VecTool.Handlers.Traversal
         /// Lazy-initializes the pattern matcher on first use.
         /// Constructor WITHOUT Layer 2 support (backward compatible).
         /// </summary>
-        public FileSystemTraverser(IUserInterface? ui = null, string? rootPath = null)
+        public FileSystemTraverser(IUserInterface? ui = null)
         {
             this.ui = ui;
-            this.rootPath = rootPath ?? Environment.CurrentDirectory;
             this.markerExtractor = null;  // Layer 2 disabled
         }
 
@@ -53,15 +52,13 @@ namespace VecTool.Handlers.Traversal
         /// </summary>
         public FileSystemTraverser(
             IUserInterface? ui,
-            string? rootPath,
             IFileMarkerExtractor? markerExtractor)
         {
             this.ui = ui;
-            this.rootPath = rootPath ?? Environment.CurrentDirectory;
+            //this.rootPath = rootPath ?? Environment.CurrentDirectory;
             this.markerExtractor = markerExtractor;  // Layer 2 enabled (if provided)
 
             using var ctx = log.Ctx.Set(new Props()
-                .Add("root_path", this.rootPath)
                 .Add("layer_2_enabled", markerExtractor != null ? "yes" : "no"));
             log.Info("FileSystemTraverser initialized");
         }
@@ -75,10 +72,12 @@ namespace VecTool.Handlers.Traversal
             if (primaryMatcher != null)
                 return;
 
+            var rootPath = config.GetRootPath() ?? Environment.CurrentDirectory;
+
             try
             {
                 // LAYER 1: PRIMARY - Create pattern matcher .gitignore/.vtignore
-                primaryMatcher = IgnoreMatcherFactory.Create (
+                primaryMatcher = IgnoreMatcherFactory.Create(
                     IgnoreLibraryType.Auto,
                     rootPath
                 );
@@ -255,6 +254,13 @@ namespace VecTool.Handlers.Traversal
 
             writeFolderEnd?.Invoke(context);
         }
+
+        /// <summary>
+        /// gets root path from VectorStoreConfig and calls EnumerateFilesRespectingExclusions
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public IEnumerable<string> EnumerateFilesRespectingExclusions(IVectorStoreConfig config) => EnumerateFilesRespectingExclusions(config.GetRootPath(), config);
 
         /// <summary>
         /// Enumerates all files in a folder tree respecting exclusions (Layer 1 + Layer 2).

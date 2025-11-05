@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,6 +13,20 @@ namespace VecTool.Configuration
         public List<string> FolderPaths { get; set; } = new List<string>();
         public List<string> ExcludedFiles { get; set; } = new List<string>();
         public List<string> ExcludedFolders { get; set; } = new List<string>();
+        
+        [JsonConstructor]
+        public VectorStoreConfig()
+        {
+            
+        }
+
+        public VectorStoreConfig(params string[] args)
+        {
+            foreach (var arg in args)
+            {
+                AddFolderPath(arg);
+            }
+        }
 
         /// <summary>
         /// Add a folder path if it doesn't exist.

@@ -31,7 +31,7 @@ namespace UnitTests.Traversal
                 Guid.NewGuid().ToString("N")
             );
             Directory.CreateDirectory(testDir);
-            config = new VectorStoreConfig();
+            config = new VectorStoreConfig(testDir);
         }
 
         [TearDown]
@@ -56,7 +56,7 @@ namespace UnitTests.Traversal
         public void EnsureMatcherInitializedShouldOnlyInitializeOnce()
         {
             // Arrange
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
             var subDir = Path.Combine(testDir, "SubFolder");
             Directory.CreateDirectory(subDir);
 
@@ -83,7 +83,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testDir, "debug.log"), "// logs");
             File.WriteAllText(Path.Combine(testDir, "temp.tmp"), "// temp");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
@@ -108,7 +108,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testDir, "file.txt"), "text");
             File.WriteAllText(Path.Combine(testDir, "file.cs"), "code");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
@@ -133,7 +133,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testDir, "file.cs"), "code");
             File.WriteAllText(Path.Combine(testDir, "file.tmp"), "temp");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
@@ -156,7 +156,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testDir, "debug.log"), "");
             File.WriteAllText(Path.Combine(testDir, "main.cs"), "");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             using (var ctx = _log.Ctx.Set(
@@ -171,30 +171,6 @@ namespace UnitTests.Traversal
                 files.ShouldNotContain(f => f.EndsWith("debug.log"),
                     "pattern should exclude");
             }
-        }
-
-        /// <summary>
-        /// TEST 6: EnumerateFolders respects exclusion rules
-        /// Folders matching patterns should be excluded from traversal.
-        /// </summary>
-        [Test]
-        public void EnumerateFoldersShouldRespectExclusionRules()
-        {
-            // Arrange
-            Directory.CreateDirectory(Path.Combine(testDir, "src"));
-            Directory.CreateDirectory(Path.Combine(testDir, "bin"));
-            Directory.CreateDirectory(Path.Combine(testDir, "obj"));
-            File.WriteAllText(Path.Combine(testDir, ".gitignore"), "bin/\nobj/\n");
-
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
-
-            // Act
-            var folders = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
-
-            // Assert
-            folders.ShouldContain(f => f.EndsWith("src"), "src/ should be included");
-            folders.ShouldNotContain(f => f.EndsWith("bin"), "bin/ should be excluded");
-            folders.ShouldNotContain(f => f.EndsWith("obj"), "obj/ should be excluded");
         }
 
         /// <summary>
@@ -215,7 +191,7 @@ namespace UnitTests.Traversal
 
             File.WriteAllText(Path.Combine(testDir, ".gitignore"), "bin/\n");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
@@ -237,7 +213,7 @@ namespace UnitTests.Traversal
             Directory.CreateDirectory(Path.Combine(testDir, "empty"));
             File.WriteAllText(Path.Combine(testDir, "file.cs"), "");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act & Assert - should NOT throw
             var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
@@ -259,7 +235,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testDir, "src", "main.cs"), "");
             File.WriteAllText(Path.Combine(testDir, "vendor", "lib.cs"), "");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
@@ -283,7 +259,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testDir, "temp.tmp"), "");
             File.WriteAllText(Path.Combine(testDir, "backup.bak"), "");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
@@ -305,7 +281,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testDir, "code.cs"), "");
             File.WriteAllText(Path.Combine(testDir, "debug.log"), "");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
             var processedFiles = new List<string>();
 
             // Act
@@ -342,7 +318,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testDir, "code.cs"), "");
             File.WriteAllText(Path.Combine(testDir, "debug.log"), "");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testDir);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();

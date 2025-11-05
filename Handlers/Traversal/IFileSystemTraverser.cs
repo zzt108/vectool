@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using VecTool.Configuration;
+
     public interface IFileSystemTraverser
     {
         /// <summary>
@@ -10,6 +11,8 @@
         /// Pre-filters patterns and legacy config BEFORE returning files.
         /// </summary>
         IEnumerable<string> EnumerateFilesRespectingExclusions(string root, IVectorStoreConfig config);
+
+        IEnumerable<string> EnumerateFilesRespectingExclusions(IVectorStoreConfig config);
 
         /// <summary>
         /// Recursively processes folders with custom processing logic.

@@ -75,7 +75,7 @@ namespace UnitTests.Traversal
 
             var config = new VectorStoreConfig();
             var mockMarkerExtractor = new MockFileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: mockMarkerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: mockMarkerExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -113,7 +113,7 @@ public class Generated
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -149,7 +149,7 @@ public class ConfigGenerated { }";
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -183,7 +183,7 @@ public class MarkedClass { }";
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "*.log");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: null);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -197,7 +197,7 @@ public class MarkedClass { }";
             log.Info("Backward compatibility verified");
         }
 
-        #endregion
+        #endregion Category 1: Layer 1 + Layer 2 Combined Tests (4 tests)
 
         #region Category 2: File vs Directory Exclusion (3 tests)
 
@@ -228,7 +228,7 @@ public class MarkedClass { }";
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "bin/\nobj/");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -260,7 +260,7 @@ public class MarkedClass { }";
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -300,7 +300,7 @@ public class MarkedClass { }";
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "node_modules/");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -315,7 +315,7 @@ public class MarkedClass { }";
             log.Info("Nested exclusion verified");
         }
 
-        #endregion
+        #endregion Category 2: File vs Directory Exclusion (3 tests)
 
         #region Category 3: Marker Extraction Failures (3 tests)
 
@@ -333,7 +333,7 @@ public class MarkedClass { }";
 
             var config = new VectorStoreConfig();
             var throwingExtractor = new ThrowingFileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: throwingExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: throwingExtractor);
 
             // Act & Assert - Should not throw; should continue processing
             Should.NotThrow(() =>
@@ -365,7 +365,7 @@ public class Generated { }";
 
             var config = new VectorStoreConfig();
             var partialFailureExtractor = new PartialFailureFileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: partialFailureExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: partialFailureExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -391,7 +391,7 @@ public class Generated { }";
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor(); // Valid extractor
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act & Assert
             Should.NotThrow(() =>
@@ -405,7 +405,7 @@ public class Generated { }";
             log.Info("Failure logging verified - no rethrow");
         }
 
-        #endregion
+        #endregion Category 3: Marker Extraction Failures (3 tests)
 
         #region Category 4: ProcessFolder & EnumerateFiles Integration (4 tests)
 
@@ -425,7 +425,7 @@ public class Person { }";
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             var processedFiles = new List<string>();
             Action<string> captureFile = f => processedFiles.Add(f);
@@ -465,7 +465,7 @@ public class ExternalLib { }";
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -499,7 +499,7 @@ public class Lower { }";
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -528,7 +528,7 @@ public class Lower { }";
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act - Enumerate multiple times
             var files1 = traverser.EnumerateFilesRespectingExclusions(testRoot, config).OrderBy(f => f).ToList();
@@ -547,7 +547,7 @@ public class Lower { }";
             log.Info("Deterministic file order verified");
         }
 
-        #endregion
+        #endregion Category 4: ProcessFolder & EnumerateFiles Integration (4 tests)
 
         #region Category 5: XSD and JSON Special Cases (3 tests)
 
@@ -579,7 +579,7 @@ namespace Generated.Schema
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -620,7 +620,7 @@ namespace Generated.Schema
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -659,7 +659,7 @@ namespace Generated.Schema
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -676,7 +676,7 @@ namespace Generated.Schema
             log.Info("Mixed format marker handling verified");
         }
 
-        #endregion
+        #endregion Category 5: XSD and JSON Special Cases (3 tests)
 
         #region Category 6: Performance and Edge Cases (2 tests)
 
@@ -704,7 +704,7 @@ namespace Generated.Schema
 
             var config = new VectorStoreConfig();
             var markerExtractor = new FileMarkerExtractor();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+            var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
             // Act
             var enumStopwatch = Stopwatch.StartNew();
@@ -739,7 +739,7 @@ namespace Generated.Schema
 
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "*.log");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var results = new List<int>();
 
@@ -747,7 +747,7 @@ namespace Generated.Schema
             var threads = Enumerable.Range(0, 5)
                 .Select(_ => new Thread(() =>
                 {
-                    var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot, markerExtractor: markerExtractor);
+                    var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
                     var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
                     lock (results)
                     {
@@ -769,7 +769,7 @@ namespace Generated.Schema
             log.Info("Concurrent enumeration safety verified");
         }
 
-        #endregion
+        #endregion Category 6: Performance and Edge Cases (2 tests)
     }
 
     #region Mock and Helper Classes
@@ -814,5 +814,5 @@ namespace Generated.Schema
         }
     }
 
-    #endregion
+    #endregion Mock and Helper Classes
 }

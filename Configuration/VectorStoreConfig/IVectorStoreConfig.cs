@@ -45,6 +45,12 @@ namespace VecTool.Configuration
         /// </summary>
         bool RemoveFolderPath(string folderPath);
 
+        /// <summary>
+        /// Common root; prefers ancestor containing .git or dot-folders when multiple valid roots exist
+        /// </summary>
+        /// <returns></returns>
+        public string? GetRootPath();
+
         List<string> ExcludedFiles { get; set; }
         List<string> ExcludedFolders { get; set; }
         List<string> FolderPaths { get; set; }
