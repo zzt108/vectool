@@ -289,7 +289,7 @@ dist/
             {
                 var fullPath = Path.Combine(testRoot, path);
                 Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
-                File.WriteAllText(fullPath, "");
+                File.WriteAllText(fullPath, $"// file {fullPath}");
             }
 
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "bin/\nbuild/\n.git/\n");
@@ -300,17 +300,17 @@ dist/
             var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
 
             // Act
-            var folders = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
+            var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
 
             // Assert
-            folders.ShouldContain(f => f.EndsWith("src"), "src should be included");
-            folders.ShouldContain(f => f.EndsWith("core"), "src/core should be included");
-            folders.ShouldContain(f => f.EndsWith("Ui"), "src/Ui should be included");
+            files.ShouldContain(f => f.Contains("\\src\\"), "src should be included");
+            files.ShouldContain(f => f.Contains("\\core\\"), "src/core should be included");
+            files.ShouldContain(f => f.Contains("\\Ui\\"), "src/Ui should be included");
 
-            folders.ShouldNotContain(f => f.EndsWith("bin"), "bin excluded by pattern");
-            folders.ShouldNotContain(f => f.EndsWith("build"), "build excluded by pattern");
-            folders.ShouldNotContain(f => f.EndsWith(".git"), ".git excluded by pattern");
-            folders.ShouldNotContain(f => f.EndsWith("vendor"), "vendor excluded by config");
+            files.ShouldNotContain(f => f.Contains("bin\\"), "bin excluded by pattern");
+            files.ShouldNotContain(f => f.Contains("build\\"), "build excluded by pattern");
+            files.ShouldNotContain(f => f.Contains(".git\\"), ".git excluded by pattern");
+            files.ShouldNotContain(f => f.Contains("vendor\\"), "vendor excluded by config");
         }
 
         /// <summary>
@@ -464,7 +464,7 @@ dist/
             threads.ForEach(t => t.Join());
 
             // Assert
-            results.ShouldAllBe( x=>x==10, "All threads got same result");
+            results.ShouldAllBe(x => x == 10, "All threads got same result");
         }
 
         /// <summary>
