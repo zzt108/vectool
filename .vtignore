@@ -3,3 +3,11 @@
 
 # User-specific files
 *.resx
+*.sln
+readme.md
+changelog.md
+.gitmodules
+*.clinerules
+
+[Ll]og[Cc]tx/
+
