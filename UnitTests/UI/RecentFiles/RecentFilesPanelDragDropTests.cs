@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-#nullable enable
+﻿#nullable enable
 using NUnit.Framework;
 using oaiUI.RecentFiles;
 using Shouldly;
