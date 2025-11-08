@@ -16,7 +16,7 @@
         /// <summary>
         /// Determines if a folder should be excluded from processing.
         /// </summary>
-        public static bool IsFolderExcluded(string folderName, VectorStoreConfig config)
+        public static bool IsFolderExcluded(string folderName, IVectorStoreConfig config)
         {
             if (string.IsNullOrWhiteSpace(folderName))
                 return true;
@@ -34,7 +34,7 @@
         /// <summary>
         /// Determines if a file should be excluded from processing.
         /// </summary>
-        public static bool IsFileExcluded(string fileName, VectorStoreConfig config)
+        public static bool IsFileExcluded(string fileName, IVectorStoreConfig config)
         {
             if (string.IsNullOrWhiteSpace(fileName))
                 return true;
@@ -68,11 +68,17 @@
 
                 // File must exist
                 if (!fi.Exists)
+                {
+                    log.Trace($"File does not exist: {path}");
                     return false;
+                }
 
                 // File must have content
                 if (fi.Length == 0)
+                {
+                    log.Trace($"File has no content: {path}");
                     return false;
+                }
 
                 var ext = Path.GetExtension(path);
                 if (IsBinary(ext, path))
@@ -156,7 +162,7 @@
         /// 2. MimeTypeProvider binary detection (from mdTags.json)
         /// 3. File system validity checks
         /// </summary>
-        public static bool ShouldIncludeInExport(string filePath, VectorStoreConfig config)
+        public static bool ShouldIncludeInExport(string filePath, IVectorStoreConfig config)
         {
             if (string.IsNullOrWhiteSpace(filePath))
                 return false;

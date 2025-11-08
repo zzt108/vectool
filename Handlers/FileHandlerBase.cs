@@ -4,6 +4,7 @@ using global::VecTool.Configuration;
 using global::VecTool.Handlers.Analysis;
 using global::VecTool.Handlers.Traversal;
 using global::VecTool.RecentFiles;
+using LogCtxShared;
 using NLogShared;
 using System;
 
@@ -15,31 +16,42 @@ public abstract class FileHandlerBase
 {
     protected static readonly CtxLogger log = new(); // renamed from _log to match AI faulti code generation logic
     
-    protected readonly IUserInterface? ui; // renamed from _ui to match AI faulti code generation logic
-    protected readonly IRecentFilesManager? _recentFilesManager; // renamed from _recentFilesManager to match AI faulti code generation logic
-    protected readonly AiContextGenerator _aiContextGenerator;
-    protected readonly FileSystemTraverser _fileSystemTraverser;
+    protected readonly IUserInterface? Ui; // renamed from _ui to match AI faulti code generation logic
+    protected readonly IRecentFilesManager? RecentFilesManager; // renamed from RecentFilesManager to match AI faulti code generation logic
+    protected readonly AiContextGenerator AiContextGenerator;
+    protected readonly IFileSystemTraverser FileSystemTraverser;
 
-    protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager)
+    protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager,
+        IFileSystemTraverser? traverser = null)
     {
-        this.ui = ui;
-        this._recentFilesManager = recentFilesManager;
-        _aiContextGenerator = new AiContextGenerator();
-        _fileSystemTraverser = new FileSystemTraverser(ui);
+        this.Ui = ui;
+        this.RecentFilesManager = recentFilesManager;
+
+        if (traverser != null)
+        {
+            FileSystemTraverser = traverser;
+        }
+        else
+        {
+            FileSystemTraverser = new FileSystemTraverser(ui, null);
+        }
+
+        AiContextGenerator = new AiContextGenerator();
     }
+
 
     // ============================================================================
     // AI Context - Delegated to AiContextGenerator
     // ============================================================================
 
     protected string GenerateTableOfContentsList(List<string> folderPaths)
-        => _aiContextGenerator.GenerateTableOfContents(folderPaths);
+        => AiContextGenerator.GenerateTableOfContents(folderPaths);
 
     protected string GenerateCrossReferencesList(List<string> folderPaths)
-        => _aiContextGenerator.GenerateCrossReferences(folderPaths);
+        => AiContextGenerator.GenerateCrossReferences(folderPaths);
 
     protected string GenerateCodeMetaInfoList(List<string> folderPaths)
-        => _aiContextGenerator.GenerateCodeMetaInfo(folderPaths);
+        => AiContextGenerator.GenerateCodeMetaInfo(folderPaths);
 
     protected void AddAIOptimizedContext<T>(
         List<string> folderPaths,
@@ -67,44 +79,34 @@ public abstract class FileHandlerBase
         string folderPath,
         T context,
         VectorStoreConfig vectorStoreConfig,
-        Action<string, T, VectorStoreConfig> processFile,
+        Action<string, T, IVectorStoreConfig> processFile,
         Action<T, string> writeFolderName,
         Action<T>? writeFolderEnd = null)
     {
-        _fileSystemTraverser.ProcessFolder(
+        FileSystemTraverser.ProcessFolder(
             folderPath, context, vectorStoreConfig,
             processFile, writeFolderName, writeFolderEnd);
     }
 
     protected IEnumerable<string> EnumerateFilesRespectingExclusions(string root, VectorStoreConfig config)
-        => _fileSystemTraverser.EnumerateFilesRespectingExclusions(root, config);
+    {
+        if (FileSystemTraverser == null)
+        {
+            using var ctx = log.Ctx.Set(new Props()
+                .Add(nameof(root), root)
+                .Add("reason", "null_traverser"));
+            log.Warn("FileSystemTraverser not initialized");
+            return Enumerable.Empty<string>();
+        }
 
-    // ============================================================================
-    // Validation - Virtual for derived overrides
-    // ============================================================================
-
-    protected virtual bool IsFolderExcluded(string folderName, VectorStoreConfig config)
-        => FileValidator.IsFolderExcluded(folderName, config);
-
-    protected virtual bool IsFileExcluded(string fileName, VectorStoreConfig config)
-        => FileValidator.IsFileExcluded(fileName, config);
-
-    protected virtual bool IsFileValid(string path, string? outputPath)
-        => FileValidator.IsFileValid(path, outputPath);
-
-    // ============================================================================
-    // Content helpers - Virtual for derived customization
-    // ============================================================================
+        return FileSystemTraverser.EnumerateFilesRespectingExclusions(root, config);
+    }
 
     protected virtual string GetFileContent(string filePath)
         => PathHelpers.SafeReadAllText(filePath);
 
     protected virtual string GetEnhancedFileContent(string file)
         => PathHelpers.SafeReadAllText(file);
-
-    // ============================================================================
-    // Legacy compatibility overloads
-    // ============================================================================
 
     protected virtual void ProcessFile(string file, System.IO.StreamWriter writer, VectorStoreConfig vectorStoreConfig)
     {

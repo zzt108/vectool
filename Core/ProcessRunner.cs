@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// File: Core/ProcessRunner.cs
+﻿// File: Core/ProcessRunner.cs
 
 using LogCtxShared;
 using NLogShared;
@@ -46,7 +45,6 @@ namespace VecTool.Core
 
             try
             {
-
                 log?.Debug($"Starting process: FileName='{fileName}', Args='{arguments}', WorkDir='{workingDirectory}'");
 
                 try
@@ -87,11 +85,9 @@ namespace VecTool.Core
                     .Add("Duration", (DateTime.UtcNow - startedAt).TotalMilliseconds);
                 log?.Error(ex, $"ProcessRunner.RunAsync failed. Command: '{fileName}', Args: '{arguments}', WorkDir: '{workingDirectory}'");
                 throw; // Re-throw with logged context
-
             }
             finally
             {
-                
             }
         }
     }

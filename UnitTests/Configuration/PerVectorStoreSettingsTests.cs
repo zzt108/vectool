@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using VecTool.Configuration;
 
-namespace UnitTests.Config
+namespace UnitTests.Configuration
 {
     [TestFixture]
     public class PerVectorStoreSettingsTests

@@ -146,5 +146,4 @@ public static class RecentFileTypeExtensions
         var parts = baseName.Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
         return parts.Length == 0 ? string.Empty : parts[^1];
     }
-
 }

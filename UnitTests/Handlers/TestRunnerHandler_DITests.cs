@@ -1,12 +1,11 @@
-﻿// ✅ FULL FILE VERSION
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
 using UnitTests.Fakes;
 using VecTool.Core.Abstractions;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
 
-namespace UnitTests
+namespace UnitTests.Handlers
 {
     [TestFixture]
     public class TestRunnerHandler_DITests

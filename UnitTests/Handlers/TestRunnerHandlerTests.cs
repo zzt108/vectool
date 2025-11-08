@@ -4,7 +4,7 @@ using NUnit.Framework;
 using Shouldly;
 using VecTool.Handlers;
 
-namespace VecTool.UnitTests
+namespace UnitTests.Handlers
 {
     [TestFixture]
     public class TestRunnerHandlerTests

@@ -9,7 +9,7 @@ using VecTool.Core.Abstractions;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
 
-namespace UnitTests
+namespace UnitTests.Handlers
 {
     [TestFixture]
     public class TestRunnerHandlerDependencyTests
@@ -26,8 +26,6 @@ namespace UnitTests
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
-            //var sln = Path.Combine(tempDir, "VecTool.sln");
-            //await File.WriteAllTextAsync(sln, "Microsoft Visual Studio Solution File, Format Version 12.00");
 
             try
             {
