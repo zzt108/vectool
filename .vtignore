@@ -4,11 +4,16 @@ OaiUI/
 # Tests
 # unittests/
 
+# Documentations
+.documentation/
+readme.md
+changelog.md
+LICENSE-2.0.txt
+logctx/LICENSE-2.0.txt
+
 # User-specific files
 *.resx
 *.sln
-readme.md
-changelog.md
 .gitmodules
 *.clinerules
 
