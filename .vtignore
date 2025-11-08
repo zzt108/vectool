@@ -1,0 +1,99 @@
+# UI-specific files
+OaiUI/
+
+# Tests
+# unittests/
+
+# Documentations
+.documentation/
+readme.md
+changelog.md
+LICENSE-2.0.txt
+logctx/LICENSE-2.0.txt
+
+# User-specific files
+*.resx
+*.sln
+.gitmodules
+*.clinerules
+
+media/
+logctx/
+log/
+.cr/
+.vs/
+.vscode/
+
+# 🎯 Build Artifacts (often 100+ MB)
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+*.so
+*.dylib
+
+# 📦 NuGet & Package Managers
+packages/
+.nuget/
+*.nupkg
+node_modules/
+dist/
+build/
+
+# 🔧 IDE & Editor (safe to exclude)
+.vs/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+*.user
+*.suo
+.idea/
+*.swp
+*.swo
+
+# 📄 Build Logs & Temp (high volume, low value)
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+TestResults/
+
+# 🎨 Generated Files (redundant with source)
+*.designer.cs
+*.xaml.cs
+*.g.cs
+*.g.i.cs
+
+# 📚 Documentation (optional - keep if LLM needs context)
+# docs/
+# README.md
+
+# 🔐 Secrets & Configuration (CRITICAL)
+.openai
+*.key
+*.pem
+secrets.json
+appsettings.*.json  # ❌ EXCLUDE but keep appsettings.json
+
+# 🧪 Test Outputs (captured in Recent Files)
+Generated/
+*.trx
+coverage/
+
+# 🌍 OS-Specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 🎁 Optional: Heavy Assets (if not needed for LLM)
+*.zip
+*.tar.gz
+*.iso
+*.mp4
+*.png
+*.jpg
+*.gif
+*.bmp
+

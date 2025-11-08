@@ -17,7 +17,7 @@ namespace UnitTests.Traversal
     /// Tests performance, nested structures, and real-world .gitignore patterns.
     /// </summary>
     [TestFixture]
-    public class FileSystemTraverserIntegrationTests
+    public class FileSystemTraverserIntegrationTestsV1
     {
         private string testRoot = default!;
         private readonly CtxLogger _log = new();
@@ -75,7 +75,7 @@ namespace UnitTests.Traversal
             setupStopwatch.Stop();
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act - Enumerate and measure
             var enumStopwatch = Stopwatch.StartNew();
@@ -130,7 +130,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "bin/\nobj/\n");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -199,7 +199,7 @@ dist/
             }
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -234,7 +234,7 @@ dist/
             File.WriteAllText(Path.Combine(testRoot, "accessible", "file.txt"), "");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act & Assert - Should NOT throw exception
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -256,7 +256,7 @@ dist/
             File.WriteAllText(Path.Combine(testRoot, "αρχείο.txt"), "");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -289,7 +289,7 @@ dist/
             {
                 var fullPath = Path.Combine(testRoot, path);
                 Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
-                File.WriteAllText(fullPath, "");
+                File.WriteAllText(fullPath, $"// file {fullPath}");
             }
 
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "bin/\nbuild/\n.git/\n");
@@ -297,20 +297,20 @@ dist/
             var config = new VectorStoreConfig();
             config.ExcludedFolders.Add("vendor");
 
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
-            var folders = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
+            var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
 
             // Assert
-            folders.ShouldContain(f => f.EndsWith("src"), "src should be included");
-            folders.ShouldContain(f => f.EndsWith("core"), "src/core should be included");
-            folders.ShouldContain(f => f.EndsWith("Ui"), "src/Ui should be included");
+            files.ShouldContain(f => f.Contains("\\src\\"), "src should be included");
+            files.ShouldContain(f => f.Contains("\\core\\"), "src/core should be included");
+            files.ShouldContain(f => f.Contains("\\Ui\\"), "src/Ui should be included");
 
-            folders.ShouldNotContain(f => f.EndsWith("bin"), "bin excluded by pattern");
-            folders.ShouldNotContain(f => f.EndsWith("build"), "build excluded by pattern");
-            folders.ShouldNotContain(f => f.EndsWith(".git"), ".git excluded by pattern");
-            folders.ShouldNotContain(f => f.EndsWith("vendor"), "vendor excluded by config");
+            files.ShouldNotContain(f => f.Contains("bin\\"), "bin excluded by pattern");
+            files.ShouldNotContain(f => f.Contains("build\\"), "build excluded by pattern");
+            files.ShouldNotContain(f => f.Contains(".git\\"), ".git excluded by pattern");
+            files.ShouldNotContain(f => f.Contains("vendor\\"), "vendor excluded by config");
         }
 
         /// <summary>
@@ -337,7 +337,7 @@ dist/
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "*.log\n");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
             var processedFiles = new List<string>();
             var folderSummaries = new List<string>();
 
@@ -388,7 +388,7 @@ dist/
             }
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -418,7 +418,7 @@ dist/
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "*.log\n");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act - Should complete quickly despite large file
             var sw = Stopwatch.StartNew();
@@ -452,7 +452,7 @@ dist/
             // Act - Multiple threads enumerate simultaneously
             var threads = Enumerable.Range(0, 5).Select(_ => new System.Threading.Thread(() =>
             {
-                var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+                var traverser = new FileSystemTraverser(ui: null);
                 var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
                 lock (results)
                 {
@@ -464,7 +464,7 @@ dist/
             threads.ForEach(t => t.Join());
 
             // Assert
-            results.ShouldAllBe( x=>x==10, "All threads got same result");
+            results.ShouldAllBe(x => x == 10, "All threads got same result");
         }
 
         /// <summary>
@@ -481,7 +481,7 @@ dist/
             File.WriteAllText(Path.Combine(testRoot, "data.log"), "");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();
@@ -518,7 +518,7 @@ dist/
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "*.log\n");
 
             var config = new VectorStoreConfig();
-            var traverser = new FileSystemTraverser(ui: null, rootPath: testRoot);
+            var traverser = new FileSystemTraverser(ui: null);
 
             // Act
             var files = traverser.EnumerateFilesRespectingExclusions(testRoot, config).ToList();

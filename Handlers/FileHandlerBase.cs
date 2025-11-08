@@ -102,32 +102,11 @@ public abstract class FileHandlerBase
         return FileSystemTraverser.EnumerateFilesRespectingExclusions(root, config);
     }
 
-    // ============================================================================
-    // Validation - Virtual for derived overrides
-    // ============================================================================
-
-    protected virtual bool IsFolderExcluded(string folderName, VectorStoreConfig config)
-        => FileValidator.IsFolderExcluded(folderName, config);
-
-    protected virtual bool IsFileExcluded(string fileName, VectorStoreConfig config)
-        => FileValidator.IsFileExcluded(fileName, config);
-
-    protected virtual bool IsFileValid(string path, string? outputPath)
-        => FileValidator.IsFileValid(path, outputPath);
-
-    // ============================================================================
-    // Content helpers - Virtual for derived customization
-    // ============================================================================
-
     protected virtual string GetFileContent(string filePath)
         => PathHelpers.SafeReadAllText(filePath);
 
     protected virtual string GetEnhancedFileContent(string file)
         => PathHelpers.SafeReadAllText(file);
-
-    // ============================================================================
-    // Legacy compatibility overloads
-    // ============================================================================
 
     protected virtual void ProcessFile(string file, System.IO.StreamWriter writer, VectorStoreConfig vectorStoreConfig)
     {

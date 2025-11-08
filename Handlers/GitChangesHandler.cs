@@ -26,7 +26,7 @@ public sealed class GitChangesHandler : FileHandlerBase
     {
         _aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"]
             ?? "Analyze the following Git changes and provide a concise, descriptive commit message.";
-        traverser = new FileSystemTraverser(ui, rootPath);
+        traverser = new FileSystemTraverser(ui);
     }
 
     /// <summary>

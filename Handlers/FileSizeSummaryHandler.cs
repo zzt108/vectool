@@ -18,11 +18,10 @@ namespace VecTool.Handlers
     /// </summary>
     public class FileSizeSummaryHandler : FileHandlerBase
     {
-        private static readonly CtxLogger log = new();
+        //private static readonly CtxLogger log = new();
 
         // ✅ NEW: Injected traverser for exclusive authority
         private readonly IFileSystemTraverser _fileSystemTraverser;
-        private readonly string _rootPath;
 
         /// <summary>
         /// ✅ NEW: Constructor with dependency injection for traverser
@@ -30,17 +29,14 @@ namespace VecTool.Handlers
         /// <param name="ui">Optional UI interface for progress updates</param>
         /// <param name="recentFilesManager">Optional recent files manager</param>
         /// <param name="fileSystemTraverser">Traverser for file enumeration (required for exclusive authority)</param>
-        /// <param name="rootPath">Root path for traverser initialization</param>
         public FileSizeSummaryHandler(
             IUserInterface? ui,
             IRecentFilesManager? recentFilesManager,
-            IFileSystemTraverser? fileSystemTraverser = null,
-            string? rootPath = null)
+            IFileSystemTraverser? fileSystemTraverser = null)
             : base(ui, recentFilesManager)
         {
             // ✅ DI pattern: accept injection or create default
-            _fileSystemTraverser = fileSystemTraverser ?? new FileSystemTraverser(ui, rootPath);
-            _rootPath = rootPath ?? Environment.CurrentDirectory;
+            _fileSystemTraverser = fileSystemTraverser ?? new FileSystemTraverser(ui);
         }
 
         /// <summary>

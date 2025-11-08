@@ -49,7 +49,7 @@ namespace UnitTests.Constants
         public void TagBuilderShouldThrowOnNullOrEmptyInput()
         {
             // Assert
-            Should.Throw<ArgumentException>(() => TagBuilder.BuildFilePathTag(null));
+            Should.Throw<ArgumentException>(() => TagBuilder.BuildFilePathTag(null!));
             Should.Throw<ArgumentException>(() => TagBuilder.BuildFilePathTag(""));
             Should.Throw<ArgumentException>(() => TagBuilder.BuildFilePathTag("   "));
         }

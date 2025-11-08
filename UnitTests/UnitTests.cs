@@ -67,7 +67,7 @@ namespace UnitTests
 
             var result = MimeTypeProvider.GetMdTag(extension);
 
-            _log.Ctx.Set(new LogCtxShared.Props("Actual", result));
+            _log.Ctx.Set(new LogCtxShared.Props("Actual", result??"(null)"));
             _log.Info($"Assert: comparing expected vs actual for {extension}");
             result.ShouldBe(expectedMdTag);
         }
@@ -84,7 +84,7 @@ namespace UnitTests
 
             var result = MimeTypeProvider.GetMimeType(extension);
 
-            _log.Ctx.Set(new LogCtxShared.Props("Actual", result));
+            _log.Ctx.Set(new LogCtxShared.Props("Actual", result??"(null)"));
             _log.Info($"Assert: comparing expected vs actual for {extension}");
             result.ShouldBe(expectedMimeType);
         }
