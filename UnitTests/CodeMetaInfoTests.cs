@@ -6,7 +6,6 @@ using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using VecTool.Handlers;
 using VecTool.Constants;
-using VecTool.Configuration;
 
 namespace DocXHandlerTests
 {

@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Vectool.UI.Versioning;
-using VecTool.Configuration;
 using VecTool.Core;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
