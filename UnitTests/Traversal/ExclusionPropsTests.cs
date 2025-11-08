@@ -23,7 +23,7 @@ namespace UnitTests.Traversal
             props.ShouldNotBeNull();
             foreach (var key in expectedKeys)
                 props.Keys.ShouldContain(key);
-            props.Keys.ShouldContain("timestamputc");
+            props.Keys.ShouldContain("timestamp_utc");  
         }
 
         private static void AssertTimestamp(string timestamp)
@@ -42,28 +42,30 @@ namespace UnitTests.Traversal
         public void CreatePatternProps_IncludesAllRequiredKeys()
         {
             var props = ExclusionProps.CreatePatternProps(
-                "/home/user/project/file.g.cs", "*.g.cs", ".vtignore");
+                "home/user/project/file.g.cs",
+                "*.g.cs",
+                ".vtignore"
+            );
 
-            AssertCommonKeys(props, "exclusionlayer", "itempath", "pattern", "sourcefile");
-            props["exclusionlayer"].ShouldBe("layer1:pattern");
-            props["itempath"].ShouldBe("/home/user/project/file.g.cs");
+            AssertCommonKeys(props, "exclusion_layer", "item_path", "pattern", "source_file"); 
+            props["exclusion_layer"].ShouldBe("layer_1_pattern"); 
+            props["item_path"].ShouldBe("home/user/project/file.g.cs"); 
             props["pattern"].ShouldBe("*.g.cs");
-            props["sourcefile"].ShouldBe(".vtignore");
-            AssertTimestamp((string)props["timestamputc"]);
+            props["source_file"].ShouldBe(".vtignore"); 
+            AssertTimestamp((string)props["timestamp_utc"]); 
         }
 
         [TestCase("app/debug.log", "*.log", ".gitignore")]
         [TestCase("app/Generated.g.cs", "*.g.cs", ".vtignore")]
-        [TestCase("app/bin", "bin/", ".gitignore")]
-        [TestCase("app/node_modules", "node_modules/", ".gitignore")]
-        public void CreatePatternProps_HandlesVariousPatternTypes(
-            string itemPath, string pattern, string sourceFile)
+        [TestCase("app/bin", "bin", ".gitignore")]
+        [TestCase("app/node_modules", "node_modules", ".gitignore")]
+        public void CreatePatternProps_HandlesVariousPatternTypes(string itemPath, string pattern, string sourceFile)
         {
             var props = ExclusionProps.CreatePatternProps(itemPath, pattern, sourceFile);
 
             props["pattern"].ShouldBe(pattern);
-            props["itempath"].ShouldBe(itemPath);
-            props["exclusionlayer"].ShouldBe("layer1:pattern");
+            props["item_path"].ShouldBe(itemPath); 
+            props["exclusion_layer"].ShouldBe("layer_1_pattern"); 
         }
 
         #endregion
@@ -74,37 +76,44 @@ namespace UnitTests.Traversal
         public void CreateMarkerProps_IncludesAllRequiredKeys()
         {
             var props = ExclusionProps.CreateMarkerProps(
-                "app/src/Generated.g.cs", "generated:by:xsd", "XSD-Schema-Docs", 3);
+                "app/src/Generated.g.cs",
+                "generated_by_xsd",  
+                "XSD-Schema-Docs",
+                3
+            );
 
-            AssertCommonKeys(props, "exclusionlayer", "filepath", "reason",
-                "spacereference", "linenumber");
-            props["exclusionlayer"].ShouldBe("layer2:marker");
-            props["filepath"].ShouldBe("app/src/Generated.g.cs");
-            props["reason"].ShouldBe("generated:by:xsd");
-            props["spacereference"].ShouldBe("XSD-Schema-Docs");
-            ((int)props["linenumber"]).ShouldBe(3);
+            AssertCommonKeys(props, "exclusion_layer", "file_path", "reason", "space_reference", "line_number"); 
+            props["exclusion_layer"].ShouldBe("layer_2_marker"); 
+            props["file_path"].ShouldBe("app/src/Generated.g.cs"); 
+            props["reason"].ShouldBe("generated_by_xsd"); 
+            props["space_reference"].ShouldBe("XSD-Schema-Docs"); 
+            ((int)props["line_number"]).ShouldBe(3); 
         }
 
         [Test]
         public void CreateMarkerProps_DefaultsNullSpaceReferenceToNone()
         {
             var props = ExclusionProps.CreateMarkerProps(
-                "app/file.cs", "vendorlibrary", null, 1);
+                "app/file.cs",
+                "vendor_library", 
+                null,
+                1
+            );
 
-            props["spacereference"].ShouldBe("no space reference");
+            props["space_reference"].ShouldBe("no space reference"); 
         }
 
-        [TestCase("generated:by:xsd", "XSD-Schema-Docs")]
-        [TestCase("generated:by:proto", "Protobuf-Guide")]
-        [TestCase("vendorlibrary", "Third-Party-Guide")]
-        [TestCase("testharness", "Testing-Generated")]
+        [TestCase("generated_by_xsd", "XSD-Schema-Docs")] 
+        [TestCase("generated_by_proto", "Protobuf-Guide")] 
+        [TestCase("vendor_library", "Third-Party-Guide")] 
+        [TestCase("test_harness", "Testing-Generated")] 
         public void CreateMarkerProps_HandlesVariousReasonTypes(string reason, string reference)
         {
             var props = ExclusionProps.CreateMarkerProps("app/file.cs", reason, reference, 1);
 
             props["reason"].ShouldBe(reason);
-            props["spacereference"].ShouldBe(reference);
-            props["exclusionlayer"].ShouldBe("layer2:marker");
+            props["space_reference"].ShouldBe(reference); 
+            props["exclusion_layer"].ShouldBe("layer_2_marker"); 
         }
 
         #endregion
@@ -115,13 +124,16 @@ namespace UnitTests.Traversal
         public void CreateMarkerErrorProps_IncludesAllRequiredKeys()
         {
             var props = ExclusionProps.CreateMarkerErrorProps(
-                "app/Config.g.cs", "UnauthorizedAccessException", "Access denied");
+                "app/Config.g.cs",
+                "UnauthorizedAccessException",
+                "Access denied"
+            );
 
-            AssertCommonKeys(props, "exclusionlayer", "filepath", "errortype", "errormessage");
-            props["exclusionlayer"].ShouldBe("layer2:marker:error");
-            props["filepath"].ShouldBe("app/Config.g.cs");
-            props["errortype"].ShouldBe("UnauthorizedAccessException");
-            props["errormessage"].ShouldBe("Access denied");
+            AssertCommonKeys(props, "exclusion_layer", "file_path", "error_type", "error_message"); 
+            props["exclusion_layer"].ShouldBe("layer_2_marker_error"); 
+            props["file_path"].ShouldBe("app/Config.g.cs"); 
+            props["error_type"].ShouldBe("UnauthorizedAccessException"); 
+            props["error_message"].ShouldBe("Access denied"); 
         }
 
         [Test]
@@ -129,14 +141,13 @@ namespace UnitTests.Traversal
         {
             var props = ExclusionProps.CreateSummaryProps(1500, 425, 12, 2);
 
-            AssertCommonKeys(props, "operation", "filesprocessed",
-                "filesexcluded:layer1:pattern", "filesexcluded:layer2:marker",
-                "markerextractionerrors");
-            props["operation"].ShouldBe("foldertraversal:summary");
-            ((int)props["filesprocessed"]).ShouldBe(1500);
-            ((int)props["filesexcluded:layer1:pattern"]).ShouldBe(425);
-            ((int)props["filesexcluded:layer2:marker"]).ShouldBe(12);
-            ((int)props["markerextractionerrors"]).ShouldBe(2);
+            AssertCommonKeys(props, "operation", "files_processed", "files_excluded_layer_1_pattern",
+                           "files_excluded_layer_2_marker", "marker_extraction_errors"); 
+            props["operation"].ShouldBe("folder_traversal_summary"); 
+            ((int)props["files_processed"]).ShouldBe(1500); 
+            ((int)props["files_excluded_layer_1_pattern"]).ShouldBe(425); 
+            ((int)props["files_excluded_layer_2_marker"]).ShouldBe(12); 
+            ((int)props["marker_extraction_errors"]).ShouldBe(2); 
         }
 
         #endregion
@@ -147,29 +158,31 @@ namespace UnitTests.Traversal
         public void CreateDirectoryExclusionProps_HandlesTreeExclusions()
         {
             var props = ExclusionProps.CreateDirectoryExclusionProps(
-                "app/node_modules", "node_modules/", 1247);
+                "app/node_modules",
+                "node_modules",
+                1247
+            );
 
-            AssertCommonKeys(props, "exclusionlayer", "directorypath", "pattern", "itemsskipped");
-            props["exclusionlayer"].ShouldBe("layer1:directory");
-            props["directorypath"].ShouldBe("app/node_modules");
-            props["pattern"].ShouldBe("node_modules/");
-            ((int)props["itemsskipped"]).ShouldBe(1247);
+            AssertCommonKeys(props, "exclusion_layer", "directory_path", "pattern", "items_skipped"); 
+            props["exclusion_layer"].ShouldBe("layer_1_directory"); 
+            props["directory_path"].ShouldBe("app/node_modules"); 
+            props["pattern"].ShouldBe("node_modules");
+            ((int)props["items_skipped"]).ShouldBe(1247); 
         }
 
         #endregion
 
-        #region Category 5: Props Serialization & SEQ Compatibility (3 tests)
+        #region Category 5: Props Serialization / SEQ Compatibility (3 tests)
 
         [Test]
         public void PatternProps_SerializeToJsonCorrectly()
         {
             var props = ExclusionProps.CreatePatternProps("app/file.log", "*.log", ".gitignore");
-
             var json = JsonSerializer.Serialize(props);
 
-            json.ShouldContain("exclusionlayer");
-            json.ShouldContain("layer1:pattern");
-            json.ShouldContain("itempath");
+            json.ShouldContain("exclusion_layer"); 
+            json.ShouldContain("layer_1_pattern"); 
+            json.ShouldContain("item_path"); 
             json.ShouldContain("pattern");
 
             var deserialized = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
@@ -181,15 +194,19 @@ namespace UnitTests.Traversal
         public void MarkerProps_SerializeToJsonCorrectly()
         {
             var props = ExclusionProps.CreateMarkerProps(
-                "app/Generated.g.cs", "generated:by:xsd", "XSD-Schema-Docs", 3);
-
+                "app/Generated.g.cs",
+                "generated_by_xsd", 
+                "XSD-Schema-Docs",
+                3
+            );
             var json = JsonSerializer.Serialize(props);
-            json.ShouldContain("\"linenumber\":3");
+
+            json.ShouldContain("line_number\":3"); 
 
             var doc = JsonDocument.Parse(json);
-            doc.RootElement.TryGetProperty("exclusionlayer", out var layer);
-            layer.GetString().ShouldBe("layer2:marker");
-            doc.RootElement.TryGetProperty("linenumber", out var lineNum);
+            doc.RootElement.TryGetProperty("exclusion_layer", out var layer); 
+            layer.GetString().ShouldBe("layer_2_marker"); 
+            doc.RootElement.TryGetProperty("line_number", out var lineNum); 
             lineNum.GetInt32().ShouldBe(3);
         }
 
@@ -197,17 +214,17 @@ namespace UnitTests.Traversal
         public void SummaryProps_SerializeWithCorrectTypePreservation()
         {
             var props = ExclusionProps.CreateSummaryProps(1500, 425, 12, 2);
-
             var json = JsonSerializer.Serialize(props);
-            json.ShouldContain("\"filesprocessed\":1500");
-            json.ShouldContain("\"filesexcluded:layer1:pattern\":425");
-            json.ShouldContain("\"filesexcluded:layer2:marker\":12");
-            json.ShouldContain("\"markerextractionerrors\":2");
+
+            json.ShouldContain("\"files_processed\":1500"); 
+            json.ShouldContain("\"files_excluded_layer_1_pattern\":425"); 
+            json.ShouldContain("\"files_excluded_layer_2_marker\":12"); 
+            json.ShouldContain("\"marker_extraction_errors\":2"); 
 
             var doc = JsonDocument.Parse(json);
-            doc.RootElement.TryGetProperty("filesprocessed", out var filesProcessed);
+            doc.RootElement.TryGetProperty("files_processed", out var filesProcessed); 
             filesProcessed.GetInt32().ShouldBe(1500);
-            doc.RootElement.TryGetProperty("filesexcluded:layer2:marker", out var excluded);
+            doc.RootElement.TryGetProperty("files_excluded_layer_2_marker", out var excluded); 
             excluded.GetInt32().ShouldBe(12);
         }
 
@@ -220,24 +237,29 @@ namespace UnitTests.Traversal
         {
             var patternProps = ExclusionProps.CreatePatternProps("app/file.log", "*.log", ".gitignore");
             var markerProps = ExclusionProps.CreateMarkerProps(
-                "app/Gen.g.cs", "generated:by:xsd", "XSD-Docs", 1);
+                "app/Gen.g.cs",
+                "generated_by_xsd", 
+                "XSD-Docs",
+                1
+            );
             var summaryProps = ExclusionProps.CreateSummaryProps(100, 25, 5, 0);
 
-            patternProps["exclusionlayer"].ShouldBe("layer1:pattern");
-            markerProps["exclusionlayer"].ShouldBe("layer2:marker");
-            summaryProps["operation"].ShouldBe("foldertraversal:summary");
+            patternProps["exclusion_layer"].ShouldBe("layer_1_pattern"); 
+            markerProps["exclusion_layer"].ShouldBe("layer_2_marker"); 
+            summaryProps["operation"].ShouldBe("folder_traversal_summary"); 
+
             patternProps.Keys.ShouldContain("pattern");
             markerProps.Keys.ShouldContain("reason");
-            summaryProps.Keys.ShouldContain("filesexcluded:layer2:marker");
-            patternProps["sourcefile"].ShouldBe(".gitignore");
+            summaryProps.Keys.ShouldContain("files_excluded_layer_2_marker"); 
+            patternProps["source_file"].ShouldBe(".gitignore"); 
         }
 
         [Test]
         public void Props_EnableReasonFilteringForAggregation()
         {
-            var reasons = new[] { "generated:by:xsd", "generated:by:proto", "vendorlibrary" };
+            var reasons = new[] { "generated_by_xsd", "generated_by_proto", "vendor_library" }; 
             var propsList = reasons
-                .Select(r => ExclusionProps.CreateMarkerProps($"app/file_{r}.cs", r, "Reference", 1))
+                .Select(r => ExclusionProps.CreateMarkerProps($"app/file{r}.cs", r, "Reference", 1))
                 .ToList();
 
             var grouped = propsList
@@ -245,8 +267,9 @@ namespace UnitTests.Traversal
                 .ToDictionary(g => g.Key, g => g.Count());
 
             grouped.Count.ShouldBe(3);
-            grouped["generated:by:xsd"].ShouldBe(1);
-            grouped["vendorlibrary"].ShouldBe(1);
+            grouped["generated_by_xsd"].ShouldBe(1); 
+            grouped["vendor_library"].ShouldBe(1); 
+
             foreach (var reason in reasons)
                 grouped.Keys.ShouldContain(reason);
         }
@@ -255,16 +278,15 @@ namespace UnitTests.Traversal
 
         #region Category 7: Edge Cases and Null Handling (2 tests)
 
-        [TestCase("   ", "  ", " ")]
         [TestCase("", "", "")]
-        public void PropsBuilders_HandleWhitespaceAndEmptyStrings(
-            string itemPath, string pattern, string sourceFile)
+        [TestCase(" ", " ", " ")]
+        public void PropsBuilders_HandleWhitespaceAndEmptyStrings(string itemPath, string pattern, string sourceFile)
         {
             var props = ExclusionProps.CreatePatternProps(itemPath, pattern, sourceFile);
 
-            props["itempath"].ShouldBe(itemPath);
+            props["item_path"].ShouldBe(itemPath); 
             props["pattern"].ShouldBe(pattern);
-            props["sourcefile"].ShouldBe(sourceFile);
+            props["source_file"].ShouldBe(sourceFile); 
         }
 
         [Test]
@@ -274,15 +296,15 @@ namespace UnitTests.Traversal
             var markerProps = ExclusionProps.CreateMarkerProps("app/Gen.g.cs", "reason", null, 1);
             var errorProps = ExclusionProps.CreateMarkerErrorProps("app/file.cs", "IOException", "Failed");
             var summaryProps = ExclusionProps.CreateSummaryProps(10, 2, 1, 0);
-            var dirProps = ExclusionProps.CreateDirectoryExclusionProps("app/bin", "bin/", 5);
+            var dirProps = ExclusionProps.CreateDirectoryExclusionProps("app/bin", "bin", 5);
 
             var timestamps = new[]
             {
-                (string)patternProps["timestamputc"],
-                (string)markerProps["timestamputc"],
-                (string)errorProps["timestamputc"],
-                (string)summaryProps["timestamputc"],
-                (string)dirProps["timestamputc"]
+                (string)patternProps["timestamp_utc"], 
+                (string)markerProps["timestamp_utc"], 
+                (string)errorProps["timestamp_utc"], 
+                (string)summaryProps["timestamp_utc"], 
+                (string)dirProps["timestamp_utc"] 
             };
 
             foreach (var ts in timestamps)

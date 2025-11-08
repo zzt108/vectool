@@ -1,7 +1,7 @@
 ﻿namespace VecTool.Handlers.Traversal
 {
     using global::VecTool.Configuration;
-    using global::VecTool.Utils; // ✅ NEW - for MimeTypeProvider
+    using global::VecTool.Utils;  
     using NLogShared;
     using System;
     using System.IO;

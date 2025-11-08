@@ -1,5 +1,4 @@
-﻿// ✅ NEW - TestInfrastructure/TestData.cs
-using VecTool.Configuration;
+﻿using VecTool.Configuration;
 using VecTool.RecentFiles;
 
 public static class TestData

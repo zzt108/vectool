@@ -78,7 +78,7 @@ namespace Vectool.OaiUI
                 : $"Commit: {_versions.CommitShort}";
         }
 
-        // ✅ NEW: Named click-handler for Designer event binding without renaming existing methods
+        // Named click-handler for Designer event binding without renaming existing methods
         private void BtnCloseClick(object? sender, EventArgs e)
         {
             this.Close();

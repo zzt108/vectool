@@ -1,5 +1,4 @@
-﻿// ✅ NEW FILE
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
