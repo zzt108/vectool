@@ -7,6 +7,14 @@
     public interface IFileSystemTraverser
     {
         /// <summary>
+        /// Enumerates all folders (directories) in the specified root, respecting exclusion rules.
+        /// Returns only folders that should be included based on pattern matching and legacy config.
+        /// Folders are yielded even if they contain no exportable files (e.g., folders with only .git).
+        /// Used by Git handler to discover repositories.
+        /// </summary>
+        IEnumerable<string> EnumerateFoldersRespectingExclusions(string root, VectorStoreConfig config);
+
+        /// <summary>
         /// Enumerates all files in a folder tree respecting exclusions.
         /// Pre-filters patterns and legacy config BEFORE returning files.
         /// </summary>

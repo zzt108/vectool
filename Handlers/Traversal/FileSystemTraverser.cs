@@ -1,21 +1,21 @@
 ﻿namespace VecTool.Handlers.Traversal
 {
+    using DocumentFormat.OpenXml.Bibliography;
     using LogCtxShared;
     using MAB.DotIgnore;
     using NLogShared;
     using System;
-    using System.Collections.Generic;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using VecTool.Configuration;
     using VecTool.Configuration.Exclusion;
+    using static System.Runtime.InteropServices.JavaScript.JSType;
 
     /// <summary>
     /// Handles folder traversal and file enumeration with exclusion support (Layer 1 + Layer 2).
     /// Thread-safe for concurrent enumeration scenarios.
-    /// Layer 1: Pattern-based exclusions (.gitignore, .vtignore)
-    /// Layer 2: File marker-based exclusions ([VECTOOL:EXCLUDE:...])
     /// </summary>
     public class FileSystemTraverser : IFileSystemTraverser
     {
@@ -378,5 +378,103 @@
                 }
             }
         }
+
+        /// <summary>
+        /// Yields directories even if they contain only excluded files (important for Git detection).
+        /// Uses helper method to avoid CS1626 (yield in try-catch).
+        /// </summary>
+        public IEnumerable<string> EnumerateFoldersRespectingExclusions(string root, VectorStoreConfig config)
+        {
+            if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root))
+                yield break;
+
+            // Delegate to helper that handles exceptions
+            foreach (var folder in EnumerateFoldersRespectingExclusionsInternal(root, config))
+            {
+                yield return folder;
+            }
+        }
+
+        private IEnumerable<string> EnumerateFoldersRespectingExclusionsInternal(string root, VectorStoreConfig config)
+        {
+            var dirStack = new Stack<string>();
+            dirStack.Push(root);
+
+            while (dirStack.Count > 0)
+            {
+                var currentDir = dirStack.Pop();
+
+                // Layer 1: Check if directory itself should be excluded by patterns
+                if (!ShouldIncludeDirectory(currentDir, root, config))
+                    continue;
+
+                // ✅ Yield this folder (even if it has no valid files)
+                yield return currentDir;
+
+                // ✅ FIXED: Get subdirectories without try-catch in iterator
+                // Errors are logged inside the helper, stack building happens outside yield
+                var subdirs = GetSubdirectoriesSafe(currentDir);
+                foreach (var subDir in subdirs)
+                {
+                    dirStack.Push(subDir);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to safely enumerate subdirectories.
+        /// Handles errors locally, returns safe collection for iteration in iterator.
+        /// Separated to avoid try-catch in yield method.
+        /// </summary>
+        private IEnumerable<string> GetSubdirectoriesSafe(string currentDir)
+        {
+            try
+            {
+                return Directory.EnumerateDirectories(currentDir).ToList();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                using var ctx = log?.Ctx.Set(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
+                log?.Error(ex, "Access denied to directory");
+                return Enumerable.Empty<string>();
+            }
+            catch (Exception ex)
+            {
+                using var ctx = log?.Ctx.Set(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
+                log?.Error(ex, "Error enumerating subdirectories");
+                return Enumerable.Empty<string>();
+            }
+        }
+
+        /// <summary>
+        /// Determines if a directory should be included based on exclusion rules.
+        /// Uses same Layer 1 and Layer 2 filtering as file enumeration.
+        /// </summary>
+        private bool ShouldIncludeDirectory(string dirPath, string rootPath, VectorStoreConfig config)
+        {
+            if (string.IsNullOrWhiteSpace(dirPath))
+                return false;
+
+            // Layer 1: Pattern matching (gitignore/_vtignore)
+            if (primaryMatcher != null)
+            {
+                var relativePath = Path.GetRelativePath(rootPath, dirPath);
+
+                // Check if directory matches exclusion patterns
+                if (primaryMatcher.IsIgnored(relativePath + "/", true) || primaryMatcher.IsIgnored(relativePath, true))
+                    return false;
+            }
+
+            // Layer 2: Legacy config ExcludedFolders
+            if (config?.ExcludedFolders != null && config.ExcludedFolders.Count > 0)
+            {
+                var dirName = Path.GetFileName(dirPath);
+                if (config.ExcludedFolders.Any(ex => ex.Equals(dirName, StringComparison.OrdinalIgnoreCase)))
+                    return false;
+            }
+
+            return true;
+        }
+
     }
 }

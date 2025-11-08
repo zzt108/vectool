@@ -58,9 +58,9 @@ public sealed class GitChangesHandler : FileHandlerBase
             foreach (var folderPath in folderPaths)
             {
                 // Use traverser to get only non-excluded folders
+                // This ensures folders containing only .git (no exportable files) are detected
                 var allowedFolders = traverser
-                    .EnumerateFilesRespectingExclusions(folderPath, config)
-                    .Select(f => Path.GetDirectoryName(f))
+                    .EnumerateFoldersRespectingExclusions(folderPath, config)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
@@ -71,6 +71,7 @@ public sealed class GitChangesHandler : FileHandlerBase
                     .Where(dir => GitRunner.IsGitRepository(dir))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
+
                 using var _ = log.Ctx.Set().Add("basePath", folderPath);
                 log.Info($"Found {gitRepos.Count} Git repositories to process");
 
