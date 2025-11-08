@@ -15,6 +15,7 @@ logctx/LICENSE-2.0.txt
 *.resx
 *.sln
 .gitmodules
+.gitattributes
 *.clinerules
 
 media/
