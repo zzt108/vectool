@@ -19,7 +19,7 @@ namespace UnitTests.Traversal
         {
             testDir = Path.Combine(Path.GetTempPath(), $"FileValidatorTests-{Guid.NewGuid():N}");
             Directory.CreateDirectory(testDir);
-            config = new VectorStoreConfig();
+            config = new VectorStoreConfig(testDir);
         }
 
         [TearDown]

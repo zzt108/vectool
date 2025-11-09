@@ -38,7 +38,7 @@ namespace UnitTests.Traversal
         {
             testRoot = Path.Combine(Path.GetTempPath(), "TraverserIntegration", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(testRoot);
-            config = new VectorStoreConfig();
+            config = new VectorStoreConfig(testRoot);
         }
 
         [TearDown]
@@ -73,7 +73,7 @@ namespace UnitTests.Traversal
             File.WriteAllText(Path.Combine(testRoot, "debug.log"), "// log file");
             File.WriteAllText(Path.Combine(testRoot, "temp.tmp"), "// temp");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var mockMarkerExtractor = new MockFileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: mockMarkerExtractor);
 
@@ -103,7 +103,7 @@ namespace UnitTests.Traversal
         {
             // Arrange
             // Create a file with marker in first 50 lines
-            var markedContent = @"// [VECTOOLEXCLUDE:generated_by_xsd:XSD-Schema-Docs]
+            var markedContent = @"// [VECTOOL:EXCLUDE:generated_by_xsd@XSD-Schema-Docs]
 public class Generated
 {
     public string Name { get; set; }
@@ -111,7 +111,7 @@ public class Generated
             File.WriteAllText(Path.Combine(testRoot, "generated.cs"), markedContent);
             File.WriteAllText(Path.Combine(testRoot, "main.cs"), "// regular code");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -141,13 +141,13 @@ public class Generated
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "*.log");
             File.WriteAllText(Path.Combine(testRoot, "ignored.log"), "// log");
 
-            var markedContent = @"// [VECTOOLEXCLUDE:generated_by_proto:Protobuf-Guide]
+            var markedContent = @"// [VECTOOL:EXCLUDE:generated_by_proto@Protobuf-Guide]
 public class ConfigGenerated { }";
             File.WriteAllText(Path.Combine(testRoot, "config.g.cs"), markedContent);
 
             File.WriteAllText(Path.Combine(testRoot, "main.cs"), "// code");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -177,12 +177,12 @@ public class ConfigGenerated { }";
         public void ShouldNotExcludeFileWhenMarkerExtractorIsNull()
         {
             // Arrange - File with marker but marker extractor disabled
-            var markedContent = @"// [VECTOOLEXCLUDE:test:Docs]
+            var markedContent = @"// [VECTOOL:EXCLUDE:test@Docs]
 public class MarkedClass { }";
             File.WriteAllText(Path.Combine(testRoot, "marked.cs"), markedContent);
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "*.log");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: null);
 
             // Act
@@ -227,7 +227,8 @@ public class MarkedClass { }";
 
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "bin/\nobj/");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
+
             var traverser = new FileSystemTraverser(ui: null);
 
             // Act
@@ -258,7 +259,7 @@ public class MarkedClass { }";
             File.WriteAllText(Path.Combine(testRoot, "generated", "config.cs"), "// code");
             File.WriteAllText(Path.Combine(testRoot, "main.cs"), "// main");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -299,7 +300,7 @@ public class MarkedClass { }";
 
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "node_modules/");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var traverser = new FileSystemTraverser(ui: null);
 
             // Act
@@ -331,7 +332,7 @@ public class MarkedClass { }";
             File.WriteAllText(Path.Combine(testRoot, "file1.cs"), "// code");
             File.WriteAllText(Path.Combine(testRoot, "file2.cs"), "// code");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var throwingExtractor = new ThrowingFileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: throwingExtractor);
 
@@ -363,7 +364,7 @@ public class Generated { }";
             File.WriteAllText(Path.Combine(testRoot, "normal.cs"), "// code");
             File.WriteAllText(Path.Combine(testRoot, "other.txt"), "text");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var partialFailureExtractor = new PartialFailureFileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: partialFailureExtractor);
 
@@ -389,7 +390,7 @@ public class Generated { }";
             // Arrange
             File.WriteAllText(Path.Combine(testRoot, "file.cs"), "// code");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor(); // Valid extractor
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -423,7 +424,7 @@ public class Person { }";
             File.WriteAllText(Path.Combine(testRoot, "person.g.cs"), markedContent);
             File.WriteAllText(Path.Combine(testRoot, "program.cs"), "// entry point");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -463,7 +464,7 @@ public class ExternalLib { }";
             File.WriteAllText(Path.Combine(testRoot, "vendor.cs"), markedContent);
             File.WriteAllText(Path.Combine(testRoot, "main.cs"), "// our code");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -497,7 +498,7 @@ public class Lower { }";
             File.WriteAllText(Path.Combine(testRoot, "lower.cs"), markedContent2);
             File.WriteAllText(Path.Combine(testRoot, "main.cs"), "// code");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -526,7 +527,7 @@ public class Lower { }";
             File.WriteAllText(Path.Combine(testRoot, "b.cs"), "// b");
             File.WriteAllText(Path.Combine(testRoot, "c.cs"), "// c");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -561,12 +562,12 @@ public class Lower { }";
         {
             // Arrange
             var xsdContent = @"<?xml version=""1.0""?>
-<!-- [VECTOOLEXCLUDE:generated_by_xsd:XSD-Schema-Docs] -->
+<!-- [VECTOOL:EXCLUDE:generated_by_xsd@XSD-Schema-Docs] -->
 <xs:schema xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
   <xs:element name=""root"" type=""xs:string""/>
 </xs:schema>";
 
-            var genCsContent = @"// [VECTOOLEXCLUDE:generated_by_xsd:XSD-Schema-Docs]
+            var genCsContent = @"// [VECTOOL:EXCLUDE:generated_by_xsd@XSD-Schema-Docs]
 // Auto-generated by xsd.exe
 namespace Generated.Schema
 {
@@ -577,7 +578,7 @@ namespace Generated.Schema
             File.WriteAllText(Path.Combine(testRoot, "Person.g.cs"), genCsContent);
             File.WriteAllText(Path.Combine(testRoot, "Program.cs"), "// main");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -606,7 +607,7 @@ namespace Generated.Schema
         {
             // Arrange
             var jsonContent = @"{
-  ""vectoolexclude"": ""[VECTOOLEXCLUDE:generated_by_proto:Protobuf-Guide]"",
+  ""vectoolexclude"": ""[VECTOOL:EXCLUDE:generated_by_proto@Protobuf-Guide]"",
   ""name"": ""GeneratedConfig"",
   ""version"": ""1.0.0"",
   ""properties"": {
@@ -618,7 +619,7 @@ namespace Generated.Schema
             File.WriteAllText(Path.Combine(testRoot, "appsettings.json"), @"{ ""app"": ""test"" }");
             File.WriteAllText(Path.Combine(testRoot, "program.cs"), "// code");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -646,18 +647,18 @@ namespace Generated.Schema
         {
             // Arrange
             File.WriteAllText(Path.Combine(testRoot, "schema.xsd"),
-                @"<?xml version=""1.0""?><!-- [VECTOOLEXCLUDE:generated_by_xsd:XSD-Schema-Docs] --><xs:schema/>");
+                @"<?xml version=""1.0""?><!-- [VECTOOL:EXCLUDE:generated_by_xsd@XSD-Schema-Docs] --><xs:schema/>");
 
             File.WriteAllText(Path.Combine(testRoot, "config.g.json"),
-                @"{ ""vectoolexclude"": ""[VECTOOLEXCLUDE:generated_by_proto:Protobuf-Guide]"" }");
+                @"{ ""vectoolexclude"": ""[VECTOOL:EXCLUDE:generated_by_proto@Protobuf-Guide]"" }");
 
             File.WriteAllText(Path.Combine(testRoot, "Generated.g.cs"),
-                @"// [VECTOOLEXCLUDE:generated_by_xsd:XSD-Schema-Docs]\npublic class Gen { }");
+                @"// [VECTOOL:EXCLUDE:generated_by_xsd@XSD-Schema-Docs]\npublic class Gen { }");
 
             File.WriteAllText(Path.Combine(testRoot, "Program.cs"), "// code");
             File.WriteAllText(Path.Combine(testRoot, "appsettings.json"), @"{ ""app"": ""test"" }");
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
@@ -702,7 +703,7 @@ namespace Generated.Schema
             File.WriteAllText(Path.Combine(testRoot, ".gitignore"), "bin/\nobj/");
             setupStopwatch.Stop();
 
-            var config = new VectorStoreConfig();
+            var config = new VectorStoreConfig(testRoot);
             var markerExtractor = new FileMarkerExtractor();
             var traverser = new FileSystemTraverser(ui: null, markerExtractor: markerExtractor);
 
