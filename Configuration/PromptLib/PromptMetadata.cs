@@ -1,0 +1,122 @@
+﻿#nullable enable
+using System;
+using System.IO;
+using System.Linq;
+using LogCtxShared;
+using NLogShared;
+using VecTool.Configuration.PromptLib;
+
+namespace VecTool.Core.Models.PromptLib
+{
+    /// <summary>
+    /// Metadata parsed from prompt filename and path hierarchy.
+    /// Naming convention: {TYPE}-{VERSION}-{NAME}.{ext}
+    /// Example: PROMPT-1.0-analyzer.md → Type=PROMPT, Version=1.0, Name=analyzer
+    /// Path: C:/work/vectortool/spaces/PROMPT-1.0-analyzer.md → Area=work, Project=vectortool, Category=spaces
+    /// </summary>
+    public sealed record PromptMetadata
+    {
+        private static readonly CtxLogger log = new();
+
+        public string FileName { get; init; } = string.Empty;
+        public string Version { get; init; } = string.Empty; // e.g., "1.0", "1.1"
+        public string Name { get; init; } = string.Empty; // e.g., "analyzer", "git-integration"
+        public string Type { get; init; } = string.Empty; // e.g., "PROMPT", "GUIDE", "SPACE"
+        public string? Description { get; init; } // From first line/comment (optional)
+        public string Area { get; init; } = string.Empty; // e.g., "work", "private", "development"
+        public string Project { get; init; } = string.Empty; // e.g., "VecTool", "LINX", "AgileAI"
+        public string Category { get; init; } = string.Empty; // e.g., "Spaces", "Guides"
+
+        /// <summary>
+        /// Parse filename and path into metadata.
+        /// Returns null if filename doesn't match expected pattern (logs warning).
+        /// </summary>
+        public static PromptMetadata? Parse(string fullPath, string? firstLineContent = null)
+        {
+            using var ctx = log.Ctx.Set(new Props()
+                .Add("fullPath", fullPath)
+                .Add("firstLine", firstLineContent?.Substring(0, Math.Min(50, firstLineContent?.Length ?? 0))));
+
+            if (string.IsNullOrWhiteSpace(fullPath))
+            {
+                log.Warn("Full path is null or empty");
+                return null;
+            }
+
+            var fileName = Path.GetFileName(fullPath);
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                log.Warn("File name could not be extracted from path");
+                return null;
+            }
+
+            // Parse filename: {TYPE}-{VERSION}-{NAME}.{ext}
+            var nameWithoutExt = fileName;
+            string ext = Path.GetExtension(fileName);
+            if(!string.IsNullOrWhiteSpace(ext) && PromptsConfig.DefaultFileExtensions.Contains(ext,StringComparison.OrdinalIgnoreCase))
+                nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+
+            var parts = nameWithoutExt.Split('-', StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length < 3)
+            {
+                log.Warn($"Filename does not match expected pattern (TYPE-VERSION-NAME): {fileName}");
+                return null;
+            }
+
+            var type = parts[0].Trim();
+            var version = parts[1].Trim();
+            var name = string.Join("-", parts.Skip(2)).Trim(); // Support multi-part names like "git-integration"
+
+            // Parse path hierarchy: /area/project/category/filename.md
+            var (area, project, category) = ExtractHierarchy(fullPath);
+
+            var metadata = new PromptMetadata
+            {
+                FileName = fileName,
+                Version = version,
+                Name = name,
+                Type = type,
+                Description = firstLineContent?.Trim(),
+                Area = area,
+                Project = project,
+                Category = category
+            };
+
+            log.Debug($"Parsed metadata: Type={type}, Version={version}, Name={name}, Area={area}, Project={project}, Category={category}");
+            return metadata;
+        }
+
+        /// <summary>
+        /// Extract area/project/category from filesystem path.
+        /// Example: C:/work/vectortool/spaces/PROMPT-1.0-analyzer.md → area=work, project=vectortool, category=spaces
+        /// Root-level files return empty strings for all fields.
+        /// </summary>
+        private static (string Area, string Project, string Category) ExtractHierarchy(string fullPath)
+        {
+            try
+            {
+                var directoryPath = Path.GetDirectoryName(fullPath);
+                if (string.IsNullOrWhiteSpace(directoryPath))
+                    return (string.Empty, string.Empty, string.Empty);
+
+                // Split path into segments (handle both / and \)
+                var segments = directoryPath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+
+                segments = [.. segments.Where(s => !s.EndsWith(':'))];
+
+                // Extract last 3 segments as category, project, area (in reverse order)
+                var category = segments.Length >= 1 ? segments[^1] : string.Empty;
+                var project = segments.Length >= 2 ? segments[^2] : string.Empty;
+                var area = segments.Length >= 3 ? segments[^3] : string.Empty;
+
+                return (area, project, category);
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex, "Failed to extract hierarchy from path");
+                return (string.Empty, string.Empty, string.Empty);
+            }
+        }
+    }
+}

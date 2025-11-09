@@ -1,8 +1,8 @@
 # UI-specific files
-# OaiUI/
+OaiUI/
 
 # Tests
-unittests/
+# unittests/
 
 # Documentations
 .documentation/

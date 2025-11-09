@@ -1,11 +1,10 @@
-<!-- ✅ FULL FILE VERSION -->
 <!-- File: ./Directory.Build.props -->
 <Project>
   <PropertyGroup>
     <!-- Versioning (kept from repo pattern) -->
     <MajorVersion>4</MajorVersion>
-    <PlanId>5</PlanId>
-    <PlanPhase>11</PlanPhase>
+    <PlanId>6</PlanId>
+    <PlanPhase>12</PlanPhase>
     <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
     <HHmm>$([System.DateTime]::UtcNow.ToString('HHmm'))</HHmm>
     <DayOfYear>$([System.DateTime]::UtcNow.DayOfYear)</DayOfYear>
