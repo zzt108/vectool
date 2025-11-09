@@ -16,6 +16,7 @@
     public class FileMarkerExtractor : IFileMarkerExtractor
     {
         private static readonly CtxLogger log = new();
+        public const string MarkerSigniture = "[VECTOOL:EXCLUDE:";
 
         /// <summary>
         /// Compiled regex for marker pattern (case-insensitive).
@@ -24,7 +25,7 @@
         /// Reference: optional @word-word (e.g., "@XSD-Docs", "@AI-Generated")
         /// </summary>
         private static readonly Regex MarkerRegex = new(
-            pattern: @"\[VECTOOL:EXCLUDE:(?<reason>[a-zA-Z0-9_\-]+)(?::(?<reference>@[\w\-\.]+))?\]",
+            pattern: @"\"+MarkerSigniture+@"(?<reason>[a-zA-Z0-9_\-]+)(?:(?<reference>@[\w\-\.]+))?\]",
             options: RegexOptions.Compiled | RegexOptions.IgnoreCase,
             matchTimeout: TimeSpan.FromMilliseconds(100)
         );
@@ -48,6 +49,7 @@
 
             // 1. Read file header (1500 bytes max)
             string? header = ReadFileHeader(filePath, maxBytes: 1500);
+            bool isVectoolExcude = header != null && header.Contains(MarkerSigniture);
 
             // 2. Handle read failures
             if (string.IsNullOrEmpty(header))
@@ -75,7 +77,17 @@
 
             // 5. Validate match groups
             if (!match.Success)
-                return null;  
+            {
+                if (isVectoolExcude)
+                {
+                    var markedLines = lines.Where(l => l.Contains(MarkerSigniture));
+                    using var ctx = log.Ctx.Set(new Props()
+                        .Add("file_path", filePath)
+                        .AddJson("lines", markedLines));
+                    log.Warn($"Found:{lines.FirstOrDefault()}, but no match found in marker pattern");
+                }
+                return null;
+            }
 
             // 6. Extract components
             var reason = match.Groups["reason"]?.Value;
@@ -86,7 +98,7 @@
             var markerPattern = new FileMarkerPattern
             {
                 FilePath = filePath,
-                Reason = reason??"unknown",
+                Reason = reason ?? "unknown",
                 SpaceReference = spaceReference,
                 LineNumber = lineNumber,
                 ExtractedAt = DateTime.UtcNow
@@ -105,6 +117,7 @@
 
             return markerPattern;
         }
+
 
         /// <summary>
         /// Reads file header (first maxBytes) with proper encoding detection.

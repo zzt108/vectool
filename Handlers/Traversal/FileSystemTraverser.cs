@@ -289,7 +289,7 @@
                     .Add("current", current)
                     .Add("folderName", folderName));
 
-                // LAYER 1: Pattern check FIRST (requires relative path)
+                // LAYER 1: Pattern check FOLDER FIRST (requires relative path)
                 if (primaryMatcher != null)
                 {
                     var relativePath = Path.GetRelativePath(root, current);

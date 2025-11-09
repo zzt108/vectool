@@ -87,7 +87,7 @@ namespace Generated
             result.ShouldNotBeNull();
             result!.FilePath.ShouldBe(filePath);
             result.Reason.ShouldBe("generated_by_xsd", StringCompareShould.IgnoreCase);
-            result.SpaceReference.ShouldBe("XSD-Schema-Docs");
+            result.SpaceReference.ShouldBe("@XSD-Schema-Docs");
             result.LineNumber.ShouldBe(1);
             result.ExtractedAt.ShouldBeGreaterThan(DateTime.UtcNow.AddSeconds(-5));
 
@@ -120,7 +120,7 @@ import generated_code
             // Assert
             result.ShouldNotBeNull();
             result!.Reason.ShouldBe("vendor_library", StringCompareShould.IgnoreCase);
-            result.SpaceReference.ShouldBe("AI-Generated");
+            result.SpaceReference.ShouldBe("@AI-Generated");
             result.LineNumber.ShouldBe(1);
         }
 
@@ -146,7 +146,7 @@ import generated_code
             // Assert
             result.ShouldNotBeNull();
             result!.Reason.ShouldBe("generated_by_tool", StringCompareShould.IgnoreCase);
-            result.SpaceReference.ShouldBe("XML-Generator");
+            result.SpaceReference.ShouldBe("@XML-Generator");
         }
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace Generated { }";
             result.ShouldNotBeNull();
             result!.FilePath.ShouldEndWith(".xsd");
             result.Reason.ShouldBe("generated_by_xsd", StringCompareShould.IgnoreCase);
-            result.SpaceReference.ShouldBe("XSD-Schema-Docs");
+            result.SpaceReference.ShouldBe("@XSD-Schema-Docs");
             result.LineNumber.ShouldBe(1);
 
             // Verify audit includes XSD context
@@ -266,7 +266,7 @@ namespace Generated
             result.ShouldNotBeNull();
             result!.FilePath.ShouldEndWith(".g.cs");
             result.Reason.ShouldBe("generated_by_xsd", StringCompareShould.IgnoreCase);
-            result.SpaceReference.ShouldBe("XSD-Generator");
+            result.SpaceReference.ShouldBe("@XSD-Generator");
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ public partial class GeneratedClass
             // Assert
             result.ShouldNotBeNull();
             result!.Reason.ShouldBe("generated_by_tool", StringCompareShould.IgnoreCase);
-            result.SpaceReference.ShouldBe("Auto-Generated");
+            result.SpaceReference.ShouldBe("@Auto-Generated");
         }
         #endregion
 
@@ -332,7 +332,7 @@ public partial class GeneratedClass
             // Assert
             result.ShouldNotBeNull();
             result!.Reason.ShouldBe("generated_by_tool", StringCompareShould.IgnoreCase);
-            result.SpaceReference.ShouldBe("JSON-Config");
+            result.SpaceReference.ShouldBe("@JSON-Config");
             result.LineNumber.ShouldBe(2);
         }
 

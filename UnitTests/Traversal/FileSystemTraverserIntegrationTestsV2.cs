@@ -418,7 +418,7 @@ public class Generated { }";
         public void ProcessFolderShouldRespectMarkers()
         {
             // Arrange
-            var markedContent = @"// [VECTOOLEXCLUDE:generated_by_xsd:XSD-Schema-Docs]
+            var markedContent = @"// [VECTOOL:EXCLUDE:generated_by_xsd@XSD-Schema-Docs]
 public class Person { }";
             File.WriteAllText(Path.Combine(testRoot, "person.g.cs"), markedContent);
             File.WriteAllText(Path.Combine(testRoot, "program.cs"), "// entry point");
@@ -458,7 +458,7 @@ public class Person { }";
         public void EnumerateFilesRespectingExclusionsShouldRespectMarkers()
         {
             // Arrange
-            var markedContent = @"// [VECTOOLEXCLUDE:vendor_library:Third-Party-Guide]
+            var markedContent = @"// [VECTOOL:EXCLUDE:vendor_library@Third-Party-Guide]
 public class ExternalLib { }";
             File.WriteAllText(Path.Combine(testRoot, "vendor.cs"), markedContent);
             File.WriteAllText(Path.Combine(testRoot, "main.cs"), "// our code");
