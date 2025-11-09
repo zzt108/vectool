@@ -143,20 +143,6 @@ public class LegacyConfigAdapterTests:IgnoreAdapterTestBase
         result.ShouldBeFalse();
     }
 
-    [Test]
-    public void ShouldExcludeMultipleFolders()
-    {
-        // Arrange
-        _config.ExcludedFolders.AddRange(new[] { "bin", "obj", ".git" });
-        _adapter = new LegacyConfigAdapter(_config);
-
-        // Act & Assert
-        _adapter.IsIgnored("bin", isDirectory: true).ShouldBeTrue();
-        _adapter.IsIgnored("obj", isDirectory: true).ShouldBeTrue();
-        _adapter.IsIgnored(".git", isDirectory: true).ShouldBeTrue();
-        _adapter.IsIgnored("src", isDirectory: true).ShouldBeFalse();
-    }
-
     // ======== Config State Tests ========
 
     [Test]

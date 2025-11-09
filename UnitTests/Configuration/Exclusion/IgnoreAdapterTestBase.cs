@@ -118,7 +118,7 @@ namespace VecTool.UnitTests.Configuration.Exclusion
         public void ShouldExcludeMultipleFolders()
         {
             var adapter = CreateAdapter();
-            SetupTestPatterns(adapter, new[] { "bin", "obj", ".git" });
+            SetupTestPatterns(adapter, new[] { "bin/", "obj/", ".git/" });
 
             adapter.IsIgnored("bin", isDirectory: true).ShouldBeTrue();
             adapter.IsIgnored("obj", isDirectory: true).ShouldBeTrue();
