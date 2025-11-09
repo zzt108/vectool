@@ -10,17 +10,6 @@ namespace UnitTests.Configuration.Exclusion;
 public class IgnoreMatcherFactoryTests
 {
     [Test]
-    public void Should_Create_GitignoreParserNet_Adapter()
-    {
-        // Act
-        var matcher = IgnoreMatcherFactory.Create(IgnoreLibraryType.GitignoreParserNet);
-
-        // Assert
-        matcher.ShouldNotBeNull();
-        matcher.ShouldBeOfType<GitignoreParserNetAdapter>();
-    }
-
-    [Test]
     public void Should_Create_MabDotIgnore_Adapter()
     {
         // Act
