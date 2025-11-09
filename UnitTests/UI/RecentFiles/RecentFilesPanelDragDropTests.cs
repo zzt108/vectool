@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-#nullable enable
+﻿#nullable enable
 using NUnit.Framework;
 using oaiUI.RecentFiles;
 using Shouldly;
@@ -39,7 +38,7 @@ namespace UnitTests.UI.RecentFiles
             var store = new InMemoryRecentFilesStore();
             manager = new RecentFilesManager(config, store);
 
-            // ✅ NEW - Initialize RecentFilesPanel with constructor injection
+             //Initialize RecentFilesPanel with constructor injection
             panel = new RecentFilesPanel();
             panel.Initialize(manager, testDirectory);
         }
@@ -64,7 +63,7 @@ namespace UnitTests.UI.RecentFiles
         }
 
         /// <summary>
-        /// ✅ NEW - Ensures DragEnter event handler correctly sets Effect to Copy when FileDrop is present.
+        /// Ensures DragEnter event handler correctly sets Effect to Copy when FileDrop is present.
         /// This test guards against regressions where AllowDrop is not enabled or drag handlers are not wired.
         /// </summary>
         [Test]
@@ -97,7 +96,7 @@ namespace UnitTests.UI.RecentFiles
         }
 
         /// <summary>
-        /// ✅ NEW - Ensures DragEnter does NOT set Effect when non-FileDrop data is present.
+        /// Ensures DragEnter does NOT set Effect when non-FileDrop data is present.
         /// </summary>
         [Test]
         public void DragEnter_ShouldNotSetEffect_WhenNoFileDrop()
@@ -123,8 +122,6 @@ namespace UnitTests.UI.RecentFiles
                 "DragEnter handler should NOT set Effect when FileDrop is not present");
         }
 
-        // ✅ NEW - Helper Methods
-
         /// <summary>
         /// Reflection-based helper to get the internal ListView control from RecentFilesPanel.
         /// </summary>
@@ -136,7 +133,7 @@ namespace UnitTests.UI.RecentFiles
         }
 
         /// <summary>
-        /// ✅ NEW - Testable wrapper for ListView that exposes DragEnter logic without reflection.
+        /// Testable wrapper for ListView that exposes DragEnter logic without reflection.
         /// This approach avoids brittle reflection on private WinForms EVENT_DRAGENTER keys.
         /// </summary>
         private sealed class TestableListView

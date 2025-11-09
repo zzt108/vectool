@@ -289,11 +289,18 @@
                     .Add("current", current)
                     .Add("folderName", folderName));
 
-                // LAYER 1: Pattern check FIRST
-                if (primaryMatcher != null && primaryMatcher.IsIgnored(current, isDirectory: true))
+                // LAYER 1: Pattern check FOLDER FIRST (requires relative path)
+                if (primaryMatcher != null)
                 {
-                    log.Trace($"Skipping excluded folder (pattern): {current}");
-                    continue;
+                    var relativePath = Path.GetRelativePath(root, current);
+                    if (primaryMatcher.IsIgnored(relativePath, isDirectory: true))
+                    {
+                        using var _ = log.Ctx.Set(new Props()
+                            .Add("excludedDir", relativePath)
+                            .Add("fullPath", current));
+                        log.Trace($"Skipping excluded folder (pattern): {relativePath}");
+                        continue;
+                    }
                 }
 
                 // LAYER 1: Legacy config fallback
@@ -327,11 +334,18 @@
                         continue;
                     }
 
-                    // LAYER 1: Pattern check for file
-                    if (primaryMatcher != null && primaryMatcher.IsIgnored(f, isDirectory: false))
+                    // LAYER 1: Pattern check for file (requires relative path)
+                    if (primaryMatcher != null)
                     {
-                        log.Trace($"Skipping excluded file (pattern): {f}");
-                        continue;
+                        var relativePath = Path.GetRelativePath(root, f);
+                        if (primaryMatcher.IsIgnored(relativePath, isDirectory: false))
+                        {
+                            using var _ = log.Ctx.Set(new Props()
+                                .Add("excludedFile", relativePath)
+                                .Add("fullPath", f));
+                            log.Trace($"Skipping excluded file (pattern): {relativePath}");
+                            continue;
+                        }
                     }
 
                     // LAYER 1: Legacy config check

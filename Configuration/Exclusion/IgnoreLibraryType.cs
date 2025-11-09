@@ -6,11 +6,6 @@
 public enum IgnoreLibraryType
 {
     /// <summary>
-    /// GitignoreParserNet - Full .gitignore spec compliance.
-    /// </summary>
-    GitignoreParserNet = 0,
-
-    /// <summary>
     /// MAB.DotIgnore - Simpler alternative parser.
     /// </summary>
     MabDotIgnore = 1,

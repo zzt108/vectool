@@ -19,16 +19,13 @@ namespace VecTool.Configuration
         public string? GetRootPath()
         {
             var paths = (FolderPaths ?? new List<string>())
-            .Where(p => !string.IsNullOrWhiteSpace(p))
-            .Select(NormalizePath)
-            .Distinct(PathComparer)
-            .ToList();
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Select(NormalizePath)
+                .Distinct(PathComparer)
+                .ToList();
 
-            if (paths.Count == 0)
-                return null;
-
-            if (paths.Count == 1)
-                return TrimDirectorySeparator(paths.First());
+            if (paths.Count == 0) return null;
+            if (paths.Count == 1) return TrimDirectorySeparator(paths.First());
 
             // Compute deepest common directory via segment-wise LCP
             var segmentsList = paths.Select(SplitSegments).ToList();
@@ -39,21 +36,24 @@ namespace VecTool.Configuration
             {
                 var candidate = segmentsList[0][i];
                 if (segmentsList.All(s => StringEquals(s[i], candidate)))
-                {
                     common.Add(candidate);
-                }
                 else
-                {
                     break;
-                }
             }
 
-            if (common.Count == 0)
-                return null;
+            if (common.Count == 0) return null;
 
             var commonPath = Recombine(common);
+
+            // Find the shortest (shallowest) configured path as the boundary
+            // PromoteToRepoRoot should not walk above this boundary
+            var shortestPath = paths
+                .OrderBy(p => SplitSegments(p).Length)
+                .First();
+
             // If multiple ancestor roots are possible, prefer one with .git or dot-folders
-            var promoted = PromoteToRepoRoot(commonPath);
+            // but only within the boundary of configured paths
+            var promoted = PromoteToRepoRoot(commonPath, shortestPath);
             return TrimDirectorySeparator(promoted ?? commonPath);
         }
 
@@ -72,36 +72,65 @@ namespace VecTool.Configuration
             return path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         }
 
+        // Preserve drive letters and handle path splitting correctly
         private static string[] SplitSegments(string path)
         {
-            // Handle drive roots and UNC paths robustly by using DirectoryInfo
-            // But to keep things simple and fast, split on both separators
+            // Normalize separators
             var normalized = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-            // Keep leading "\\" or drive root semantics intact by not removing empty head segments
-            return normalized.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+
+            // On Windows, handle drive letters specially
+            if (OperatingSystem.IsWindows() && normalized.Length >= 2 && normalized[1] == ':')
+            {
+                // Extract drive (e.g., "C:") as first segment
+                var drive = normalized.Substring(0, 2);
+                var rest = normalized.Length > 3
+                    ? normalized.Substring(3) // Skip "C:\"
+                    : string.Empty;
+
+                if (string.IsNullOrEmpty(rest))
+                    return new[] { drive };
+
+                var restSegments = rest.Split(new[] { Path.DirectorySeparatorChar },
+                                              StringSplitOptions.RemoveEmptyEntries);
+
+                return new[] { drive }.Concat(restSegments).ToArray();
+            }
+
+            // Unix or relative paths
+            return normalized.Split(new[] { Path.DirectorySeparatorChar },
+                                   StringSplitOptions.RemoveEmptyEntries);
         }
 
+        // Fixed Windows path reconstruction
         private static string Recombine(IEnumerable<string> segments)
         {
-            var combined = string.Join(Path.DirectorySeparatorChar, segments);
-            // Prepend root if needed (Windows drive letter or Unix root)
+            var segmentList = segments.ToList();
+            if (segmentList.Count == 0) return string.Empty;
+
+            // On Windows, check if first segment is a drive (e.g., "C:")
             if (OperatingSystem.IsWindows())
             {
-                // If first segment has "C:"-like drive, ensure it stays as drive-rooted
-                var first = segments.FirstOrDefault();
+                var first = segmentList[0];
                 if (!string.IsNullOrEmpty(first) && first.EndsWith(":", StringComparison.Ordinal))
                 {
-                    return first + Path.DirectorySeparatorChar + string.Join(Path.DirectorySeparatorChar, segments.Skip(1));
+                    // Drive letter present - reconstruct with proper separator
+                    if (segmentList.Count == 1)
+                        return first + Path.DirectorySeparatorChar;
+
+                    return first + Path.DirectorySeparatorChar +
+                           string.Join(Path.DirectorySeparatorChar, segmentList.Skip(1));
                 }
+
+                // No drive letter - relative path, use Path.GetFullPath
+                var combined = string.Join(Path.DirectorySeparatorChar, segmentList);
+                return Path.GetFullPath(combined);
             }
             else
             {
-                // On Unix, ensure leading separator for absolute paths
+                // Unix: ensure leading separator for absolute paths
+                var combined = string.Join(Path.DirectorySeparatorChar, segmentList);
                 return Path.DirectorySeparatorChar + combined;
             }
-
-            // Fallback for already absolute inputs
-            return Path.GetFullPath(combined);
         }
 
         private static bool StringEquals(string a, string b)
@@ -136,16 +165,23 @@ namespace VecTool.Configuration
             return false;
         }
 
-        private static string? PromoteToRepoRoot(string commonPath)
+        // boundary parameter to prevent walking above vector store scope
+        private static string? PromoteToRepoRoot(string commonPath, string boundaryPath)
         {
             try
             {
                 var current = new DirectoryInfo(commonPath);
+                var boundary = new DirectoryInfo(boundaryPath);
                 DirectoryInfo? candidateWithMarkers = null;
 
                 // Walk upwards; pick nearest ancestor that has repo markers
+                // BUT do not go above the boundary (shortest configured path)
                 while (current != null)
                 {
+                    // Stop if we've reached or gone above the boundary
+                    if (!IsAtOrBelow(current.FullName, boundary.FullName))
+                        break;
+
                     if (ContainsRepoMarkers(current.FullName))
                     {
                         candidateWithMarkers = current;
@@ -159,6 +195,29 @@ namespace VecTool.Configuration
             catch
             {
                 return null;
+            }
+        }
+
+        //Helper to check if a path is at or below another path
+        private static bool IsAtOrBelow(string childPath, string parentPath)
+        {
+            try
+            {
+                var childFull = Path.GetFullPath(childPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                var parentFull = Path.GetFullPath(parentPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                // On Windows, use case-insensitive comparison; on Unix, case-sensitive
+                var comparison = OperatingSystem.IsWindows()
+                    ? StringComparison.OrdinalIgnoreCase
+                    : StringComparison.Ordinal;
+
+                // Child is at or below parent if it equals parent or starts with parent + separator
+                return childFull.Equals(parentFull, comparison) ||
+                       childFull.StartsWith(parentFull + Path.DirectorySeparatorChar, comparison);
+            }
+            catch
+            {
+                return false; // Defensive: treat path comparison errors as "not below"
             }
         }
     }

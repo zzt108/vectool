@@ -141,7 +141,7 @@ namespace VecTool.Handlers
         /// Returns (isAvailable, command to use).
         /// </summary>
         /// <remarks>
-        /// ✅ NEW - Try global install first (more reliable on Windows).
+        // Try global install first (more reliable on Windows).
         /// Fallback to npx if global install not found.
         /// Uses full path resolution to handle PATH inconsistencies.
         /// </remarks>
@@ -220,7 +220,7 @@ namespace VecTool.Handlers
         /// <param name="executableName">Name of executable (e.g., "repomix", "npx")</param>
         /// <returns>Full path if found, or null if not in PATH</returns>
         /// <remarks>
-        /// ✅ NEW - Handles Windows .exe/.cmd extensions and Unix executables.
+        // - Handles Windows .exe/.cmd extensions and Unix executables.
         /// Uses 'where' (Windows) or 'which' (Unix) to resolve paths.
         /// </remarks>
         private string? DetermineExecutablePath(string executableName)
@@ -303,7 +303,7 @@ namespace VecTool.Handlers
                 .Add("TargetDirectory", targetDirectory)
                 .Add("OutputPath", outputPath));
 
-            // ✅ NEW - Only include "repomix" subcommand for npx
+            // Only include "repomix" subcommand for npx
             var isNpx = command.Contains("npx", StringComparison.OrdinalIgnoreCase);
             var args = isNpx ? "repomix " : "";
 

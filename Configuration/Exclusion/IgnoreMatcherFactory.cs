@@ -31,7 +31,6 @@ public static class IgnoreMatcherFactory
 
         IIgnorePatternMatcher matcher = libraryType switch
         {
-            IgnoreLibraryType.GitignoreParserNet => new GitignoreParserNetAdapter(),
             IgnoreLibraryType.MabDotIgnore => new MabDotIgnoreAdapter(),
             _ => throw new ArgumentException($"Unknown library type: {libraryType}", nameof(libraryType))
         };

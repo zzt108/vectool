@@ -90,7 +90,7 @@ namespace oaiUI.RecentFiles
             // Context menu
             InitializeContextMenu();
 
-            // ✅ NEW - Call WireDragDrop to centralize AllowDrop and drag-drop event wiring
+             // Call WireDragDrop to centralize AllowDrop and drag-drop event wiring
             WireDragDrop();
 
             // Other runtime handlers
@@ -141,7 +141,7 @@ namespace oaiUI.RecentFiles
         }
 
         /// <summary>
-        /// ✅ NEW - Handles FileSystemWatcher events with debouncing.
+        /// Handles FileSystemWatcher events with debouncing.
         /// </summary>
         private void OnFileSystemChanged(object? sender, FileSystemEventArgs e)
         {

@@ -19,7 +19,7 @@ namespace UnitTests.Traversal
         {
             testDir = Path.Combine(Path.GetTempPath(), $"FileValidatorTests-{Guid.NewGuid():N}");
             Directory.CreateDirectory(testDir);
-            config = new VectorStoreConfig();
+            config = new VectorStoreConfig(testDir);
         }
 
         [TearDown]
@@ -160,7 +160,7 @@ namespace UnitTests.Traversal
         public void ShouldIncludeInExport_EmptyFile_ReturnsFalse()
         {
             // Arrange
-            var emptyFile = CreateTestFile("Empty.cs", "");
+            var emptyFile = CreateTestFile("Empty.cs", string.Empty);
 
             // Act
             var result = FileValidator.ShouldIncludeInExport(emptyFile, config);
@@ -174,7 +174,7 @@ namespace UnitTests.Traversal
         {
             // Act & Assert
             FileValidator.ShouldIncludeInExport(null!, config).ShouldBeFalse();
-            FileValidator.ShouldIncludeInExport("", config).ShouldBeFalse();
+            FileValidator.ShouldIncludeInExport(string.Empty, config).ShouldBeFalse();
             FileValidator.ShouldIncludeInExport("   ", config).ShouldBeFalse();
         }
 

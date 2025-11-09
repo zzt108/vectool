@@ -8,7 +8,7 @@ using VecTool.RecentFiles;
 
 namespace UnitTests.RecentFiles
 {
-    [TestFixture]
+    [TestFixture, Category("Unit")]
     public class RecentFilesManagerTests
     {
         private static RecentFilesConfig TestConfig(int maxCount = 10, int retentionDays = 30) =>

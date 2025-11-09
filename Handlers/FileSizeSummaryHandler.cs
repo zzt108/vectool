@@ -20,11 +20,11 @@ namespace VecTool.Handlers
     {
         //private static readonly CtxLogger log = new();
 
-        // ✅ NEW: Injected traverser for exclusive authority
+        // Injected traverser for exclusive authority
         private readonly IFileSystemTraverser _fileSystemTraverser;
 
         /// <summary>
-        /// ✅ NEW: Constructor with dependency injection for traverser
+        // Constructor with dependency injection for traverser
         /// </summary>
         /// <param name="ui">Optional UI interface for progress updates</param>
         /// <param name="recentFilesManager">Optional recent files manager</param>

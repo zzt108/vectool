@@ -7,7 +7,7 @@ using VecTool.Handlers;
 
 namespace UnitTests.RecentFiles
 {
-    [TestFixture]
+    [TestFixture, Category("Integration")]
     public class RecentFilesManagerIntegrationTests
     {
         private string testDirectory = null!;
