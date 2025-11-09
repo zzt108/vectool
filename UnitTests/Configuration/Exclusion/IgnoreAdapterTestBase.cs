@@ -41,7 +41,7 @@ namespace VecTool.UnitTests.Configuration.Exclusion
         public void ShouldExcludeFileByExtension()
         {
             var adapter = CreateAdapter();
-            SetupTestPatterns(adapter, new[] { ".log" });
+            SetupTestPatterns(adapter, new[] { "*.log" });
 
             adapter.IsIgnored("app.log", isDirectory: false).ShouldBeTrue();
             adapter.IsIgnored("debug.log", isDirectory: false).ShouldBeTrue();
@@ -56,7 +56,7 @@ namespace VecTool.UnitTests.Configuration.Exclusion
         public void ShouldNotExcludeNonMatchingFile()
         {
             var adapter = CreateAdapter();
-            SetupTestPatterns(adapter, new[] { ".log" });
+            SetupTestPatterns(adapter, new[] { "*.log" });
 
             adapter.IsIgnored("program.cs", isDirectory: false).ShouldBeFalse();
             adapter.IsIgnored("readme.txt", isDirectory: false).ShouldBeFalse();
@@ -71,7 +71,7 @@ namespace VecTool.UnitTests.Configuration.Exclusion
         public void ShouldExcludeMultipleFileExtensions()
         {
             var adapter = CreateAdapter();
-            SetupTestPatterns(adapter, new[] { ".log", ".tmp", ".bak" });
+            SetupTestPatterns(adapter, new[] { "*.log", "*.tmp", "*.bak" });
 
             adapter.IsIgnored("debug.log", isDirectory: false).ShouldBeTrue();
             adapter.IsIgnored("temp.tmp", isDirectory: false).ShouldBeTrue();
@@ -151,7 +151,7 @@ namespace VecTool.UnitTests.Configuration.Exclusion
         public void ShouldHandleNullOrEmptyPath()
         {
             var adapter = CreateAdapter();
-            SetupTestPatterns(adapter, new[] { ".log" });
+            SetupTestPatterns(adapter, new[] { "*.log" });
 
             adapter.IsIgnored(null!, isDirectory: false).ShouldBeFalse();
             adapter.IsIgnored("", isDirectory: false).ShouldBeFalse();

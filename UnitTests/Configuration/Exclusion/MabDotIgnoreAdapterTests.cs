@@ -66,8 +66,8 @@ namespace VecTool.UnitTests.Configuration.Exclusion
         {
             var gitignorePath = Path.Combine(_testRepoPath, ".gitignore");
             var vtignorePath = Path.Combine(_testRepoPath, ".vtignore");
-            File.WriteAllLines(gitignorePath, new[] { ".dll" });
-            File.WriteAllLines(vtignorePath, new[] { ".exe" });
+            File.WriteAllLines(gitignorePath, new[] { "*.dll" });
+            File.WriteAllLines(vtignorePath, new[] { "*.exe" });
 
             var adapter = new MabDotIgnoreAdapter();
             adapter.LoadFromRoot(_testRepoPath);
@@ -84,8 +84,8 @@ namespace VecTool.UnitTests.Configuration.Exclusion
         {
             var gitignorePath = Path.Combine(_testRepoPath, ".gitignore");
             var vtignorePath = Path.Combine(_testRepoPath, ".vtignore");
-            File.WriteAllLines(gitignorePath, new[] { ".log" });
-            File.WriteAllLines(vtignorePath, new[] { ".txt" });
+            File.WriteAllLines(gitignorePath, new[] { "*.log" });
+            File.WriteAllLines(vtignorePath, new[] { "*.txt" });
 
             var adapter = new MabDotIgnoreAdapter();
             adapter.LoadFromRoot(_testRepoPath);
@@ -139,7 +139,7 @@ namespace VecTool.UnitTests.Configuration.Exclusion
         public void ShouldCachePatternsAcrossMultipleCalls()
         {
             var vtignorePath = Path.Combine(_testRepoPath, ".vtignore");
-            File.WriteAllLines(vtignorePath, new[] { ".log" });
+            File.WriteAllLines(vtignorePath, new[] { "*.log" });
 
             var adapter = new MabDotIgnoreAdapter();
             adapter.LoadFromRoot(_testRepoPath);
