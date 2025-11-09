@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using LogCtxShared;
 using NLogShared;
 
-namespace VecTool.Configuration.PromptLib;
+namespace VecTool.Core.AI;
 
 /// <summary>
 /// LLM provider configuration loaded from external JSON with environment variable substitution.
@@ -113,17 +113,6 @@ public sealed class LLMProviderConfig
             return value;
         });
     }
-}
-
-/// <summary>
-/// Provider-specific settings (API key, model, timeout).
-/// </summary>
-public sealed class ProviderSettings
-{
-    public bool Enabled { get; set; }
-    public string ApiKey { get; set; } = string.Empty;
-    public string Model { get; set; } = string.Empty;
-    public int Timeout { get; set; } = 30; // seconds
 }
 
 /// <summary>
