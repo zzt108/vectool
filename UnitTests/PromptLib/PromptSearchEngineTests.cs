@@ -158,7 +158,7 @@ namespace VecTool.UnitTests.PromptLib
         public void RebuildIndexShouldHandleInvalidFiles()
         {
             // Arrange
-            CreateTestFile("invalid-file.md", "No valid pattern");
+            CreateTestFile("invalid-file.docx", "No valid pattern");
             CreateTestFile("PROMPT-1.0-valid.md", "Valid content");
             engine.RebuildIndex();
 

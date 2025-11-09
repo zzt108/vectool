@@ -99,14 +99,20 @@ namespace VecTool.Core.Models
 
             // Parse path hierarchy: /area/project/category/filename.md
             var (area, project, category) = ExtractHierarchy(fullPath);
-
+            
+            var description = firstLineContent?.Trim();
+            if (!string.IsNullOrEmpty(description) && description.Length > 200)
+            {
+                description = description.Substring(0, 200) + "...";
+            }
+            
             var metadata = new PromptMetadata
             {
                 FileName = fileName,
                 Version = version,
                 Name = name,
                 Type = type,
-                Description = firstLineContent?.Trim(),
+                Description = description,
                 Area = area,
                 Project = project,
                 Category = category
