@@ -488,9 +488,9 @@ public class ExternalLib { }";
         public void ShouldRespectCaseInsensitiveReasonMatching()
         {
             // Arrange
-            var markedContent1 = @"// [VECTOOLEXCLUDE:GENERATED_BY_XSD:XSD-Schema-Docs]
+            var markedContent1 = @"// [VECTOOL:EXCLUDE:GENERATED_BY_XSD@XSD-Schema-Docs]
 public class Upper { }";
-            var markedContent2 = @"// [VECTOOLEXCLUDE:generated_by_xsd:XSD-Schema-Docs]
+            var markedContent2 = @"// [VECTOOL:EXCLUDE:generated_by_xsd@XSD-Schema-Docs]
 public class Lower { }";
 
             File.WriteAllText(Path.Combine(testRoot, "upper.cs"), markedContent1);

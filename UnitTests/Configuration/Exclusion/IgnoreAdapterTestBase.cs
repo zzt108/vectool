@@ -154,7 +154,7 @@ namespace VecTool.UnitTests.Configuration.Exclusion
             SetupTestPatterns(adapter, new[] { "*.log" });
 
             adapter.IsIgnored(null!, isDirectory: false).ShouldBeFalse();
-            adapter.IsIgnored("", isDirectory: false).ShouldBeFalse();
+            adapter.IsIgnored(String.Empty, isDirectory: false).ShouldBeFalse();
             adapter.IsIgnored("   ", isDirectory: false).ShouldBeFalse();
 
             CleanupAdapter(adapter);

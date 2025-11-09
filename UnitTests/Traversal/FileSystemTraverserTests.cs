@@ -103,7 +103,7 @@ namespace UnitTests.Traversal
         {
             // Arrange
             File.WriteAllText(Path.Combine(testDir, ".gitignore"), "*.log\n");
-            File.WriteAllText(Path.Combine(testDir, ".vtignore"), "*.txt\n");
+            File.WriteAllText(Path.Combine(testDir, ".vtignore"), "!*.log\n*.txt\n");
             File.WriteAllText(Path.Combine(testDir, "file.log"), "log");
             File.WriteAllText(Path.Combine(testDir, "file.txt"), "text");
             File.WriteAllText(Path.Combine(testDir, "file.cs"), "code");
@@ -129,7 +129,7 @@ namespace UnitTests.Traversal
         public void ShouldFallbackToLegacyConfigWhenNoPatternFile()
         {
             // Arrange
-            config.ExcludedFiles.Add(".tmp");
+            config.ExcludedFiles.Add("*.tmp");
             File.WriteAllText(Path.Combine(testDir, "file.cs"), "code");
             File.WriteAllText(Path.Combine(testDir, "file.tmp"), "temp");
 
@@ -153,8 +153,8 @@ namespace UnitTests.Traversal
         {
             // Arrange
             File.WriteAllText(Path.Combine(testDir, ".gitignore"), "*.log\n");
-            File.WriteAllText(Path.Combine(testDir, "debug.log"), "");
-            File.WriteAllText(Path.Combine(testDir, "main.cs"), "");
+            File.WriteAllText(Path.Combine(testDir, "debug.log"), "// content");
+            File.WriteAllText(Path.Combine(testDir, "main.cs"), "// content");
 
             var traverser = new FileSystemTraverser(ui: null);
 
@@ -184,10 +184,10 @@ namespace UnitTests.Traversal
             Directory.CreateDirectory(Path.Combine(testDir, "src", "feature1", "bin"));
             Directory.CreateDirectory(Path.Combine(testDir, "src", "feature2"));
 
-            File.WriteAllText(Path.Combine(testDir, "src", "main.cs"), "");
-            File.WriteAllText(Path.Combine(testDir, "src", "feature1", "feature.cs"), "");
-            File.WriteAllText(Path.Combine(testDir, "src", "feature1", "bin", "output.dll"), "");
-            File.WriteAllText(Path.Combine(testDir, "src", "feature2", "feature.cs"), "");
+            File.WriteAllText(Path.Combine(testDir, "src", "main.cs"), "// main");
+            File.WriteAllText(Path.Combine(testDir, "src", "feature1", "feature.cs"), "// feature1");
+            File.WriteAllText(Path.Combine(testDir, "src", "feature1", "bin", "output.dll"), "// content");
+            File.WriteAllText(Path.Combine(testDir, "src", "feature2", "feature.cs"), "// feature2");
 
             File.WriteAllText(Path.Combine(testDir, ".gitignore"), "bin/\n");
 
@@ -211,7 +211,7 @@ namespace UnitTests.Traversal
         {
             // Arrange
             Directory.CreateDirectory(Path.Combine(testDir, "empty"));
-            File.WriteAllText(Path.Combine(testDir, "file.cs"), "");
+            File.WriteAllText(Path.Combine(testDir, "file.cs"), "// content");
 
             var traverser = new FileSystemTraverser(ui: null);
 
@@ -232,8 +232,8 @@ namespace UnitTests.Traversal
             Directory.CreateDirectory(Path.Combine(testDir, "src"));
             Directory.CreateDirectory(Path.Combine(testDir, "vendor"));
 
-            File.WriteAllText(Path.Combine(testDir, "src", "main.cs"), "");
-            File.WriteAllText(Path.Combine(testDir, "vendor", "lib.cs"), "");
+            File.WriteAllText(Path.Combine(testDir, "src", "main.cs"), "// content");
+            File.WriteAllText(Path.Combine(testDir, "vendor", "lib.cs"), "// content");
 
             var traverser = new FileSystemTraverser(ui: null);
 
@@ -241,7 +241,7 @@ namespace UnitTests.Traversal
             var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
 
             // Assert
-            files.ShouldNotContain(f => f.EndsWith("main.cs"));
+            files.ShouldContain(f => f.EndsWith("main.cs"));
             files.ShouldNotContain(f => f.EndsWith("lib.cs"), "vendor/ excluded by legacy config");
         }
 
@@ -254,10 +254,10 @@ namespace UnitTests.Traversal
         {
             // Arrange
             File.WriteAllText(Path.Combine(testDir, ".gitignore"), "*.log\n*.tmp\n*.bak\n");
-            File.WriteAllText(Path.Combine(testDir, "main.cs"), "");
-            File.WriteAllText(Path.Combine(testDir, "debug.log"), "");
-            File.WriteAllText(Path.Combine(testDir, "temp.tmp"), "");
-            File.WriteAllText(Path.Combine(testDir, "backup.bak"), "");
+            File.WriteAllText(Path.Combine(testDir, "main.cs"), "// must have content, otherwise it is ignored");
+            File.WriteAllText(Path.Combine(testDir, "debug.log"), "// content");
+            File.WriteAllText(Path.Combine(testDir, "temp.tmp"), "// content");
+            File.WriteAllText(Path.Combine(testDir, "backup.bak"), "// content");
 
             var traverser = new FileSystemTraverser(ui: null);
 
@@ -278,8 +278,8 @@ namespace UnitTests.Traversal
         {
             // Arrange
             File.WriteAllText(Path.Combine(testDir, ".gitignore"), "*.log\n");
-            File.WriteAllText(Path.Combine(testDir, "code.cs"), "");
-            File.WriteAllText(Path.Combine(testDir, "debug.log"), "");
+            File.WriteAllText(Path.Combine(testDir, "code.cs"), "// content");
+            File.WriteAllText(Path.Combine(testDir, "debug.log"), "// content");
 
             var traverser = new FileSystemTraverser(ui: null);
             var processedFiles = new List<string>();
@@ -315,8 +315,8 @@ namespace UnitTests.Traversal
 *.tmp
 ";
             File.WriteAllText(Path.Combine(testDir, ".gitignore"), gitignoreContent);
-            File.WriteAllText(Path.Combine(testDir, "code.cs"), "");
-            File.WriteAllText(Path.Combine(testDir, "debug.log"), "");
+            File.WriteAllText(Path.Combine(testDir, "code.cs"), "// content");
+            File.WriteAllText(Path.Combine(testDir, "debug.log"), "// log");
 
             var traverser = new FileSystemTraverser(ui: null);
 

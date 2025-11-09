@@ -50,7 +50,7 @@ namespace UnitTests.Constants
         {
             // Assert
             Should.Throw<ArgumentException>(() => TagBuilder.BuildFilePathTag(null!));
-            Should.Throw<ArgumentException>(() => TagBuilder.BuildFilePathTag(""));
+            Should.Throw<ArgumentException>(() => TagBuilder.BuildFilePathTag(string.Empty));
             Should.Throw<ArgumentException>(() => TagBuilder.BuildFilePathTag("   "));
         }
 
