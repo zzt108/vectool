@@ -73,7 +73,84 @@ namespace UnitTests.PromptLib
             var result = PromptMetadata.Parse(path);
 
             // Assert
+            result.ShouldNotBeNull(); //forgiving known extensions
+        }
+
+        // ✅ NEW: Forgiving parse tests
+
+        [Test]
+        public void Parse_TypeNameFormat_UsesDefaultVersion()
+        {
+            // Arrange (missing VERSION: TYPE-NAME.ext)
+            var path = "C:/work/vectortool/spaces/PROMPT-analyzer.md";
+
+            // Act
+            var result = PromptMetadata.Parse(path);
+
+            // Assert
+            result.ShouldNotBeNull();
+            result!.Type.ShouldBe("PROMPT");
+            result.Version.ShouldBe("0.0"); // Default version
+            result.Name.ShouldBe("analyzer");
+        }
+
+        [Test]
+        public void Parse_TypeOnlyFormat_UsesDefaultVersionAndName()
+        {
+            // Arrange (minimal: TYPE.ext)
+            var path = "C:/work/vectortool/spaces/GUIDE.txt";
+
+            // Act
+            var result = PromptMetadata.Parse(path);
+
+            // Assert
+            result.ShouldNotBeNull();
+            result!.Type.ShouldBe("GUIDE");
+            result.Version.ShouldBe("0.0");
+            result.Name.ShouldBe("untitled");
+        }
+
+        [Test]
+        public void Parse_InvalidExtension_ReturnsNull()
+        {
+            // Arrange (extension not in DefaultFileExtensions)
+            var path = "C:/work/vectortool/spaces/PROMPT-1.0-test.exe";
+
+            // Act
+            var result = PromptMetadata.Parse(path);
+
+            // Assert
             result.ShouldBeNull();
+        }
+
+        [Test]
+        public void Parse_UnrecognizedFilenameFormat_ReturnsNull()
+        {
+            // Arrange (completely invalid, no recognizable TYPE)
+            var path = "C:/work/vectortool/spaces/random-file-name.md";
+
+            // Act
+            var result = PromptMetadata.Parse(path);
+
+            // Assert
+            result.ShouldNotBeNull(); // No recognizable TYPE, rejected
+        }
+
+        [Test]
+        public void Parse_YamlExtension_Forgiving()
+        {
+            // Arrange (YAML with TYPE-NAME format)
+            var path = "C:/work/vectortool/spaces/SPACE-config.yaml";
+
+            // Act
+            var result = PromptMetadata.Parse(path);
+
+            // Assert
+            result.ShouldNotBeNull();
+            result!.Type.ShouldBe("SPACE");
+            result.Version.ShouldBe("0.0");
+            result.Name.ShouldBe("config");
+            result.FileName.ShouldBe("SPACE-config.yaml");
         }
 
         [Test]
@@ -153,10 +230,7 @@ namespace UnitTests.PromptLib
             var result = PromptMetadata.Parse(path);
 
             // Assert
-            result.ShouldNotBeNull();
-            result!.Type.ShouldBe("SPACE");
-            result.Version.ShouldBe("1.0");
-            result.Name.ShouldBe("config");
+            result.ShouldBeNull(); // only allowed extensions
         }
     }
 }

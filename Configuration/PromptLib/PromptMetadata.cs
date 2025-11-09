@@ -53,20 +53,50 @@ namespace VecTool.Core.Models.PromptLib
             // Parse filename: {TYPE}-{VERSION}-{NAME}.{ext}
             var nameWithoutExt = fileName;
             string ext = Path.GetExtension(fileName);
-            if(!string.IsNullOrWhiteSpace(ext) && PromptsConfig.DefaultFileExtensions.Contains(ext,StringComparison.OrdinalIgnoreCase))
+            var allowedExtensions = PromptsConfig.DefaultFileExtensions.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            if (!string.IsNullOrWhiteSpace(ext) && allowedExtensions.FirstOrDefault(x => x == ext) is not null)
                 nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
 
             var parts = nameWithoutExt.Split('-', StringSplitOptions.RemoveEmptyEntries);
 
-            if (parts.Length < 3)
+            string type, version, name;
+
+            if (parts.Length >= 3)
             {
-                log.Warn($"Filename does not match expected pattern (TYPE-VERSION-NAME): {fileName}");
+                // Standard format: TYPE-VERSION-NAME
+                type = parts[0].Trim();
+                version = parts[1].Trim();
+                name = string.Join("-", parts.Skip(2)).Trim();
+            }
+            else if (parts.Length == 2)
+            {
+                // TYPE-NAME format (missing version) → default version "0.0"
+                type = parts[0].Trim();
+                version = "0.0"; // Default version
+                name = parts[1].Trim();
+                log.Debug($"Filename missing version, using default: {fileName} → version={version}");
+            }
+            else if (parts.Length == 1)
+            {
+                // TYPE only (e.g., "PROMPT.md") → default version + name
+                type = parts[0].Trim();
+                version = "0.0";
+                name = "untitled";
+                log.Debug($"Filename minimal format, using defaults: {fileName} → version={version}, name={name}");
+            }
+            else
+            {
+                // ❌ REMOVE: Reject completely invalid filenames
+                log.Warn($"Filename does not match expected pattern (TYPE-VERSION-NAME or TYPE-NAME or TYPE): {fileName}");
                 return null;
             }
 
-            var type = parts[0].Trim();
-            var version = parts[1].Trim();
-            var name = string.Join("-", parts.Skip(2)).Trim(); // Support multi-part names like "git-integration"
+            // Validate file extension (forgiving behavior only for recognized extensions)
+            if (!allowedExtensions.Any(e => e.Trim().Equals(ext, StringComparison.OrdinalIgnoreCase)))
+            {
+                log.Warn($"File extension not in allowed list: {fileName} (ext={ext})");
+                return null;
+            }
 
             // Parse path hierarchy: /area/project/category/filename.md
             var (area, project, category) = ExtractHierarchy(fullPath);
