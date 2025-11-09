@@ -18,6 +18,7 @@ namespace VecTool.UI.Panels
         private System.Windows.Forms.Button btnNew = null!;
         private System.Windows.Forms.Button btnGit = null!;
         private System.Windows.Forms.Label lblStatus = null!;
+        private System.Windows.Forms.SplitContainer splitContainerMain = null!;
 
         protected override void Dispose(bool disposing)
         {
@@ -37,6 +38,13 @@ namespace VecTool.UI.Panels
             this.cmbFilterType = new System.Windows.Forms.ComboBox();
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.btnRefresh = new System.Windows.Forms.Button();
+            this.splitContainerMain = new System.Windows.Forms.SplitContainer();
+            // Ensure SplitContainer fills the entire tab
+            this.splitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainerMain.FixedPanel = System.Windows.Forms.FixedPanel.None; // Allow both panels to resize
+            this.splitContainerMain.SplitterDistance = 250; // Initial TreeView width
+            this.splitContainerMain.SplitterWidth = 6; // Make splitter easier to grab
+
             this.treeViewHierarchy = new System.Windows.Forms.TreeView();
             this.lvResults = new System.Windows.Forms.ListView();
             this.buttonPanel = new System.Windows.Forms.Panel();
@@ -65,6 +73,7 @@ namespace VecTool.UI.Panels
             this.tableLayoutPanel.Controls.Add(this.cmbFilterType, 1, 0);
             this.tableLayoutPanel.Controls.Add(this.txtSearch, 2, 0);
             this.tableLayoutPanel.Controls.Add(this.btnRefresh, 3, 0);
+            this.tableLayoutPanel.Controls.Add(this.splitContainerMain, 0, 1); // Span all 4 columns
             this.tableLayoutPanel.Controls.Add(this.treeViewHierarchy, 0, 1);
             this.tableLayoutPanel.Controls.Add(this.lvResults, 1, 1);
             this.tableLayoutPanel.Controls.Add(this.buttonPanel, 0, 2);
@@ -119,7 +128,28 @@ namespace VecTool.UI.Panels
             this.btnRefresh.UseVisualStyleBackColor = true;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefreshClick);
 
+            // splitContainerMain configuration
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
+            this.splitContainerMain.Panel1.SuspendLayout();
+            this.splitContainerMain.Panel2.SuspendLayout();
+            this.splitContainerMain.SuspendLayout();
+
+            this.splitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainerMain.Location = new System.Drawing.Point(6, 41);
+            this.splitContainerMain.Margin = new System.Windows.Forms.Padding(6);
+            this.splitContainerMain.Name = "splitContainerMain";
+            this.splitContainerMain.Orientation = System.Windows.Forms.Orientation.Vertical;
+            // 🔄 4:1 ratio for 900px panel = 720px tree : 180px list (80% : 20%)
+            this.splitContainerMain.SplitterDistance = 720;
+            this.splitContainerMain.SplitterWidth = 4;
+            this.splitContainerMain.Size = new System.Drawing.Size(888, 473); // Row 1 height from TableLayout
+            this.splitContainerMain.TabIndex = 4;
+            this.splitContainerMain.Panel1MinSize = 200;
+            this.splitContainerMain.Panel2MinSize = 150;
+
             // treeViewHierarchy
+            this.treeViewHierarchy.MinimumSize = new System.Drawing.Size(150, 0); // Allow narrow collapse
+
             this.treeViewHierarchy.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeViewHierarchy.Location = new System.Drawing.Point(6, 41);
             this.treeViewHierarchy.Margin = new System.Windows.Forms.Padding(6);
@@ -128,18 +158,19 @@ namespace VecTool.UI.Panels
             this.treeViewHierarchy.Size = new System.Drawing.Size(48, 473);
             this.treeViewHierarchy.TabIndex = 4;
             this.treeViewHierarchy.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewHierarchyAfterSelect);
+            this.splitContainerMain.Panel1.Controls.Add(this.treeViewHierarchy);
 
             // lvResults
             this.tableLayoutPanel.SetColumnSpan(this.lvResults, 3);
             this.lvResults.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvResults.FullRowSelect = true;
             this.lvResults.GridLines = true;
-            this.lvResults.Location = new System.Drawing.Point(66, 41);
-            this.lvResults.Margin = new System.Windows.Forms.Padding(6);
+            this.lvResults.Location = new System.Drawing.Point(0, 0);
+            this.lvResults.Margin = new System.Windows.Forms.Padding(0); // ✅ No margin inside splitter
             this.lvResults.MultiSelect = false;
             this.lvResults.Name = "lvResults";
-            this.lvResults.Size = new System.Drawing.Size(828, 473);
-            this.lvResults.TabIndex = 5;
+            this.lvResults.Size = new System.Drawing.Size(164, 473); // Calculated: 888 - 720 - 4 (splitter)
+            this.lvResults.TabIndex = 0;
             this.lvResults.UseCompatibleStateImageBehavior = false;
             this.lvResults.View = System.Windows.Forms.View.Details;
             this.lvResults.Columns.Add("Fav", 40);
@@ -150,6 +181,7 @@ namespace VecTool.UI.Panels
             this.lvResults.Columns.Add("Modified", 140);
             this.lvResults.ItemActivate += new System.EventHandler(this.lvResultsItemActivate);
             this.lvResults.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lvResultsMouseClick);
+            this.splitContainerMain.Panel2.Controls.Add(this.lvResults);
 
             // buttonPanel
             this.tableLayoutPanel.SetColumnSpan(this.buttonPanel, 4);
@@ -220,6 +252,11 @@ namespace VecTool.UI.Panels
             this.Name = "PromptsBrowserPanel";
             this.Size = new System.Drawing.Size(900, 600);
 
+            // Resume layout with SplitContainer
+            this.splitContainerMain.Panel1.ResumeLayout(false);
+            this.splitContainerMain.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).EndInit();
+            this.splitContainerMain.ResumeLayout(false);
             this.tableLayoutPanel.ResumeLayout(false);
             this.tableLayoutPanel.PerformLayout();
             this.buttonPanel.ResumeLayout(false);
