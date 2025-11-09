@@ -1,4 +1,4 @@
-﻿// Path: UnitTests/RecentFiles/RecentFilesConfigTests.cs
+﻿// ✅ FULL FILE VERSION
 using NUnit.Framework;
 using Shouldly;
 using System;
@@ -10,85 +10,118 @@ namespace UnitTests.RecentFiles
     [TestFixture]
     public class RecentFilesConfigTests
     {
-        // Mock reader for predictable test inputs
+        #region Test Helper - Mock Reader
+
         private sealed class FakeReader : IAppSettingsReader
         {
             private readonly Dictionary<string, string?> _values;
-            public FakeReader(Dictionary<string, string?> values) => _values = values;
-            public string? Get(string key) => _values.TryGetValue(key, out var v) ? v : null;
+
+            public FakeReader(Dictionary<string, string?> values)
+            {
+                _values = values;
+            }
+
+            public string? Get(string key) =>
+                _values.TryGetValue(key, out var v) ? v : null;
         }
 
+        #endregion
+
+        #region FromAppConfig Tests
+
         [Test]
-        public void FromAppConfig_WhenKeysArePresent_ShouldLoadValues()
+        public void FromAppConfig_AllKeysPresent_LoadsValues()
         {
-            // Arrange
             var reader = new FakeReader(new Dictionary<string, string?>
             {
-                { "recentFilesMaxCount", "50" },
-                { "recentFilesRetentionDays", "15" },
-                { "recentFilesOutputPath", "TestOutput" }
+                ["recentFilesMaxCount"] = "50",
+                ["recentFilesRetentionDays"] = "15",
+                ["recentFilesOutputPath"] = "TestOutput"
             });
 
-            // Act
             var config = RecentFilesConfig.FromAppConfig(reader);
 
-            // Assert
             config.MaxCount.ShouldBe(50);
             config.RetentionDays.ShouldBe(15);
             config.OutputPath.ShouldBe("TestOutput");
-            config.StorageFilePath.ShouldBe("TestOutput\\recentFiles.json");
+            config.StorageFilePath.ShouldBe(@"TestOutput\recentFiles.json");
         }
 
         [Test]
-        public void FromAppConfig_WhenKeysAreMissing_ShouldUseDefaults()
+        public void FromAppConfig_KeysMissing_UsesDefaults()
         {
-            // Arrange
             var reader = new FakeReader(new Dictionary<string, string?>());
 
-            // Act
             var config = RecentFilesConfig.FromAppConfig(reader);
 
-            // Assert
             config.MaxCount.ShouldBe(RecentFilesConfig.DefaultMaxCount);
             config.RetentionDays.ShouldBe(RecentFilesConfig.DefaultRetentionDays);
             config.OutputPath.ShouldBe(RecentFilesConfig.DefaultOutputPath);
         }
 
         [Test]
-        public void FromAppConfig_WhenValuesAreInvalidFormat_ShouldUseDefaults()
+        public void FromAppConfig_InvalidFormat_UsesDefaults()
         {
-            // Arrange
             var reader = new FakeReader(new Dictionary<string, string?>
             {
-                { "recentFilesMaxCount", "not-a-number" },
-                { "recentFilesRetentionDays", "invalid" }
+                ["recentFilesMaxCount"] = "not-a-number",
+                ["recentFilesRetentionDays"] = "invalid"
             });
 
-            // Act
             var config = RecentFilesConfig.FromAppConfig(reader);
 
-            // Assert
             config.MaxCount.ShouldBe(RecentFilesConfig.DefaultMaxCount);
             config.RetentionDays.ShouldBe(RecentFilesConfig.DefaultRetentionDays);
         }
 
-        [Test]
-        public void Constructor_WithInvalidRanges_ShouldThrowArgumentOutOfRangeException()
+        #endregion
+
+        #region Constructor Validation Tests
+
+        [TestCase(0, 30, "path", "MaxCount must be between")]
+        [TestCase(10001, 30, "path", "MaxCount must be between")]
+        [TestCase(-1, 30, "path", "MaxCount must be between")]
+        [TestCase(100, -1, "path", "RetentionDays must be between")]
+        [TestCase(100, 3651, "path", "RetentionDays must be between")]
+        public void Constructor_InvalidRanges_ThrowsArgumentOutOfRangeException(
+            int maxCount,
+            int retentionDays,
+            string outputPath,
+            string expectedMessageFragment)
         {
-            // Assert
-            Should.Throw<ArgumentOutOfRangeException>(() => new RecentFilesConfig(0, 30, "path"));
-            Should.Throw<ArgumentOutOfRangeException>(() => new RecentFilesConfig(10001, 30, "path"));
-            Should.Throw<ArgumentOutOfRangeException>(() => new RecentFilesConfig(100, -1, "path"));
-            Should.Throw<ArgumentOutOfRangeException>(() => new RecentFilesConfig(100, 3651, "path"));
+            var ex = Should.Throw<ArgumentOutOfRangeException>(
+                () => new RecentFilesConfig(maxCount, retentionDays, outputPath));
+
+            ex.Message.ShouldContain(expectedMessageFragment);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        public void Constructor_InvalidPath_NullOrWhitespace_ThrowsArgumentException(string? invalidPath)
+        {
+            Should.Throw<ArgumentException>(
+                () => new RecentFilesConfig(100, 30, invalidPath!));
         }
 
         [Test]
-        public void Constructor_WithInvalidPath_ShouldThrowArgumentException()
+        public void Constructor_InvalidPath_IllegalCharacters_ThrowsArgumentException()
         {
-            // Assert
-            Should.Throw<ArgumentException>(() => new RecentFilesConfig(100, 30, ""));
-            Should.Throw<ArgumentException>(() => new RecentFilesConfig(100, 30, "   "));
-            Should.Throw<ArgumentException>(() => new RecentFilesConfig(100, 30, "C:\\inv|lid\\path"));
+            Should.Throw<ArgumentException>(
+                () => new RecentFilesConfig(100, 30, @"C:\|id"));
         }
+
+        [Test]
+        public void Constructor_ValidParameters_CreatesInstance()
+        {
+            var config = new RecentFilesConfig(100, 30, "Generated");
+
+            config.MaxCount.ShouldBe(100);
+            config.RetentionDays.ShouldBe(30);
+            config.OutputPath.ShouldBe("Generated");
+            config.StorageFilePath.ShouldBe(@"Generated\recentFiles.json");
+        }
+
+        #endregion
     }
 }

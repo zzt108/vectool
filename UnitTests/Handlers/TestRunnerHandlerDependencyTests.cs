@@ -14,6 +14,19 @@ namespace UnitTests.Handlers
     [TestFixture]
     public class TestRunnerHandlerDependencyTests
     {
+
+        [Test]
+        public void Should_wire_dependencies_via_canonical_DI_constructor()
+        {
+            IProcessRunner processRunner = new FakeProcessRunner();
+            IUserInterface ui = new FakeUserInterface();
+            IRecentFilesManager recentFiles = new NoopRecentFilesManager();
+
+            var handler = new TestRunnerHandler("Fake.sln", null, processRunner, ui, recentFiles, "main", "S");
+
+            handler.ShouldNotBeNull();
+        }
+
         [Test]
         public async Task RunTestsAsync_should_return_null_when_dotnet_fails()
         {

@@ -39,7 +39,7 @@ namespace oaiUI.RecentFiles
                 }
             }
 
-            // ✅ NEW: First-run font from App.config if UiState has no font
+            // First-run font from App.config if UiState has no font
             if (!state.RecentFilesFontSize.HasValue)
             {
                 var fontSizeStr = System.Configuration.ConfigurationManager.AppSettings["recentFilesFontSize"];

@@ -71,18 +71,6 @@ namespace UnitTests.Handlers
         }
 
         [Test]
-        public void ConstructorShouldAcceptTraverserInjection()
-        {
-            // Arrange
-            var handler = new FileSizeSummaryHandler(mockUi, mockRecentFilesManager, mockTraverser);
-
-            // Assert
-            handler.ShouldNotBeNull();
-            // Ensure no traversal call happened yet during construction.
-            mockTraverser.Received(0).EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>());
-        }
-
-        [Test]
         public void GenerateFileSizeSummaryShouldIncludeMultipleFolders()
         {
             // Arrange

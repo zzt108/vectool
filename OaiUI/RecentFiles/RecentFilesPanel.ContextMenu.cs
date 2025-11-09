@@ -50,7 +50,7 @@ namespace oaiUI.RecentFiles
             // Dynamically enable/disable menu items based on selection
             contextMenu.Opening += OnContextMenuOpening;
 
-            // ✅ NEW - Attach to ListView explicitly
+            // Attach to ListView explicitly
             if (lvRecentFiles is not null)
             {
                 lvRecentFiles.ContextMenuStrip = contextMenu;

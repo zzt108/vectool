@@ -84,7 +84,7 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
         {
             if (isDirectory)
             {
-                var result = _config.IsFolderExcluded(relativePath);
+                 var result = _config.IsFolderExcluded(relativePath);
                 if (result)
                 {
                     log.Trace($"Ignored by legacy config (folder): {relativePath}");

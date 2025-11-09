@@ -199,34 +199,10 @@ namespace UnitTests.Configuration
         }
 
         /// <summary>
-        /// Root with .git directory should be promoted as RootPath.
-        /// </summary>
-        [Test]
-        public void GetRootPathShouldPromoteAncestorWithGitDirectory()
-        {
-            // Arrange
-            var projectRoot = Path.Combine(_tempBase, "project");
-            var gitDir = Path.Combine(projectRoot, ".git");
-            var srcDir = Path.Combine(projectRoot, "src");
-            Directory.CreateDirectory(gitDir);
-            Directory.CreateDirectory(srcDir);
-
-            var config = new VectorStoreConfig();
-            config.FolderPaths.Add(srcDir);
-
-            // Act
-            var result = config.GetRootPath();
-
-            // Assert - should promote to projectRoot because it contains .git
-            result.ShouldNotBeNull();
-            result.ShouldBe(Path.GetFullPath(projectRoot));
-        }
-
-        /// <summary>
         /// Root with dot-prefixed folder(s) should be promoted.
         /// </summary>
         [Test]
-        public void GetRootPathShouldPromoteAncestorWithDotFolder()
+        public void GetRootPathShouldPromoteAncestorWithDotFolderIfItIsInTheFolderPaths()
         {
             // Arrange
             var projectRoot = Path.Combine(_tempBase, "project");
@@ -243,14 +219,24 @@ namespace UnitTests.Configuration
 
             // Assert - should promote to projectRoot because it contains .config
             result.ShouldNotBeNull();
+            result.ShouldBe(Path.GetFullPath(srcDir));
+
+            config.FolderPaths.Add(projectRoot);
+
+            // Act
+            result = config.GetRootPath();
+
+            // Assert - should promote to projectRoot because it contains .config
+            result.ShouldNotBeNull();
             result.ShouldBe(Path.GetFullPath(projectRoot));
+
         }
 
         /// <summary>
         /// When multiple ancestor roots are possible, prefer nearest with .git or dot-folders.
         /// </summary>
         [Test]
-        public void GetRootPathShouldPreferNearestAncestorWithRepoMarkers()
+        public void GetRootPathShouldPreferNearestAncestorWithRepoMarkersIfItIsInTheFolderPaths()
         {
             // Arrange
             var grandparent = Path.Combine(_tempBase, "grandparent");
@@ -266,9 +252,19 @@ namespace UnitTests.Configuration
             // Act
             var result = config.GetRootPath();
 
-            // Assert - should stop at grandparent, not go higher
+            // Assert - should stop at child, grandparent is not in folderpaths
+            result.ShouldNotBeNull();
+            result.ShouldBe(Path.GetFullPath(child));
+
+            config.FolderPaths.Add(grandparent);
+
+            result = config.GetRootPath();
+
+            // Assert - should return grandparent
             result.ShouldNotBeNull();
             result.ShouldBe(Path.GetFullPath(grandparent));
+
+
         }
 
         /// <summary>

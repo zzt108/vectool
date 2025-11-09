@@ -1,7 +1,7 @@
 ﻿// File: UnitTests/MimeTypeProviderTests.cs
 
-using LogCtxShared;        // ✅ NEW
-using NLogShared;          // ✅ NEW
+using LogCtxShared;        
+using NLogShared;          
 using NUnit.Framework;
 using Shouldly;
 using System;
@@ -28,7 +28,6 @@ namespace UnitTests
             _log.Info("Test suite starting");
         }
 
-        // ✅ NEW: per-test scoped logger/context
         private string _corrId = string.Empty;
 
         [SetUp]

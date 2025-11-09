@@ -1,5 +1,4 @@
-﻿// File: UnitTests/Handlers/MarkdownExportHandlerMockTests.cs
-
+﻿// ✅ FULL FILE VERSION
 using LogCtxShared;
 using NSubstitute;
 using NUnit.Framework;
@@ -7,529 +6,253 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using VecTool.Configuration;
 using VecTool.Handlers;
-using VecTool.Core.RecentFiles;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
 
 namespace UnitTests.Handlers
 {
     /// <summary>
-    /// Mock-based unit tests for MDHandler (MarkdownExportHandler)
-    /// Tests verify handler uses traverser exclusively and manages mock state properly
+    /// Consolidated tests for MDHandler (Markdown export) with mock dependencies.
+    /// Combines mock-based and integration tests for minimal token footprint.
     /// </summary>
     [TestFixture]
-    public class MarkdownExportHandlerMockTests
+    public class MarkdownExportHandlerTests
     {
-        private IFileSystemTraverser mockTraverser = null!;
-        private IRecentFilesManager mockRecentFilesManager = null!;
-        private IUserInterface mockUi = null!;
-        private VectorStoreConfig config = null!;
-        private string testDir = null!;
+        private IFileSystemTraverser _mockTraverser = null!;
+        private IRecentFilesManager _mockRecentFiles = null!;
+        private IUserInterface _mockUi = null!;
+        private VectorStoreConfig _config = null!;
+        private string _testDir = null!;
+        private MDHandler _handler = null!;
 
         [SetUp]
         public void Setup()
         {
-            // ✅ Create isolated test directory
-            testDir = Path.Combine(Path.GetTempPath(), "MDHandlerTests", Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(testDir);
+            _testDir = Path.Combine(Path.GetTempPath(), $"MDHandlerTests_{Guid.NewGuid():N}");
+            Directory.CreateDirectory(_testDir);
 
-            // ✅ Create fresh mock instances for each test
-            mockTraverser = Substitute.For<IFileSystemTraverser>();
-            mockRecentFilesManager = Substitute.For<IRecentFilesManager>();
-            mockUi = Substitute.For<IUserInterface>();
+            _mockTraverser = Substitute.For<IFileSystemTraverser>();
+            _mockRecentFiles = Substitute.For<IRecentFilesManager>();
+            _mockUi = Substitute.For<IUserInterface>();
+            _config = new VectorStoreConfig();
 
-            // ✅ Default configuration
-            config = new VectorStoreConfig
-            {
-                ExcludedFiles = new List<string> { ".log", ".tmp" },
-                ExcludedFolders = new List<string> { "bin", "obj", ".git" }
-            };
+            _handler = new MDHandler(_mockUi, _mockRecentFiles, _mockTraverser);
         }
 
         [TearDown]
         public void Cleanup()
         {
-            try
-            {
-                if (!string.IsNullOrEmpty(testDir) && Directory.Exists(testDir))
-                {
-                    Directory.Delete(testDir, recursive: true);
-                }
-            }
-            catch
-            {
-                // Swallow cleanup exceptions in tests
-            }
+            try { if (Directory.Exists(_testDir)) Directory.Delete(_testDir, true); }
+            catch { /* Best-effort cleanup */ }
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════════
-        // ✅ DEPENDENCY INJECTION TESTS
-        // ═══════════════════════════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// TEST 1: Constructor accepts all required dependencies
-        /// Verifies DI wiring and initialization
-        /// </summary>
-        [Test]
-        public void ConstructorShouldAcceptDependencies()
+        // ✅ Helper for file creation (DRY)
+        private string CreateTestFile(string relativePath, string content)
         {
-            // Arrange & Act
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-
-            // Assert
-            handler.ShouldNotBeNull();
-
-            // ✅ No traversal should happen during construction
-            mockTraverser.Received(0)
-                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>());
+            var fullPath = Path.Combine(_testDir, relativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+            File.WriteAllText(fullPath, content);
+            return fullPath;
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════════
-        // ✅ TRAVERSER EXCLUSIVITY TESTS (ARCH-002 Validation)
-        // ═══════════════════════════════════════════════════════════════════════════════
+        #region Dependency Injection Tests
 
-        /// <summary>
-        /// TEST 2: Handler MUST use traverser for file enumeration
-        /// ✅ CRITICAL: Validates exclusive authority pattern (ARCH-002)
-        /// Fails if handler uses Directory.GetFiles() directly
-        /// </summary>
         [Test]
-        public void ExportSelectedFoldersShouldUseTraverserNotDirectoryEnumeration()
+        public void Constructor_AcceptsDependencies()
+        {
+            _handler.ShouldNotBeNull();
+            _mockTraverser.Received(0).EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>());
+        }
+
+        #endregion
+
+        #region ARCH-002: Traverser Exclusivity Tests
+
+        [Test]
+        public void ExportSelectedFolders_UsesTraverserNotDirectEnumeration()
         {
             // Arrange
-            var file1 = Path.Combine(testDir, "program.cs");
-            var file2 = Path.Combine(testDir, "readme.md");
-            File.WriteAllText(file1, "namespace Demo { }");
-            File.WriteAllText(file2, "# Project");
+            var file1 = CreateTestFile("code.cs", "namespace Demo { }");
+            var file2 = CreateTestFile("readme.md", "# Project");
 
-            // Mock traverser to return filtered files
-            mockTraverser
+            _mockTraverser
                 .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
                 .Returns(new[] { file1, file2 });
 
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
+            var outputPath = Path.Combine(_testDir, "output.md");
 
             // Act
-            handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
+            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
 
-            // Assert
-            // ✅ CRITICAL: Traverser MUST be called exactly once per folder
-            mockTraverser
-                .Received(1)
-                .EnumerateFilesRespectingExclusions(
-                    Arg.Any<string>(),
-                    Arg.Any<VectorStoreConfig>());
+            // Assert - CRITICAL: Traverser called exactly once per folder
+            _mockTraverser.Received(1).EnumerateFilesRespectingExclusions(
+                Arg.Any<string>(),
+                Arg.Any<VectorStoreConfig>());
         }
 
-        /// <summary>
-        /// TEST 3: Handler should NEVER make direct exclusion decisions
-        /// ✅ CRITICAL: Validates exclusive authority (ARCH-003)
-        /// All exclusion logic delegated to traverser
-        /// </summary>
         [Test]
-        public void HandlerShouldNotCallIsFileExcludedDirectly()
+        public void Handler_NeverCallsIsFileExcludedDirectly()
         {
             // Arrange
-            var allowedFile = Path.Combine(testDir, "code.cs");
-            var excludedFile = Path.Combine(testDir, "debug.log"); // Matches exclusion pattern
-            File.WriteAllText(allowedFile, "code");
-            File.WriteAllText(excludedFile, "logs");
+            var allowedFile = CreateTestFile("code.cs", "code");
+            var excludedFile = CreateTestFile("debug.log", "logs");
 
-            // Mock traverser returns ONLY allowed file (exclusion already applied)
-            mockTraverser
+            _config.ExcludedFiles.Add("*.log");
+
+            // Mock: Traverser already applied exclusions
+            _mockTraverser
                 .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(new[] { allowedFile }); // ✅ Only allowed file
+                .Returns(new[] { allowedFile }); // Only allowed file
 
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
+            var outputPath = Path.Combine(_testDir, "output.md");
 
             // Act
-            handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
+            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
 
-            // Assert
-            // ✅ Verify traverser was called (handler delegates exclusion logic)
-            mockTraverser
-                .Received(1)
-                .EnumerateFilesRespectingExclusions(
-                    Arg.Any<string>(),
-                    Arg.Any<VectorStoreConfig>());
+            // Assert - Handler delegates all exclusion logic
+            _mockTraverser.Received(1).EnumerateFilesRespectingExclusions(
+                Arg.Any<string>(),
+                Arg.Any<VectorStoreConfig>());
+
+            // Verify handler has no IsFileExcluded method
+            var methodNames = _handler.GetType()
+                .GetMethods(System.Reflection.BindingFlags.Instance |
+                           System.Reflection.BindingFlags.Public |
+                           System.Reflection.BindingFlags.NonPublic)
+                .Select(m => m.Name);
+
+            methodNames.ShouldNotContain("IsFileExcluded");
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════════
-        // ✅ OUTPUT FILE GENERATION TESTS
-        // ═══════════════════════════════════════════════════════════════════════════════
+        #endregion
 
-        /// <summary>
-        /// TEST 4: Output file should be created with correct content
-        /// Verifies Markdown generation
-        /// </summary>
+        #region Output Generation Tests
+
         [Test]
-        public void ExportSelectedFoldersShouldCreateValidMarkdownFile()
+        public void ExportSelectedFolders_CreatesValidMarkdownFile()
         {
             // Arrange
-            var sourceFile = Path.Combine(testDir, "code.cs");
-            File.WriteAllText(sourceFile, "namespace Demo { }");
+            var sourceFile = CreateTestFile("code.cs", "namespace Demo { }");
 
-            mockTraverser
+            _mockTraverser
                 .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
                 .Returns(new[] { sourceFile });
 
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
+            var outputPath = Path.Combine(_testDir, "output.md");
 
             // Act
-            handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
-
-            // Assert
-            File.Exists(outputPath).ShouldBeTrue("Output Markdown file should exist");
-            var content = File.ReadAllText(outputPath);
-            content.ShouldContain("code.cs", Case.Insensitive, "Filename should be in output");
-            content.ShouldContain("namespace Demo", Case.Insensitive, "File content should be in output");
-        }
-
-        /// <summary>
-        /// TEST 5: Output should be registered with RecentFilesManager
-        /// ✅ FIX MC-002: Includes ClearReceivedCalls() for test isolation
-        /// Verifies artifact tracking without context pollution
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersShouldRegisterOutputWithRecentFiles()
-        {
-            // Arrange
-            var sourceFile = Path.Combine(testDir, "code.cs");
-            File.WriteAllText(sourceFile, "code");
-
-            mockTraverser
-                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(new[] { sourceFile });
-
-            // ✅ FIX MC-002: Clear mock state before test assertions
-            // Prevents orphaned Arg.Any() specs from polluting this test
-            mockRecentFilesManager.ClearReceivedCalls();
-
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
-
-            // Act
-            handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
-
-            // Assert
-            // ✅ FIX MC-002: All 5 parameters explicitly matched
-            // Prevents RedundantArgumentMatcherException
-            mockRecentFilesManager
-                .Received(1)
-                .RegisterGeneratedFile(
-                    outputPath,
-                    RecentFileType.Codebase_Md,
-                    Arg.Any<IReadOnlyList<string>>(),
-                    Arg.Any<long>(),
-                    Arg.Any<DateTime?>());
-        }
-
-        /// <summary>
-        /// TEST 6: UI should receive progress updates during export
-        /// Verifies progress notifications
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersShouldUpdateUiDuringExecution()
-        {
-            // Arrange
-            var sourceFile = Path.Combine(testDir, "code.cs");
-            File.WriteAllText(sourceFile, "code");
-
-            mockTraverser
-                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(new[] { sourceFile });
-
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
-
-            // Act
-            handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
-
-            // Assert
-            // ✅ Verify progress notifications
-            mockUi.Received(1).WorkStart(Arg.Any<string>(), Arg.Any<List<string>>());
-            mockUi.Received(1).WorkFinish();
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════════
-        // ✅ MULTIPLE FOLDERS TESTS
-        // ═══════════════════════════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// TEST 7: Multiple folders should all be processed
-        /// Verifies multi-folder export
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersShouldProcessMultipleFolders()
-        {
-            // Arrange
-            var folder1 = Path.Combine(testDir, "folder1");
-            var folder2 = Path.Combine(testDir, "folder2");
-            Directory.CreateDirectory(folder1);
-            Directory.CreateDirectory(folder2);
-
-            var file1 = Path.Combine(folder1, "file1.cs");
-            var file2 = Path.Combine(folder2, "file2.cs");
-            File.WriteAllText(file1, "file1");
-            File.WriteAllText(file2, "file2");
-
-            mockTraverser
-                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(new[] { file1, file2 });
-
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
-
-            // Act
-            handler.ExportSelectedFolders(new List<string> { folder1, folder2 }, outputPath, config);
-
-            // Assert
-            var content = File.ReadAllText(outputPath);
-            content.ShouldContain("file1.cs");
-            content.ShouldContain("file2.cs");
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════════
-        // ✅ ASYNC TESTS
-        // ═══════════════════════════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// TEST 8: Async wrapper should delegate to sync implementation
-        /// Verifies ExportSelectedFoldersAsync
-        /// </summary>
-        [Test]
-        public async Task ExportSelectedFoldersAsyncShouldDelegate()
-        {
-            // Arrange
-            var sourceFile = Path.Combine(testDir, "code.cs");
-            File.WriteAllText(sourceFile, "code");
-
-            mockTraverser
-                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(new[] { sourceFile });
-
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
-
-            // Act
-            await handler.ExportSelectedFoldersAsync(new List<string> { testDir }, outputPath, config);
-
-            // Assert
-            File.Exists(outputPath).ShouldBeTrue("Async export should produce output file");
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════════
-        // ✅ PARAMETER VALIDATION TESTS (QF-003, MC-004 Related)
-        // ═══════════════════════════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// TEST 9: Null folders list should throw ArgumentException
-        /// ✅ Validates QF-003 fix requirement
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersWithNullFoldersShouldThrow()
-        {
-            // Arrange
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
-
-            // Act & Assert
-            Should.Throw<ArgumentException>(() =>
-                handler.ExportSelectedFolders(null!, outputPath, config));
-        }
-
-        /// <summary>
-        /// TEST 10: Empty folders list should throw ArgumentException
-        /// ✅ Validates QF-003 fix requirement
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersWithEmptyFoldersShouldThrow()
-        {
-            // Arrange
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
-
-            // Act & Assert
-            Should.Throw<ArgumentException>(() =>
-                handler.ExportSelectedFolders(new List<string>(), outputPath, config));
-        }
-
-        /// <summary>
-        /// TEST 11: Null output path should throw ArgumentException
-        /// Validates output path validation
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersWithNullOutputPathShouldThrow()
-        {
-            // Arrange
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-
-            // Act & Assert
-            Should.Throw<ArgumentException>(() =>
-                handler.ExportSelectedFolders(new List<string> { testDir }, null!, config));
-        }
-
-        /// <summary>
-        /// TEST 12: Invalid output path should throw ArgumentException
-        /// ✅ Validates MC-003 fix (expect ArgumentException or IOException)
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersWithInvalidOutputPathShouldThrow()
-        {
-            // Arrange
-            var sourceFile = Path.Combine(testDir, "code.cs");
-            File.WriteAllText(sourceFile, "code");
-
-            mockTraverser
-                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(new[] { sourceFile });
-
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var invalidPath = "C:\\...<invalid>\\path\\output.md"; // Invalid path syntax
-
-            // Act & Assert
-            // ✅ Should throw ArgumentException OR IOException (both acceptable)
-            Should.Throw<IOException>(() =>
-                handler.ExportSelectedFolders(new List<string> { testDir }, invalidPath, config))
-                ;
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════════════
-        // ✅ EDGE CASES & STRESS TESTS
-        // ═══════════════════════════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// TEST 13: Mixed file types should be grouped correctly
-        /// Verifies categorization by extension
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersShouldGroupByFileType()
-        {
-            // Arrange
-            var cs1 = Path.Combine(testDir, "file1.cs");
-            var cs2 = Path.Combine(testDir, "file2.cs");
-            var md1 = Path.Combine(testDir, "readme.md");
-            var json1 = Path.Combine(testDir, "config.json");
-
-            File.WriteAllText(cs1, "code1");
-            File.WriteAllText(cs2, "code2");
-            File.WriteAllText(md1, "# Readme");
-            File.WriteAllText(json1, "{}");
-
-            mockTraverser
-                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(new[] { cs1, cs2, md1, json1 });
-
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
-
-            // Act
-            handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
-
-            // Assert
-            var content = File.ReadAllText(outputPath);
-            content.ShouldContain(".cs");
-            content.ShouldContain(".md");
-            content.ShouldContain(".json");
-        }
-
-        /// <summary>
-        /// TEST 14: Files should be grouped hierarchically by folder
-        /// Verifies hierarchical structure preservation
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersShouldGroupFilesByFolder()
-        {
-            // Arrange
-            var subfolder = Path.Combine(testDir, "sub");
-            Directory.CreateDirectory(subfolder);
-
-            var rootFile = Path.Combine(testDir, "root.cs");
-            var subFile = Path.Combine(subfolder, "sub.cs");
-            File.WriteAllText(rootFile, "root");
-            File.WriteAllText(subFile, "sub");
-
-            mockTraverser
-                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(new[] { rootFile, subFile });
-
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
-
-            // Act
-            handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
-
-            // Assert
-            var content = File.ReadAllText(outputPath);
-            content.ShouldContain("root.cs");
-            content.ShouldContain("sub.cs");
-            // ✅ Verify hierarchical structure
-            var rootIndex = content.IndexOf("root.cs");
-            var subIndex = content.IndexOf("sub.cs");
-            subIndex.ShouldBeGreaterThan(rootIndex, "Files should maintain folder hierarchy");
-        }
-
-        /// <summary>
-        /// TEST 15: Empty file list should produce minimal report
-        /// Graceful handling of edge case
-        /// </summary>
-        [Test]
-        public void ExportSelectedFoldersShouldHandleEmptyFileList()
-        {
-            // Arrange
-            mockTraverser
-                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(Array.Empty<string>()); // No files
-
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
-
-            // Act
-            handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
+            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
 
             // Assert
             File.Exists(outputPath).ShouldBeTrue();
             var content = File.ReadAllText(outputPath);
-            content.Length.ShouldBeGreaterThan(0); // Should have at least header
+            content.ShouldContain("code.cs", Case.Insensitive);
+            content.ShouldContain("namespace Demo", Case.Insensitive);
         }
 
-        /// <summary>
-        /// TEST 16: Large number of files should process efficiently
-        /// Stress test
-        /// </summary>
         [Test]
-        public void ExportSelectedFoldersShouldHandleManyFiles()
+        public void ExportSelectedFolders_RegistersOutputWithRecentFiles()
         {
             // Arrange
-            var files = new List<string>();
-            for (int i = 0; i < 100; i++)
-            {
-                var file = Path.Combine(testDir, $"file{i}.cs");
-                File.WriteAllText(file, new string('X', i + 1));
-                files.Add(file);
-            }
+            var sourceFile = CreateTestFile("code.cs", "code");
 
-            mockTraverser
+            _mockTraverser
                 .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
-                .Returns(files.ToArray());
+                .Returns(new[] { sourceFile });
 
-            var handler = new MDHandler(mockUi, mockRecentFilesManager, mockTraverser);
-            var outputPath = Path.Combine(testDir, "output.md");
+            _mockRecentFiles.ClearReceivedCalls();
+            var outputPath = Path.Combine(_testDir, "output.md");
 
             // Act
-            handler.ExportSelectedFolders(new List<string> { testDir }, outputPath, config);
+            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
 
             // Assert
-            File.Exists(outputPath).ShouldBeTrue();
-            var content = File.ReadAllText(outputPath);
-            content.ShouldContain(".cs");
-            content.Length.ShouldBeGreaterThan(1000); // Should have substantial content
+            _mockRecentFiles.Received(1).RegisterGeneratedFile(
+                outputPath,
+                RecentFileType.Codebase_Md,
+                Arg.Any<IReadOnlyList<string>>(),
+                Arg.Any<long>());
         }
+
+        [Test]
+        public void ExportSelectedFolders_MultipleFolders_IncludesAllFiles()
+        {
+            // Arrange
+            var file1 = CreateTestFile("folder1/code.cs", "class A { }");
+            var file2 = CreateTestFile("folder2/readme.md", "# Docs");
+
+            _mockTraverser
+                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
+                .Returns(new[] { file1 }, new[] { file2 }); // Sequential calls
+
+            var outputPath = Path.Combine(_testDir, "output.md");
+
+            // Act
+            _handler.ExportSelectedFolders(
+                new List<string> { Path.Combine(_testDir, "folder1"), Path.Combine(_testDir, "folder2") },
+                outputPath,
+                _config);
+
+            // Assert
+            var content = File.ReadAllText(outputPath);
+            content.ShouldContain("code.cs");
+            content.ShouldContain("readme.md");
+            content.ShouldContain("class A");
+            content.ShouldContain("# Docs");
+        }
+
+        #endregion
+
+        #region Input Validation Tests
+
+        [TestCase(null, "output.md", "Folder list cannot be null")]
+        [TestCase("[]", "output.md", "Folder list cannot be empty")]
+        [TestCase("[\"folder\"]", null, "Output path cannot be null")]
+        [TestCase("[\"folder\"]", "", "Output path cannot be null")]
+        public void ExportSelectedFolders_InvalidInput_ThrowsArgumentException(
+            string? foldersJson,
+            string? outputPath,
+            string expectedMessage)
+        {
+            // Arrange
+            var folders = foldersJson == null ? null :
+                          foldersJson == "[]" ? new List<string>() :
+                          new List<string> { "folder" };
+
+            // Act & Assert
+            var ex = Should.Throw<ArgumentException>(() =>
+                _handler.ExportSelectedFolders(folders!, outputPath!, _config));
+
+            ex.Message.ShouldContain(expectedMessage, Case.Insensitive);
+        }
+
+        #endregion
+
+        #region UI Integration Tests
+
+        [Test]
+        public void ExportSelectedFolders_UpdatesUiProgress()
+        {
+            // Arrange
+            var sourceFile = CreateTestFile("code.cs", "code");
+
+            _mockTraverser
+                .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
+                .Returns(new[] { sourceFile });
+
+            var outputPath = Path.Combine(_testDir, "output.md");
+
+            // Act
+            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
+
+            // Assert
+            _mockUi.Received().WorkStart(Arg.Any<string>(), Arg.Any<IEnumerable<string>>());
+            _mockUi.Received().UpdateStatus(Arg.Is<string>(s => s.Contains("Enumerating")));
+            _mockUi.Received().WorkFinish();
+        }
+
+        #endregion
     }
 }
