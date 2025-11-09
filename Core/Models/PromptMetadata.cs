@@ -4,9 +4,8 @@ using System.IO;
 using System.Linq;
 using LogCtxShared;
 using NLogShared;
-using VecTool.Configuration.PromptLib;
 
-namespace VecTool.Core.Models.PromptLib
+namespace VecTool.Core.Models
 {
     /// <summary>
     /// Metadata parsed from prompt filename and path hierarchy.
@@ -100,14 +99,20 @@ namespace VecTool.Core.Models.PromptLib
 
             // Parse path hierarchy: /area/project/category/filename.md
             var (area, project, category) = ExtractHierarchy(fullPath);
-
+            
+            var description = firstLineContent?.Trim();
+            if (!string.IsNullOrEmpty(description) && description.Length > 200)
+            {
+                description = description.Substring(0, 200) + "...";
+            }
+            
             var metadata = new PromptMetadata
             {
                 FileName = fileName,
                 Version = version,
                 Name = name,
                 Type = type,
-                Description = firstLineContent?.Trim(),
+                Description = description,
                 Area = area,
                 Project = project,
                 Category = category

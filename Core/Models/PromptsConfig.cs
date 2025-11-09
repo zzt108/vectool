@@ -5,7 +5,7 @@ using System.IO;
 using LogCtxShared;
 using NLogShared;
 
-namespace VecTool.Configuration.PromptLib;
+namespace VecTool.Core.Models;
 
 /// <summary>
 /// Prompts repository settings loaded from app.config with validation.

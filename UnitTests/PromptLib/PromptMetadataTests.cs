@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Shouldly;
 using System;
 using System.IO;
-using VecTool.Core.Models.PromptLib;
+using VecTool.Core.Models;
 
 namespace UnitTests.PromptLib
 {

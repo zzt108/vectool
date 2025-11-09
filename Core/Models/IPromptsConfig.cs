@@ -1,4 +1,4 @@
-﻿namespace VecTool.Configuration.PromptLib;
+﻿namespace VecTool.Core.Models;
 
 /// <summary>
 /// Configuration interface for AI Prompts Library repository settings.

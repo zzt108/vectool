@@ -2,6 +2,7 @@
 using System;
 using System.Configuration;
 using System.IO;
+using VecTool.Core.Models;
 
 namespace VecTool.Configuration
 {

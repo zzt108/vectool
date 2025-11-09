@@ -4,6 +4,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using VecTool.Configuration;
+using VecTool.Core.Models;
 
 namespace UnitTests.RecentFiles
 {
