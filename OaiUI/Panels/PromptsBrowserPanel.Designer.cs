@@ -4,6 +4,7 @@ namespace VecTool.UI.Panels
     partial class PromptsBrowserPanel
     {
         private System.ComponentModel.IContainer components = null!;
+        private ToolTip toolTip = null!;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel = null!;
         private System.Windows.Forms.Label lblFilter = null!;
         private System.Windows.Forms.ComboBox cmbFilterType = null!;
@@ -30,6 +31,7 @@ namespace VecTool.UI.Panels
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.lblFilter = new System.Windows.Forms.Label();
             this.cmbFilterType = new System.Windows.Forms.ComboBox();

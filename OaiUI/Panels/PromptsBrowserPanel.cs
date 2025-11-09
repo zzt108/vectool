@@ -51,12 +51,56 @@ namespace VecTool.UI.Panels
 
             this.searchEngine = searchEngine ?? throw new ArgumentNullException(nameof(searchEngine));
             this.favoritesManager = favoritesManager ?? throw new ArgumentNullException(nameof(favoritesManager));
-            this.promptsRepositoryPath = promptsRepositoryPath;
-
+         
+            searchEngine.RebuildIndex(); // 🔄 MODIFY: Rebuild index on startup (from previous fix)
+            InitializeTooltips(); // ✅ NEW: Setup all tooltips in one place
+        
             log.Info("PromptsBrowserPanel initialized.");
 
-            // ✅ NEW: Initial load
+            // Initial load
             RefreshPanel();
+        }
+
+        /// <summary>
+        /// ✅ NEW: Initialize tooltips for all Prompts tab controls (centralized).
+        /// </summary>
+        private void InitializeTooltips()
+        {
+            var tooltip = new ToolTip
+            {
+                AutoPopDelay = 5000,
+                InitialDelay = 500,
+                ReshowDelay = 200,
+                ShowAlways = true
+            };
+
+            // Filter dropdown
+            tooltip.SetToolTip(cmbFilterType, "Filter prompts by type (PROMPT, GUIDE, SPACE) or category");
+
+            // Search textbox
+            tooltip.SetToolTip(txtSearch, "Enter keywords to search prompt names, content, or metadata");
+
+            // Search button (magnifying glass)
+            // tooltip.SetToolTip(btnSearch, "Execute search with current query and filters");
+
+            // Refresh button
+            tooltip.SetToolTip(btnRefresh, "Rebuild search index from repository (use after adding/modifying prompts)");
+
+            // Results grid
+            tooltip.SetToolTip(lvResults, "Prompt search results - double-click to open, right-click for actions");
+
+            // Action buttons (if present)
+            if (btnCopy != null)
+                tooltip.SetToolTip(btnCopy, "Copy selected prompt content to clipboard");
+
+            if (btnEdit != null)
+                tooltip.SetToolTip(btnEdit, "Open selected prompt in default text editor");
+
+            if (btnNew != null)
+                tooltip.SetToolTip(btnNew, "Create a new prompt file in the repository");
+
+            if (btnGit != null)
+                tooltip.SetToolTip(btnGit, "Open Git operations for the prompts repository");
         }
 
         /// <summary>
