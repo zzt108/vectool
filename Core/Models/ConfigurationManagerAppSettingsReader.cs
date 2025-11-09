@@ -1,7 +1,7 @@
 ﻿// Path: Configuration/ConfigurationManagerAppSettingsReader.cs
 using System.Configuration;
 
-namespace VecTool.Configuration
+namespace VecTool.Core.Models
 {
     /// <summary>
     /// Default appSettings reader backed by System.Configuration.

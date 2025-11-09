@@ -4,9 +4,8 @@ using System.IO;
 using System.Linq;
 using LogCtxShared;
 using NLogShared;
-using VecTool.Configuration.PromptLib;
 
-namespace VecTool.Core.Models.PromptLib
+namespace VecTool.Core.Models
 {
     /// <summary>
     /// Metadata parsed from prompt filename and path hierarchy.

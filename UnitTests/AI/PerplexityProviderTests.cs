@@ -7,7 +7,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using VecTool.Configuration.PromptLib;
 using VecTool.Core.AI;
 using VecTool.Core.AI.Providers;
 using ProviderSettings = VecTool.Core.AI.ProviderSettings;

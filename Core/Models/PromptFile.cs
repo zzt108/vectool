@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System;
 
-namespace VecTool.Core.Models.PromptLib
+namespace VecTool.Core.Models
 {
     /// <summary>
     /// Represents a prompt file with metadata, content, and favorites state.

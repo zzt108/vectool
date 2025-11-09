@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Shouldly;
 using System;
 using System.Collections.Generic;
-using VecTool.Configuration.PromptLib;
 using VecTool.Core.AI;
 
 namespace VecTool.UnitTests.AI
