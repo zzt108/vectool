@@ -145,47 +145,96 @@ namespace VecTool.UI.Panels
             }
         }
 
-        private void PopulateTreeView(List<PromptFile> files)
+        private static TreeNode FindOrCreateChildNode(TreeNodeCollection nodes, string text)
         {
-            treeViewHierarchy.Nodes.Clear();
-
-            var areaGroups = files
-                .GroupBy(f => f.Metadata.Area)
-                .OrderBy(g => g.Key);
-
-            foreach (var areaGroup in areaGroups)
+            foreach (TreeNode node in nodes)
             {
-                var areaNode = new TreeNode(areaGroup.Key) { Tag = areaGroup.Key };
-
-                var projectGroups = areaGroup
-                    .GroupBy(f => f.Metadata.Project)
-                    .OrderBy(g => g.Key);
-
-                foreach (var projectGroup in projectGroups)
+                if (string.Equals(node.Text, text, StringComparison.OrdinalIgnoreCase))
                 {
-                    var projectNode = new TreeNode(projectGroup.Key) { Tag = projectGroup.Key };
-
-                    var categoryGroups = projectGroup
-                        .GroupBy(f => f.Metadata.Category)
-                        .OrderBy(g => g.Key);
-
-                    foreach (var categoryGroup in categoryGroups)
-                    {
-                        var categoryNode = new TreeNode($"{categoryGroup.Key} ({categoryGroup.Count()})")
-                        {
-                            Tag = categoryGroup.ToList()
-                        };
-
-                        projectNode.Nodes.Add(categoryNode);
-                    }
-
-                    areaNode.Nodes.Add(projectNode);
+                    return node;
                 }
-
-                treeViewHierarchy.Nodes.Add(areaNode);
             }
 
-            treeViewHierarchy.ExpandAll();
+            var created = new TreeNode(text)
+            {
+                // Tag will be initialized by AddFileToNode
+                Tag = null
+            };
+
+            nodes.Add(created);
+            return created;
+        }
+
+        // ✅ NEW: helper to accumulate files on a node.Tag as List<PromptFile>
+        private static void AddFileToNode(TreeNode node, PromptFile file)
+        {
+            if (node.Tag is not List<PromptFile> list)
+            {
+                list = new List<PromptFile>();
+                node.Tag = list;
+            }
+
+            // Avoid duplicates in case the same file is processed multiple times
+            if (!list.Contains(file))
+            {
+                list.Add(file);
+            }
+        }
+
+        private void PopulateTreeView(List<PromptFile> files)
+        {
+            treeViewHierarchy.BeginUpdate();
+            try
+            {
+                treeViewHierarchy.Nodes.Clear();
+
+                // Sort by display hierarchy string for stable ordering
+                var orderedFiles = files
+                    .OrderBy(f => string.Join("/",
+                        f.Metadata.GetDisplayHierarchy() ?? Array.Empty<string>()),
+                        StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                foreach (var file in orderedFiles)
+                {
+                    // GetDisplayHierarchy already skips Const.NA and empty segments
+                    var hierarchy = file.Metadata.GetDisplayHierarchy();
+
+                    // If there is no known area/project/category, place under a single root bucket.
+                    if (hierarchy.Count == 0)
+                    {
+                        hierarchy = new[] { "(uncategorized)" };
+                    }
+
+                    TreeNodeCollection currentLevel = treeViewHierarchy.Nodes;
+                    TreeNode? currentNode = null;
+
+                    foreach (var segment in hierarchy)
+                    {
+                        var nextNode = FindOrCreateChildNode(currentLevel, segment);
+
+                        // Every level accumulates all descendant files in Tag
+                        AddFileToNode(nextNode, file);
+
+                        currentNode = nextNode;
+                        currentLevel = nextNode.Nodes;
+                    }
+
+                    // If for some reason no hierarchy segment was created,
+                    // attach directly to a synthetic root node.
+                    if (currentNode == null)
+                    {
+                        var rootNode = FindOrCreateChildNode(treeViewHierarchy.Nodes, "(uncategorized)");
+                        AddFileToNode(rootNode, file);
+                    }
+                }
+
+                treeViewHierarchy.ExpandAll();
+            }
+            finally
+            {
+                treeViewHierarchy.EndUpdate();
+            }
         }
 
         private void PopulateListView(List<PromptFile> files)

@@ -154,5 +154,43 @@ namespace VecTool.Core.Models
                 return (string.Empty, string.Empty, string.Empty);
             }
         }
+
+        public IReadOnlyList<string> GetDisplayHierarchy()
+        {
+            var segments = new List<string>();
+
+            // Skip unknown area
+            if (!string.IsNullOrWhiteSpace(Area) &&
+                !string.Equals(Area, Const.NA, StringComparison.OrdinalIgnoreCase))
+            {
+                segments.Add(Area);
+            }
+
+            // Skip unknown project
+            if (!string.IsNullOrWhiteSpace(Project) &&
+                !string.Equals(Project, Const.NA, StringComparison.OrdinalIgnoreCase))
+            {
+                segments.Add(Project);
+            }
+
+            // Skip unknown category
+            if (!string.IsNullOrWhiteSpace(Category) &&
+                !string.Equals(Category, Const.NA, StringComparison.OrdinalIgnoreCase))
+            {
+                segments.Add(Category);
+            }
+
+            // Fallback: if everything above was NA/empty but Category is a real folder,
+            // place the file directly under that folder as a top level.
+            if (segments.Count == 0 &&
+                !string.IsNullOrWhiteSpace(Category) &&
+                !string.Equals(Category, Const.NA, StringComparison.OrdinalIgnoreCase))
+            {
+                segments.Add(Category);
+            }
+
+            return segments;
+        }
     }
 }
+

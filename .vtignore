@@ -1,6 +1,6 @@
 # UI-specific files
-OaiUI/
-!OaiUI/panels/
+#OaiUI/
+#!OaiUI/panels/
 
 # Tests
 unittests/
