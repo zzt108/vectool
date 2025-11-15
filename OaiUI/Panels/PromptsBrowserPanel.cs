@@ -201,7 +201,8 @@ namespace VecTool.UI.Panels
                     file.Metadata.Version,
                     file.Metadata.Type,
                     file.Metadata.Category,
-                    file.LastModified.ToString("yyyy-MM-dd HH:mm")
+                    file.LastModified.ToString("yyyy-MM-dd HH:mm"),
+                    Path.GetFileName(file.FullPath)
                 })
                 {
                     Tag = file

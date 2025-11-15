@@ -78,9 +78,9 @@ namespace VecTool.Core.Models
             else if (parts.Length == 1)
             {
                 // TYPE only (e.g., "PROMPT.md") → default version + name
-                type = parts[0].Trim();
+                type = "Unknown";
                 version = "0.0";
-                name = "untitled";
+                name = parts[0].Trim();
                 log.Debug($"Filename minimal format, using defaults: {fileName} → version={version}, name={name}");
             }
             else

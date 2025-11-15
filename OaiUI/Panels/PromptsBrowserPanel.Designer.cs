@@ -171,6 +171,7 @@ namespace VecTool.UI.Panels
             this.lvResults.Columns.Add("Type", 80);
             this.lvResults.Columns.Add("Category", 120);
             this.lvResults.Columns.Add("Modified", 140);
+            this.lvResults.Columns.Add("File name", 240);
             this.lvResults.ItemActivate += new System.EventHandler(this.lvResultsItemActivate);
             this.lvResults.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lvResultsMouseClick);
             this.splitContainerMain.Panel2.Controls.Add(this.lvResults);
