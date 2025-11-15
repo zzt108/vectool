@@ -448,6 +448,7 @@ namespace VecTool.UI.Panels
             }
         }
 
+
         // Helpers
 
         private PromptFile? GetSelectedPromptFile()
@@ -473,5 +474,37 @@ namespace VecTool.UI.Panels
             var configPath = System.Configuration.ConfigurationManager.AppSettings["favoritesConfigPath"];
             return configPath ?? Path.Combine(promptsRepositoryPath ?? ".", "favorites.json");
         }
+
+        private void OpenRenamePromptDialog()
+        {
+            using var ctx = LogCtx.Set(new Props());
+
+            try
+            {
+                var selected = GetSelectedPromptFile();
+                if (selected == null)
+                {
+                    ShowError("No prompt selected.");
+                    return;
+                }
+
+                using var dlg = new PromptRenameForm(selected);
+                var owner = FindForm();
+
+                if (dlg.ShowDialog(owner) == DialogResult.OK && dlg.WasRenamed)
+                {
+                    log.Info("Prompt file renamed, rebuilding index.");
+
+                    searchEngine.RebuildIndex();
+                    RefreshPanel();
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex, "Failed to rename prompt file from browser panel.");
+                ShowError("Failed to rename prompt file.");
+            }
+        }
     }
 }
+

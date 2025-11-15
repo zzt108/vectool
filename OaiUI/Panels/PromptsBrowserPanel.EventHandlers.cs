@@ -61,11 +61,34 @@ namespace VecTool.UI.Panels
             if (e.Button == MouseButtons.Left)
             {
                 var hitTest = lvResults.HitTest(e.Location);
-                if (hitTest.Item != null && hitTest.SubItem?.Text == "☑" || hitTest.SubItem?.Text == "☐")
+                if (hitTest.Item != null && hitTest.SubItem?.Text == "★")
                 {
                     ToggleFavorite();
                 }
+
+                return;
             }
+
+            // ✅ NEW: right-click context menu support
+            if (e.Button == MouseButtons.Right)
+            {
+                var hit = lvResults.HitTest(e.Location);
+                if (hit.Item != null)
+                {
+                    hit.Item.Selected = true;
+                    lvResults.FocusedItem = hit.Item;
+                }
+
+                if (lvResults.SelectedItems.Count > 0)
+                {
+                    contextMenuResults.Show(lvResults, e.Location);
+                }
+            }
+        }
+
+        private void mnuRenamePromptClick(object? sender, EventArgs e)
+        {
+            OpenRenamePromptDialog();
         }
 
         private void btnCopyClick(object? sender, EventArgs e)

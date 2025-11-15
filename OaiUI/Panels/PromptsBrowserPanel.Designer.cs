@@ -20,6 +20,9 @@ namespace VecTool.UI.Panels
         private System.Windows.Forms.Label lblStatus = null!;
         private System.Windows.Forms.SplitContainer splitContainerMain = null!;
 
+        private System.Windows.Forms.ContextMenuStrip contextMenuResults = null!;
+        private System.Windows.Forms.ToolStripMenuItem mnuRenamePrompt = null!;
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -53,6 +56,8 @@ namespace VecTool.UI.Panels
             this.btnNew = new System.Windows.Forms.Button();
             this.btnGit = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
+            this.contextMenuResults = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.mnuRenamePrompt = new System.Windows.Forms.ToolStripMenuItem();
 
             this.tableLayoutPanel.SuspendLayout();
             this.buttonPanel.SuspendLayout();
@@ -174,6 +179,24 @@ namespace VecTool.UI.Panels
             this.lvResults.Columns.Add("File name", 240);
             this.lvResults.ItemActivate += new System.EventHandler(this.lvResultsItemActivate);
             this.lvResults.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lvResultsMouseClick);
+
+            // ✅ NEW: attach context menu
+            this.lvResults.ContextMenuStrip = this.contextMenuResults;
+
+            // ✅ NEW: contextMenuResults
+            this.contextMenuResults.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
+            {
+                this.mnuRenamePrompt
+            });
+
+            this.contextMenuResults.Name = "contextMenuResults";
+
+            // ✅ NEW: mnuRenamePrompt
+            this.mnuRenamePrompt.Name = "mnuRenamePrompt";
+            this.mnuRenamePrompt.Size = new System.Drawing.Size(220, 22);
+            this.mnuRenamePrompt.Text = "Rename prompt file...";
+            this.mnuRenamePrompt.Click += new System.EventHandler(this.mnuRenamePromptClick);
+
             this.splitContainerMain.Panel2.Controls.Add(this.lvResults);
 
             // buttonPanel

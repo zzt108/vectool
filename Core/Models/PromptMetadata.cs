@@ -191,6 +191,62 @@ namespace VecTool.Core.Models
 
             return segments;
         }
+
+        /// <summary>
+        /// Build a standard filename using the prompt naming convention.
+        /// Pattern: TYPE-VERSION-NAME.ext (or TYPE-NAME.ext if version is empty).
+        /// </summary>
+        /// <param name="type">Prompt type, e.g. PROMPT, GUIDE, SPACE.</param>
+        /// <param name="version">Version string, e.g. 1.0, 1.1 (may be empty).</param>
+        /// <param name="name">Prompt name slug, e.g. analyzer, git-integration.</param>
+        /// <param name="extension">
+        /// File extension including or excluding leading dot, e.g. ".md" or "md".
+        /// </param>
+        /// <returns>Standardized filename.</returns>
+        public static string BuildFileName(string type, string version, string name, string extension)
+        {
+            if (type is null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            type = type.Trim();
+            version = version?.Trim() ?? string.Empty;
+            name = name.Trim();
+
+            if (type.Length == 0)
+            {
+                throw new ArgumentException("Type is required.", nameof(type));
+            }
+
+            if (name.Length == 0)
+            {
+                throw new ArgumentException("Name is required.", nameof(name));
+            }
+
+            var core = string.IsNullOrWhiteSpace(version)
+                ? $"{type}-{name}"
+                : $"{type}-{version}-{name}";
+
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                return core;
+            }
+
+            extension = extension.Trim();
+            if (!extension.StartsWith(".", StringComparison.Ordinal))
+            {
+                extension = "." + extension;
+            }
+
+            return core + extension;
+        }
     }
 }
+
 
