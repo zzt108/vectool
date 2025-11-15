@@ -72,11 +72,10 @@ public class PromptsConfigTests
         var reader = new InMemoryAppSettingsReader();
 
         // Act
-        Action act = () => PromptsConfig.FromAppConfig(reader);
+        var pconfig = PromptsConfig.FromAppConfig(reader);
 
         // Assert
-        act.ShouldThrow<InvalidOperationException>()
-            .Message.ShouldContain("promptsRepositoryPath");
+        pconfig.ShouldBeNull();
     }
 
     [Test]
@@ -87,11 +86,10 @@ public class PromptsConfigTests
         reader.Set("promptsRepositoryPath", "C:\\prompts");
 
         // Act
-        Action act = () => PromptsConfig.FromAppConfig(reader);
+        var promptsConfig = PromptsConfig.FromAppConfig(reader);
 
         // Assert
-        act.ShouldThrow<InvalidOperationException>()
-            .Message.ShouldContain("llmProviderConfig");
+        promptsConfig.ShouldBeNull();
     }
 
     [Test]

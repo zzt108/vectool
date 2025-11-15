@@ -55,7 +55,7 @@ public sealed class PromptsConfig : IPromptsConfig
     /// Factory method to load configuration from app.config with defaults and validation.
     /// Similar to <see cref="VectorStoreConfig.FromAppConfig"/>.
     /// </summary>
-    public static PromptsConfig FromAppConfig(IAppSettingsReader? reader = null)
+    public static PromptsConfig? FromAppConfig(IAppSettingsReader? reader = null)
     {
         reader ??= new ConfigurationManagerAppSettingsReader();
 
@@ -71,14 +71,14 @@ public sealed class PromptsConfig : IPromptsConfig
         {
             var ex = new InvalidOperationException($"Missing required app.config key: {KEY_REPO_PATH}");
             log.Error(ex, "Prompts repository path not configured");
-            throw ex;
+            return null;
         }
 
         if (string.IsNullOrWhiteSpace(llmConfigPath))
         {
             var ex = new InvalidOperationException($"Missing required app.config key: {KEY_LLM_CONFIG_PATH}");
             log.Error(ex, "LLM provider config path not configured");
-            throw ex;
+            return null;
         }
 
         // Auto-generate favorites path if not specified

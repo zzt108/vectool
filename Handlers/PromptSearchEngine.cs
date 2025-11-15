@@ -21,12 +21,12 @@ namespace VecTool.Handlers
     {
         private static readonly CtxLogger log = new();
         private readonly Dictionary<string, PromptFile> index = new(StringComparer.OrdinalIgnoreCase);
-        private readonly IPromptsConfig config;
+        private readonly IPromptsConfig? config;
         private const int ContentSearchLimit = 2000;
 
-        public PromptSearchEngine(IPromptsConfig config)
+        public PromptSearchEngine(IPromptsConfig? config)
         {
-            this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.config = config;
         }
 
         /// <summary>

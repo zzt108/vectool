@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// File: OaiUI/MainForm.cs
+﻿// File: OaiUI/MainForm.cs
 
 using oaiUI;
 using oaiUI.Services;
@@ -28,7 +27,5 @@ namespace Vectool.OaiUI
     /// </summary>
     public partial class MainForm : Form
     {
-        // ✅ All implementation moved to partial classes for Single Responsibility Principle compliance.
-        // ✅ See individual partials for specific method implementations.
     }
 }

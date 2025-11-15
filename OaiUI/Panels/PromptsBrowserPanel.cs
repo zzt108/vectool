@@ -42,8 +42,8 @@ namespace VecTool.UI.Panels
         /// Initialize panel with dependencies (call after designer initialization).
         /// </summary>
         public void Initialize(
-            PromptSearchEngine searchEngine,
-            FavoritesManager favoritesManager,
+            PromptSearchEngine? searchEngine,
+            FavoritesManager? favoritesManager,
             string? promptsRepositoryPath)
         {
             using var ctx = log.Ctx.Set(new Props()

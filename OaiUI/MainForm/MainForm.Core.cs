@@ -63,14 +63,17 @@ namespace Vectool.OaiUI
             var searchEngine = new PromptSearchEngine(promptsConfig);
             var favoritesManager = new FavoritesManager();
 
-            promptsBrowserPanel = new PromptsBrowserPanel();
-            tabPagePrompts.Controls.Add(promptsBrowserPanel);
-            promptsBrowserPanel.Dock = DockStyle.Fill;
-            promptsBrowserPanel.Initialize(searchEngine, favoritesManager, promptsConfig.RepositoryPath);
+            if (promptsConfig is not null)
+            {
+                promptsBrowserPanel = new PromptsBrowserPanel();
+                tabPagePrompts.Controls.Add(promptsBrowserPanel);
+                promptsBrowserPanel.Dock = DockStyle.Fill;
+                promptsBrowserPanel.Initialize(searchEngine, favoritesManager, promptsConfig?.RepositoryPath);
+            }
 
             WireUpEvents();
             LoadVectorStoresIntoComboBox();
-            UpdateFormTitle(); // Will now include version
+            UpdateFormTitle();
         }
 
         /// <summary>
