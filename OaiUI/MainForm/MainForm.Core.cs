@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// File: OaiUI/MainForm.Core.cs
+﻿// File: OaiUI/MainForm.Core.cs
 
 using oaiUI;
 using oaiUI.Services;
@@ -9,6 +8,7 @@ using System.Windows.Forms;
 using Vectool.UI.Versioning;
 using VecTool.Configuration;
 using VecTool.Core;
+using VecTool.Core.Configuration;
 using VecTool.Core.Helpers;
 using VecTool.Core.Models;
 using VecTool.Core.Services;

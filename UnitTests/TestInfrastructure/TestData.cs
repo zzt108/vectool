@@ -1,4 +1,5 @@
 ﻿using VecTool.Configuration;
+using VecTool.Core.Configuration;
 using VecTool.RecentFiles;
 
 public static class TestData

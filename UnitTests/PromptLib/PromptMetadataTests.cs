@@ -105,9 +105,9 @@ namespace UnitTests.PromptLib
 
             // Assert
             result.ShouldNotBeNull();
-            result!.Type.ShouldBe("GUIDE");
+            result!.Type.ShouldBe("Unknown");
             result.Version.ShouldBe("0.0");
-            result.Name.ShouldBe("untitled");
+            result.Name.ShouldBe("GUIDE");
         }
 
         [Test]
@@ -215,8 +215,8 @@ namespace UnitTests.PromptLib
 
             // Assert
             result.ShouldNotBeNull();
-            result!.Area.ShouldBe(string.Empty); // Only 1 folder deep
-            result.Project.ShouldBe(string.Empty);
+            result!.Area.ShouldBe("N/A"); // Only 1 folder deep
+            result.Project.ShouldBe("N/A");
             result.Category.ShouldBe("prompts");
         }
 

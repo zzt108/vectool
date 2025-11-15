@@ -1,13 +1,11 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using LogCtxShared;
 using NLogShared;
 using VecTool.Core.Models;
+using VecTool.Configuration;
+using VecTool.Handlers.Traversal;
 
-namespace VecTool.Core.Services
+namespace VecTool.Handlers
 {
     /// <summary>
     /// In-memory search engine for prompt files.
@@ -60,44 +58,95 @@ namespace VecTool.Core.Services
             try
             {
                 // Traverse repository recursively
-                foreach (var filePath in Directory.EnumerateFiles(config.RepositoryPath, "*.*", SearchOption.AllDirectories))
+                //foreach (var filePath in Directory.EnumerateFiles(config.RepositoryPath, "*.*", SearchOption.AllDirectories))
+                //{
+                //    filesProcessed++;
+
+                //    var ext = Path.GetExtension(filePath);
+                //    if (!extensions.Contains(ext))
+                //    {
+                //        log.Trace($"Skipping file with non-matching extension: {filePath}");
+                //        continue;
+                //    }
+
+                //    try
+                //    {
+                //        // Read file content
+                //        var content = File.ReadAllText(filePath);
+                //        var lastModified = File.GetLastWriteTime(filePath);
+                //        var firstLine = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+
+                //        var relativePath = Path.GetRelativePath(config.RepositoryPath, filePath).Replace('\\', '/');
+
+                //        // Parse metadata
+                //        var metadata = PromptMetadata.Parse(relativePath, firstLine);
+                //        if (metadata == null)
+                //        {
+                //            log.Debug($"Failed to parse metadata for file: {filePath}");
+                //            continue;
+                //        }
+
+                //        // Create PromptFile
+                //        var promptFile = new PromptFile(filePath, relativePath, metadata, content, lastModified, isFavorite: false);
+
+                //        // Add to index
+                //        index[filePath] = promptFile;
+                //        filesIndexed++;
+
+                //        log.Trace($"Indexed file: {Path.GetFileName(filePath)}");
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        log.Error(ex, $"Failed to index file: {filePath}");
+                //    }
+                //}
+
+                // Traverse repository recursively using FileSystemTraverser to honor .vtignore/.gitignore [file:2]
+                var traversalConfig = new VectorStoreConfig(config.RepositoryPath);  // ✅ NEW: configure root for traverser [file:1][file:2]
+                                                                                     // Layer 2 marker exclusion (VECTOOLEXCLUDE...) is optional; enable for consistency with other features. [file:2]
+                var fileMarkerExtractor = new FileMarkerExtractor();                 // ✅ NEW [file:2]
+                var fileSystemTraverser = new FileSystemTraverser(ui: null, markerExtractor: fileMarkerExtractor); // ✅ NEW [file:2]
+
+                // 🔄 MODIFY: use traverser.EnumerateFilesRespectingExclusions instead of Directory.EnumerateFiles [file:1][file:2]
+                foreach (var filePath in fileSystemTraverser.EnumerateFilesRespectingExclusions(config.RepositoryPath, traversalConfig))
                 {
                     filesProcessed++;
 
                     var ext = Path.GetExtension(filePath);
                     if (!extensions.Contains(ext))
                     {
-                        log.Trace($"Skipping file with non-matching extension: {filePath}");
+                        log.Trace($"Skipping file with non-matching extension: {filePath}");  // unchanged behavior [file:1]
                         continue;
                     }
 
                     try
                     {
                         // Read file content
-                        var content = File.ReadAllText(filePath);
-                        var lastModified = File.GetLastWriteTime(filePath);
-                        var firstLine = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                        var content = File.ReadAllText(filePath);  // unchanged [file:1]
+                        var lastModified = File.GetLastWriteTime(filePath);  // unchanged [file:1]
+                        var firstLine = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();  // unchanged [file:1]
+                        var relativePath = Path.GetRelativePath(config.RepositoryPath, filePath).Replace('\\', '/');  // unchanged [file:1]
 
                         // Parse metadata
-                        var metadata = PromptMetadata.Parse(filePath, firstLine);
+                        var metadata = PromptMetadata.Parse(relativePath, firstLine);  // unchanged API [file:1]
                         if (metadata == null)
                         {
-                            log.Debug($"Failed to parse metadata for file: {filePath}");
+                            log.Debug($"Failed to parse metadata for file: {filePath}");  // unchanged [file:1]
                             continue;
                         }
 
                         // Create PromptFile
-                        var promptFile = new PromptFile(filePath, metadata, content, lastModified, isFavorite: false);
+                        var promptFile = new PromptFile(filePath, relativePath, metadata, content, lastModified, isFavorite: false);  // unchanged [file:1]
 
                         // Add to index
                         index[filePath] = promptFile;
                         filesIndexed++;
 
-                        log.Trace($"Indexed file: {Path.GetFileName(filePath)}");
+                        log.Trace($"Indexed file: {Path.GetFileName(filePath)}");  // unchanged [file:1]
                     }
                     catch (Exception ex)
                     {
-                        log.Error(ex, $"Failed to index file: {filePath}");
+                        log.Error(ex, $"Failed to index file: {filePath}");  // unchanged [file:1]
                     }
                 }
 

@@ -141,9 +141,9 @@ namespace VecTool.Core.Models
                 segments = [.. segments.Where(s => !s.EndsWith(':'))];
 
                 // Extract last 3 segments as category, project, area (in reverse order)
-                var category = segments.Length >= 1 ? segments[^1] : string.Empty;
-                var project = segments.Length >= 2 ? segments[^2] : string.Empty;
-                var area = segments.Length >= 3 ? segments[^3] : string.Empty;
+                var category = segments.Length >= 1 ? segments[^1] : "N/A";
+                var project = segments.Length >= 2 ? segments[^2] : "N/A";
+                var area = segments.Length >= 3 ? segments[^3] : "N/A";
 
                 return (area, project, category);
             }

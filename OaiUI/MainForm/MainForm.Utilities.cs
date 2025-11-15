@@ -1,5 +1,5 @@
 ﻿// ✅ FULL FILE VERSION
-// File: OaiUI/MainForm.Utilities.cs
+// File: OaiUI/MainForm.Configuration.cs
 
 using System;
 using System.IO;

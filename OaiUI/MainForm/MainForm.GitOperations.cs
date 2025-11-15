@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using VecTool.Core;
+using VecTool.Core.Helpers;
 using VecTool.Handlers;
 
 namespace Vectool.OaiUI
@@ -42,7 +43,7 @@ namespace Vectool.OaiUI
             try
             {
                 // ✅ Prefer deriving branch from the selected vector store folder's repo, not the app repo.
-                var preferredWorkingDir = Utilities.ResolvePreferredWorkingDirectory(GetCurrentVectorStoreConfig().FolderPaths);
+                var preferredWorkingDir = Configuration.ResolvePreferredWorkingDirectory(GetCurrentVectorStoreConfig().FolderPaths);
                 if (!string.IsNullOrWhiteSpace(preferredWorkingDir))
                 {
                     var git = new GitRunner(preferredWorkingDir);
@@ -51,7 +52,7 @@ namespace Vectool.OaiUI
                 }
 
                 // ✅ Fallback to previous behavior: solution directory
-                var solutionPath = Utilities.FindSolutionFiles(GetCurrentVectorStoreConfig()).FirstOrDefault();
+                var solutionPath = Configuration.FindSolutionFiles(GetCurrentVectorStoreConfig()).FirstOrDefault();
                 var solutionDir = solutionPath is null
                     ? AppDomain.CurrentDomain.BaseDirectory
                     : Path.GetDirectoryName(solutionPath)!;

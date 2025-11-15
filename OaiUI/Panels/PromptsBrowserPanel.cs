@@ -9,7 +9,7 @@ using System.Linq;
 using System.Windows.Forms;
 using VecTool.Core.Helpers;
 using VecTool.Core.Models;
-using VecTool.Core.Services;
+using VecTool.Handlers;
 
 namespace VecTool.UI.Panels
 {
@@ -202,7 +202,7 @@ namespace VecTool.UI.Panels
                     file.Metadata.Type,
                     file.Metadata.Category,
                     file.LastModified.ToString("yyyy-MM-dd HH:mm"),
-                    Path.GetFileName(file.FullPath)
+                    Path.GetFileName(file.RelativePath)
                 })
                 {
                     Tag = file

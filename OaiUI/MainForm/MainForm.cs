@@ -24,7 +24,7 @@ namespace Vectool.OaiUI
     /// - MainForm.MenuActions.cs: Menu item click handlers
     /// - MainForm.VectorStoreManagement.cs: Vector store CRUD operations
     /// - MainForm.GitOperations.cs: Git-related helper methods
-    /// - MainForm.Utilities.cs: Utility/helper methods (filename sanitization)
+    /// - MainForm.Configuration.cs: Utility/helper methods (filename sanitization)
     /// </summary>
     public partial class MainForm : Form
     {

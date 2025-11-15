@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using VecTool.Core;
+using VecTool.Core.Helpers;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
 
@@ -187,7 +187,7 @@ namespace Vectool.OaiUI
                 return;
             }
 
-            var solutionPaths = Utilities.FindSolutionFiles(currentVectorStore);
+            var solutionPaths = Configuration.FindSolutionFiles(currentVectorStore);
 
             if (solutionPaths.Length == 0)
             {

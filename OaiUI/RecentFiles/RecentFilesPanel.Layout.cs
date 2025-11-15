@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using VecTool.Configuration;
+using VecTool.Core.Configuration;
 
 namespace oaiUI.RecentFiles
 {

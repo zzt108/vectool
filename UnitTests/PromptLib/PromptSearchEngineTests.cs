@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using VecTool.Core.Models;
-using VecTool.Core.Services;
+using VecTool.Handlers;
 
 namespace VecTool.UnitTests.PromptLib
 {

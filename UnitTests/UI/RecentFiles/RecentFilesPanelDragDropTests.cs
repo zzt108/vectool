@@ -7,6 +7,7 @@ using System.IO;
 using System.Windows.Forms;
 using UnitTests.RecentFiles;
 using VecTool.Configuration;
+using VecTool.Core.Configuration;
 using VecTool.RecentFiles;
 
 namespace UnitTests.UI.RecentFiles

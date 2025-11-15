@@ -4,7 +4,7 @@ using System.Configuration;
 using System.IO;
 using VecTool.Core.Models;
 
-namespace VecTool.Configuration
+namespace VecTool.Core.Configuration
 {
     /// <summary>
     /// Configuration for the Recent Files feature with validation and defaults.

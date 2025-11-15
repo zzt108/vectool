@@ -3,7 +3,7 @@
 using System;
 using System.Globalization;
 using System.IO;
-using VecTool.Configuration;
+using VecTool.Core.Configuration;
 
 /// <summary>
 /// Manages creation and cleanup of the output directory structure.
