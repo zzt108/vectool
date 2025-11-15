@@ -30,19 +30,19 @@ namespace VecTool.Core.Models
         /// Parse filename and path into metadata.
         /// Returns null if filename doesn't match expected pattern (logs warning).
         /// </summary>
-        public static PromptMetadata? Parse(string fullPath, string? firstLineContent = null)
+        public static PromptMetadata? Parse(string relativePath, string? firstLineContent = null)
         {
-            using var ctx = log.Ctx.Set(new Props()
-                .Add("fullPath", fullPath)
+            using var ctx = LogCtx.Set(new Props()
+                .Add("relativePath", relativePath)
                 .Add("firstLine", firstLineContent?.Substring(0, Math.Min(50, firstLineContent?.Length ?? 0))));
 
-            if (string.IsNullOrWhiteSpace(fullPath))
+            if (string.IsNullOrWhiteSpace(relativePath))
             {
                 log.Warn("Full path is null or empty");
                 return null;
             }
 
-            var fileName = Path.GetFileName(fullPath);
+            var fileName = Path.GetFileName(relativePath);
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 log.Warn("File name could not be extracted from path");
@@ -98,7 +98,7 @@ namespace VecTool.Core.Models
             }
 
             // Parse path hierarchy: /area/project/category/filename.md
-            var (area, project, category) = ExtractHierarchy(fullPath);
+            var (area, project, category) = ExtractHierarchy(relativePath);
             
             var description = firstLineContent?.Trim();
             if (!string.IsNullOrEmpty(description) && description.Length > 200)
@@ -127,13 +127,13 @@ namespace VecTool.Core.Models
         /// Example: C:/work/vectortool/spaces/PROMPT-1.0-analyzer.md → area=work, project=vectortool, category=spaces
         /// Root-level files return empty strings for all fields.
         /// </summary>
-        private static (string Area, string Project, string Category) ExtractHierarchy(string fullPath)
+        private static (string Area, string Project, string Category) ExtractHierarchy(string relativePath)
         {
             try
             {
-                var directoryPath = Path.GetDirectoryName(fullPath);
+                var directoryPath = Path.GetDirectoryName(relativePath);
                 if (string.IsNullOrWhiteSpace(directoryPath))
-                    return (string.Empty, string.Empty, string.Empty);
+                    return ("N/A", "N/A", "N/A");
 
                 // Split path into segments (handle both / and \)
                 var segments = directoryPath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
@@ -141,9 +141,9 @@ namespace VecTool.Core.Models
                 segments = [.. segments.Where(s => !s.EndsWith(':'))];
 
                 // Extract last 3 segments as category, project, area (in reverse order)
-                var category = segments.Length >= 1 ? segments[^1] : "N/A";
-                var project = segments.Length >= 2 ? segments[^2] : "N/A";
-                var area = segments.Length >= 3 ? segments[^3] : "N/A";
+                var category = segments.Length >= 3 ? segments[2] : "N/A";
+                var project = segments.Length >= 2 ? segments[1] : "N/A";
+                var area = segments.Length >= 1 ? segments[0] : "N/A";
 
                 return (area, project, category);
             }

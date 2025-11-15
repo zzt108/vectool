@@ -23,7 +23,7 @@ namespace VecTool.Core.Helpers
         /// <returns>Git diff output or empty string on error.</returns>
         public static string GetUnstagedChanges(string repoPath)
         {
-            using var ctx = log.Ctx.Set(new Props().Add("repoPath", repoPath));
+            using var ctx = LogCtx.Set(new Props().Add("repoPath", repoPath));
 
             if (!IsGitRepository(repoPath))
             {
@@ -49,7 +49,7 @@ namespace VecTool.Core.Helpers
         /// <returns>List of changed file paths.</returns>
         public static List<string> GetChangedFiles(string repoPath)
         {
-            using var ctx = log.Ctx.Set(new Props().Add("repoPath", repoPath));
+            using var ctx = LogCtx.Set(new Props().Add("repoPath", repoPath));
 
             if (!IsGitRepository(repoPath))
             {
@@ -94,7 +94,7 @@ namespace VecTool.Core.Helpers
         /// </summary>
         private static string ExecuteGitCommand(string workingDirectory, string arguments)
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("workingDirectory", workingDirectory)
                 .Add("arguments", arguments));
 

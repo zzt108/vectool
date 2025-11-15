@@ -27,7 +27,7 @@ public sealed class LLMProviderConfig
     /// </summary>
     public static LLMProviderConfig Load(string configPath)
     {
-        using var ctx = log.Ctx.Set(new Props().Add("configPath", configPath));
+        using var ctx = LogCtx.Set(new Props().Add("configPath", configPath));
 
         if (string.IsNullOrWhiteSpace(configPath))
         {

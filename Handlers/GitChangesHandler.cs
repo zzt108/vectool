@@ -72,7 +72,7 @@ public sealed class GitChangesHandler : FileHandlerBase
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                using var _ = log.Ctx.Set().Add("basePath", folderPath);
+                using var _ = LogCtx.Set().Add("basePath", folderPath);
                 log.Info($"Found {gitRepos.Count} Git repositories to process");
 
                 foreach (var repoPath in gitRepos)

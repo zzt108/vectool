@@ -50,7 +50,7 @@ namespace VecTool.Core.AI.Providers
 
         public async Task<string> RequestAsync(string prompt, CancellationToken ct = default)
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("provider", "Perplexity")
                 .Add("model", model)
                 .Add("promptLength", prompt?.Length ?? 0));
@@ -82,7 +82,7 @@ namespace VecTool.Core.AI.Providers
 
                 var responseBody = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
-                using var responseCtx = log.Ctx.Set(new Props()
+                using var responseCtx = LogCtx.Set(new Props()
                     .Add("statusCode", (int)response.StatusCode)
                     .Add("responseLength", responseBody?.Length ?? 0));
 
@@ -127,7 +127,7 @@ namespace VecTool.Core.AI.Providers
 
         public async Task<bool> ValidateConfigAsync(CancellationToken ct = default)
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("provider", "Perplexity")
                 .Add("operation", "ValidateConfig"));
 

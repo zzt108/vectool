@@ -77,7 +77,7 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                using (var ctx = log.Ctx.Set(new Props()
+                using (var ctx = LogCtx.Set(new Props()
                     .Add("outputPath", outputPath)
                     .Add("folderCount", folderPaths.Count)))
                 {
@@ -127,7 +127,7 @@ namespace VecTool.Handlers
             // ✅ Validate folder
             if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
             {
-                using (var ctx = log.Ctx.Set(new Props()
+                using (var ctx = LogCtx.Set(new Props()
                     .Add("folderPath", folderPath)
                     .Add("exists", Directory.Exists(folderPath))))
                 {
@@ -144,7 +144,7 @@ namespace VecTool.Handlers
                     .EnumerateFilesRespectingExclusions(folderPath, config)
                     .ToList();
 
-                using (var ctx = log.Ctx.Set(new Props()
+                using (var ctx = LogCtx.Set(new Props()
                     .Add("folderPath", folderPath)
                     .Add("fileCount", files.Count)
                     .Add("source", "traverser")))
@@ -172,7 +172,7 @@ namespace VecTool.Handlers
                         fileSizesByType[extension] += fileInfo.Length;
                         fileCountByType[extension]++;
 
-                        using (var ctx = log.Ctx.Set(new Props()
+                        using (var ctx = LogCtx.Set(new Props()
                             .Add("file", Path.GetFileName(file))
                             .Add("size", fileInfo.Length)
                             .Add("extension", extension)))
@@ -182,7 +182,7 @@ namespace VecTool.Handlers
                     }
                     catch (Exception ex)
                     {
-                        using (var ctx = log.Ctx.Set(new Props()
+                        using (var ctx = LogCtx.Set(new Props()
                             .Add("file", file)))
                         {
                             log.Error(ex, "Error processing file for summary");
@@ -193,7 +193,7 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                using (var ctx = log.Ctx.Set(new Props()
+                using (var ctx = LogCtx.Set(new Props()
                     .Add("folderPath", folderPath)))
                 {
                     log.Error(ex, "Error calculating folder sizes");
@@ -253,7 +253,7 @@ namespace VecTool.Handlers
                 writer.WriteLine();
                 writer.WriteLine($"*Summary includes {totalCount:N0} files across {fileSizesByType.Count} file types.*");
 
-                using (var ctx = log.Ctx.Set(new Props()
+                using (var ctx = LogCtx.Set(new Props()
                     .Add("outputPath", outputPath)
                     .Add("fileCount", totalCount)
                     .Add("totalSize", totalSize)))
@@ -263,7 +263,7 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                using (var ctx = log.Ctx.Set(new Props()
+                using (var ctx = LogCtx.Set(new Props()
                     .Add("outputPath", outputPath)))
                 {
                     log.Error(ex, "Error writing file size summary report");

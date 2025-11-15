@@ -159,7 +159,7 @@ namespace UnitTests.Traversal
             var traverser = new FileSystemTraverser(ui: null);
 
             // Act
-            using (var ctx = _log.Ctx.Set(
+            using (var ctx = LogCtx.Set(
                 new Props()
                     .Add("test", "exclusion_logging")
                     .Add("testDir", testDir)))

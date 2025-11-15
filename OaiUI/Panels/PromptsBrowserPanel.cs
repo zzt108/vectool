@@ -46,7 +46,7 @@ namespace VecTool.UI.Panels
             FavoritesManager? favoritesManager,
             string? promptsRepositoryPath)
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("RepositoryPath", promptsRepositoryPath ?? "null"));
 
             this.searchEngine = searchEngine ?? throw new ArgumentNullException(nameof(searchEngine));
@@ -108,7 +108,7 @@ namespace VecTool.UI.Panels
         /// </summary>
         public void RefreshPanel()
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("SearchQuery", currentSearchQuery));
 
             try
@@ -226,7 +226,7 @@ namespace VecTool.UI.Panels
 
         private void CopySelectedToClipboard()
         {
-            using var ctx = log.Ctx.Set(new Props());
+            using var ctx = LogCtx.Set(new Props());
 
             try
             {
@@ -250,7 +250,7 @@ namespace VecTool.UI.Panels
 
         private void EditSelectedPrompt()
         {
-            using var ctx = log.Ctx.Set(new Props());
+            using var ctx = LogCtx.Set(new Props());
 
             try
             {
@@ -279,7 +279,7 @@ namespace VecTool.UI.Panels
 
         private void CreateNewVersion()
         {
-            using var ctx = log.Ctx.Set(new Props());
+            using var ctx = LogCtx.Set(new Props());
 
             try
             {
@@ -320,7 +320,7 @@ namespace VecTool.UI.Panels
 
         private void OpenInGit()
         {
-            using var ctx = log.Ctx.Set(new Props());
+            using var ctx = LogCtx.Set(new Props());
 
             try
             {
@@ -367,7 +367,7 @@ namespace VecTool.UI.Panels
 
         private void ToggleFavorite()
         {
-            using var ctx = log.Ctx.Set(new Props());
+            using var ctx = LogCtx.Set(new Props());
 
             try
             {

@@ -40,7 +40,7 @@
             // Guard: validate input
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                using var ctx = log.Ctx.Set(
+                using var ctx = LogCtx.Set(
                     new Props().Add("error", "empty_file_path")
                 );
                 log.Warn("ExtractMarker called with null/empty filePath");
@@ -67,7 +67,7 @@
             }
             catch (RegexMatchTimeoutException ex)
             {
-                using var ctx = log.Ctx.Set(new Props()
+                using var ctx = LogCtx.Set(new Props()
                     .Add("file_path", filePath)
                     .Add("error_type", "RegexMatchTimeoutException")
                 );
@@ -81,7 +81,7 @@
                 if (isVectoolExcude)
                 {
                     var markedLines = lines.Where(l => l.Contains(MarkerSigniture));
-                    using var ctx = log.Ctx.Set(new Props()
+                    using var ctx = LogCtx.Set(new Props()
                         .Add("file_path", filePath)
                         .AddJson("lines", markedLines));
                     log.Warn($"Found:{lines.FirstOrDefault()}, but no match found in marker pattern");
@@ -105,7 +105,7 @@
             };
 
             // 8. Log successful extraction to SEQ
-            using (var ctx = log.Ctx.Set(new Props()
+            using (var ctx = LogCtx.Set(new Props()
                 .Add("file_path", filePath)
                 .Add("reason", reason)
                 .Add("space_reference", spaceReference ?? "none")
@@ -131,7 +131,7 @@
                 // Validate file exists before opening stream
                 if (!File.Exists(filePath))
                 {
-                    using var ctx = log.Ctx.Set(new Props()
+                    using var ctx = LogCtx.Set(new Props()
                         .Add("file_path", filePath)
                         .Add("error_type", "FileNotFoundException"));
                     log.Debug("File does not exist");
@@ -161,7 +161,7 @@
             }
             catch (UnauthorizedAccessException ex)
             {
-                using var ctx = log.Ctx.Set(new Props()
+                using var ctx = LogCtx.Set(new Props()
                     .Add("file_path", filePath)
                     .Add("error_type", "UnauthorizedAccessException")
                     .Add("message", ex.Message));
@@ -170,7 +170,7 @@
             }
             catch (IOException ex)
             {
-                using var ctx = log.Ctx.Set(new Props()
+                using var ctx = LogCtx.Set(new Props()
                     .Add("file_path", filePath)
                     .Add("error_type", "IOException")
                     .Add("message", ex.Message));
@@ -179,7 +179,7 @@
             }
             catch (Exception ex)
             {
-                using var ctx = log.Ctx.Set(new Props()
+                using var ctx = LogCtx.Set(new Props()
                     .Add("file_path", filePath)
                     .Add("error_type", ex.GetType().Name)
                     .Add("message", ex.Message)

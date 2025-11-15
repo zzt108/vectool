@@ -23,7 +23,7 @@ public sealed class GitCommitMessageGenerator
     /// </summary>
     public async Task<string?> GenerateAsync(string gitDiff, CommitContext context)
     {
-        using var lc = _log.Ctx.Set()
+        using var lc = LogCtxShared.LogCtx.Set()
             .Add("repo", context.Repo)
             .Add("diffLength", gitDiff.Length);
 
@@ -62,10 +62,10 @@ Example: Add PromptCategorizer with AI-powered suggestions";
             if (commitMessage.Length > MaxCommitLength)
             {
                 commitMessage = commitMessage.Substring(0, MaxCommitLength);
-                using var __ = _log.Ctx.Set().Add("length", commitMessage.Length);
+                using var __ = LogCtxShared.LogCtx.Set().Add("length", commitMessage.Length);
                 _log.Warn("Commit message truncated");
             }
-            using var _ = _log.Ctx.Set().Add("message", commitMessage);
+            using var _ = LogCtxShared.LogCtx.Set().Add("message", commitMessage);
             _log.Info("Commit message generated");
             return commitMessage;
         }

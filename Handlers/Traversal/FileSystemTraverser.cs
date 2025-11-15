@@ -58,7 +58,7 @@
             //this.rootPath = rootPath ?? Environment.CurrentDirectory;
             this.markerExtractor = markerExtractor;  // Layer 2 enabled (if provided)
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("layer_2_enabled", markerExtractor != null ? "yes" : "no"));
             log.Info("FileSystemTraverser initialized");
         }
@@ -82,7 +82,7 @@
                     rootPath
                 );
 
-                using var ctx = log.Ctx.Set(new Props()
+                using var ctx = LogCtx.Set(new Props()
                     .Add("rootpath", rootPath)
                     .Add("library", "MabDotIgnore"));
                 log.Info("Pattern matcher initialized for root");
@@ -90,7 +90,7 @@
                 // LAYER 2: FALLBACK - Create fallback matcher for legacy config
                 fallbackMatcher = new LegacyConfigAdapter(config);
 
-                using var ctx2 = log.Ctx.Set(new Props()
+                using var ctx2 = LogCtx.Set(new Props()
                     .Add("primary", primaryMatcher?.GetType().Name ?? "null")
                     .Add("fallback", fallbackMatcher?.GetType().Name ?? "null"));
                 log.Info("Exclusion matcher chain ready");
@@ -125,7 +125,7 @@
                 if (marker != null)
                 {
                     // File excluded by marker
-                    using var ctx = log.Ctx.Set(ExclusionProps.CreateMarkerProps(
+                    using var ctx = LogCtx.Set(ExclusionProps.CreateMarkerProps(
                         marker.FilePath,
                         marker.Reason,
                         marker.SpaceReference,
@@ -138,7 +138,7 @@
             }
             catch (Exception ex)
             {
-                using var ctx = log.Ctx.Set(ExclusionProps.CreateMarkerErrorProps(
+                using var ctx = LogCtx.Set(ExclusionProps.CreateMarkerErrorProps(
                     filePath,
                     ex.GetType().Name,
                     ex.Message));
@@ -285,7 +285,7 @@
                 var current = stack.Pop();
                 var folderName = new DirectoryInfo(current).Name;
 
-                using var ctx = log.Ctx.Set(new Props()
+                using var ctx = LogCtx.Set(new Props()
                     .Add("current", current)
                     .Add("folderName", folderName));
 
@@ -295,7 +295,7 @@
                     var relativePath = Path.GetRelativePath(root, current);
                     if (primaryMatcher.IsIgnored(relativePath, isDirectory: true))
                     {
-                        using var _ = log.Ctx.Set(new Props()
+                        using var _ = LogCtx.Set(new Props()
                             .Add("excludedDir", relativePath)
                             .Add("fullPath", current));
                         log.Trace($"Skipping excluded folder (pattern): {relativePath}");
@@ -340,7 +340,7 @@
                         var relativePath = Path.GetRelativePath(root, f);
                         if (primaryMatcher.IsIgnored(relativePath, isDirectory: false))
                         {
-                            using var _ = log.Ctx.Set(new Props()
+                            using var _ = LogCtx.Set(new Props()
                                 .Add("excludedFile", relativePath)
                                 .Add("fullPath", f));
                             log.Trace($"Skipping excluded file (pattern): {relativePath}");
@@ -358,7 +358,7 @@
                     // File system validity check
                     if (!FileValidator.IsFileValid(f, outputPath: null))
                     {
-                        using var ctxValid = log.Ctx.Set(new Props()
+                        using var ctxValid = LogCtx.Set(new Props()
                             .Add("content", f));
                         log.Trace("Invalid or binary file");
                         continue;
@@ -448,13 +448,13 @@
             }
             catch (UnauthorizedAccessException ex)
             {
-                using var ctx = log?.Ctx.Set(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
+                using var ctx = LogCtx.Set(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
                 log?.Error(ex, "Access denied to directory");
                 return Enumerable.Empty<string>();
             }
             catch (Exception ex)
             {
-                using var ctx = log?.Ctx.Set(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
+                using var ctx = LogCtx.Set(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
                 log?.Error(ex, "Error enumerating subdirectories");
                 return Enumerable.Empty<string>();
             }

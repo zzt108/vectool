@@ -87,7 +87,7 @@ namespace UnitTests.Traversal
             files.ShouldNotContain(f => f.EndsWith("temp.tmp"));
 
             // Verify marker extractor was called only for non-excluded files (mocking would show this)
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "pattern_only")
                 .Add("filesChecked", files.Count)
                 .Add("pattern", ".gitignore"));
@@ -123,7 +123,7 @@ public class Generated
             files.ShouldContain(f => f.EndsWith("main.cs"));
             files.ShouldNotContain(f => f.EndsWith("generated.cs"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "marker_only")
                 .Add("filesIncluded", files.Count));
             log.Info("Marker-only exclusion verified");
@@ -160,7 +160,7 @@ public class ConfigGenerated { }";
             files.ShouldNotContain(f => f.EndsWith("ignored.log"));
             files.ShouldNotContain(f => f.EndsWith("config.g.cs"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "both_layers")
                 .Add("patternExcluded", 1)
                 .Add("markerExcluded", 1)
@@ -191,7 +191,7 @@ public class MarkedClass { }";
             // Assert - Marked file should be included (Layer 2 disabled)
             files.ShouldContain(f => f.EndsWith("marked.cs"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "marker_null")
                 .Add("layer2Enabled", false));
             log.Info("Backward compatibility verified");
@@ -239,7 +239,7 @@ public class MarkedClass { }";
             files.ShouldNotContain(f => f.Contains("bin"));
             files.ShouldNotContain(f => f.Contains("obj"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "directory_exclusion")
                 .Add("filesIncluded", files.Count)
                 .Add("directoriesExcluded", 2));
@@ -270,7 +270,7 @@ public class MarkedClass { }";
             files.Count.ShouldBeGreaterThan(0);
             files.ShouldContain(f => f.EndsWith("config.cs"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "markers_not_for_dirs")
                 .Add("directoriesProcessed", true));
             log.Info("Marker non-application to directories verified");
@@ -310,7 +310,7 @@ public class MarkedClass { }";
             files.ShouldContain(f => f.EndsWith("main.cs"));
             files.ShouldNotContain(f => f.Contains("node_modules"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "files_in_excluded_dirs")
                 .Add("nestedFilesExcluded", true));
             log.Info("Nested exclusion verified");
@@ -343,7 +343,7 @@ public class MarkedClass { }";
                 files.Count.ShouldBe(2); // Both files enumerated despite extractor throwing
             });
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "marker_extractor_throws")
                 .Add("filesProcessed", 2));
             log.Info("Graceful failure verified");
@@ -374,7 +374,7 @@ public class Generated { }";
             // Assert - Some files still processed
             files.Count.ShouldBeGreaterThan(0);
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "partial_failure")
                 .Add("filesProcessed", files.Count));
             log.Info("Partial failure isolation verified");
@@ -401,7 +401,7 @@ public class Generated { }";
                 files.Count.ShouldBeGreaterThanOrEqualTo(0);
             });
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "failure_logging"));
             log.Info("Failure logging verified - no rethrow");
         }
@@ -445,7 +445,7 @@ public class Person { }";
             processedFiles.ShouldContain(f => f.EndsWith("program.cs"));
             processedFiles.ShouldNotContain(f => f.EndsWith("person.g.cs"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "processFolder_respect_markers")
                 .Add("filesProcessed", processedFiles.Count));
             log.Info("ProcessFolder marker respect verified");
@@ -475,7 +475,7 @@ public class ExternalLib { }";
             files.Count.ShouldBe(1);
             files[0].ShouldEndWith("main.cs");
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "enumerate_files_markers")
                 .Add("filesReturned", files.Count));
             log.Info("EnumerateFilesRespectingExclusions marker respect verified");
@@ -509,7 +509,7 @@ public class Lower { }";
             files.Count.ShouldBe(1);
             files.ShouldContain(f => f.EndsWith("main.cs"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "case_insensitive_reason")
                 .Add("casesHandled", 2));
             log.Info("Case-insensitive reason matching verified");
@@ -542,7 +542,7 @@ public class Lower { }";
                 files1[i].ShouldBe(files2[i]);
             }
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "deterministic_order")
                 .Add("filesEnumerated", files1.Count));
             log.Info("Deterministic file order verified");
@@ -590,7 +590,7 @@ namespace Generated.Schema
             files.ShouldNotContain(f => f.EndsWith("schema.xsd"));
             files.ShouldNotContain(f => f.EndsWith("Person.g.cs"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "xsd_file_markers")
                 .Add("xsdFilesExcluded", 1)
                 .Add("generatedCsExcluded", 1)
@@ -631,7 +631,7 @@ namespace Generated.Schema
             files.ShouldContain(f => f.EndsWith("program.cs"));
             files.ShouldNotContain(f => f.EndsWith("config.g.json"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "json_file_markers")
                 .Add("markedJsonExcluded", 1)
                 .Add("unmarkedJsonIncluded", 1));
@@ -670,7 +670,7 @@ namespace Generated.Schema
             files.ShouldContain(f => f.EndsWith("Program.cs"));
             files.ShouldContain(f => f.EndsWith("appsettings.json"));
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "mixed_formats")
                 .Add("filesIncluded", files.Count)
                 .Add("filesExcluded", 3));
@@ -717,7 +717,7 @@ namespace Generated.Schema
             enumStopwatch.ElapsedMilliseconds.ShouldBeLessThan(1200,
                 $"Large project enumeration took {enumStopwatch.ElapsedMilliseconds}ms");
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "large_project_performance")
                 .Add("filesEnumerated", files.Count)
                 .Add("setupMs", setupStopwatch.ElapsedMilliseconds)
@@ -763,7 +763,7 @@ namespace Generated.Schema
             // Assert - All threads got same result
             results.ShouldAllBe(x => x == 50);
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "concurrent_enumeration")
                 .Add("threadsRun", 5)
                 .Add("filesPerThread", 50));

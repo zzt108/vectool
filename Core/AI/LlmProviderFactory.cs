@@ -30,7 +30,7 @@ namespace VecTool.Core.AI
                 throw ex;
             }
 
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("defaultProvider", config.DefaultProvider));
 
             var providerKey = config.DefaultProvider?.ToLowerInvariant() ?? string.Empty;

@@ -18,7 +18,7 @@ public static class IgnoreMatcherFactory
     /// <returns>Configured matcher instance.</returns>
     public static IIgnorePatternMatcher? Create(IgnoreLibraryType libraryType, string? rootPath = null)
     {
-        using var ctx = _log.Ctx.Set(new Props()
+        using var ctx = LogCtx.Set(new Props()
             .Add("LibraryType", libraryType.ToString())
             .Add("RootPath", rootPath ?? "deferred"));
 

@@ -22,7 +22,7 @@ public sealed class PromptCategorizer
     /// </summary>
     public async Task<CategorySuggestion?> SuggestCategoryAsync(string content)
     {
-        using var lc = _log.Ctx.Set().Add("contentLength", content.Length);
+        using var lc = LogCtxShared.LogCtx.Set().Add("contentLength", content.Length);
 
         try
         {
@@ -45,7 +45,7 @@ Example response: work/VecTool/Spaces";
 
             _log.Info("Requesting AI categorization");
             var response = await _llmProvider.RequestAsync(prompt);
-            using var ctx = _log.Ctx.Set().Add("response", response);
+            using var ctx = LogCtxShared.LogCtx.Set().Add("response", response);
             _log.Info("AI response received");
 
             // Parse response: "work/VecTool/Spaces"
@@ -53,7 +53,7 @@ Example response: work/VecTool/Spaces";
 
             if (parts.Length != 3)
             {
-                using var _ = _log.Ctx.Set().Add("response", response);
+                using var _ = LogCtxShared.LogCtx.Set().Add("response", response);
                 _log.Warn("Invalid AI response format");
                 return null;
             }

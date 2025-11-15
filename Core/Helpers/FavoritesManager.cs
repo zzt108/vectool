@@ -22,7 +22,7 @@ namespace VecTool.Core.Helpers
         /// <returns>List of favorite file paths, or empty list if file doesn't exist or is invalid.</returns>
         public List<string> LoadFavorites(string configPath)
         {
-            using var ctx = log.Ctx.Set(new Props().Add("configPath", configPath));
+            using var ctx = LogCtx.Set(new Props().Add("configPath", configPath));
 
             if (string.IsNullOrWhiteSpace(configPath))
             {
@@ -73,7 +73,7 @@ namespace VecTool.Core.Helpers
         /// <param name="favorites">List of favorite file paths.</param>
         public void SaveFavorites(string configPath, List<string> favorites)
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("configPath", configPath)
                 .Add("count", favorites?.Count ?? 0));
 

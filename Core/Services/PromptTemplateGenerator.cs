@@ -18,7 +18,7 @@ public sealed class PromptTemplateGenerator
     /// <returns>Content with variables substituted.</returns>
     public string ApplyTemplateVariables(string content, Dictionary<string, string>? customVars = null)
     {
-        using var lc = _log.Ctx.Set().Add("contentLength", content.Length);
+        using var lc = LogCtx.Set().Add("contentLength", content.Length);
 
         try
         {
@@ -44,7 +44,7 @@ public sealed class PromptTemplateGenerator
             var unresolvedCount = System.Text.RegularExpressions.Regex.Matches(result, @"\{\{[A-Z_]+\}\}").Count;
             if (unresolvedCount > 0)
             {
-                using var lc2 = _log.Ctx.Set().Add("unresolvedCount", unresolvedCount);
+                using var lc2 = LogCtx.Set().Add("unresolvedCount", unresolvedCount);
                 _log.Warn("Unresolved variables found");
             }
 

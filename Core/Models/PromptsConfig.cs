@@ -59,12 +59,17 @@ public sealed class PromptsConfig : IPromptsConfig
     {
         reader ??= new ConfigurationManagerAppSettingsReader();
 
-        using var ctx = log.Ctx.Set(new Props().Add("source", "app.config"));
+        using var ctx = LogCtx.Set(new Props().Add("source", "app.config")); //
 
         var repoPath = reader.Get(KEY_REPO_PATH);
         var extensions = reader.Get(KEY_FILE_EXTENSIONS) ?? DefaultFileExtensions;
         var llmConfigPath = reader.Get(KEY_LLM_CONFIG_PATH);
         var favoritesPath = reader.Get(KEY_FAVORITES_PATH);
+
+        LogCtx.Set(ctx.Add(KEY_REPO_PATH, repoPath)
+            .Add(KEY_FILE_EXTENSIONS, extensions)
+            .Add(KEY_LLM_CONFIG_PATH, llmConfigPath)
+            .Add(KEY_FAVORITES_PATH, favoritesPath));
 
         // Validate required settings
         if (string.IsNullOrWhiteSpace(repoPath))

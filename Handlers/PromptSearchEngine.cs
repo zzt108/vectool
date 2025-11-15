@@ -35,7 +35,7 @@ namespace VecTool.Handlers
         /// </summary>
         public void RebuildIndex()
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("repositoryPath", config.RepositoryPath)
                 .Add("operation", "RebuildIndex"));
 
@@ -166,7 +166,7 @@ namespace VecTool.Handlers
         /// </summary>
         public List<PromptFile> Search(string query)
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("query", query)
                 .Add("indexSize", index.Count));
 
@@ -213,7 +213,7 @@ namespace VecTool.Handlers
         /// </summary>
         public List<PromptFile> GetByHierarchy(string? area, string? project, string? category)
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("area", area ?? "any")
                 .Add("project", project ?? "any")
                 .Add("category", category ?? "any")

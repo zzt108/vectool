@@ -25,7 +25,7 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
     /// </summary>
     public void LoadFromRoot(string rootPath)
     {
-        using var ctx = log.Ctx.Set(new Props()
+        using var ctx = LogCtx.Set(new Props()
             .Add("rootPath", rootPath)
             .Add("adapterType", "LegacyConfig")
         );
