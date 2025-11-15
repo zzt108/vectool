@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Shouldly;
 using System;
 using System.IO;
+using VecTool.Constants;
 using VecTool.Core.Models;
 
 namespace UnitTests.PromptLib
@@ -215,8 +216,8 @@ namespace UnitTests.PromptLib
 
             // Assert
             result.ShouldNotBeNull();
-            result!.Area.ShouldBe("N/A"); // Only 1 folder deep
-            result.Project.ShouldBe("N/A");
+            result!.Area.ShouldBe(Const.NA); // Only 1 folder deep
+            result.Project.ShouldBe(Const.NA);
             result.Category.ShouldBe("prompts");
         }
 

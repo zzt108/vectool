@@ -35,4 +35,9 @@ namespace VecTool.Constants
         /// <summary>Sample CSV reverse dependency list.</summary>
         public const string UsedByList = @"Main.cs,App.cs";
     }
+
+    public static class Const
+    {
+        public const string NA = "N/A";
+    }
 }

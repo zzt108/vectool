@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\Constants\Constants.csproj" />
     <ProjectReference Include="..\Log\Log.csproj" />
   </ItemGroup>
 

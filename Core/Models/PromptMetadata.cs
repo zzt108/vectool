@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using LogCtxShared;
 using NLogShared;
+using VecTool.Constants;
 
 namespace VecTool.Core.Models
 {
@@ -133,7 +134,7 @@ namespace VecTool.Core.Models
             {
                 var directoryPath = Path.GetDirectoryName(relativePath);
                 if (string.IsNullOrWhiteSpace(directoryPath))
-                    return ("N/A", "N/A", "N/A");
+                    return (Const.NA, Const.NA, Const.NA);
 
                 // Split path into segments (handle both / and \)
                 var segments = directoryPath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
@@ -141,9 +142,9 @@ namespace VecTool.Core.Models
                 segments = [.. segments.Where(s => !s.EndsWith(':'))];
 
                 // Extract last 3 segments as category, project, area (in reverse order)
-                var category = segments.Length >= 3 ? segments[2] : "N/A";
-                var project = segments.Length >= 2 ? segments[1] : "N/A";
-                var area = segments.Length >= 1 ? segments[0] : "N/A";
+                var category = segments.Length >= 3 ? segments[2] : Const.NA;
+                var project = segments.Length >= 2 ? segments[1] : Const.NA;
+                var area = segments.Length >= 1 ? segments[0] : Const.NA;
 
                 return (area, project, category);
             }
