@@ -74,8 +74,7 @@ namespace VecTool.UI.Panels
             this.tableLayoutPanel.Controls.Add(this.txtSearch, 2, 0);
             this.tableLayoutPanel.Controls.Add(this.btnRefresh, 3, 0);
             this.tableLayoutPanel.Controls.Add(this.splitContainerMain, 0, 1); // Span all 4 columns
-            this.tableLayoutPanel.Controls.Add(this.treeViewHierarchy, 0, 1);
-            this.tableLayoutPanel.Controls.Add(this.lvResults, 1, 1);
+            this.tableLayoutPanel.SetColumnSpan(this.splitContainerMain, 4);
             this.tableLayoutPanel.Controls.Add(this.buttonPanel, 0, 2);
             this.tableLayoutPanel.Controls.Add(this.lblStatus, 0, 3);
             this.tableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -151,12 +150,8 @@ namespace VecTool.UI.Panels
             this.treeViewHierarchy.MinimumSize = new System.Drawing.Size(150, 0); // Allow narrow collapse
 
             this.treeViewHierarchy.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeViewHierarchy.Location = new System.Drawing.Point(6, 41);
-            this.treeViewHierarchy.Margin = new System.Windows.Forms.Padding(6);
             this.treeViewHierarchy.Name = "treeViewHierarchy";
-            this.tableLayoutPanel.SetRowSpan(this.treeViewHierarchy, 1);
-            this.treeViewHierarchy.Size = new System.Drawing.Size(48, 473);
-            this.treeViewHierarchy.TabIndex = 4;
+            this.treeViewHierarchy.TabIndex = 0;
             this.treeViewHierarchy.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewHierarchyAfterSelect);
             this.splitContainerMain.Panel1.Controls.Add(this.treeViewHierarchy);
 
@@ -165,12 +160,9 @@ namespace VecTool.UI.Panels
             this.lvResults.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvResults.FullRowSelect = true;
             this.lvResults.GridLines = true;
-            this.lvResults.Location = new System.Drawing.Point(0, 0);
-            this.lvResults.Margin = new System.Windows.Forms.Padding(0); // ✅ No margin inside splitter
             this.lvResults.MultiSelect = false;
             this.lvResults.Name = "lvResults";
-            this.lvResults.Size = new System.Drawing.Size(164, 473); // Calculated: 888 - 720 - 4 (splitter)
-            this.lvResults.TabIndex = 0;
+            this.lvResults.TabIndex = 1;
             this.lvResults.UseCompatibleStateImageBehavior = false;
             this.lvResults.View = System.Windows.Forms.View.Details;
             this.lvResults.Columns.Add("Fav", 40);

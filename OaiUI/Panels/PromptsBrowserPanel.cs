@@ -52,8 +52,8 @@ namespace VecTool.UI.Panels
             this.searchEngine = searchEngine ?? throw new ArgumentNullException(nameof(searchEngine));
             this.favoritesManager = favoritesManager ?? throw new ArgumentNullException(nameof(favoritesManager));
          
-            searchEngine.RebuildIndex(); // 🔄 MODIFY: Rebuild index on startup (from previous fix)
-            InitializeTooltips(); // ✅ NEW: Setup all tooltips in one place
+            searchEngine.RebuildIndex(); // Rebuild index on startup (from previous fix)
+            InitializeTooltips(); // Setup all tooltips in one place
         
             log.Info("PromptsBrowserPanel initialized.");
 
@@ -62,7 +62,7 @@ namespace VecTool.UI.Panels
         }
 
         /// <summary>
-        /// ✅ NEW: Initialize tooltips for all Prompts tab controls (centralized).
+        /// Initialize tooltips for all Prompts tab controls (centralized).
         /// </summary>
         private void InitializeTooltips()
         {
