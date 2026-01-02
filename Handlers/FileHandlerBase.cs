@@ -1,5 +1,6 @@
 namespace VecTool.Handlers;
 
+using DocumentFormat.OpenXml.Bibliography;
 using global::VecTool.Configuration;
 using global::VecTool.Handlers.Analysis;
 using global::VecTool.Handlers.Traversal;
@@ -7,6 +8,7 @@ using global::VecTool.RecentFiles;
 using LogCtxShared;
 using NLogShared;
 using System;
+using VecTool.Constants;
 
 /// <summary>
 /// Base class for all file format handlers (DOCX, MD, PDF, Git).
@@ -44,31 +46,33 @@ public abstract class FileHandlerBase
     // AI Context - Delegated to AiContextGenerator
     // ============================================================================
 
-    protected string GenerateTableOfContentsList(List<string> folderPaths)
-        => AiContextGenerator.GenerateTableOfContents(folderPaths);
+    protected string GenerateTableOfContentsList(VectorStoreConfig config)
+        => AiContextGenerator.GenerateTableOfContents(config);
 
-    protected string GenerateCrossReferencesList(List<string> folderPaths)
-        => AiContextGenerator.GenerateCrossReferences(folderPaths);
+    protected string GenerateCrossReferencesList(VectorStoreConfig config)
+        => AiContextGenerator.GenerateCrossReferences(config);
 
-    protected string GenerateCodeMetaInfoList(List<string> folderPaths)
-        => AiContextGenerator.GenerateCodeMetaInfo(folderPaths);
+    protected string GenerateCodeMetaInfoList(VectorStoreConfig config)
+        => AiContextGenerator.GenerateCodeMetaInfo(config);
 
     protected void AddAIOptimizedContext<T>(
-        List<string> folderPaths,
+        VectorStoreConfig config,
         T context,
         Action<T, string> writeContent)
     {
-        var toc = GenerateTableOfContentsList(folderPaths);
-        if (!string.IsNullOrWhiteSpace(toc))
-            writeContent(context, toc);
+        //var toc = GenerateTableOfContentsList(config);
+        //if (!string.IsNullOrWhiteSpace(toc))
+        //    writeContent(context, toc);
 
-        var xref = GenerateCrossReferencesList(folderPaths);
-        if (!string.IsNullOrWhiteSpace(xref))
-            writeContent(context, xref);
+        //var xref = GenerateCrossReferencesList(config);
+        //if (!string.IsNullOrWhiteSpace(xref))
+        //    writeContent(context, xref);
 
-        var meta = GenerateCodeMetaInfoList(folderPaths);
-        if (!string.IsNullOrWhiteSpace(meta))
-            writeContent(context, meta);
+        //var meta = GenerateCodeMetaInfoList(config);
+        //if (!string.IsNullOrWhiteSpace(meta))
+        //    writeContent(context, meta);
+
+        writeContent(context, TestStrings.AiExportHeader);
     }
 
     // ============================================================================

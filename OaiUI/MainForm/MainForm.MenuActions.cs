@@ -45,10 +45,10 @@ namespace Vectool.OaiUI
             {
                 userInterface.WorkStart("Generating MD file...", selectedFolders);
                 var handler = new MDHandler(userInterface, recentFilesManager);
-                await Task.Run(() => handler.ExportSelectedFolders(selectedFolders, outputPath, config)).ConfigureAwait(true);
+                await Task.Run(() => handler.ExportSelectedFolders(outputPath, config)).ConfigureAwait(true);
                 userInterface.ShowMessage($"Successfully generated file at:\n{outputPath}", "Success", MessageType.Information);
 
-                // 🔄 MODIFY - Refresh recent files after MD generation
+                // Refresh recent files after MD generation
                 recentFilesPanel.RefreshList();
             }
             catch (Exception ex)

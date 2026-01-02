@@ -37,7 +37,7 @@ namespace UnitTests.Handlers
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
             var mdHandler = new MDHandler(null, null);
-            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new VectorStoreConfig());
+            mdHandler.ExportSelectedFolders(outputMarkdownPath, new VectorStoreConfig());
             
             File.Exists(outputMarkdownPath).ShouldBeTrue();
 
@@ -67,7 +67,7 @@ namespace UnitTests.Handlers
             List<string> folderPaths = new List<string> { mainFolder };
 
             var mdHandler = new MDHandler(null, null);
-            mdHandler.ExportSelectedFolders(folderPaths, outputMarkdownPath, new VectorStoreConfig());
+            mdHandler.ExportSelectedFolders(outputMarkdownPath, new VectorStoreConfig());
             
             File.Exists(outputMarkdownPath).ShouldBeTrue();
             string markdownContent = File.ReadAllText(outputMarkdownPath);
