@@ -6,9 +6,10 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Text.Json;
+using VecTool.Configuration;
 using VecTool.Core.RecentFiles;
 
-namespace VecTool.Configuration
+namespace VecTool.Core.Configuration
 {
     /// <summary>
     /// Persists simple UI state such as the last selected vector store name and Recent Files layout.

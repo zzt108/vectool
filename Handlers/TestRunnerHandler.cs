@@ -53,7 +53,7 @@ namespace VecTool.Handlers
         public async Task<string?> RunTestsAsync(CancellationToken ct)
         {
             using var log = new CtxLogger();
-            using var _ = log.Ctx.Set()
+            using var _ = LogCtx.Set()
                 .Add("Operation", "RunTestsAsync")
                 .Add("SolutionPath", _solutionPath);
 
@@ -69,7 +69,7 @@ namespace VecTool.Handlers
 
                 var message = MapExitCodeToMessage(testResult.ExitCode);
 
-                using var ctx = log.Ctx.Set(new Props()
+                using var ctx = LogCtx.Set(new Props()
                     .Add("ExitCode", testResult.ExitCode)
                     .Add("Message", message));
 
@@ -142,7 +142,7 @@ namespace VecTool.Handlers
                 return;
 
             using var log = new CtxLogger();
-            using var _ = log.Ctx.Set()
+            using var _ = LogCtx.Set()
                 .Add("Operation", "WriteTestResult")
                 .Add("OutputFile", _outputFile)
                 .Add("ExitCode", testResult.ExitCode);
@@ -163,7 +163,7 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                using var __ = log.Ctx.Set()
+                using var __ = LogCtx.Set()
                     .Add("Operation", "WriteTestResult")
                     .Add("ErrorType", ex.GetType().Name)
                     .Add("OutputFile", _outputFile);

@@ -6,7 +6,7 @@ using System;
 using System.Configuration;
 using System.IO;
 using System.Windows.Forms;
-using VecTool.Configuration;
+using VecTool.Core.Configuration;
 using VecTool.RecentFiles;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 

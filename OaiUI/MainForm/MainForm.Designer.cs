@@ -3,12 +3,12 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using VecTool.UI.Panels;
 
 namespace Vectool.OaiUI
 {
     partial class MainForm
     {
-        // ✅ Designer field declarations - ALL controls must be here
         private System.ComponentModel.IContainer components = null;
 
         // Top menu
@@ -49,8 +49,11 @@ namespace Vectool.OaiUI
         private ComboBox cmbSettingsVectorStore;
         private Label lblSettingsVectorStore;
 
-        // ✅ Recent Files tab - CRITICAL: This field MUST be declared here
+        // Recent Files tab 
         private oaiUI.RecentFiles.RecentFilesPanel recentFilesPanel;
+
+        private TabPage tabPagePrompts;
+        private PromptsBrowserPanel promptsBrowserPanel = null!;
 
         // Status
         private StatusStrip statusStrip1;
@@ -199,12 +202,23 @@ namespace Vectool.OaiUI
             aboutToolStripMenuItem.Size = new Size(180, 22);
             aboutToolStripMenuItem.Text = "&About";
             aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
+
+            // tabPagePrompts
+            this.tabPagePrompts = new System.Windows.Forms.TabPage();
+            this.tabPagePrompts.Location = new System.Drawing.Point(4, 24);
+            this.tabPagePrompts.Name = "tabPagePrompts";
+            this.tabPagePrompts.Size = new System.Drawing.Size(900, 600);
+            this.tabPagePrompts.TabIndex = 2;
+            this.tabPagePrompts.Text = "Prompts";
+            this.tabPagePrompts.UseVisualStyleBackColor = true;
+
             // 
             // tabControl1
             // 
             tabControl1.Controls.Add(tabPageMain);
             tabControl1.Controls.Add(tabPageSettings);
             tabControl1.Controls.Add(tabPageRecentFiles);
+            tabControl1.Controls.Add(tabPagePrompts);
             tabControl1.Dock = DockStyle.Fill;
             tabControl1.Location = new Point(0, 24);
             tabControl1.Name = "tabControl1";

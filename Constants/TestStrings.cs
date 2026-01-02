@@ -53,4 +53,10 @@ When referencing code changes, always specify:
         /// <summary>Sample CSV reverse dependency list.</summary>
         public const string UsedByList = @"Main.cs,App.cs";
     }
+
+    public static class Const
+    {
+        public const string NA = "N/A";
+        public const string All = "All";
+    }
 }

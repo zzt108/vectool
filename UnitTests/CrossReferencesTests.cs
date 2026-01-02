@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using VecTool.Handlers;
-using VecTool.Configuration;
 using VecTool.Constants;
 
 namespace DocXHandlerTests

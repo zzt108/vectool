@@ -47,7 +47,7 @@ namespace VecTool.Handlers
             VectorStoreConfig? vectorStoreConfig = null,
             CancellationToken cancellationToken = default)
         {
-            using var _ = log.Ctx.Set();
+            using var _ = LogCtx.Set();
 
             if (!Directory.Exists(targetDirectory))
             {
@@ -148,7 +148,7 @@ namespace VecTool.Handlers
         private async Task<(bool isAvailable, string command)> IsRepomixAvailableAsync(
             CancellationToken cancellationToken)
         {
-            using var _ = log.Ctx.Set(new Props().Add("Method", "IsRepomixAvailableAsync"));
+            using var _ = LogCtx.Set(new Props().Add("Method", "IsRepomixAvailableAsync"));
 
             // ✅ Step 1: Try global repomix install first (more reliable on Windows)
             log.Debug("Checking for global 'repomix' installation...");
@@ -225,7 +225,7 @@ namespace VecTool.Handlers
         /// </remarks>
         private string? DetermineExecutablePath(string executableName)
         {
-            using var _ = log.Ctx.Set(new Props().Add("Executable", executableName));
+            using var _ = LogCtx.Set(new Props().Add("Executable", executableName));
 
             try
             {
@@ -298,7 +298,7 @@ namespace VecTool.Handlers
             VectorStoreConfig? config,
             string command)
         {
-            using var _ = log.Ctx.Set(new Props()
+            using var _ = LogCtx.Set(new Props()
                 .Add("Command", command)
                 .Add("TargetDirectory", targetDirectory)
                 .Add("OutputPath", outputPath));

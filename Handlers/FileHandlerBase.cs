@@ -96,7 +96,7 @@ public abstract class FileHandlerBase
     {
         if (FileSystemTraverser == null)
         {
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add(nameof(root), root)
                 .Add("reason", "null_traverser"));
             log.Warn("FileSystemTraverser not initialized");

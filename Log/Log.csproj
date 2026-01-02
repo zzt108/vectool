@@ -28,7 +28,7 @@
 
   <ItemGroup>
     <PackageReference Update="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Update="NLog" Version="6.0.5" />
+    <PackageReference Update="NLog" Version="6.0.6" />
     <PackageReference Update="NLog.Targets.Seq" Version="4.0.2" />
   </ItemGroup>
 

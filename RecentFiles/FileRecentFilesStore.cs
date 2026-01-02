@@ -1,7 +1,7 @@
 ﻿// Path: RecentFiles/FileRecentFilesStore.cs
 using System;
 using System.IO;
-using VecTool.Configuration;
+using VecTool.Core.Configuration;
 
 namespace VecTool.RecentFiles
 {

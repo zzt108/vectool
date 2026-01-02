@@ -2,9 +2,9 @@
 using System.Linq;
 using VecTool.Configuration;
 
-namespace VecTool.Core
+namespace VecTool.Core.Helpers
 {
-    public static class Utilities
+    public static class Configuration
     {
         public static string? ResolvePreferredWorkingDirectory(IReadOnlyList<string> folders)
         {
@@ -27,8 +27,6 @@ namespace VecTool.Core
 
             return firstExisting;
         }
-
-
 
         public static string[] FindSolutionFiles(VectorStoreConfig vsConfig)
         {

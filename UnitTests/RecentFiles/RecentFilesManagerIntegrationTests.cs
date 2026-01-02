@@ -4,6 +4,7 @@ using NUnit.Framework;
 using VecTool.RecentFiles;
 using VecTool.Configuration;
 using VecTool.Handlers;
+using VecTool.Core.Configuration;
 
 namespace UnitTests.RecentFiles
 {

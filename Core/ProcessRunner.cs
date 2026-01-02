@@ -77,7 +77,7 @@ namespace VecTool.Core
             }
             catch (Exception ex)
             {
-                using var _ = log?.Ctx.Set()
+                using var _ = LogCtx.Set()
                     .Add("FileName", fileName)
                     .Add("Arguments", arguments)
                     .Add("WorkingDirectory", workingDirectory)

@@ -16,7 +16,7 @@ public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
 
     public void LoadFromRoot(string rootPath)
     {
-        using var _ = _log.Ctx.Set(new Props()
+        using var _ = LogCtx.Set(new Props()
             .Add("RootPath", rootPath));
 
         if (string.IsNullOrWhiteSpace(rootPath) || !Directory.Exists(rootPath))

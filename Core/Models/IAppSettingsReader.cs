@@ -1,5 +1,5 @@
 ﻿// Path: Configuration/IAppSettingsReader.cs
-namespace VecTool.Configuration
+namespace VecTool.Core.Models
 {
     /// <summary>
     /// Abstraction to read application settings for testability.

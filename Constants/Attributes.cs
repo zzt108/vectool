@@ -1,6 +1,4 @@
 ﻿// Path: Constants/Attributes.cs
-
-// Path: Constants/Attributes.cs
 using System;
 
 namespace VecTool.Constants

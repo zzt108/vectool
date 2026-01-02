@@ -1,8 +1,8 @@
 ﻿// File: Tests/RecentFiles/RecentFilesOutputManagerTests.cs
 using Shouldly;
 using NUnit.Framework;
-using VecTool.Configuration;
 using VecTool.RecentFiles;
+using VecTool.Core.Configuration;
 
 namespace Tests.RecentFiles
 {

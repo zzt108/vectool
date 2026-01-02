@@ -290,7 +290,7 @@ namespace UnitTests.Handlers
             var outputPath = Path.Combine(testDir, "git-changes.md");
 
             // Act
-            using var ctx = log.Ctx.Set(new Props()
+            using var ctx = LogCtx.Set(new Props()
                 .Add("test", "gitchangeslogging")
                 .Add("testDir", testDir));
 

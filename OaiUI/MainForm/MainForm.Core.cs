@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-// File: OaiUI/MainForm.Core.cs
+﻿// File: OaiUI/MainForm.Core.cs
 
 using oaiUI;
 using oaiUI.Services;
@@ -9,8 +8,13 @@ using System.Windows.Forms;
 using Vectool.UI.Versioning;
 using VecTool.Configuration;
 using VecTool.Core;
+using VecTool.Core.Configuration;
+using VecTool.Core.Helpers;
+using VecTool.Core.Models;
+using VecTool.Core.Services;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
+using VecTool.UI.Panels;
 
 namespace Vectool.OaiUI
 {
@@ -55,9 +59,21 @@ namespace Vectool.OaiUI
             // ✅ Recent files panel created by designer; initialize once controls exist
             recentFilesPanel.Initialize(recentFilesManager);
 
+            var promptsConfig = PromptsConfig.FromAppConfig();
+            var searchEngine = new PromptSearchEngine(promptsConfig);
+            var favoritesManager = new FavoritesManager();
+
+            if (promptsConfig is not null)
+            {
+                promptsBrowserPanel = new PromptsBrowserPanel();
+                tabPagePrompts.Controls.Add(promptsBrowserPanel);
+                promptsBrowserPanel.Dock = DockStyle.Fill;
+                promptsBrowserPanel.Initialize(searchEngine, favoritesManager, promptsConfig?.RepositoryPath);
+            }
+
             WireUpEvents();
             LoadVectorStoresIntoComboBox();
-            UpdateFormTitle(); // Will now include version
+            UpdateFormTitle();
         }
 
         /// <summary>

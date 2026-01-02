@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Shouldly;
 using VecTool.Configuration;
+using VecTool.Core.Configuration;
 using VecTool.Core.RecentFiles;
 
 namespace UnitTests
