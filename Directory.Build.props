@@ -3,8 +3,8 @@
   <PropertyGroup>
     <!-- Versioning (kept from repo pattern) -->
     <MajorVersion>4</MajorVersion>
-    <PlanId>6</PlanId>
-    <PlanPhase>21</PlanPhase>
+    <PlanId>7</PlanId>
+    <PlanPhase>0</PlanPhase>
     <YyyyMMdd>$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</YyyyMMdd>
     <HHmm>$([System.DateTime]::UtcNow.ToString('HHmm'))</HHmm>
     <DayOfYear>$([System.DateTime]::UtcNow.DayOfYear)</DayOfYear>
