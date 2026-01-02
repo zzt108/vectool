@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using VecTool.Configuration;
+using VecTool.Constants;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
 using VecTool.Utils;
@@ -29,9 +30,9 @@ namespace VecTool.Handlers
         /// <summary>
         /// Async wrapper for ExportSelectedFolders to enable better parallelism.
         /// </summary>
-        public Task ExportSelectedFoldersAsync(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
+        public Task ExportSelectedFoldersAsync(string outputPath, VectorStoreConfig vectorStoreConfig)
         {
-            return Task.Run(() => ExportSelectedFolders(folderPaths, outputPath, vectorStoreConfig));
+            return Task.Run(() => ExportSelectedFolders(outputPath, vectorStoreConfig));
         }
 
         /// <summary>
@@ -43,12 +44,10 @@ namespace VecTool.Handlers
         /// <param name="vectorStoreConfig">Configuration for file exclusion rules</param>
         /// <exception cref="ArgumentException">Thrown if folderPaths is null, empty, or outputPath is invalid</exception>
         /// <exception cref="IOException">Thrown if output file cannot be created or written</exception>
-        public void ExportSelectedFolders(List<string> folderPaths, string outputPath, VectorStoreConfig vectorStoreConfig)
+        public void ExportSelectedFolders(string outputPath, VectorStoreConfig vectorStoreConfig)
         {
-            // Null check guard - prevents NullReferenceException
-            if (folderPaths == null)
-                throw new ArgumentException("Folder list cannot be null", nameof(folderPaths));
-
+            var folderPaths = vectorStoreConfig.FolderPaths;
+            
             // Empty check guard - validates business requirement
             if (folderPaths.Count == 0)
                 throw new ArgumentException("Folder list cannot be empty", nameof(folderPaths));
@@ -62,6 +61,17 @@ namespace VecTool.Handlers
                 Ui?.WorkStart("Exporting to MD", folderPaths);
 
                 using StreamWriter writer = new StreamWriter(outputPath);
+              
+                AddAIOptimizedContext(
+                    vectorStoreConfig,
+                    writer,
+                    (w, content) =>
+                    {
+                        w.WriteLine(content);
+                        w.WriteLine();
+                    }
+                );
+
                 writer.WriteLine($"# Codebase for folder(s):");
                 foreach (string folderPath in folderPaths)
                     writer.WriteLine($"- {folderPath}");

@@ -8,6 +8,24 @@ namespace VecTool.Constants
     /// </summary>
     public static class TestStrings
     {
+        /// <summary>
+        /// Header text for AI context in exported markdown files.
+        /// </summary>
+        public const string AiExportHeader = @"# Codebase Export Format
+
+**Line Numbering Convention:**
+- Each file section starts with `### File: <filename> (Time:<timestamp>)`
+- Line numbers RESET to 1 at the start of each fenced code block (```)
+- Line numbers END at the closing fence (```)
+- Example: If you see line 5 in `MainActivity.kt` and line 5 in `TimerService.kt`, these are DIFFERENT lines in DIFFERENT files
+
+**Usage for AI:**
+When referencing code changes, always specify:
+1. Full file path (e.g., `app/src/main/java/.../MainActivity.kt`)
+2. Line number relative to the file's code fence (1-indexed)
+3. Context snippet (2-3 lines before/after)
+";
+
         /// <summary>Sample absolute folder path used in tests.</summary>
         public const string SampleFolder = @"C:\Projects\VecTool\src";
 

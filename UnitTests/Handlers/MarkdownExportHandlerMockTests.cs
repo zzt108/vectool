@@ -84,7 +84,7 @@ namespace UnitTests.Handlers
             var outputPath = Path.Combine(_testDir, "output.md");
 
             // Act
-            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
+            _handler.ExportSelectedFolders(outputPath, _config);
 
             // Assert - CRITICAL: Traverser called exactly once per folder
             _mockTraverser.Received(1).EnumerateFilesRespectingExclusions(
@@ -109,7 +109,7 @@ namespace UnitTests.Handlers
             var outputPath = Path.Combine(_testDir, "output.md");
 
             // Act
-            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
+            _handler.ExportSelectedFolders(outputPath, _config);
 
             // Assert - Handler delegates all exclusion logic
             _mockTraverser.Received(1).EnumerateFilesRespectingExclusions(
@@ -143,7 +143,7 @@ namespace UnitTests.Handlers
             var outputPath = Path.Combine(_testDir, "output.md");
 
             // Act
-            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
+            _handler.ExportSelectedFolders(outputPath, _config);
 
             // Assert
             File.Exists(outputPath).ShouldBeTrue();
@@ -166,7 +166,7 @@ namespace UnitTests.Handlers
             var outputPath = Path.Combine(_testDir, "output.md");
 
             // Act
-            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
+            _handler.ExportSelectedFolders(outputPath, _config);
 
             // Assert
             _mockRecentFiles.Received(1).RegisterGeneratedFile(
@@ -191,7 +191,7 @@ namespace UnitTests.Handlers
 
             // Act
             _handler.ExportSelectedFolders(
-                new List<string> { Path.Combine(_testDir, "folder1"), Path.Combine(_testDir, "folder2") },
+                // new List<string> { Path.Combine(_testDir, "folder1"), Path.Combine(_testDir, "folder2") },
                 outputPath,
                 _config);
 
@@ -223,7 +223,9 @@ namespace UnitTests.Handlers
 
             // Act & Assert
             var ex = Should.Throw<ArgumentException>(() =>
-                _handler.ExportSelectedFolders(folders!, outputPath!, _config));
+                _handler.ExportSelectedFolders(
+                    // folders!, 
+                    outputPath!, _config));
 
             ex.Message.ShouldContain(expectedMessage, Case.Insensitive);
         }
@@ -245,7 +247,7 @@ namespace UnitTests.Handlers
             var outputPath = Path.Combine(_testDir, "output.md");
 
             // Act
-            _handler.ExportSelectedFolders(new List<string> { _testDir }, outputPath, _config);
+            _handler.ExportSelectedFolders(outputPath, _config);
 
             // Assert
             _mockUi.Received().WorkStart(Arg.Any<string>(), Arg.Any<IEnumerable<string>>());

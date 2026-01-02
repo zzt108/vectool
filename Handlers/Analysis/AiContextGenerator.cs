@@ -26,12 +26,9 @@ public sealed class AiContextGenerator
     /// <summary>
     /// Generates table of contents XML block.
     /// </summary>
-    public string GenerateTableOfContents(List<string> folderPaths)
+    public string GenerateTableOfContents(VectorStoreConfig vectorStoreConfig)
     {
-        if (folderPaths == null || folderPaths.Count == 0)
-            return string.Empty;
-
-        var config = new VectorStoreConfig();
+        var folderPaths = vectorStoreConfig.FolderPaths;
 
         var entries = new List<(string RootName, string FilePath)>();
         var traverser = new FileSystemTraverser(null);
@@ -39,7 +36,7 @@ public sealed class AiContextGenerator
         foreach (var root in folderPaths)
         {
             var rootName = PathHelpers.SafeDirectoryName(root);
-            foreach (var file in traverser.EnumerateFilesRespectingExclusions(root, config))
+            foreach (var file in traverser.EnumerateFilesRespectingExclusions(root, vectorStoreConfig))
             {
                 entries.Add((rootName, file));
             }
@@ -83,12 +80,9 @@ public sealed class AiContextGenerator
     /// <summary>
     /// Generates cross-references XML block.
     /// </summary>
-    public string GenerateCrossReferences(List<string> folderPaths)
+    public string GenerateCrossReferences(VectorStoreConfig config)
     {
-        if (folderPaths == null || folderPaths.Count == 0)
-            return string.Empty;
-
-        var config = new VectorStoreConfig();
+        var folderPaths = config.FolderPaths;
 
         var csFiles = new List<string>();
         var traverser = new FileSystemTraverser(null);
@@ -145,12 +139,10 @@ public sealed class AiContextGenerator
     /// <summary>
     /// Generates code meta-info XML block.
     /// </summary>
-    public string GenerateCodeMetaInfo(List<string> folderPaths)
+    public string GenerateCodeMetaInfo(VectorStoreConfig config)
     {
-        if (folderPaths == null || folderPaths.Count == 0)
-            return string.Empty;
 
-        var config = new VectorStoreConfig();
+        var folderPaths = config.FolderPaths;
 
         var files = new List<string>();
         var traverser = new FileSystemTraverser(null);

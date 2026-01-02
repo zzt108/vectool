@@ -29,7 +29,7 @@ namespace Vectool.OaiUI
 
             // Execute both operations in parallel
             var gitTask = Task.Run(async () => await gitHandler.GetGitChangesAsync(selectedFolders, gitOutputPath, vectorStoreConfig).ConfigureAwait(false));
-            var mdTask = mdHandler.ExportSelectedFoldersAsync(selectedFolders, mdOutputPath, vectorStoreConfig);
+            var mdTask = mdHandler.ExportSelectedFoldersAsync(mdOutputPath, vectorStoreConfig);
 
             await Task.WhenAll(gitTask, mdTask).ConfigureAwait(true);
         }
