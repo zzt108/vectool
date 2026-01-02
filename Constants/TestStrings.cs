@@ -39,5 +39,6 @@ namespace VecTool.Constants
     public static class Const
     {
         public const string NA = "N/A";
+        public const string All = "All";
     }
 }

@@ -7,6 +7,7 @@
     using System.Linq;
     using System.Text;
     using System.Text.RegularExpressions;
+    using VecTool.Constants;
 
     /// <summary>
     /// Extracts [VECTOOL:EXCLUDE:...] markers from file headers.
@@ -108,7 +109,7 @@
             using (var ctx = LogCtx.Set(new Props()
                 .Add("file_path", filePath)
                 .Add("reason", reason)
-                .Add("space_reference", spaceReference ?? "none")
+                .Add("space_reference", spaceReference ?? Const.NA)
                 .Add("line_number", lineNumber)
                 .Add("marker_status", "extracted")))
             {

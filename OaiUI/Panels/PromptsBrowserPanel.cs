@@ -3,10 +3,12 @@ using LogCtxShared;
 using NLogShared;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using VecTool.Constants;
 using VecTool.Core.Helpers;
 using VecTool.Core.Models;
 using VecTool.Handlers;
@@ -27,6 +29,8 @@ namespace VecTool.UI.Panels
 
         private List<PromptFile> currentResults = new();
         private string currentSearchQuery = string.Empty;
+        private static readonly string[] DefaultPromptTypes = new[] { "PROMPT", "GUIDE", "SPACE" };
+        private string[] promptTypes = Array.Empty<string>();
 
         /// <summary>
         /// Constructor for designer support.
@@ -36,6 +40,43 @@ namespace VecTool.UI.Panels
             InitializeComponent();
             searchEngine = null!;
             favoritesManager = null!;
+        }
+        private static string[] GetConfiguredPromptTypes()
+        {
+            var raw = ConfigurationManager.AppSettings["promptsTypes"];
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return DefaultPromptTypes;
+            }
+
+            return raw
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t =>
+                    t.Length > 0 &&
+                    !string.Equals(t, "All", StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+
+        private void InitializeFilterDropdown()
+        {
+            promptTypes = GetConfiguredPromptTypes();
+
+            cmbFilterType.Items.Clear();
+
+            foreach (var type in promptTypes)
+            {
+                cmbFilterType.Items.Add(type);
+            }
+
+            cmbFilterType.Items.Add(Const.All);
+
+            if (cmbFilterType.SelectedIndex < 0 && cmbFilterType.Items.Count > 0)
+            {
+                // Default to "All"
+                cmbFilterType.SelectedIndex = cmbFilterType.Items.Count - 1;
+            }
         }
 
         /// <summary>
@@ -51,7 +92,9 @@ namespace VecTool.UI.Panels
 
             this.searchEngine = searchEngine ?? throw new ArgumentNullException(nameof(searchEngine));
             this.favoritesManager = favoritesManager ?? throw new ArgumentNullException(nameof(favoritesManager));
-         
+
+            InitializeFilterDropdown();
+
             searchEngine.RebuildIndex(); // Rebuild index on startup (from previous fix)
             InitializeTooltips(); // Setup all tooltips in one place
         
@@ -74,14 +117,15 @@ namespace VecTool.UI.Panels
                 ShowAlways = true
             };
 
+            var typeLabel = (promptTypes is { Length: > 0 })
+                ? string.Join(", ", promptTypes)
+                : "type";
+
             // Filter dropdown
-            tooltip.SetToolTip(cmbFilterType, "Filter prompts by type (PROMPT, GUIDE, SPACE) or category");
+            tooltip.SetToolTip(cmbFilterType, $"Filter prompts by type ({typeLabel}) or category");
 
             // Search textbox
             tooltip.SetToolTip(txtSearch, "Enter keywords to search prompt names, content, or metadata");
-
-            // Search button (magnifying glass)
-            // tooltip.SetToolTip(btnSearch, "Execute search with current query and filters");
 
             // Refresh button
             tooltip.SetToolTip(btnRefresh, "Rebuild search index from repository (use after adding/modifying prompts)");
