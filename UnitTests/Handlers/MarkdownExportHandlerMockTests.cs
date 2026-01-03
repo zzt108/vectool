@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-using LogCtxShared;
+﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -39,6 +38,7 @@ namespace UnitTests.Handlers
             _mockRecentFiles = Substitute.For<IRecentFilesManager>();
             _mockUi = Substitute.For<IUserInterface>();
             _config = new VectorStoreConfig();
+            _config.FolderPaths.Add(_testDir);
 
             _handler = new MDHandler(logger, _mockUi, _mockRecentFiles, _mockTraverser);
         }
