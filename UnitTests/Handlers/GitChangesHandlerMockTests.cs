@@ -5,12 +5,8 @@ using NUnit.Framework;
 
 using Shouldly;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using VecTool.Configuration;
-using VecTool.Core;
 using VecTool.Handlers;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
@@ -29,7 +25,7 @@ namespace UnitTests.Handlers
         private IUserInterface mockUi = default!;
         private IRecentFilesManager mockRecentFilesManager = default!;
         private IFileSystemTraverser mockTraverser = default!;
-        private readonly ILogger<GitChangesHandlerMockTests> logger;
+        private readonly ILogger logger = TestLogger.For<GitChangesHandlerMockTests>();
 
         [SetUp]
         public void Setup()

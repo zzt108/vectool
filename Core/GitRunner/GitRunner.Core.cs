@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,7 +14,9 @@ namespace VecTool.Core
     /// </summary>
     public sealed partial class GitRunner
     {
-        private static readonly ILogger logger;
+        private static readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<GitRunner>();
+
         private readonly string workingDirectory;
 
         public GitRunner(string workingDirectory)

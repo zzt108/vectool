@@ -1,5 +1,6 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 
 namespace VecTool.Configuration.Exclusion;
 
@@ -8,7 +9,8 @@ namespace VecTool.Configuration.Exclusion;
 /// </summary>
 public static class IgnoreMatcherFactory
 {
-    private static readonly ILogger logger;
+    private static readonly ILogger logger =
+        LoggerFactory.Create(b => b.AddNLog()).CreateLogger("IgnoreMatcherFactory");
 
     /// <summary>
     /// Creates a matcher instance for the specified library type.

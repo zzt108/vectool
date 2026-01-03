@@ -1,5 +1,6 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
@@ -18,7 +19,9 @@ namespace VecTool.Handlers
     /// </summary>
     public sealed class RepomixHandler
     {
-        private static readonly ILogger logger;
+        private static readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptSearchEngine>();
+
         private readonly IUserInterface userInterface;
         private readonly IRecentFilesManager recentFilesManager;
         private readonly IProcessRunner processRunner;

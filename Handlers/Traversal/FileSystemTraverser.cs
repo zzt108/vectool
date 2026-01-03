@@ -4,6 +4,7 @@
     using LogCtxShared;
     using MAB.DotIgnore;
     using Microsoft.Extensions.Logging;
+    using NLog.Extensions.Logging;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
@@ -19,7 +20,8 @@
     /// </summary>
     public class FileSystemTraverser : IFileSystemTraverser
     {
-        private static readonly ILogger logger;
+        private static readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptSearchEngine>();
 
         private readonly IUserInterface? ui;
         // private readonly string rootPath;

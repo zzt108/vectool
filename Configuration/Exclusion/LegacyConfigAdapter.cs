@@ -2,6 +2,7 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 
 /// <summary>
@@ -10,7 +11,8 @@ using System;
 /// </summary>
 public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
 {
-    private static readonly ILogger logger;
+    private static readonly ILogger logger =
+        LoggerFactory.Create(b => b.AddNLog()).CreateLogger<LegacyConfigAdapter>();
 
     private IVectorStoreConfig? _config;
     private string? _loadedRootPath;

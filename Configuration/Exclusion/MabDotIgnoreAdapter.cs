@@ -1,6 +1,7 @@
 ﻿using LogCtxShared;
 using MAB.DotIgnore;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 
 namespace VecTool.Configuration.Exclusion;
 
@@ -10,7 +11,9 @@ namespace VecTool.Configuration.Exclusion;
 /// </summary>
 public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
 {
-    private static readonly ILogger logger;
+    private static readonly ILogger logger =
+        LoggerFactory.Create(b => b.AddNLog()).CreateLogger<MabDotIgnoreAdapter>();
+
     private IgnoreList? _ignoreList;
     private string? _loadedRootPath;
 

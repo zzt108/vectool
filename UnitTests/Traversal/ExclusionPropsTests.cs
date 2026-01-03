@@ -14,7 +14,7 @@ namespace UnitTests.Traversal
     [TestFixture]
     public class ExclusionPropsTests
     {
-        private readonly ILogger logger;
+        private readonly ILogger logger = TestLogger.For<ExclusionPropsTests>();
 
         #region Assertion Helpers
 

@@ -1,10 +1,11 @@
 ﻿#nullable enable
 
 using LogCtxShared;
-using VecTool.Core.Models;
-using VecTool.Configuration;
-using VecTool.Handlers.Traversal;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
+using VecTool.Configuration;
+using VecTool.Core.Models;
+using VecTool.Handlers.Traversal;
 
 namespace VecTool.Handlers
 {
@@ -20,7 +21,9 @@ namespace VecTool.Handlers
     /// </summary>
     public sealed class PromptSearchEngine
     {
-        private static readonly ILogger logger;
+        private static readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptSearchEngine>();
+
         private readonly Dictionary<string, PromptFile> index = new(StringComparer.OrdinalIgnoreCase);
         private readonly IPromptsConfig? config;
         private const int ContentSearchLimit = 2000;

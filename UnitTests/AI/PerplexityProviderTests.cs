@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using UnitTests;
 using VecTool.Core.AI;
 using VecTool.Core.AI.Providers;
 using ProviderSettings = VecTool.Core.AI.ProviderSettings;
@@ -17,7 +18,7 @@ namespace VecTool.UnitTests.AI
     [TestFixture]
     public class PerplexityProviderTests
     {
-        private readonly ILogger<PerplexityProvider> logger;
+        private readonly ILogger logger = TestLogger.For<PerplexityProviderTests>();
 
         [Test]
         public void Constructor_ShouldThrowWhenApiKeyMissing()

@@ -21,7 +21,7 @@ namespace UnitTests.Traversal
     {
         private string testDir = default!;
         private VectorStoreConfig config = default!;
-        private readonly ILogger logger;
+        private readonly ILogger logger = TestLogger.For<FileSystemTraverserTests>();
 
         [SetUp]
         public void Setup()

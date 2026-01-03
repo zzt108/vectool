@@ -14,14 +14,14 @@ namespace VecTool.Core.AI.Providers
     /// </summary>
     public sealed class PerplexityProvider : ILlmProvider, IDisposable
     {
-        private readonly ILogger<PerplexityProvider> logger;
+        private readonly ILogger logger;
         private readonly HttpClient httpClient;
         private readonly string apiKey;
         private readonly string model;
         private readonly int timeoutSeconds;
         private const string ApiBaseUrl = "https://api.perplexity.ai/chat/completions";
 
-        public PerplexityProvider(ILogger<PerplexityProvider> logger, ProviderSettings settings)
+        public PerplexityProvider(ILogger logger, ProviderSettings settings)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 

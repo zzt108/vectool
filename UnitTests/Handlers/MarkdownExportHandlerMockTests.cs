@@ -27,7 +27,7 @@ namespace UnitTests.Handlers
         private VectorStoreConfig _config = null!;
         private string _testDir = null!;
         private MDHandler _handler = null!;
-        private readonly ILogger logger;
+        private readonly ILogger logger = TestLogger.For<MarkdownExportHandlerTests>();
 
         [SetUp]
         public void Setup()

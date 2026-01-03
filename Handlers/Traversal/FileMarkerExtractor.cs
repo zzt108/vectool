@@ -2,6 +2,7 @@
 {
     using LogCtxShared;
     using Microsoft.Extensions.Logging;
+    using NLog.Extensions.Logging;
     using System;
     using System.IO;
     using System.Linq;
@@ -16,7 +17,9 @@
     /// </summary>
     public class FileMarkerExtractor : IFileMarkerExtractor
     {
-        private static readonly ILogger logger;
+        private static readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptSearchEngine>();
+
         public const string MarkerSigniture = "[VECTOOL:EXCLUDE:";
 
         /// <summary>

@@ -12,7 +12,7 @@ namespace UnitTests.Handlers
     [TestFixture]
     public class ConvertSelectedFoldersToMDTests : DocTestBase
     {
-        private readonly ILogger logger;
+        private readonly ILogger logger = TestLogger.For<ConvertSelectedFoldersToMDTests>();
 
         [SetUp]
         public void Setup()

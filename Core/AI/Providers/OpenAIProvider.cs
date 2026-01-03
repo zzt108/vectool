@@ -1,10 +1,11 @@
 ﻿#nullable enable
 
+using LogCtxShared;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using LogCtxShared;
-using Microsoft.Extensions.Logging;
 
 namespace VecTool.Core.AI.Providers
 {
@@ -13,7 +14,8 @@ namespace VecTool.Core.AI.Providers
     /// </summary>
     public sealed class OpenAIProvider : ILlmProvider
     {
-        private static readonly ILogger logger;
+        private static readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<OpenAIProvider>();
 
         public OpenAIProvider(ProviderSettings settings)
         {

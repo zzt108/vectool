@@ -32,7 +32,7 @@ namespace UnitTests.Traversal
     {
         private string testRoot = default!;
         private VectorStoreConfig config = default!;
-        private readonly ILogger logger;
+        private readonly ILogger logger = TestLogger.For<FileSystemTraverserIntegrationTestsV2>();
 
         [SetUp]
         public void Setup()

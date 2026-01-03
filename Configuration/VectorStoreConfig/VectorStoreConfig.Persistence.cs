@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -13,7 +14,8 @@ namespace VecTool.Configuration
     /// </summary>
     public partial class VectorStoreConfig
     {
-        private static readonly ILogger logger;
+        private static readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<VectorStoreConfig>();
 
         /// <summary>
         /// Create a VectorStoreConfig from app.config settings.

@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using UnitTests.Handlers;
 using VecTool.Configuration;
 using VecTool.Handlers;
 using VecTool.Handlers.Analysis; // For IUserInterface
@@ -18,7 +19,7 @@ namespace UnitTests
     [TestFixture]
     public class MimeTypeProviderTests
     {
-        private static ILogger logger;
+        private readonly ILogger logger = TestLogger.For<MimeTypeProviderTests>();
 
         [OneTimeSetUp]
         public void OneTimeSetUp()

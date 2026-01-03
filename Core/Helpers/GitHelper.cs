@@ -1,12 +1,13 @@
 ﻿#nullable enable
 
+using LogCtxShared;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using LogCtxShared;
-using Microsoft.Extensions.Logging;
 
 namespace VecTool.Core.Helpers
 {
@@ -15,7 +16,8 @@ namespace VecTool.Core.Helpers
     /// </summary>
     public static class GitHelper
     {
-        private static readonly ILogger logger;
+        private static readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger("GitHelper");
 
         /// <summary>
         /// Executes 'git diff' and returns the unstaged changes.

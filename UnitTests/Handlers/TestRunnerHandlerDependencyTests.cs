@@ -15,7 +15,7 @@ namespace UnitTests.Handlers
     [TestFixture]
     public class TestRunnerHandlerDependencyTests
     {
-        private readonly ILogger logger;
+        private readonly ILogger logger = TestLogger.For<TestRunnerHandlerDependencyTests>();
 
         [Test]
         public void Should_wire_dependencies_via_canonical_DI_constructor()

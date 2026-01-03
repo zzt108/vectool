@@ -1,5 +1,6 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.IO;
 using System.Text;
@@ -24,7 +25,9 @@ namespace VecTool.Handlers
         private readonly IRecentFilesManager? _recentFilesManager;
         private readonly string _branchName;
         private readonly string _vectorStoreId;
-        private ILogger logger;
+
+        private readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<TestRunnerHandler>();
 
         /// <summary>
         /// Canonical DI constructor expected by unit tests.

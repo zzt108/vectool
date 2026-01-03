@@ -11,7 +11,7 @@ namespace UnitTests
             throw new NotImplementedException();
         }
 
-        public void RegisterGeneratedFile(string filePath, RecentFileType fileType, IReadOnlyList<string> sourceFolders, long fileSizeBytes = 0, DateTime? generatedAtUtc = null)
+        public void RegisterGeneratedFile(string filePath, RecentFileType fileType, IReadOnlyList<string>? sourceFolders, long fileSizeBytes = 0, DateTime? generatedAtUtc = null)
         {
             RegisteredFiles.Add((filePath, fileType, sourceFolders, fileSizeBytes));
         }

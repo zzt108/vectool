@@ -24,7 +24,7 @@ namespace UnitTests.Handlers
         // Use interface for safe NSubstitute proxying (no ctor args allowed for interfaces).
         private IFileSystemTraverser mockTraverser = default!;
 
-        private readonly ILogger logger;
+        private readonly ILogger logger = TestLogger.For<FileSizeSummaryHandlerMockTests>();
 
         [SetUp]
         public void Setup()

@@ -1,5 +1,6 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using VecTool.Core.AI;
 using VecTool.Core.Models;
 
@@ -12,7 +13,9 @@ public sealed class GitCommitMessageGenerator
 {
     private readonly ILlmProvider _llmProvider;
     private const int MaxCommitLength = 72;
-    private ILogger logger;
+
+    private readonly ILogger logger =
+        LoggerFactory.Create(b => b.AddNLog()).CreateLogger<GitCommitMessageGenerator>();
 
     public GitCommitMessageGenerator(ILlmProvider llmProvider)
     {
