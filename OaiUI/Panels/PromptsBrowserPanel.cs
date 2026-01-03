@@ -2,6 +2,7 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -22,7 +23,8 @@ namespace VecTool.UI.Panels
     /// </summary>
     public sealed partial class PromptsBrowserPanel : UserControl
     {
-        private static readonly ILogger logger;
+        private static readonly ILogger logger =
+            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptsBrowserPanel>();
 
         private PromptSearchEngine searchEngine;
         private FavoritesManager favoritesManager;

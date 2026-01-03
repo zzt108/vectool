@@ -14,26 +14,6 @@ namespace Vectool.OaiUI
     /// </summary>
     public partial class MainForm : Form
     {
-        private readonly ILoggerFactory loggerFactory;
-        private readonly ILogger<MainForm> logger;
-
-        // Parameterless ctor for WinForms designer
-        public MainForm()
-            : this(LoggerFactory.Create(_ => { }))
-        {
-        }
-
-        // DI ctor used by Program.cs -> serviceProvider.GetRequiredService<MainForm>() [file:10]
-        public MainForm(ILoggerFactory loggerFactory)
-        {
-            this.loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-            this.logger = this.loggerFactory.CreateLogger<MainForm>();
-
-            InitializeComponent();
-
-            // keep existing initialization code here
-        }
-
         /// <summary>
         /// Handler for "Convert to MD" menu item (Ctrl+M).
         /// </summary>
