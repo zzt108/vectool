@@ -1,6 +1,7 @@
 namespace VecTool.Handlers;
 
 using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -16,13 +17,13 @@ using VecTool.RecentFiles;
 /// <summary>
 /// Handler for extracting and formatting Git changes from repositories.
 /// </summary>
-public sealed class GitChangesHandler : FileHandlerBase
+public sealed class GitChangesHandler : FileHandlerBase<GitChangesHandler>
 {
     private readonly string _aiPrompt;
     private readonly FileSystemTraverser traverser;
 
-    public GitChangesHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager, string? rootPath = null)
-        : base(ui, recentFilesManager)
+    public GitChangesHandler(ILogger<GitChangesHandler> logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager, string? rootPath = null)
+        : base(logger, ui, recentFilesManager)
     {
         _aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"]
             ?? "Analyze the following Git changes and provide a concise, descriptive commit message.";

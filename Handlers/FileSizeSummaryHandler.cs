@@ -1,4 +1,5 @@
 ﻿using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using NLogShared;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace VecTool.Handlers
     /// Generates file size summaries for selected folders using traverser for exclusive file enumeration.
     /// ✅ Uses FileSystemTraverser.EnumerateFilesRespectingExclusions() for all file access
     /// </summary>
-    public class FileSizeSummaryHandler : FileHandlerBase
+    public class FileSizeSummaryHandler : FileHandlerBase<FileSizeSummaryHandler>
     {
         //private static readonly CtxLogger log = new();
 
@@ -29,11 +30,11 @@ namespace VecTool.Handlers
         /// <param name="ui">Optional UI interface for progress updates</param>
         /// <param name="recentFilesManager">Optional recent files manager</param>
         /// <param name="fileSystemTraverser">Traverser for file enumeration (required for exclusive authority)</param>
-        public FileSizeSummaryHandler(
+        public FileSizeSummaryHandler(ILogger<FileSizeSummaryHandler> logger,
             IUserInterface? ui,
             IRecentFilesManager? recentFilesManager,
             IFileSystemTraverser? fileSystemTraverser = null)
-            : base(ui, recentFilesManager)
+            : base(logger, ui, recentFilesManager)
         {
             // ✅ DI pattern: accept injection or create default
             _fileSystemTraverser = fileSystemTraverser ?? new FileSystemTraverser(ui);

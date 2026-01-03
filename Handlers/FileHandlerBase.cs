@@ -5,8 +5,8 @@ using global::VecTool.Configuration;
 using global::VecTool.Handlers.Analysis;
 using global::VecTool.Handlers.Traversal;
 using global::VecTool.RecentFiles;
+using Microsoft.Extensions.Logging;
 using LogCtxShared;
-using NLogShared;
 using System;
 using VecTool.Constants;
 
@@ -14,18 +14,21 @@ using VecTool.Constants;
 /// Base class for all file format handlers (DOCX, MD, PDF, Git).
 /// Delegates complex operations to specialized helpers following SRP.
 /// </summary>
-public abstract class FileHandlerBase
+public abstract class FileHandlerBase<TLogCategory>
 {
-    protected static readonly CtxLogger log = new(); // renamed from _log to match AI faulti code generation logic
-    
+    protected readonly ILogger<TLogCategory> logger;
     protected readonly IUserInterface? Ui; // renamed from _ui to match AI faulti code generation logic
     protected readonly IRecentFilesManager? RecentFilesManager; // renamed from RecentFilesManager to match AI faulti code generation logic
     protected readonly AiContextGenerator AiContextGenerator;
     protected readonly IFileSystemTraverser FileSystemTraverser;
 
-    protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager,
+    protected FileHandlerBase(
+        ILogger<TLogCategory> logger,
+        IUserInterface? ui,
+        IRecentFilesManager? recentFilesManager,
         IFileSystemTraverser? traverser = null)
     {
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.Ui = ui;
         this.RecentFilesManager = recentFilesManager;
 
@@ -40,7 +43,6 @@ public abstract class FileHandlerBase
 
         AiContextGenerator = new AiContextGenerator();
     }
-
 
     // ============================================================================
     // AI Context - Delegated to AiContextGenerator

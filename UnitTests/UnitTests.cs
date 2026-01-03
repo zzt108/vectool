@@ -1,7 +1,7 @@
 ﻿// File: UnitTests/MimeTypeProviderTests.cs
 
-using LogCtxShared;        
-using NLogShared;          
+using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Shouldly;
 using System;
@@ -66,7 +66,7 @@ namespace UnitTests
 
             var result = MimeTypeProvider.GetMdTag(extension);
 
-            LogCtx.Set(new LogCtxShared.Props("Actual", result??"(null)"));
+            LogCtx.Set(new LogCtxShared.Props("Actual", result ?? "(null)"));
             _log.Info($"Assert: comparing expected vs actual for {extension}");
             result.ShouldBe(expectedMdTag);
         }
@@ -83,7 +83,7 @@ namespace UnitTests
 
             var result = MimeTypeProvider.GetMimeType(extension);
 
-            LogCtx.Set(new LogCtxShared.Props("Actual", result??"(null)"));
+            LogCtx.Set(new LogCtxShared.Props("Actual", result ?? "(null)"));
             _log.Info($"Assert: comparing expected vs actual for {extension}");
             result.ShouldBe(expectedMimeType);
         }
@@ -106,16 +106,16 @@ namespace UnitTests
     }
 
     // Helper test class remains unchanged
-    public class TestFileHandler : FileHandlerBase
+    public class TestFileHandler : FileHandlerBase<TestFileHandler>
     {
-        public TestFileHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager = null)
-            : base(ui, recentFilesManager)
+        public TestFileHandler(ILogger<TestFileHandler>? logger = null, IUserInterface? ui, IRecentFilesManager? recentFilesManager = null)
+            : base(logger!, ui, recentFilesManager)
         {
         }
 
-        public static bool TestIsFileExcluded(string fileName, VectorStoreConfig config)
+        public bool TestIsFileExcluded(string fileName, VectorStoreConfig config)
         {
-            var handler = new TestFileHandler(null);
+            var handler = new TestFileHandler(logger, null);
             // This method is now in FileValidator
             return FileValidator.IsFileExcluded(fileName, config);
         }

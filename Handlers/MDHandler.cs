@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,14 +17,13 @@ namespace VecTool.Handlers
     /// Markdown export handler for codebase documentation generation.
     /// Added parameter validation guards for null/empty folder lists (QF-003)
     /// </summary>
-    public class MDHandler : FileHandlerBase
+    public class MDHandler : FileHandlerBase<MDHandler>
     {
-        public MDHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager):base(ui, recentFilesManager)
+        public MDHandler(ILogger<MDHandler> logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager) : base(logger, ui, recentFilesManager)
         {
-            
         }
 
-        public MDHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager, IFileSystemTraverser traverser) : base(ui, recentFilesManager, traverser)
+        public MDHandler(ILogger<MDHandler> logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager, IFileSystemTraverser traverser) : base(logger, ui, recentFilesManager, traverser)
         {
         }
 
@@ -47,7 +47,7 @@ namespace VecTool.Handlers
         public void ExportSelectedFolders(string outputPath, VectorStoreConfig vectorStoreConfig)
         {
             var folderPaths = vectorStoreConfig.FolderPaths;
-            
+
             // Empty check guard - validates business requirement
             if (folderPaths.Count == 0)
                 throw new ArgumentException("Folder list cannot be empty", nameof(folderPaths));
@@ -61,7 +61,7 @@ namespace VecTool.Handlers
                 Ui?.WorkStart("Exporting to MD", folderPaths);
 
                 using StreamWriter writer = new StreamWriter(outputPath);
-              
+
                 AddAIOptimizedContext(
                     vectorStoreConfig,
                     writer,
