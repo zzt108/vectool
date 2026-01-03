@@ -96,12 +96,13 @@ public abstract class FileHandlerBase<TLogCategory>
 
     protected IEnumerable<string> EnumerateFilesRespectingExclusions(string root, VectorStoreConfig config)
     {
-        if (FileSystemTraverser == null)
+        if (FileSystemTraverser is null)
         {
-            using var ctx = LogCtx.Set(new Props()
+            using var _ = logger.SetContext(new Props()
                 .Add(nameof(root), root)
-                .Add("reason", "null_traverser"));
-            log.Warn("FileSystemTraverser not initialized");
+                .Add("reason", "nulltraverser"));
+
+            logger.LogWarning("FileSystemTraverser not initialized");
             return Enumerable.Empty<string>();
         }
 

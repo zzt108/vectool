@@ -137,7 +137,7 @@ namespace VecTool.UnitTests.Configuration.Exclusion
             var adapter = CreateAdapter();
             SetupTestPatterns(adapter, new[] { "*.pdb" });
 
-            adapter.IsIgnored("Debug.pdb", isDirectory: false).ShouldBeTrue();
+            adapter.IsIgnored("LogDebug.pdb", isDirectory: false).ShouldBeTrue();
             adapter.IsIgnored("Release.pdb", isDirectory: false).ShouldBeTrue();
             adapter.IsIgnored("program.cs", isDirectory: false).ShouldBeFalse();
 

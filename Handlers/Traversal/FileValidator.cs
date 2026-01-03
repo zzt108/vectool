@@ -11,7 +11,7 @@
     /// </summary>
     public static class FileValidator
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger = new();
 
         /// <summary>
         /// Determines if a folder should be excluded from processing.
@@ -69,21 +69,21 @@
                 // File must exist
                 if (!fi.Exists)
                 {
-                    log.Trace($"File does not exist: {path}");
+                    logger.LogTrace($"File does not exist: {path}");
                     return false;
                 }
 
                 // File must have content
                 if (fi.Length == 0)
                 {
-                    log.Trace($"File has no content: {path}");
+                    logger.LogTrace($"File has no content: {path}");
                     return false;
                 }
 
                 var ext = Path.GetExtension(path);
                 if (IsBinary(ext, path))
                 {
-                    log.Trace($"File marked as binary by MimeTypeProvider: {path}");
+                    logger.LogTrace($"File marked as binary by MimeTypeProvider: {path}");
                     return false;
                 }
 
@@ -179,14 +179,14 @@
             // 1️⃣ Check config-based exclusions (app.config)
             if (IsFileExcluded(fileName, config))
             {
-                log.Trace($"Excluded by VectorStoreConfig: {fileName}");
+                logger.LogTrace($"Excluded by VectorStoreConfig: {fileName}");
                 return false;
             }
 
             // 2️⃣ Check file system validity (includes MimeTypeProvider.IsBinary check)
             if (!IsFileValid(filePath, outputPath: null))
             {
-                log.Trace($"Invalid or binary file: {fileName}");
+                logger.LogTrace($"Invalid or binary file: {fileName}");
                 return false;
             }
 

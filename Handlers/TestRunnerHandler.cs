@@ -52,8 +52,8 @@ namespace VecTool.Handlers
         /// </summary>
         public async Task<string?> RunTestsAsync(CancellationToken ct)
         {
-            using var log = new CtxLogger();
-            using var _ = LogCtx.Set()
+            using var log = new ILogger();
+            using var _ = logger.SetContext()
                 .Add("Operation", "RunTestsAsync")
                 .Add("SolutionPath", _solutionPath);
 
@@ -69,7 +69,7 @@ namespace VecTool.Handlers
 
                 var message = MapExitCodeToMessage(testResult.ExitCode);
 
-                using var ctx = LogCtx.Set(new Props()
+                using var ctx = logger.SetContext(new Props()
                     .Add("ExitCode", testResult.ExitCode)
                     .Add("Message", message));
 
@@ -77,16 +77,16 @@ namespace VecTool.Handlers
                 {
                     case 0:
                         _ui?.ShowMessage(message, "Test Runner - No Fails", MessageType.Information);
-                        log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                        logger.LogWarning($"Tests completed with exit code {testResult.ExitCode}. {message}");
                         break;
                     case 1:
                     case 2:
                         _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - With issues", MessageType.Warning);
-                        log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                        logger.LogWarning($"Tests completed with exit code {testResult.ExitCode}. {message}");
                         break;
                     default:
-                        _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - Error", MessageType.Error);
-                        log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                        _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - LogError", MessageType.LogError);
+                        logger.LogWarning($"Tests completed with exit code {testResult.ExitCode}. {message}");
                         break;
                 }
 
@@ -106,7 +106,7 @@ namespace VecTool.Handlers
                         );
                     }
                 }
-                log.Info("Test run finished successfully.");
+                logger.LogInformation("Test run finished successfully.");
                 _ui?.UpdateStatus("Test run finished successfully.");
                 if (testResult.ExitCode == 0 && _outputFile != null)
                 {
@@ -116,7 +116,7 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Test execution failed");
+                logger.LogError(ex, "Test execution failed");
                 throw;
             }
         }
@@ -141,8 +141,8 @@ namespace VecTool.Handlers
             if (string.IsNullOrWhiteSpace(_outputFile))
                 return;
 
-            using var log = new CtxLogger();
-            using var _ = LogCtx.Set()
+            using var log = new ILogger();
+            using var _ = logger.SetContext()
                 .Add("Operation", "WriteTestResult")
                 .Add("OutputFile", _outputFile)
                 .Add("ExitCode", testResult.ExitCode);
@@ -159,15 +159,15 @@ namespace VecTool.Handlers
                 // Write to file asynchronously
                 await File.WriteAllTextAsync(_outputFile, markdownContent, ct).ConfigureAwait(false);
                 _.Add("FileSize", markdownContent.Length);
-                log.Info("Test testResult markdown written successfully");
+                logger.LogInformation("Test testResult markdown written successfully");
             }
             catch (Exception ex)
             {
-                using var __ = LogCtx.Set()
+                using var __ = logger.SetContext()
                     .Add("Operation", "WriteTestResult")
                     .Add("ErrorType", ex.GetType().Name)
                     .Add("OutputFile", _outputFile);
-                log.Error(ex, "Failed to write test testResult markdown");
+                logger.LogError(ex, "Failed to write test testResult markdown");
                 throw;
             }
         }

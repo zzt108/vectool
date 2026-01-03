@@ -1,4 +1,4 @@
-﻿using NLogShared;
+﻿using Microsoft.Extensions.Logging;
 using VecTool.Core.AI;
 using VecTool.Core.Models;
 
@@ -10,7 +10,7 @@ namespace VecTool.Core.Services;
 public sealed class PromptCategorizer
 {
     private readonly ILlmProvider _llmProvider;
-    private static readonly CtxLogger _log = new();
+    private static readonly ILogger logger;
 
     public PromptCategorizer(ILlmProvider llmProvider)
     {
@@ -22,7 +22,7 @@ public sealed class PromptCategorizer
     /// </summary>
     public async Task<CategorySuggestion?> SuggestCategoryAsync(string content)
     {
-        using var lc = LogCtxShared.LogCtx.Set().Add("contentLength", content.Length);
+        using var lc = LogCtxShared.logger.SetContext().Add("contentLength", content.Length);
 
         try
         {
@@ -43,18 +43,18 @@ Categories: Spaces, Guides, Templates, Scripts
 
 Example response: work/VecTool/Spaces";
 
-            _log.Info("Requesting AI categorization");
+            logger.LogInformation("Requesting AI categorization");
             var response = await _llmProvider.RequestAsync(prompt);
-            using var ctx = LogCtxShared.LogCtx.Set().Add("response", response);
-            _log.Info("AI response received");
+            using var ctx = logger.SetContext().Add("response", response);
+            logger.LogInformation("AI response received");
 
             // Parse response: "work/VecTool/Spaces"
             var parts = response.Trim().Split('/', StringSplitOptions.RemoveEmptyEntries);
 
             if (parts.Length != 3)
             {
-                using var _ = LogCtxShared.LogCtx.Set().Add("response", response);
-                _log.Warn("Invalid AI response format");
+                using var _ = logger.SetContext().Add("response", response);
+                logger.LogWarning("Invalid AI response format");
                 return null;
             }
 
@@ -67,7 +67,7 @@ Example response: work/VecTool/Spaces";
         }
         catch (Exception ex)
         {
-            _log.Error(ex,"Failed to categorize prompt");
+            logger.LogError(ex, "Failed to categorize prompt");
             return null;
         }
     }

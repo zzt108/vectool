@@ -121,9 +121,9 @@ namespace oaiUI.RecentFiles
             {
                 MessageBox.Show(
                     $"Failed to open file:\n{ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxIcon.LogError);
             }
         }
 
@@ -157,9 +157,9 @@ namespace oaiUI.RecentFiles
             {
                 MessageBox.Show(
                     $"Failed to show in Explorer:\n{ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxIcon.LogError);
             }
         }
 
@@ -180,9 +180,9 @@ namespace oaiUI.RecentFiles
             {
                 MessageBox.Show(
                     $"Failed to copy path:\n{ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxIcon.LogError);
             }
         }
 
@@ -207,9 +207,9 @@ namespace oaiUI.RecentFiles
             {
                 MessageBox.Show(
                     $"Failed to remove file from list:\n{ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxIcon.LogError);
             }
         }
     }

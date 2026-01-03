@@ -1,9 +1,10 @@
 ﻿#nullable enable
+
 using System;
 using System.IO;
 using System.Linq;
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 using VecTool.Constants;
 
 namespace VecTool.Core.Models
@@ -16,7 +17,7 @@ namespace VecTool.Core.Models
     /// </summary>
     public sealed record PromptMetadata
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger;
 
         public string FileName { get; init; } = string.Empty;
         public string Version { get; init; } = string.Empty; // e.g., "1.0", "1.1"
@@ -33,20 +34,20 @@ namespace VecTool.Core.Models
         /// </summary>
         public static PromptMetadata? Parse(string relativePath, string? firstLineContent = null)
         {
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext(new Props()
                 .Add("relativePath", relativePath)
                 .Add("firstLine", firstLineContent?.Substring(0, Math.Min(50, firstLineContent?.Length ?? 0))));
 
             if (string.IsNullOrWhiteSpace(relativePath))
             {
-                log.Warn("Full path is null or empty");
+                logger.LogWarning("Full path is null or empty");
                 return null;
             }
 
             var fileName = Path.GetFileName(relativePath);
             if (string.IsNullOrWhiteSpace(fileName))
             {
-                log.Warn("File name could not be extracted from path");
+                logger.LogWarning("File name could not be extracted from path");
                 return null;
             }
 
@@ -74,7 +75,7 @@ namespace VecTool.Core.Models
                 type = parts[0].Trim();
                 version = "0.0"; // Default version
                 name = parts[1].Trim();
-                log.Debug($"Filename missing version, using default: {fileName} → version={version}");
+                logger.LogDebug($"Filename missing version, using default: {fileName} → version={version}");
             }
             else if (parts.Length == 1)
             {
@@ -82,31 +83,31 @@ namespace VecTool.Core.Models
                 type = "Unknown";
                 version = "0.0";
                 name = parts[0].Trim();
-                log.Debug($"Filename minimal format, using defaults: {fileName} → version={version}, name={name}");
+                logger.LogDebug($"Filename minimal format, using defaults: {fileName} → version={version}, name={name}");
             }
             else
             {
                 // ❌ REMOVE: Reject completely invalid filenames
-                log.Warn($"Filename does not match expected pattern (TYPE-VERSION-NAME or TYPE-NAME or TYPE): {fileName}");
+                logger.LogWarning($"Filename does not match expected pattern (TYPE-VERSION-NAME or TYPE-NAME or TYPE): {fileName}");
                 return null;
             }
 
             // Validate file extension (forgiving behavior only for recognized extensions)
             if (!allowedExtensions.Any(e => e.Trim().Equals(ext, StringComparison.OrdinalIgnoreCase)))
             {
-                log.Warn($"File extension not in allowed list: {fileName} (ext={ext})");
+                logger.LogWarning($"File extension not in allowed list: {fileName} (ext={ext})");
                 return null;
             }
 
             // Parse path hierarchy: /area/project/category/filename.md
             var (area, project, category) = ExtractHierarchy(relativePath);
-            
+
             var description = firstLineContent?.Trim();
             if (!string.IsNullOrEmpty(description) && description.Length > 200)
             {
                 description = description.Substring(0, 200) + "...";
             }
-            
+
             var metadata = new PromptMetadata
             {
                 FileName = fileName,
@@ -119,7 +120,7 @@ namespace VecTool.Core.Models
                 Category = category
             };
 
-            log.Debug($"Parsed metadata: Type={type}, Version={version}, Name={name}, Area={area}, Project={project}, Category={category}");
+            logger.LogDebug($"Parsed metadata: Type={type}, Version={version}, Name={name}, Area={area}, Project={project}, Category={category}");
             return metadata;
         }
 
@@ -150,7 +151,7 @@ namespace VecTool.Core.Models
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to extract hierarchy from path");
+                logger.LogError(ex, "Failed to extract hierarchy from path");
                 return (string.Empty, string.Empty, string.Empty);
             }
         }
@@ -248,5 +249,3 @@ namespace VecTool.Core.Models
         }
     }
 }
-
-

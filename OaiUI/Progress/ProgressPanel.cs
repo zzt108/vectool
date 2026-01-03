@@ -78,11 +78,11 @@ namespace oaiUI.Controls
         {
             if (InvokeRequired)
             {
-                BeginInvoke(new Action(() => Render(e.Info, e.CurrentItem)));
+                BeginInvoke(new Action(() => Render(e.LogInformation, e.CurrentItem)));
             }
             else
             {
-                Render(e.Info, e.CurrentItem);
+                Render(e.LogInformation, e.CurrentItem);
             }
         }
 

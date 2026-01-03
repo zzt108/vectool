@@ -1,7 +1,7 @@
 ﻿namespace VecTool.Configuration.Exclusion;
 
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 using System;
 
 /// <summary>
@@ -10,7 +10,7 @@ using System;
 /// </summary>
 public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
 {
-    private static readonly CtxLogger log = new();
+    private static readonly ILogger logger;
 
     private IVectorStoreConfig? _config;
     private string? _loadedRootPath;
@@ -25,14 +25,14 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
     /// </summary>
     public void LoadFromRoot(string rootPath)
     {
-        using var ctx = LogCtx.Set(new Props()
+        using var ctx = logger.SetContext(new Props()
             .Add("rootPath", rootPath)
             .Add("adapterType", "LegacyConfig")
         );
 
         if (string.IsNullOrWhiteSpace(rootPath) || !Directory.Exists(rootPath))
         {
-            log.Warn($"Root path invalid or does not exist: {rootPath}");
+            logger.LogWarning($"Root path invalid or does not exist: {rootPath}");
             _config = null;
             return;
         }
@@ -46,12 +46,12 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
 
         if (_config?.ExcludedFiles?.Count > 0 || _config?.ExcludedFolders?.Count > 0)
         {
-            log.Info(
+            logger.LogInformation(
                 $"Legacy config loaded: {_config.ExcludedFiles?.Count ?? 0} file rules, {_config.ExcludedFolders?.Count ?? 0} folder rules");
         }
         else
         {
-            log.Debug("No legacy config exclusion rules found");
+            logger.LogDebug("No legacy config exclusion rules found");
         }
     }
 
@@ -61,7 +61,7 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
     private void SetConfig(IVectorStoreConfig config)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
-        log.Debug($"Legacy config set directly: {_config.ExcludedFiles?.Count ?? 0} file rules, {_config.ExcludedFolders?.Count ?? 0} folder rules");
+        logger.LogDebug($"Legacy config set directly: {_config.ExcludedFiles?.Count ?? 0} file rules, {_config.ExcludedFolders?.Count ?? 0} folder rules");
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
     {
         if (_config == null)
         {
-            log.Trace("Legacy config not initialized, no exclusion");
+            logger.LogTrace("Legacy config not initialized, no exclusion");
             return false;
         }
 
@@ -84,10 +84,10 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
         {
             if (isDirectory)
             {
-                 var result = _config.IsFolderExcluded(relativePath);
+                var result = _config.IsFolderExcluded(relativePath);
                 if (result)
                 {
-                    log.Trace($"Ignored by legacy config (folder): {relativePath}");
+                    logger.LogTrace($"Ignored by legacy config (folder): {relativePath}");
                 }
                 return result;
             }
@@ -98,14 +98,14 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
                 var result = _config.IsFileExcluded(pathName);
                 if (result)
                 {
-                    log.Trace($"Root path invalid or does not exist: {relativePath}");
+                    logger.LogTrace($"Root path invalid or does not exist: {relativePath}");
                 }
                 return result;
             }
         }
         catch (Exception ex)
         {
-            log.Error(ex, $"Error checking legacy config exclusion for: {relativePath}");
+            logger.LogError(ex, $"LogError checking legacy config exclusion for: {relativePath}");
             return false; // Fail open - don't exclude on error
         }
     }

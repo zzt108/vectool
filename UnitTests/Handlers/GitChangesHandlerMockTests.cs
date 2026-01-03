@@ -28,7 +28,7 @@ namespace UnitTests.Handlers
         private IUserInterface mockUi = default!;
         private IRecentFilesManager mockRecentFilesManager = default!;
         private IFileSystemTraverser mockTraverser = default!;
-        private readonly CtxLogger log = new();
+        private readonly ILogger logger = new();
 
         [SetUp]
         public void Setup()
@@ -119,7 +119,7 @@ namespace UnitTests.Handlers
             catch (Exception ex)
             {
                 // Git not available in test environment - that's ok
-                log.Warn($"Git test skipped: {ex.Message}");
+                logger.LogWarning($"Git test skipped: {ex.Message}");
             }
         }
 
@@ -194,7 +194,7 @@ namespace UnitTests.Handlers
             }
             catch (Exception ex)
             {
-                log.Warn($"Git integration test skipped: {ex.Message}");
+                logger.LogWarning($"Git integration test skipped: {ex.Message}");
             }
         }
 
@@ -222,7 +222,7 @@ namespace UnitTests.Handlers
             }
             catch (Exception ex)
             {
-                log.Warn($"Git test skipped: {ex.Message}");
+                logger.LogWarning($"Git test skipped: {ex.Message}");
             }
         }
 
@@ -290,7 +290,7 @@ namespace UnitTests.Handlers
             var outputPath = Path.Combine(testDir, "git-changes.md");
 
             // Act
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext(new Props()
                 .Add("test", "gitchangeslogging")
                 .Add("testDir", testDir));
 
@@ -306,7 +306,7 @@ namespace UnitTests.Handlers
             }
             catch (Exception ex)
             {
-                log.Warn($"Git test skipped: {ex.Message}");
+                logger.LogWarning($"Git test skipped: {ex.Message}");
             }
         }
 
@@ -334,7 +334,7 @@ namespace UnitTests.Handlers
             }
             catch (Exception ex)
             {
-                log.Warn($"Sync wrapper test skipped: {ex.Message}");
+                logger.LogWarning($"Sync wrapper test skipped: {ex.Message}");
             }
         }
 
@@ -363,7 +363,7 @@ namespace UnitTests.Handlers
             }
             catch (Exception ex)
             {
-                log.Warn($"Duplicate repo test skipped: {ex.Message}");
+                logger.LogWarning($"Duplicate repo test skipped: {ex.Message}");
             }
         }
 
@@ -391,7 +391,7 @@ namespace UnitTests.Handlers
             }
             catch (Exception ex)
             {
-                log.Warn($"Non-existent folder test skipped: {ex.Message}");
+                logger.LogWarning($"Non-existent folder test skipped: {ex.Message}");
             }
         }
     }

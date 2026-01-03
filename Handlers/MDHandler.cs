@@ -82,14 +82,14 @@ namespace VecTool.Handlers
                 {
                     if (string.IsNullOrWhiteSpace(folderPath))
                     {
-                        log.Warn($"Skipping null or empty folder path");
+                        logger.LogWarning($"Skipping null or empty folder path");
                         continue;
                     }
 
                     Ui?.UpdateStatus($"Enumerating files in {folderPath}");
 
                     var files = EnumerateFilesRespectingExclusions(folderPath, vectorStoreConfig).ToList();
-                    log.Info($"Found {files.Count} files to export in {folderPath}");
+                    logger.LogInformation($"Found {files.Count} files to export in {folderPath}");
 
                     // Group files by folder for structured output
                     var filesByFolder = files

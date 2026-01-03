@@ -53,7 +53,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                userInterface.ShowMessage($"An error occurred: {ex.Message}", "LogError", MessageType.LogError);
             }
             finally
             {
@@ -115,7 +115,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                userInterface.ShowMessage($"An error occurred: {ex.Message}", "LogError", MessageType.LogError);
             }
             finally
             {
@@ -166,7 +166,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
+                userInterface.ShowMessage($"An error occurred: {ex.Message}", "LogError", MessageType.LogError);
             }
             finally
             {
@@ -191,7 +191,7 @@ namespace Vectool.OaiUI
 
             if (solutionPaths.Length == 0)
             {
-                MessageBox.Show("Could not find the solution file.", "Solution Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Could not find the solution file.", "Solution Not Found", MessageBoxButtons.OK, MessageBoxIcon.LogError);
                 return;
             }
 
@@ -258,7 +258,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Test execution failed: {ex.Message}", "Test Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Test execution failed: {ex.Message}", "Test LogError", MessageBoxButtons.OK, MessageBoxIcon.LogError);
             }
             finally
             {
@@ -334,8 +334,8 @@ namespace Vectool.OaiUI
             {
                 userInterface.ShowMessage(
                     $"An error occurred: {ex.Message}",
-                    "Error",
-                    MessageType.Error);
+                    "LogError",
+                    MessageType.LogError);
             }
         }
 

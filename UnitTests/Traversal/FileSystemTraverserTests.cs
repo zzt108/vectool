@@ -20,7 +20,7 @@ namespace UnitTests.Traversal
     {
         private string testDir = default!;
         private VectorStoreConfig config = default!;
-        private readonly CtxLogger _log = new();
+        private readonly ILogger _log = new();
 
         [SetUp]
         public void Setup()
@@ -159,7 +159,7 @@ namespace UnitTests.Traversal
             var traverser = new FileSystemTraverser(ui: null);
 
             // Act
-            using (var ctx = LogCtx.Set(
+            using (var ctx = logger.SetContext(
                 new Props()
                     .Add("test", "exclusion_logging")
                     .Add("testDir", testDir)))

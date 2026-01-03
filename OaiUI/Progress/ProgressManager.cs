@@ -2,11 +2,11 @@
 {
     public sealed class ProgressUpdatedEventArgs : EventArgs
     {
-        public ProgressInfo Info { get; }
+        public ProgressInfo LogInformation { get; }
         public string? CurrentItem { get; }
         public ProgressUpdatedEventArgs(ProgressInfo info, string? currentItem)
         {
-            Info = info ?? throw new ArgumentNullException(nameof(info));
+            LogInformation = info ?? throw new ArgumentNullException(nameof(info));
             CurrentItem = currentItem;
         }
     }

@@ -47,7 +47,7 @@ namespace VecTool.Versioning.Tests
         private static string FindExecutable(string fileName)
         {
             var root = TestContext.CurrentContext.TestDirectory;
-            var path = Path.GetFullPath(Path.Combine(root, "..", "..", "..", "..", "src", "VecTool.UI", "bin", "Debug", "net8.0-windows", fileName));
+            var path = Path.GetFullPath(Path.Combine(root, "..", "..", "..", "..", "src", "VecTool.UI", "bin", "LogDebug", "net8.0-windows", fileName));
             File.Exists(path).ShouldBeTrue($"Missing: {path}");
             return path;
         }

@@ -19,12 +19,12 @@ namespace VecTool.Handlers.Traversal
         /// <param name="sourceFile">Name of ignore file that matched (e.g., ".vtignore" or ".gitignore")</param>
         /// <returns>Props object with exclusion context</returns>
         /// <example>
-        /// using (var ctx = log.Ctx.Set(ExclusionProps.CreatePatternProps(
+        /// using (var ctx = logger.Ctx.Set(ExclusionProps.CreatePatternProps(
         ///     itemPath: "/path/to/file.g.cs",
         ///     pattern: "*.g.cs",
         ///     sourceFile: ".vtignore")))
         /// {
-        ///     log.Info("File excluded by pattern matching");
+        ///     logger.LogInformation("File excluded by pattern matching");
         /// }
         /// </example>
         public static Props CreatePatternProps(string itemPath, string pattern, string sourceFile)
@@ -47,13 +47,13 @@ namespace VecTool.Handlers.Traversal
         /// <param name="lineNumber">Line number where marker was found (1-indexed)</param>
         /// <returns>Props object with marker context</returns>
         /// <example>
-        /// using (var ctx = log.Ctx.Set(ExclusionProps.CreateMarkerProps(
+        /// using (var ctx = logger.Ctx.Set(ExclusionProps.CreateMarkerProps(
         ///     filePath: "/path/to/GeneratedClass.cs",
         ///     reason: "generated_by_xsd",
         ///     spaceReference: "@XSD-Schema-Docs",
         ///     lineNumber: 3)))
         /// {
-        ///     log.Info("File excluded by marker");
+        ///     logger.LogInformation("File excluded by marker");
         /// }
         /// </example>
         public static Props CreateMarkerProps(
@@ -77,15 +77,15 @@ namespace VecTool.Handlers.Traversal
         /// </summary>
         /// <param name="filePath">Full path to file where extraction was attempted</param>
         /// <param name="errorType">Exception type name (e.g., "UnauthorizedAccessException")</param>
-        /// <param name="errorMessage">Error message for debugging</param>
+        /// <param name="errorMessage">LogError message for debugging</param>
         /// <returns>Props object with error context</returns>
         /// <example>
-        /// using (var ctx = log.Ctx.Set(ExclusionProps.CreateMarkerErrorProps(
+        /// using (var ctx = logger.Ctx.Set(ExclusionProps.CreateMarkerErrorProps(
         ///     filePath: "/path/to/file.cs",
         ///     errorType: "UnauthorizedAccessException",
         ///     errorMessage: "Access to the path is denied")))
         /// {
-        ///     log.Warn("Marker extraction failed");
+        ///     logger.LogWarning("Marker extraction failed");
         /// }
         /// </example>
         public static Props CreateMarkerErrorProps(
@@ -111,13 +111,13 @@ namespace VecTool.Handlers.Traversal
         /// <param name="markerExtractionErrors">Files where marker extraction failed</param>
         /// <returns>Props object with summary statistics</returns>
         /// <example>
-        /// using (var ctx = log.Ctx.Set(ExclusionProps.CreateSummaryProps(
+        /// using (var ctx = logger.Ctx.Set(ExclusionProps.CreateSummaryProps(
         ///     filesProcessed: 1500,
         ///     filesExcludedByPattern: 425,
         ///     filesExcludedByMarker: 12,
         ///     markerExtractionErrors: 2)))
         /// {
-        ///     log.Info("Folder traversal completed");
+        ///     logger.LogInformation("Folder traversal completed");
         /// }
         /// </example>
         public static Props CreateSummaryProps(
@@ -144,12 +144,12 @@ namespace VecTool.Handlers.Traversal
         /// <param name="itemsSkipped">Count of items skipped due to directory exclusion</param>
         /// <returns>Props object with directory exclusion context</returns>
         /// <example>
-        /// using (var ctx = log.Ctx.Set(ExclusionProps.CreateDirectoryExclusionProps(
+        /// using (var ctx = logger.Ctx.Set(ExclusionProps.CreateDirectoryExclusionProps(
         ///     directoryPath: "/path/to/node_modules",
         ///     pattern: "node_modules",
         ///     itemsSkipped: 1247)))
         /// {
-        ///     log.Info("Directory excluded (subtree skipped)");
+        ///     logger.LogInformation("Directory excluded (subtree skipped)");
         /// }
         /// </example>
         public static Props CreateDirectoryExclusionProps(

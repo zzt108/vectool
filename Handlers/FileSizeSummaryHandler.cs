@@ -1,13 +1,9 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLogShared;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using VecTool.Configuration;
-using VecTool.Handlers.Analysis;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
 
@@ -19,7 +15,7 @@ namespace VecTool.Handlers
     /// </summary>
     public class FileSizeSummaryHandler : FileHandlerBase<FileSizeSummaryHandler>
     {
-        //private static readonly CtxLogger log = new();
+        //private static readonly ILogger logger = new();
 
         // Injected traverser for exclusive authority
         private readonly IFileSystemTraverser _fileSystemTraverser;
@@ -78,11 +74,11 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                using (var ctx = LogCtx.Set(new Props()
+                using (var ctx = logger.SetContext(new Props()
                     .Add("outputPath", outputPath)
                     .Add("folderCount", folderPaths.Count)))
                 {
-                    log.Error(ex, "Error generating file size summary");
+                    logger.LogError(ex, "LogError generating file size summary");
                 }
                 throw;
             }
@@ -104,7 +100,7 @@ namespace VecTool.Handlers
                     }
                     catch (Exception ex)
                     {
-                        log.Error(ex, "Failed to register generated file in recent files");
+                        logger.LogError(ex, "Failed to register generated file in recent files");
                         // Don't throw—report generation succeeded
                     }
                 }
@@ -128,11 +124,11 @@ namespace VecTool.Handlers
             // ✅ Validate folder
             if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
             {
-                using (var ctx = LogCtx.Set(new Props()
+                using (var ctx = logger.SetContext(new Props()
                     .Add("folderPath", folderPath)
                     .Add("exists", Directory.Exists(folderPath))))
                 {
-                    log.Debug($"Skipping invalid folder path");
+                    logger.LogDebug($"Skipping invalid folder path");
                 }
                 return;
             }
@@ -145,12 +141,12 @@ namespace VecTool.Handlers
                     .EnumerateFilesRespectingExclusions(folderPath, config)
                     .ToList();
 
-                using (var ctx = LogCtx.Set(new Props()
+                using (var ctx = logger.SetContext(new Props()
                     .Add("folderPath", folderPath)
                     .Add("fileCount", files.Count)
                     .Add("source", "traverser")))
                 {
-                    log.Info($"Enumerating {files.Count} files for size summary");
+                    logger.LogInformation($"Enumerating {files.Count} files for size summary");
                 }
 
                 // ✅ Process all files provided by traverser (already filtered)
@@ -173,20 +169,20 @@ namespace VecTool.Handlers
                         fileSizesByType[extension] += fileInfo.Length;
                         fileCountByType[extension]++;
 
-                        using (var ctx = LogCtx.Set(new Props()
+                        using (var ctx = logger.SetContext(new Props()
                             .Add("file", Path.GetFileName(file))
                             .Add("size", fileInfo.Length)
                             .Add("extension", extension)))
                         {
-                            log.Debug($"Added to summary: {Path.GetFileName(file)} ({fileInfo.Length:N0} bytes)");
+                            logger.LogDebug($"Added to summary: {Path.GetFileName(file)} ({fileInfo.Length:N0} bytes)");
                         }
                     }
                     catch (Exception ex)
                     {
-                        using (var ctx = LogCtx.Set(new Props()
+                        using (var ctx = logger.SetContext(new Props()
                             .Add("file", file)))
                         {
-                            log.Error(ex, "Error processing file for summary");
+                            logger.LogError(ex, "LogError processing file for summary");
                         }
                         // Continue processing other files
                     }
@@ -194,10 +190,10 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                using (var ctx = LogCtx.Set(new Props()
+                using (var ctx = logger.SetContext(new Props()
                     .Add("folderPath", folderPath)))
                 {
-                    log.Error(ex, "Error calculating folder sizes");
+                    logger.LogError(ex, "LogError calculating folder sizes");
                 }
                 // Continue with other folders
             }
@@ -254,20 +250,20 @@ namespace VecTool.Handlers
                 writer.WriteLine();
                 writer.WriteLine($"*Summary includes {totalCount:N0} files across {fileSizesByType.Count} file types.*");
 
-                using (var ctx = LogCtx.Set(new Props()
+                using (var ctx = logger.SetContext(new Props()
                     .Add("outputPath", outputPath)
                     .Add("fileCount", totalCount)
                     .Add("totalSize", totalSize)))
                 {
-                    log.Info($"File size summary written: {outputPath}");
+                    logger.LogInformation($"File size summary written: {outputPath}");
                 }
             }
             catch (Exception ex)
             {
-                using (var ctx = LogCtx.Set(new Props()
+                using (var ctx = logger.SetContext(new Props()
                     .Add("outputPath", outputPath)))
                 {
-                    log.Error(ex, "Error writing file size summary report");
+                    logger.LogError(ex, "LogError writing file size summary report");
                 }
                 throw;
             }

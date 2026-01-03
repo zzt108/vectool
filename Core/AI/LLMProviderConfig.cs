@@ -1,11 +1,12 @@
 ﻿#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 
 namespace VecTool.Core.AI;
 
@@ -15,7 +16,7 @@ namespace VecTool.Core.AI;
 /// </summary>
 public sealed class LLMProviderConfig
 {
-    private static readonly CtxLogger log = new();
+    private static readonly ILogger logger;
     private static readonly Regex EnvVarPattern = new(@"\$\{([A-Z_][A-Z0-9_]*)\}", RegexOptions.Compiled);
 
     public string DefaultProvider { get; set; } = "perplexity";
@@ -27,19 +28,19 @@ public sealed class LLMProviderConfig
     /// </summary>
     public static LLMProviderConfig Load(string configPath)
     {
-        using var ctx = LogCtx.Set(new Props().Add("configPath", configPath));
+        using var ctx = logger.SetContext(new Props().Add("configPath", configPath));
 
         if (string.IsNullOrWhiteSpace(configPath))
         {
             var ex = new ArgumentException("Config path is required.", nameof(configPath));
-            log.Error(ex, "LLM config path is null or empty");
+            logger.LogError(ex, "LLM config path is null or empty");
             throw ex;
         }
 
         if (!File.Exists(configPath))
         {
             var ex = new FileNotFoundException($"LLM config file not found: {configPath}");
-            log.Error(ex, "LLM config file missing");
+            logger.LogError(ex, "LLM config file missing");
             throw ex;
         }
 
@@ -55,24 +56,24 @@ public sealed class LLMProviderConfig
             if (config == null)
             {
                 var ex = new InvalidOperationException("Failed to deserialize LLM config (null result)");
-                log.Error(ex, "JSON deserialization returned null");
+                logger.LogError(ex, "JSON deserialization returned null");
                 throw ex;
             }
 
             // Substitute environment variables in all string properties
             config.SubstituteEnvironmentVariables();
 
-            log.Info($"LLM config loaded: provider={config.DefaultProvider}, providers={config.Providers.Count}");
+            logger.LogInformation($"LLM config loaded: provider={config.DefaultProvider}, providers={config.Providers.Count}");
             return config;
         }
         catch (JsonException ex)
         {
-            log.Error(ex, $"Invalid JSON in LLM config file: {ex.Message}");
+            logger.LogError(ex, $"Invalid JSON in LLM config file: {ex.Message}");
             throw new InvalidOperationException($"Failed to parse LLM config JSON: {ex.Message}", ex);
         }
         catch (Exception ex)
         {
-            log.Error(ex, $"Unexpected error loading LLM config: {ex.Message}");
+            logger.LogError(ex, $"Unexpected error loading LLM config: {ex.Message}");
             throw;
         }
     }
@@ -105,11 +106,11 @@ public sealed class LLMProviderConfig
 
             if (string.IsNullOrEmpty(value))
             {
-                log.Warn($"Environment variable not found: {varName} (keeping original pattern)");
+                logger.LogWarning($"Environment variable not found: {varName} (keeping original pattern)");
                 return match.Value; // Keep ${VAR_NAME} if undefined
             }
 
-            log.Debug($"Resolved env var: {varName} → [REDACTED]");
+            logger.LogDebug($"Resolved env var: {varName} → [REDACTED]");
             return value;
         });
     }

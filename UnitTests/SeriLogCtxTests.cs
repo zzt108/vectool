@@ -17,7 +17,7 @@ namespace SeriLogAdapter.Tests
         {
             // Setup any required environment configuration for tests, e.g., setting up a logger
             //Log.Logger = new LoggerConfiguration()
-            //    .MinimumLevel.Debug()
+            //    .MinimumLevel.LogDebug()
             //    .WriteTo.Console()
             //    .CreateLogger();
         }
@@ -26,7 +26,7 @@ namespace SeriLogAdapter.Tests
         public void Configure_ShouldReadConfigurationFile()
         {
             // Arrange
-            var seriLogCtx = new CtxLogger();
+            var seriLogCtx = new ILogger();
 
             // Act
             var result = seriLogCtx.ConfigureJson(ConfigPathJson);
@@ -38,16 +38,16 @@ namespace SeriLogAdapter.Tests
         [Test]
         public void CanDoStructuredLog()
         {
-            Serilog.Debugging.SelfLog.Enable(msg => Console.Error.WriteLine(msg));
+            Serilog.Debugging.SelfLog.Enable(msg => Console.LogError.WriteLine(msg));
             // Arrange
-            using var log = new CtxLogger();
-            var result = log.ConfigureXml(ConfigPathXml);
+            using var log = new ILogger();
+            var result = logger.ConfigureXml(ConfigPathXml);
 
             // Act
-            LogCtx.Set(new Props("first", result, log));
-            log.Debug("Debug");
-            log.Fatal(new ArgumentException("Test Fatal Argument Exception", "Param name"), "Fatal");
-            log.Error(new ArgumentException("Test Argument Exception", "Param name"), "Error");
+            logger.SetContext(new Props("first", result, log));
+            logger.LogDebug("LogDebug");
+            logger.Fatal(new ArgumentException("Test Fatal Argument Exception", "Param name"), "Fatal");
+            logger.LogError(new ArgumentException("Test Argument Exception", "Param name"), "LogError");
 
             // Assert
             // Log.CloseAndFlush();

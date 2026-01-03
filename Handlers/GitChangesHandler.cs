@@ -44,7 +44,7 @@ public sealed class GitChangesHandler : FileHandlerBase<GitChangesHandler>
         try
         {
             Ui?.UpdateStatus("Analyzing Git repositories...");
-            log.Info($"Starting Git changes analysis: {folderPaths.Count} folders");
+            logger.LogInformation($"Starting Git changes analysis: {folderPaths.Count} folders");
 
             var allChanges = new StringBuilder();
             allChanges.AppendLine("# AI Prompt for Commit Message");
@@ -65,7 +65,7 @@ public sealed class GitChangesHandler : FileHandlerBase<GitChangesHandler>
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                log.Debug($"Found {allowedFolders.Count} non-excluded folders in {folderPath}");
+                logger.LogDebug($"Found {allowedFolders.Count} non-excluded folders in {folderPath}");
 
                 // Find Git repos ONLY in allowed folders
                 var gitRepos = allowedFolders
@@ -73,8 +73,8 @@ public sealed class GitChangesHandler : FileHandlerBase<GitChangesHandler>
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                using var _ = LogCtx.Set().Add("basePath", folderPath);
-                log.Info($"Found {gitRepos.Count} Git repositories to process");
+                using var _ = logger.SetContext().Add("basePath", folderPath);
+                logger.LogInformation($"Found {gitRepos.Count} Git repositories to process");
 
                 foreach (var repoPath in gitRepos)
                 {
@@ -96,13 +96,13 @@ public sealed class GitChangesHandler : FileHandlerBase<GitChangesHandler>
             }
 
             Ui?.UpdateStatus($"Git changes saved: {outputPath}");
-            log.Info($"Git changes analysis completed: {outputPath}");
+            logger.LogInformation($"Git changes analysis completed: {outputPath}");
 
             return allChanges.ToString();
         }
         catch (Exception ex)
         {
-            log.Error(ex, $"Failed to analyze Git changes: {outputPath}");
+            logger.LogError(ex, $"Failed to analyze Git changes: {outputPath}");
             throw;
         }
     }
@@ -226,8 +226,8 @@ public sealed class GitChangesHandler : FileHandlerBase<GitChangesHandler>
         }
         catch (Exception ex)
         {
-            log.Error(ex, $"Error processing git repository: {repoPath}");
-            mainChanges.AppendLine($"**Error processing repository:** {ex.Message}");
+            logger.LogError(ex, $"LogError processing git repository: {repoPath}");
+            mainChanges.AppendLine($"**LogError processing repository:** {ex.Message}");
         }
 
         mainChanges.AppendLine();

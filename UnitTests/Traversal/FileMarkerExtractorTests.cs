@@ -556,7 +556,7 @@ namespace Test { }";
         }
         #endregion
 
-        #region Error Handling (3 tests)
+        #region LogError Handling (3 tests)
 
         /// <summary>
         /// Test 20: Non-existent file returns null with warning logged (no exception).

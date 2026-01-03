@@ -15,7 +15,7 @@ namespace VecTool.UI.Panels
     /// </summary>
     public sealed class PromptRenameForm : Form
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger = new();
 
         private readonly PromptFile promptFile;
         private readonly string originalFullPath;
@@ -76,7 +76,7 @@ namespace VecTool.UI.Panels
             MinimizeBox = false;
             ClientSize = new Size(640, 280);
 
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext(new Props()
                 .Add("FullPath", originalFullPath)
                 .Add("FileName", promptFile.Metadata.FileName));
 
@@ -309,7 +309,7 @@ namespace VecTool.UI.Panels
 
         private void BtnRenameClick(object? sender, EventArgs e)
         {
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext(new Props()
                 .Add("OriginalPath", originalFullPath));
 
             try
@@ -363,10 +363,10 @@ namespace VecTool.UI.Panels
 
                 File.Move(originalFullPath, newFullPath);
 
-                using var _ = LogCtx.Set()
+                using var _ = logger.SetContext()
                     .Add("From", originalFullPath)
                     .Add("To", newFullPath);
-                log.Info("Renamed prompt file.");
+                logger.LogInformation("Renamed prompt file.");
 
                 WasRenamed = true;
                 NewFullPath = newFullPath;
@@ -376,13 +376,13 @@ namespace VecTool.UI.Panels
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to rename prompt file.");
+                logger.LogError(ex, "Failed to rename prompt file.");
 
                 MessageBox.Show(this,
                     $"Failed to rename file: {ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxIcon.LogError);
             }
         }
     }

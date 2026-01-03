@@ -18,7 +18,7 @@ namespace VecTool.Handlers
     /// </summary>
     public sealed class RepomixHandler
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger = new();
         private readonly IUserInterface userInterface;
         private readonly IRecentFilesManager recentFilesManager;
         private readonly IProcessRunner processRunner;
@@ -47,15 +47,15 @@ namespace VecTool.Handlers
             VectorStoreConfig? vectorStoreConfig = null,
             CancellationToken cancellationToken = default)
         {
-            using var _ = LogCtx.Set();
+            using var _ = logger.SetContext();
 
             if (!Directory.Exists(targetDirectory))
             {
-                log.Warn($"Target directory does not exist: {targetDirectory}");
+                logger.LogWarning($"Target directory does not exist: {targetDirectory}");
                 userInterface.ShowMessage(
                     $"Target directory not found:\n{targetDirectory}",
                     "Directory Not Found",
-                    MessageType.Error);
+                    MessageType.LogError);
                 return null;
             }
 
@@ -63,12 +63,12 @@ namespace VecTool.Handlers
             var (isAvailable, command) = await IsRepomixAvailableAsync(cancellationToken);
             if (!isAvailable)
             {
-                log.Warn("Repomix not found on system");
+                logger.LogWarning("Repomix not found on system");
                 ShowInstallationHelp();
                 return null;
             }
 
-            log.Info($"Using repomix command: {command}");
+            logger.LogInformation($"Using repomix command: {command}");
 
             try
             {
@@ -76,7 +76,7 @@ namespace VecTool.Handlers
 
                 // ✅ Step 2: Build repomix command arguments
                 var args = BuildRepomixArguments(targetDirectory, outputPath, vectorStoreConfig, command);
-                log.Debug($"Repomix args: {args}");
+                logger.LogDebug($"Repomix args: {args}");
 
                 // ✅ Step 3: Execute repomix
                 var result = await processRunner.RunAsync(
@@ -87,27 +87,27 @@ namespace VecTool.Handlers
 
                 if (result.ExitCode != 0)
                 {
-                    log.Warn($"Repomix failed with exit code {result.ExitCode}:\n{result.StandardError}");
+                    logger.LogWarning($"Repomix failed with exit code {result.ExitCode}:\n{result.StandardError}");
                     userInterface.ShowMessage(
                         $"Repomix execution failed:\n{result.StandardError}",
-                        "Repomix Error",
-                        MessageType.Error);
+                        "Repomix LogError",
+                        MessageType.LogError);
                     return null;
                 }
 
                 // ✅ Step 4: Verify output file was created
                 if (!File.Exists(outputPath))
                 {
-                    log.Warn($"Repomix completed but output file not found: {outputPath}");
+                    logger.LogWarning($"Repomix completed but output file not found: {outputPath}");
                     userInterface.ShowMessage(
                         $"Output file was not created:\n{outputPath}",
                         "Output Missing",
-                        MessageType.Error);
+                        MessageType.LogError);
                     return null;
                 }
 
                 var fileInfo = new FileInfo(outputPath);
-                log.Info($"Repomix export successful: {fileInfo.Length} bytes");
+                logger.LogInformation($"Repomix export successful: {fileInfo.Length} bytes");
 
                 // ✅ Step 5: Register in recent files
                 recentFilesManager.RegisterGeneratedFile(
@@ -123,11 +123,11 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Repomix execution failed");
+                logger.LogError(ex, "Repomix execution failed");
                 userInterface.ShowMessage(
                     $"An error occurred:\n{ex.Message}",
-                    "Error",
-                    MessageType.Error);
+                    "LogError",
+                    MessageType.LogError);
                 return null;
             }
             finally
@@ -148,10 +148,10 @@ namespace VecTool.Handlers
         private async Task<(bool isAvailable, string command)> IsRepomixAvailableAsync(
             CancellationToken cancellationToken)
         {
-            using var _ = LogCtx.Set(new Props().Add("Method", "IsRepomixAvailableAsync"));
+            using var _ = logger.SetContext(new Props().Add("Method", "IsRepomixAvailableAsync"));
 
             // ✅ Step 1: Try global repomix install first (more reliable on Windows)
-            log.Debug("Checking for global 'repomix' installation...");
+            logger.LogDebug("Checking for global 'repomix' installation...");
             var repomixPath = DetermineExecutablePath("repomix");
 
             if (!string.IsNullOrEmpty(repomixPath))
@@ -166,22 +166,22 @@ namespace VecTool.Handlers
 
                     if (repomixResult.ExitCode == 0)
                     {
-                        log.Info($"Global 'repomix' found at: {repomixPath}");
+                        logger.LogInformation($"Global 'repomix' found at: {repomixPath}");
                         return (true, repomixPath);
                     }
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Global 'repomix' found but --version check failed: {repomixPath}");
+                    logger.LogError(ex, $"Global 'repomix' found but --version check failed: {repomixPath}");
                 }
             }
             else
             {
-                log.Debug("Global 'repomix' not found in PATH");
+                logger.LogDebug("Global 'repomix' not found in PATH");
             }
 
             // ✅ Step 2: Try npx as fallback
-            log.Debug("Checking for 'npx' availability...");
+            logger.LogDebug("Checking for 'npx' availability...");
             var npxPath = DetermineExecutablePath("npx");
 
             if (!string.IsNullOrEmpty(npxPath))
@@ -196,21 +196,21 @@ namespace VecTool.Handlers
 
                     if (npxResult.ExitCode == 0)
                     {
-                        log.Info($"npx found at: {npxPath}");
+                        logger.LogInformation($"npx found at: {npxPath}");
                         return (true, npxPath);
                     }
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"npx found but --version check failed: {npxPath}");
+                    logger.LogError(ex, $"npx found but --version check failed: {npxPath}");
                 }
             }
             else
             {
-                log.Debug("npx not found in PATH");
+                logger.LogDebug("npx not found in PATH");
             }
 
-            log.Warn("Neither 'repomix' nor 'npx' found in PATH");
+            logger.LogWarning("Neither 'repomix' nor 'npx' found in PATH");
             return (false, string.Empty);
         }
 
@@ -225,7 +225,7 @@ namespace VecTool.Handlers
         /// </remarks>
         private string? DetermineExecutablePath(string executableName)
         {
-            using var _ = LogCtx.Set(new Props().Add("Executable", executableName));
+            using var _ = logger.SetContext(new Props().Add("Executable", executableName));
 
             try
             {
@@ -249,7 +249,7 @@ namespace VecTool.Handlers
                             var candidatePath = Path.Combine(dir, fullName);
                             if (File.Exists(candidatePath))
                             {
-                                log.Debug($"Found executable: {candidatePath}");
+                                logger.LogDebug($"Found executable: {candidatePath}");
                                 return candidatePath;
                             }
                         }
@@ -268,18 +268,18 @@ namespace VecTool.Handlers
                         var candidatePath = Path.Combine(dir, executableName);
                         if (File.Exists(candidatePath))
                         {
-                            log.Debug($"Found executable: {candidatePath}");
+                            logger.LogDebug($"Found executable: {candidatePath}");
                             return candidatePath;
                         }
                     }
                 }
 
-                log.Debug($"Executable '{executableName}' not found in PATH");
+                logger.LogDebug($"Executable '{executableName}' not found in PATH");
                 return null;
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Error resolving executable path for '{executableName}'");
+                logger.LogError(ex, $"LogError resolving executable path for '{executableName}'");
                 return null;
             }
         }
@@ -298,7 +298,7 @@ namespace VecTool.Handlers
             VectorStoreConfig? config,
             string command)
         {
-            using var _ = LogCtx.Set(new Props()
+            using var _ = logger.SetContext(new Props()
                 .Add("Command", command)
                 .Add("TargetDirectory", targetDirectory)
                 .Add("OutputPath", outputPath));
@@ -320,7 +320,7 @@ namespace VecTool.Handlers
 
             // TODO: Future enhancement - map VectorStoreConfig exclusions to repomix --ignore patterns
 
-            log.Debug($"Built args: {args}");
+            logger.LogDebug($"Built args: {args}");
             return args.Trim();
         }
 

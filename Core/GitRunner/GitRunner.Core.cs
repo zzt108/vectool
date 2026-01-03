@@ -1,5 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-using NLogShared;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -14,7 +13,7 @@ namespace VecTool.Core
     /// </summary>
     public sealed partial class GitRunner
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger;
         private readonly string workingDirectory;
 
         public GitRunner(string workingDirectory)
@@ -73,7 +72,7 @@ namespace VecTool.Core
                 }
             };
 
-            log.Info($"Running git command: git {command} in {workingDirectory}");
+            logger.LogInformation($"Running git command: git {command} in {workingDirectory}");
 
             if (!process.Start())
             {
@@ -98,7 +97,7 @@ namespace VecTool.Core
                 }
                 catch { /* ignored */ }
 
-                log.Warn($"Git command timed out after {timeoutSeconds}s.");
+                logger.LogWarning($"Git command timed out after {timeoutSeconds}s.");
                 throw new TimeoutException("Git command timed out.");
             }
 
@@ -111,11 +110,11 @@ namespace VecTool.Core
 
             if (exitCode == 0)
             {
-                log.Info("Git command finished successfully.");
+                logger.LogInformation("Git command finished successfully.");
                 return stdOut;
             }
 
-            log.Warn($"Git command failed with exit code {exitCode}. Error: {stdErr}");
+            logger.LogWarning($"Git command failed with exit code {exitCode}. LogError: {stdErr}");
             throw new InvalidOperationException($"Git command failed: {stdErr}");
         }
     }

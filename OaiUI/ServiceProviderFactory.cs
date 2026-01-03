@@ -19,7 +19,7 @@ public static class ServiceProviderFactory
         services.AddLogging(builder =>
         {
             builder.ClearProviders();
-            builder.SetMinimumLevel(LogLevel.Trace);
+            builder.SetMinimumLevel(LogLevel.LogTrace);
             builder.AddNLog("NLog.config");
         });
 

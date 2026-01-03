@@ -1,5 +1,5 @@
 ﻿using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 
 namespace VecTool.Core.Services;
 
@@ -9,7 +9,8 @@ namespace VecTool.Core.Services;
 /// </summary>
 public sealed class PromptTemplateGenerator
 {
-    private CtxLogger _log = new();
+    private ILogger logger;
+
     /// <summary>
     /// Applies variable substitution to template content.
     /// </summary>
@@ -18,7 +19,7 @@ public sealed class PromptTemplateGenerator
     /// <returns>Content with variables substituted.</returns>
     public string ApplyTemplateVariables(string content, Dictionary<string, string>? customVars = null)
     {
-        using var lc = LogCtx.Set().Add("contentLength", content.Length);
+        using var lc = logger.SetContext().Add("contentLength", content.Length);
 
         try
         {
@@ -36,7 +37,7 @@ public sealed class PromptTemplateGenerator
                 if (result.Contains(placeholder))
                 {
                     result = result.Replace(placeholder, kvp.Value);
-                    _log.Debug($"Substituted variable: {kvp.Key}");
+                    logger.LogDebug($"Substituted variable: {kvp.Key}");
                 }
             }
 
@@ -44,15 +45,15 @@ public sealed class PromptTemplateGenerator
             var unresolvedCount = System.Text.RegularExpressions.Regex.Matches(result, @"\{\{[A-Z_]+\}\}").Count;
             if (unresolvedCount > 0)
             {
-                using var lc2 = LogCtx.Set().Add("unresolvedCount", unresolvedCount);
-                _log.Warn("Unresolved variables found");
+                using var lc2 = logger.SetContext().Add("unresolvedCount", unresolvedCount);
+                logger.LogWarning("Unresolved variables found");
             }
 
             return result;
         }
         catch (Exception ex)
         {
-            _log.Error(ex,"Failed to apply template variables");
+            logger.LogError(ex, "Failed to apply template variables");
             return content; // Return original on error
         }
     }

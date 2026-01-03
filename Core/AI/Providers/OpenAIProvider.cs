@@ -4,7 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 
 namespace VecTool.Core.AI.Providers
 {
@@ -13,11 +13,11 @@ namespace VecTool.Core.AI.Providers
     /// </summary>
     public sealed class OpenAIProvider : ILlmProvider
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger;
 
         public OpenAIProvider(ProviderSettings settings)
         {
-            log.Warn("OpenAIProvider is a stub and not yet implemented");
+            logger.LogWarning("OpenAIProvider is a stub and not yet implemented");
         }
 
         public string GetProviderName() => "OpenAI (Stub)";
@@ -25,13 +25,13 @@ namespace VecTool.Core.AI.Providers
         public Task<string> RequestAsync(string prompt, CancellationToken ct = default)
         {
             var ex = new NotImplementedException("OpenAI provider not yet implemented");
-            log.Error(ex, "OpenAI RequestAsync called but not implemented");
+            logger.LogError(ex, "OpenAI RequestAsync called but not implemented");
             throw ex;
         }
 
         public Task<bool> ValidateConfigAsync(CancellationToken ct = default)
         {
-            log.Warn("OpenAI ValidateConfigAsync called (stub)");
+            logger.LogWarning("OpenAI ValidateConfigAsync called (stub)");
             return Task.FromResult(false);
         }
     }

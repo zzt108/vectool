@@ -13,7 +13,7 @@ namespace NLogAdapter.Tests
         public void Init_ShouldInitializeLogger_WhenCanLogIsTrue()
         {
             // Arrange
-            var nLogCtx = new CtxLogger();
+            var nLogCtx = new ILogger();
 
             // Act
             var result = nLogCtx.ConfigureXml(ConfigPath);

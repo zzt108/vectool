@@ -14,7 +14,7 @@ namespace UnitTests.Traversal
     [TestFixture]
     public class ExclusionPropsTests
     {
-        private readonly CtxLogger log = new();
+        private readonly ILogger logger = new();
 
         #region Assertion Helpers
 
@@ -118,7 +118,7 @@ namespace UnitTests.Traversal
 
         #endregion
 
-        #region Category 3: Error and Summary Props (2 tests)
+        #region Category 3: LogError and Summary Props (2 tests)
 
         [Test]
         public void CreateMarkerErrorProps_IncludesAllRequiredKeys()

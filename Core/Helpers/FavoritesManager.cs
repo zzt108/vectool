@@ -1,10 +1,11 @@
 ﻿#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 
 namespace VecTool.Core.Helpers
 {
@@ -13,7 +14,7 @@ namespace VecTool.Core.Helpers
     /// </summary>
     public sealed class FavoritesManager
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger;
 
         /// <summary>
         /// Loads favorites from JSON file.
@@ -22,17 +23,17 @@ namespace VecTool.Core.Helpers
         /// <returns>List of favorite file paths, or empty list if file doesn't exist or is invalid.</returns>
         public List<string> LoadFavorites(string configPath)
         {
-            using var ctx = LogCtx.Set(new Props().Add("configPath", configPath));
+            using var ctx = logger.SetContext(new Props().Add("configPath", configPath));
 
             if (string.IsNullOrWhiteSpace(configPath))
             {
-                log.Warn("Favorites config path is null or empty");
+                logger.LogWarning("Favorites config path is null or empty");
                 return new List<string>();
             }
 
             if (!File.Exists(configPath))
             {
-                log.Info($"Favorites file not found, returning empty list: {configPath}");
+                logger.LogInformation($"Favorites file not found, returning empty list: {configPath}");
                 return new List<string>();
             }
 
@@ -47,21 +48,21 @@ namespace VecTool.Core.Helpers
 
                 if (favorites?.Favorites == null)
                 {
-                    log.Warn("Favorites JSON is null or missing 'favorites' array");
+                    logger.LogWarning("Favorites JSON is null or missing 'favorites' array");
                     return new List<string>();
                 }
 
-                log.Info($"Loaded {favorites.Favorites.Count} favorites from {configPath}");
+                logger.LogInformation($"Loaded {favorites.Favorites.Count} favorites from {configPath}");
                 return favorites.Favorites.ConvertAll(f => f.Path);
             }
             catch (JsonException ex)
             {
-                log.Error(ex, $"Failed to parse favorites JSON: {ex.Message}");
+                logger.LogError(ex, $"Failed to parse favorites JSON: {ex.Message}");
                 return new List<string>();
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Unexpected error loading favorites: {ex.Message}");
+                logger.LogError(ex, $"Unexpected error loading favorites: {ex.Message}");
                 return new List<string>();
             }
         }
@@ -73,21 +74,21 @@ namespace VecTool.Core.Helpers
         /// <param name="favorites">List of favorite file paths.</param>
         public void SaveFavorites(string configPath, List<string> favorites)
         {
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext(new Props()
                 .Add("configPath", configPath)
                 .Add("count", favorites?.Count ?? 0));
 
             if (string.IsNullOrWhiteSpace(configPath))
             {
                 var ex = new ArgumentException("Config path is required.", nameof(configPath));
-                log.Error(ex, "Config path is null or empty");
+                logger.LogError(ex, "Config path is null or empty");
                 throw ex;
             }
 
             if (favorites == null)
             {
                 var ex = new ArgumentNullException(nameof(favorites));
-                log.Error(ex, "Favorites list is null");
+                logger.LogError(ex, "Favorites list is null");
                 throw ex;
             }
 
@@ -117,11 +118,11 @@ namespace VecTool.Core.Helpers
                 }
 
                 File.WriteAllText(configPath, json);
-                log.Info($"Saved {favorites.Count} favorites to {configPath}");
+                logger.LogInformation($"Saved {favorites.Count} favorites to {configPath}");
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Failed to save favorites: {ex.Message}");
+                logger.LogError(ex, $"Failed to save favorites: {ex.Message}");
                 throw;
             }
         }

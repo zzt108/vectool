@@ -1,11 +1,10 @@
-﻿// ✅ FULL FILE VERSION
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using NLogShared;
 
 namespace VecTool.Configuration
 {
@@ -14,7 +13,7 @@ namespace VecTool.Configuration
     /// </summary>
     public partial class VectorStoreConfig
     {
-        private static readonly NLogShared.CtxLogger log = new();
+        private static readonly ILogger logger;
 
         /// <summary>
         /// Create a VectorStoreConfig from app.config settings.
@@ -72,11 +71,11 @@ namespace VecTool.Configuration
                     {
                         configs = deserializedConfigs;
                     }
-                    log.Debug($"Loaded {configs.Count} vector store configurations");
+                    logger.LogDebug($"Loaded {configs.Count} vector store configurations");
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Error loading vector store configurations from {vectorStoreFoldersPath}");
+                    logger.LogError(ex, $"LogError loading vector store configurations from {vectorStoreFoldersPath}");
                 }
             }
 
@@ -97,11 +96,11 @@ namespace VecTool.Configuration
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 string json = JsonSerializer.Serialize(configs, options);
                 File.WriteAllText(vectorStoreFoldersPath, json);
-                log.Debug($"Saved {configs.Count} vector store configurations to {vectorStoreFoldersPath}");
+                logger.LogDebug($"Saved {configs.Count} vector store configurations to {vectorStoreFoldersPath}");
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Error saving vector store configurations to {vectorStoreFoldersPath}");
+                logger.LogError(ex, $"LogError saving vector store configurations to {vectorStoreFoldersPath}");
             }
         }
     }

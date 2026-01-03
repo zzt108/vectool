@@ -1,8 +1,7 @@
-﻿// ✅ FULL FILE VERSION
-#nullable enable
+﻿#nullable enable
 
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 using VecTool.Core.AI.Providers;
 
 namespace VecTool.Core.AI
@@ -12,7 +11,7 @@ namespace VecTool.Core.AI
     /// </summary>
     public static class LlmProviderFactory
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger<PerplexityProvider> logger;
 
         /// <summary>
         /// Create an LLM provider instance based on configuration.
@@ -26,11 +25,11 @@ namespace VecTool.Core.AI
             if (config == null)
             {
                 var ex = new ArgumentNullException(nameof(config));
-                log.Error(ex, "LLM provider config is null");
+                logger.LogError(ex, "LLM provider config is null");
                 throw ex;
             }
 
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext(new Props()
                 .Add("defaultProvider", config.DefaultProvider));
 
             var providerKey = config.DefaultProvider?.ToLowerInvariant() ?? string.Empty;
@@ -38,14 +37,14 @@ namespace VecTool.Core.AI
             if (string.IsNullOrWhiteSpace(providerKey))
             {
                 var ex = new InvalidOperationException("Default provider not specified in config");
-                log.Error(ex, "Default provider is null or empty");
+                logger.LogError(ex, "Default provider is null or empty");
                 throw ex;
             }
 
             if (!config.Providers.ContainsKey(providerKey))
             {
                 var ex = new InvalidOperationException($"Provider '{providerKey}' not found in config");
-                log.Error(ex, $"Provider key '{providerKey}' missing from Providers dictionary");
+                logger.LogError(ex, $"Provider key '{providerKey}' missing from Providers dictionary");
                 throw ex;
             }
 
@@ -54,18 +53,18 @@ namespace VecTool.Core.AI
             if (!providerSettings.Enabled)
             {
                 var ex = new InvalidOperationException($"Provider '{providerKey}' is disabled in config");
-                log.Error(ex, $"Provider '{providerKey}' has Enabled=false");
+                logger.LogError(ex, $"Provider '{providerKey}' has Enabled=false");
                 throw ex;
             }
 
             ILlmProvider provider = providerKey switch
             {
-                "perplexity" => new PerplexityProvider(providerSettings),
+                "perplexity" => new PerplexityProvider(logger, providerSettings),
                 "openai" => new OpenAIProvider(providerSettings), // Stub
                 _ => throw new InvalidOperationException($"Unknown provider type: {providerKey}")
             };
 
-            log.Info($"Created LLM provider: {provider.GetProviderName()}");
+            logger.LogInformation($"Created LLM provider: {provider.GetProviderName()}");
             return provider;
         }
     }
