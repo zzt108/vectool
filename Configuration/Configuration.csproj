@@ -1,19 +1,19 @@
 <!-- Path: Configuration/Configuration.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>VecTool.Configuration</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitignoreParserNet" Version="0.2.0.14" />
+    <PackageReference Include="GitignoreParserNet" Version="0.2.0.15" />
     <PackageReference Include="MAB.DotIgnore" Version="3.0.2" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.10" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Log\Log.csproj" />
+    <ProjectReference Include="..\..\LogCtx\LogCtx\LogCtx.csproj" />
   </ItemGroup>
 </Project>
