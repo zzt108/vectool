@@ -1,8 +1,8 @@
 ﻿namespace VecTool.Handlers.Traversal
 {
     using global::VecTool.Configuration;
-    using global::VecTool.Utils;  
-    using NLogShared;
+    using global::VecTool.Utils;
+    using Microsoft.Extensions.Logging;
     using System;
     using System.IO;
 
@@ -11,7 +11,7 @@
     /// </summary>
     public static class FileValidator
     {
-        private static readonly ILogger logger = new();
+        private static readonly ILogger logger;
 
         /// <summary>
         /// Determines if a folder should be excluded from processing.
@@ -96,7 +96,7 @@
         }
 
         /// <summary>
-        /// Determines if a file is binary by checking mdTags.json first, 
+        /// Determines if a file is binary by checking mdTags.json first,
         /// then falling back to heuristic detection for unknown extensions.
         /// </summary>
         /// <param name="fileExtension">The file extension (e.g., ".ttf", ".bin")</param>
@@ -105,7 +105,7 @@
         public static bool IsBinary(string fileExtension, string? filePath)
         {
             // First check mdTags.json (authoritative)
-             var mimeType = MimeTypeProvider.GetMimeType(fileExtension);
+            var mimeType = MimeTypeProvider.GetMimeType(fileExtension);
 
             if (mimeType != null)
             {
@@ -116,7 +116,7 @@
             // Unknown extension - use heuristic detection
             if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             {
-                // Cannot probe file - assume binary 
+                // Cannot probe file - assume binary
                 return true;
             }
 
@@ -154,7 +154,6 @@
                 return false;
             }
         }
-
 
         /// <summary>
         /// Determines if a file should be included in export (MD/DOCX) based on:

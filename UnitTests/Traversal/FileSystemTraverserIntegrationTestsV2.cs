@@ -2,8 +2,9 @@
 // Tests Layer 1 (patterns) + Layer 2 (markers) combined behavior
 
 using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using NLogShared;
+
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -31,7 +32,7 @@ namespace UnitTests.Traversal
     {
         private string testRoot = default!;
         private VectorStoreConfig config = default!;
-        private readonly ILogger logger = new();
+        private readonly ILogger logger;
 
         [SetUp]
         public void Setup()

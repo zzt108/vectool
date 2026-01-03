@@ -1,7 +1,8 @@
 ﻿using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
-using NLogShared;
+
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace UnitTests.Handlers
         private IUserInterface mockUi = default!;
         private IRecentFilesManager mockRecentFilesManager = default!;
         private IFileSystemTraverser mockTraverser = default!;
-        private readonly ILogger logger = new();
+        private readonly ILogger<GitChangesHandlerMockTests> logger;
 
         [SetUp]
         public void Setup()
@@ -68,7 +69,7 @@ namespace UnitTests.Handlers
         {
             // Arrange
             // Act
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
 
             // Assert
             handler.ShouldNotBeNull();
@@ -102,7 +103,7 @@ namespace UnitTests.Handlers
                 .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
                 .Returns(allowedRepos);
 
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
             var outputPath = Path.Combine(testDir, "output.md");
 
             // Act
@@ -131,7 +132,7 @@ namespace UnitTests.Handlers
         public void GitChangesHandlerShouldNotCallIsFileExcludedDirectly()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
             Directory.CreateDirectory(Path.Combine(testDir, "included"));
             Directory.CreateDirectory(Path.Combine(testDir, "excluded"));
 
@@ -160,7 +161,7 @@ namespace UnitTests.Handlers
         public async Task GetGitChangesAsyncShouldRegisterOutputWithRecentFilesManager()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
             var repoFolder = Path.Combine(testDir, "repo1");
             Directory.CreateDirectory(repoFolder);
             var outputPath = Path.Combine(testDir, "git-changes.md");
@@ -206,7 +207,7 @@ namespace UnitTests.Handlers
         public async Task GetGitChangesAsyncShouldUpdateUiDuringExecution()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
             var outputPath = Path.Combine(testDir, "git-changes.md");
 
             // Act
@@ -234,7 +235,7 @@ namespace UnitTests.Handlers
         public void GetGitChangesAsyncWithNullFoldersShouldThrowArgumentException()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
 
             // Act & Assert
             Should.ThrowAsync<ArgumentException>(
@@ -251,7 +252,7 @@ namespace UnitTests.Handlers
         public void GetGitChangesAsyncWithEmptyFoldersShouldThrowArgumentException()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
 
             // Act & Assert
             Should.ThrowAsync<ArgumentException>(
@@ -268,7 +269,7 @@ namespace UnitTests.Handlers
         public void GetGitChangesAsyncWithNullOutputPathShouldThrowArgumentException()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
 
             // Act & Assert
             Should.ThrowAsync<ArgumentException>(
@@ -286,7 +287,7 @@ namespace UnitTests.Handlers
         public async Task GetGitChangesAsyncShouldUseLogCtxForAuditTrail()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
             var outputPath = Path.Combine(testDir, "git-changes.md");
 
             // Act
@@ -318,7 +319,7 @@ namespace UnitTests.Handlers
         public void GetGitChangesSynchronousShouldDelegateToAsync()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
             var outputPath = Path.Combine(testDir, "git-changes.md");
 
             // Act & Assert - Should not throw on invalid input pattern (git not available)
@@ -346,7 +347,7 @@ namespace UnitTests.Handlers
         public async Task GetGitChangesAsyncShouldSkipDuplicateRepositories()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
             var repoFolder = Path.Combine(testDir, "repo1");
             Directory.CreateDirectory(repoFolder);
             var outputPath = Path.Combine(testDir, "git-changes.md");
@@ -375,7 +376,7 @@ namespace UnitTests.Handlers
         public async Task GetGitChangesAsyncWithNonExistentFolderShouldHandleGracefully()
         {
             // Arrange
-            var handler = new GitChangesHandler(mockUi, mockRecentFilesManager, rootPath: testDir);
+            var handler = new GitChangesHandler(logger, mockUi, mockRecentFilesManager, rootPath: testDir);
             var nonExistentFolder = Path.Combine(testDir, "doesnotexist");
             var outputPath = Path.Combine(testDir, "git-changes.md");
 

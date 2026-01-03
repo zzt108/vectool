@@ -10,6 +10,7 @@ namespace oaiUI.Controls
         private readonly Label _lblTimeRemaining;
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IProgressReporter? Reporter
         {
             get => _reporter;
@@ -74,6 +75,7 @@ namespace oaiUI.Controls
             Controls.Add(panelLabels);
             Controls.Add(_progressBar);
         }
+
         private void OnProgressChanged(object? sender, ProgressUpdatedEventArgs e)
         {
             if (InvokeRequired)

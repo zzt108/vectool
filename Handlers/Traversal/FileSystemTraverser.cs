@@ -3,7 +3,7 @@
     using DocumentFormat.OpenXml.Bibliography;
     using LogCtxShared;
     using MAB.DotIgnore;
-    using NLogShared;
+    using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
@@ -19,7 +19,7 @@
     /// </summary>
     public class FileSystemTraverser : IFileSystemTraverser
     {
-        private static readonly ILogger logger = new();
+        private static readonly ILogger logger;
 
         private readonly IUserInterface? ui;
         // private readonly string rootPath;
@@ -449,13 +449,13 @@
             catch (UnauthorizedAccessException ex)
             {
                 using var ctx = logger.SetContext(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
-                log?.LogError(ex, "Access denied to directory");
+                logger?.LogError(ex, "Access denied to directory");
                 return Enumerable.Empty<string>();
             }
             catch (Exception ex)
             {
                 using var ctx = logger.SetContext(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
-                log?.LogError(ex, "LogError enumerating subdirectories");
+                logger?.LogError(ex, "LogError enumerating subdirectories");
                 return Enumerable.Empty<string>();
             }
         }

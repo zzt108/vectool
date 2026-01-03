@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -13,6 +14,26 @@ namespace Vectool.OaiUI
     /// </summary>
     public partial class MainForm : Form
     {
+        private readonly ILoggerFactory loggerFactory;
+        private readonly ILogger<MainForm> logger;
+
+        // Parameterless ctor for WinForms designer
+        public MainForm()
+            : this(LoggerFactory.Create(_ => { }))
+        {
+        }
+
+        // DI ctor used by Program.cs -> serviceProvider.GetRequiredService<MainForm>() [file:10]
+        public MainForm(ILoggerFactory loggerFactory)
+        {
+            this.loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            this.logger = this.loggerFactory.CreateLogger<MainForm>();
+
+            InitializeComponent();
+
+            // keep existing initialization code here
+        }
+
         /// <summary>
         /// Handler for "Convert to MD" menu item (Ctrl+M).
         /// </summary>
@@ -44,7 +65,7 @@ namespace Vectool.OaiUI
             try
             {
                 userInterface.WorkStart("Generating MD file...", selectedFolders);
-                var handler = new MDHandler(userInterface, recentFilesManager);
+                var handler = new MDHandler(logger, userInterface, recentFilesManager);
                 await Task.Run(() => handler.ExportSelectedFolders(outputPath, config)).ConfigureAwait(true);
                 userInterface.ShowMessage($"Successfully generated file at:\n{outputPath}", "Success", MessageType.Information);
 
@@ -74,7 +95,7 @@ namespace Vectool.OaiUI
 
             var vsName = SanitizeFileName(comboBoxVectorStores.SelectedItem?.ToString() ?? "default");
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
-            var gitChangesFileName = RecentFilesOutputManager.Factory().BuildOutputPath( $"{vsName}_{branchName}", RecentFileType.Git_Md);
+            var gitChangesFileName = RecentFilesOutputManager.Factory().BuildOutputPath($"{vsName}_{branchName}", RecentFileType.Git_Md);
             var mdExportFileName = RecentFilesOutputManager.Factory().BuildOutputPath($"{vsName}_{branchName}", RecentFileType.Codebase_Md);
 
             using var saveFileDialog = new SaveFileDialog
@@ -157,7 +178,7 @@ namespace Vectool.OaiUI
             try
             {
                 userInterface.WorkStart("Generating file size summary...", selectedFolders);
-                var handler = new FileSizeSummaryHandler(userInterface, recentFilesManager);
+                var handler = new FileSizeSummaryHandler(logger, userInterface, recentFilesManager);
                 await Task.Run(() => handler.GenerateFileSizeSummary(selectedFolders, outputPath, config)).ConfigureAwait(true);
                 userInterface.ShowMessage($"Successfully generated file at:\n{outputPath}", "Success", MessageType.Information);
 
@@ -191,7 +212,7 @@ namespace Vectool.OaiUI
 
             if (solutionPaths.Length == 0)
             {
-                MessageBox.Show("Could not find the solution file.", "Solution Not Found", MessageBoxButtons.OK, MessageBoxIcon.LogError);
+                MessageBox.Show("Could not find the solution file.", "Solution Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -224,7 +245,6 @@ namespace Vectool.OaiUI
             var branchName = SanitizeFileName(await GetCurrentBranchNameAsync().ConfigureAwait(true));
             var testResultsFileName = RecentFilesOutputManager.Factory().BuildOutputPath($"{vsName}_{branchName}", RecentFileType.TestResults_Md);
 
-
             using var saveFileDialog = new SaveFileDialog
             {
                 Title = "Save Git Changes As...",
@@ -238,8 +258,8 @@ namespace Vectool.OaiUI
             var testResultsOutputPath = saveFileDialog.FileName;
 
             // Create the process runner and handler (kept local for MVP; DI-ready).
-            var processRunner = new VecTool.Core.ProcessRunner();
-            var handler = new VecTool.Handlers.TestRunnerHandler(
+            var processRunner = new VecTool.Core.ProcessRunner(logger);
+            var handler = new VecTool.Handlers.TestRunnerHandler(logger,
                 solutionPath,
                 testResultsOutputPath,
                 processRunner,
@@ -258,7 +278,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Test execution failed: {ex.Message}", "Test LogError", MessageBoxButtons.OK, MessageBoxIcon.LogError);
+                MessageBox.Show($"Test execution failed: {ex.Message}", "Test LogError", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -275,6 +295,7 @@ namespace Vectool.OaiUI
         {
             Application.Exit();
         }
+
         /// <summary>Handler for Export to Repomix menu item (Ctrl+R).</summary>
         private async void exportToRepomixToolStripMenuItemClick(object? sender, EventArgs e)
         {
@@ -312,7 +333,7 @@ namespace Vectool.OaiUI
 
             try
             {
-                var handler = new RepomixHandler(userInterface, recentFilesManager);
+                var handler = new RepomixHandler(logger, userInterface, recentFilesManager);
                 var result = await handler.RunRepomixAsync(
                     targetDirectory,
                     outputPath,
@@ -338,6 +359,5 @@ namespace Vectool.OaiUI
                     MessageType.LogError);
             }
         }
-
     }
 }

@@ -1,6 +1,7 @@
 ﻿using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using NLogShared;
+
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace UnitTests.Traversal
     {
         private string testDir = default!;
         private VectorStoreConfig config = default!;
-        private readonly ILogger _log = new();
+        private readonly ILogger logger;
 
         [SetUp]
         public void Setup()

@@ -67,7 +67,7 @@ namespace oaiUI
         {
             var icon = MessageBoxIcon.Information;
             if (type == MessageType.Warning) icon = MessageBoxIcon.Warning;
-            else if (type == MessageType.LogError) icon = MessageBoxIcon.LogError;
+            else if (type == MessageType.LogError) icon = MessageBoxIcon.Error;
 
             InvokeOnUi(() =>
             {

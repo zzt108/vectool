@@ -17,13 +17,13 @@ namespace VecTool.Handlers
     /// Markdown export handler for codebase documentation generation.
     /// Added parameter validation guards for null/empty folder lists (QF-003)
     /// </summary>
-    public class MDHandler : FileHandlerBase<MDHandler>
+    public class MDHandler : FileHandlerBase
     {
-        public MDHandler(ILogger<MDHandler> logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager) : base(logger, ui, recentFilesManager)
+        public MDHandler(ILogger logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager) : base(logger, ui, recentFilesManager)
         {
         }
 
-        public MDHandler(ILogger<MDHandler> logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager, IFileSystemTraverser traverser) : base(logger, ui, recentFilesManager, traverser)
+        public MDHandler(ILogger logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager, IFileSystemTraverser traverser) : base(logger, ui, recentFilesManager, traverser)
         {
         }
 

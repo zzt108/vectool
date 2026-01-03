@@ -13,9 +13,9 @@ namespace VecTool.Handlers
     /// Generates file size summaries for selected folders using traverser for exclusive file enumeration.
     /// ✅ Uses FileSystemTraverser.EnumerateFilesRespectingExclusions() for all file access
     /// </summary>
-    public class FileSizeSummaryHandler : FileHandlerBase<FileSizeSummaryHandler>
+    public class FileSizeSummaryHandler : FileHandlerBase
     {
-        //private static readonly ILogger logger = new();
+        //private static readonly ILogger logger;
 
         // Injected traverser for exclusive authority
         private readonly IFileSystemTraverser _fileSystemTraverser;
@@ -26,7 +26,7 @@ namespace VecTool.Handlers
         /// <param name="ui">Optional UI interface for progress updates</param>
         /// <param name="recentFilesManager">Optional recent files manager</param>
         /// <param name="fileSystemTraverser">Traverser for file enumeration (required for exclusive authority)</param>
-        public FileSizeSummaryHandler(ILogger<FileSizeSummaryHandler> logger,
+        public FileSizeSummaryHandler(ILogger logger,
             IUserInterface? ui,
             IRecentFilesManager? recentFilesManager,
             IFileSystemTraverser? fileSystemTraverser = null)

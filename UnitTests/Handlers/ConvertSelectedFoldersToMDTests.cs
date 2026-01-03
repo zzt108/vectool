@@ -5,12 +5,14 @@ using VecTool.Configuration;
 using System.IO;
 using System.Collections.Generic;
 using DocXHandlerTests;
+using Microsoft.Extensions.Logging;
 
 namespace UnitTests.Handlers
 {
     [TestFixture]
     public class ConvertSelectedFoldersToMDTests : DocTestBase
     {
+        private readonly ILogger logger;
 
         [SetUp]
         public void Setup()
@@ -36,9 +38,9 @@ namespace UnitTests.Handlers
             string outputMarkdownPath = Path.Combine(testRootPath, "output.md");
             List<string> folderPaths = new List<string> { folder1, folder2 };
 
-            var mdHandler = new MDHandler(null, null);
+            var mdHandler = new MDHandler(logger, null, null);
             mdHandler.ExportSelectedFolders(outputMarkdownPath, new VectorStoreConfig());
-            
+
             File.Exists(outputMarkdownPath).ShouldBeTrue();
 
             string markdownContent = File.ReadAllText(outputMarkdownPath);
@@ -47,7 +49,7 @@ namespace UnitTests.Handlers
             markdownContent.ShouldContain(ContentOfMarkdownFile1);
             markdownContent.ShouldContain($"# Folder: {MarkdownFolder2Name}");
             markdownContent.ShouldContain($"## File: {Markdown2FileName}");
-                markdownContent.ShouldContain(ContentOfMarkdownFile2);
+            markdownContent.ShouldContain(ContentOfMarkdownFile2);
         }
 
         [Test]
@@ -66,14 +68,14 @@ namespace UnitTests.Handlers
             string outputMarkdownPath = Path.Combine(testRootPath, "output_recursive.md");
             List<string> folderPaths = new List<string> { mainFolder };
 
-            var mdHandler = new MDHandler(null, null);
+            var mdHandler = new MDHandler(logger, null, null);
             mdHandler.ExportSelectedFolders(outputMarkdownPath, new VectorStoreConfig());
-            
+
             File.Exists(outputMarkdownPath).ShouldBeTrue();
             string markdownContent = File.ReadAllText(outputMarkdownPath);
             markdownContent.ShouldContain($"# Folder: {MarkdownMainFolderName}");
             markdownContent.ShouldContain($"## File: {MainFileName}");
-                markdownContent.ShouldContain(ContentOfMainFile);
+            markdownContent.ShouldContain(ContentOfMainFile);
             markdownContent.ShouldContain($"# Folder: {MarkdownSubFolderName}");
             markdownContent.ShouldContain($"## File: {SubFileName}");
             markdownContent.ShouldContain(ContentOfSubFile);
@@ -88,5 +90,4 @@ namespace UnitTests.Handlers
             }
         }
     }
-
 }

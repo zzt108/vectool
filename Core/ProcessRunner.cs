@@ -15,9 +15,9 @@ namespace VecTool.Core
     /// </summary>
     public sealed class ProcessRunner : IProcessRunner
     {
-        private readonly ILogger<ProcessRunner> logger;
+        private readonly ILogger logger;
 
-        public ProcessRunner(ILogger<ProcessRunner> logger)
+        public ProcessRunner(ILogger logger)
         {
             this.logger = logger;
         }
@@ -58,7 +58,7 @@ namespace VecTool.Core
                 }
                 catch (System.ComponentModel.Win32Exception ex)
                 {
-                    log?.LogError(ex, $"Failed to start process '{fileName}'. LogError code: {ex.NativeErrorCode}. " +
+                    logger?.LogError(ex, $"Failed to start process '{fileName}'. LogError code: {ex.NativeErrorCode}. " +
                                    $"Possible causes: (1) File not found in PATH, (2) Invalid executable, (3) Permissions issue.");
                     throw; // Re-throw with logged context
                 }
@@ -82,12 +82,12 @@ namespace VecTool.Core
             }
             catch (Exception ex)
             {
-                using var _ = logger.SetContext()
+                using var _ = logger.SetContext(new Props()
                     .Add("FileName", fileName)
                     .Add("Arguments", arguments)
                     .Add("WorkingDirectory", workingDirectory)
                     //.Add("ExitCode", process.ExitCode)
-                    .Add("Duration", (DateTime.UtcNow - startedAt).TotalMilliseconds);
+                    .Add("Duration", (DateTime.UtcNow - startedAt).TotalMilliseconds));
                 logger?.LogError(ex, $"ProcessRunner.RunAsync failed. Command: '{fileName}', Args: '{arguments}', WorkDir: '{workingDirectory}'");
                 throw; // Re-throw with logged context
             }

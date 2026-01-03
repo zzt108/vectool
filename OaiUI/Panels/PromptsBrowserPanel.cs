@@ -1,6 +1,7 @@
 ﻿#nullable enable
+
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -16,12 +17,12 @@ using VecTool.Handlers;
 namespace VecTool.UI.Panels
 {
     /// <summary>
-    /// Main browser panel for AI Prompts Library with tree hierarchy, 
+    /// Main browser panel for AI Prompts Library with tree hierarchy,
     /// search results, and 4 core actions (Copy, Edit, New, Git).
     /// </summary>
     public sealed partial class PromptsBrowserPanel : UserControl
     {
-        private static readonly ILogger logger = new();
+        private static readonly ILogger logger;
 
         private PromptSearchEngine searchEngine;
         private FavoritesManager favoritesManager;
@@ -41,6 +42,7 @@ namespace VecTool.UI.Panels
             searchEngine = null!;
             favoritesManager = null!;
         }
+
         private static string[] GetConfiguredPromptTypes()
         {
             var raw = ConfigurationManager.AppSettings["promptsTypes"];
@@ -97,7 +99,7 @@ namespace VecTool.UI.Panels
 
             searchEngine.RebuildIndex(); // Rebuild index on startup (from previous fix)
             InitializeTooltips(); // Setup all tooltips in one place
-        
+
             logger.LogInformation("PromptsBrowserPanel initialized.");
 
             // Initial load
@@ -312,7 +314,7 @@ namespace VecTool.UI.Panels
 
         private void ShowError(string message)
         {
-            MessageBox.Show(this, message, "LogError", MessageBoxButtons.OK, MessageBoxIcon.LogError);
+            MessageBox.Show(this, message, "LogError", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         // Action button handlers
@@ -492,7 +494,6 @@ namespace VecTool.UI.Panels
             }
         }
 
-
         // Helpers
 
         private PromptFile? GetSelectedPromptFile()
@@ -551,4 +552,3 @@ namespace VecTool.UI.Panels
         }
     }
 }
-

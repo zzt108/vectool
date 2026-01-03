@@ -17,6 +17,7 @@ namespace oaiUI.RecentFiles
     {
         // Context menu controls
         private ContextMenuStrip? contextMenu;
+
         private ToolStripMenuItem? menuOpenFile;
         private ToolStripMenuItem? menuShowInExplorer;
         private ToolStripMenuItem? menuCopyPath;
@@ -123,7 +124,7 @@ namespace oaiUI.RecentFiles
                     $"Failed to open file:\n{ex.Message}",
                     "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.LogError);
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -159,7 +160,7 @@ namespace oaiUI.RecentFiles
                     $"Failed to show in Explorer:\n{ex.Message}",
                     "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.LogError);
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -182,7 +183,7 @@ namespace oaiUI.RecentFiles
                     $"Failed to copy path:\n{ex.Message}",
                     "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.LogError);
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -209,7 +210,7 @@ namespace oaiUI.RecentFiles
                     $"Failed to remove file from list:\n{ex.Message}",
                     "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.LogError);
+                    MessageBoxIcon.Error);
             }
         }
     }

@@ -1,5 +1,5 @@
 ﻿using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
@@ -18,19 +18,20 @@ namespace VecTool.Handlers
     /// </summary>
     public sealed class RepomixHandler
     {
-        private static readonly ILogger logger = new();
+        private static readonly ILogger logger;
         private readonly IUserInterface userInterface;
         private readonly IRecentFilesManager recentFilesManager;
         private readonly IProcessRunner processRunner;
 
         public RepomixHandler(
+            ILogger logger,
             IUserInterface userInterface,
             IRecentFilesManager recentFilesManager,
             IProcessRunner? processRunner = null)
         {
             this.userInterface = userInterface ?? throw new ArgumentNullException(nameof(userInterface));
             this.recentFilesManager = recentFilesManager ?? throw new ArgumentNullException(nameof(recentFilesManager));
-            this.processRunner = processRunner ?? new ProcessRunner();
+            this.processRunner = processRunner ?? new ProcessRunner(logger);
         }
 
         /// <summary>

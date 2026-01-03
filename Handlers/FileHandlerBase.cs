@@ -14,16 +14,16 @@ using VecTool.Constants;
 /// Base class for all file format handlers (DOCX, MD, PDF, Git).
 /// Delegates complex operations to specialized helpers following SRP.
 /// </summary>
-public abstract class FileHandlerBase<TLogCategory>
+public abstract class FileHandlerBase
 {
-    protected readonly ILogger<TLogCategory> logger;
+    protected readonly ILogger logger;
     protected readonly IUserInterface? Ui; // renamed from _ui to match AI faulti code generation logic
     protected readonly IRecentFilesManager? RecentFilesManager; // renamed from RecentFilesManager to match AI faulti code generation logic
     protected readonly AiContextGenerator AiContextGenerator;
     protected readonly IFileSystemTraverser FileSystemTraverser;
 
     protected FileHandlerBase(
-        ILogger<TLogCategory> logger,
+        ILogger logger,
         IUserInterface? ui,
         IRecentFilesManager? recentFilesManager,
         IFileSystemTraverser? traverser = null)

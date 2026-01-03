@@ -17,12 +17,12 @@ using VecTool.RecentFiles;
 /// <summary>
 /// Handler for extracting and formatting Git changes from repositories.
 /// </summary>
-public sealed class GitChangesHandler : FileHandlerBase<GitChangesHandler>
+public sealed class GitChangesHandler : FileHandlerBase
 {
     private readonly string _aiPrompt;
     private readonly FileSystemTraverser traverser;
 
-    public GitChangesHandler(ILogger<GitChangesHandler> logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager, string? rootPath = null)
+    public GitChangesHandler(ILogger logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager, string? rootPath = null)
         : base(logger, ui, recentFilesManager)
     {
         _aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"]
@@ -73,7 +73,7 @@ public sealed class GitChangesHandler : FileHandlerBase<GitChangesHandler>
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                using var _ = logger.SetContext().Add("basePath", folderPath);
+                using var _ = logger.SetContext(new Props().Add("folderCount", allowedFolders.Count).Add("basePath", folderPath));
                 logger.LogInformation($"Found {gitRepos.Count} Git repositories to process");
 
                 foreach (var repoPath in gitRepos)

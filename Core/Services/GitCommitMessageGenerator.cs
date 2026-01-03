@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using VecTool.Core.AI;
 using VecTool.Core.Models;
 
@@ -23,9 +24,9 @@ public sealed class GitCommitMessageGenerator
     /// </summary>
     public async Task<string?> GenerateAsync(string gitDiff, CommitContext context)
     {
-        using var lc = logger.SetContext()
+        using var lc = logger.SetContext(new Props()
             .Add("repo", context.Repo)
-            .Add("diffLength", gitDiff.Length);
+            .Add("diffLength", gitDiff.Length));
 
         try
         {
@@ -62,10 +63,10 @@ Example: Add PromptCategorizer with AI-powered suggestions";
             if (commitMessage.Length > MaxCommitLength)
             {
                 commitMessage = commitMessage.Substring(0, MaxCommitLength);
-                using var __ = logger.SetContext().Add("length", commitMessage.Length);
+                using var __ = logger.SetContext(new Props().Add("length", commitMessage.Length));
                 logger.LogWarning("Commit message truncated");
             }
-            using var _ = logger.SetContext().Add("message", commitMessage);
+            using var _ = logger.SetContext(new Props().Add("message", commitMessage));
             logger.LogInformation("Commit message generated");
             return commitMessage;
         }

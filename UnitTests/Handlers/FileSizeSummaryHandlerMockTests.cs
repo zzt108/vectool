@@ -1,4 +1,5 @@
 ﻿// File: UnitTests/Handlers/FileSizeSummaryHandlerMockTests.cs
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
@@ -22,6 +23,8 @@ namespace UnitTests.Handlers
 
         // Use interface for safe NSubstitute proxying (no ctor args allowed for interfaces).
         private IFileSystemTraverser mockTraverser = default!;
+
+        private readonly ILogger logger;
 
         [SetUp]
         public void Setup()
@@ -86,7 +89,7 @@ namespace UnitTests.Handlers
 
             ConfigureTraverser(a1, b1);
             var output = Path.Combine(testDir, "sizes.md");
-            var handler = new FileSizeSummaryHandler(mockUi, mockRecentFilesManager, mockTraverser);
+            var handler = new FileSizeSummaryHandler(logger, mockUi, mockRecentFilesManager, mockTraverser);
 
             // Act
             handler.GenerateFileSizeSummary(new List<string> { folderA, folderB }, output, config);
@@ -107,7 +110,7 @@ namespace UnitTests.Handlers
             ConfigureTraverser(f1);
 
             var output = Path.Combine(testDir, "sizes.md");
-            var handler = new FileSizeSummaryHandler(mockUi, mockRecentFilesManager, mockTraverser);
+            var handler = new FileSizeSummaryHandler(logger, mockUi, mockRecentFilesManager, mockTraverser);
 
             // Act
             handler.GenerateFileSizeSummary(new List<string> { folder }, output, config);
@@ -130,7 +133,7 @@ namespace UnitTests.Handlers
             ConfigureTraverser(f1);
 
             var output = Path.Combine(testDir, "sizes.md");
-            var handler = new FileSizeSummaryHandler(mockUi, mockRecentFilesManager, mockTraverser);
+            var handler = new FileSizeSummaryHandler(logger, mockUi, mockRecentFilesManager, mockTraverser);
 
             // Act
             handler.GenerateFileSizeSummary(new List<string> { folder }, output, config);
@@ -154,7 +157,7 @@ namespace UnitTests.Handlers
             ConfigureTraverser(f1);
 
             var output = Path.Combine(testDir, "sizes.md");
-            var handler = new FileSizeSummaryHandler(mockUi, mockRecentFilesManager, mockTraverser);
+            var handler = new FileSizeSummaryHandler(logger, mockUi, mockRecentFilesManager, mockTraverser);
 
             // Act
             handler.GenerateFileSizeSummary(new List<string> { folder }, output, config);
@@ -178,7 +181,7 @@ namespace UnitTests.Handlers
             ConfigureTraverser(f1);
 
             var output = Path.Combine(testDir, "sizes.md");
-            var handler = new FileSizeSummaryHandler(mockUi, mockRecentFilesManager, mockTraverser);
+            var handler = new FileSizeSummaryHandler(logger, mockUi, mockRecentFilesManager, mockTraverser);
 
             // Act
             handler.GenerateFileSizeSummary(new List<string> { folder }, output, config);

@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
 using System.Configuration;
 using System.Globalization;
 using VecTool.Constants;
@@ -15,7 +15,7 @@ namespace VecTool.UI.Panels
     /// </summary>
     public sealed class PromptRenameForm : Form
     {
-        private static readonly ILogger logger = new();
+        private static readonly ILogger logger;
 
         private readonly PromptFile promptFile;
         private readonly string originalFullPath;
@@ -363,9 +363,9 @@ namespace VecTool.UI.Panels
 
                 File.Move(originalFullPath, newFullPath);
 
-                using var _ = logger.SetContext()
+                using var _ = logger.SetContext(new Props()
                     .Add("From", originalFullPath)
-                    .Add("To", newFullPath);
+                    .Add("To", newFullPath));
                 logger.LogInformation("Renamed prompt file.");
 
                 WasRenamed = true;
@@ -382,7 +382,7 @@ namespace VecTool.UI.Panels
                     $"Failed to rename file: {ex.Message}",
                     "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.LogError);
+                    MessageBoxIcon.Error);
             }
         }
     }

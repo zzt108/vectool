@@ -24,8 +24,8 @@ namespace Vectool.OaiUI
         {
             userInterface.WorkStart("Generating Git changes and MD export...", selectedFolders);
 
-            var gitHandler = new GitChangesHandler(userInterface, recentFilesManager);
-            var mdHandler = new MDHandler(userInterface, recentFilesManager);
+            var gitHandler = new GitChangesHandler(logger, userInterface, recentFilesManager);
+            var mdHandler = new MDHandler(logger, userInterface, recentFilesManager);
             var vectorStoreConfig = GetCurrentVectorStoreConfig();
 
             // Execute both operations in parallel

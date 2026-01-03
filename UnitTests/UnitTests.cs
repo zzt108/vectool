@@ -18,13 +18,13 @@ namespace UnitTests
     [TestFixture]
     public class MimeTypeProviderTests
     {
-        private static NLogShared.ILogger _log => field = new();
+        private static ILogger logger;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            using var ctx = logger.SetContext();
-            ctx.Add("Suite", nameof(MimeTypeProviderTests));
+            using var ctx = logger.SetContext(new Props()
+            .Add("Suite", nameof(MimeTypeProviderTests)));
             logger.LogInformation("Test suite starting");
         }
 
@@ -106,9 +106,9 @@ namespace UnitTests
     }
 
     // Helper test class remains unchanged
-    public class TestFileHandler : FileHandlerBase<TestFileHandler>
+    public class TestFileHandler : FileHandlerBase
     {
-        public TestFileHandler(ILogger<TestFileHandler>? logger = null, IUserInterface? ui, IRecentFilesManager? recentFilesManager = null)
+        public TestFileHandler(ILogger? logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager = null)
             : base(logger!, ui, recentFilesManager)
         {
         }

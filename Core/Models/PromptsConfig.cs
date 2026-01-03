@@ -67,7 +67,7 @@ public sealed class PromptsConfig : IPromptsConfig
         var llmConfigPath = reader.Get(KEY_LLM_CONFIG_PATH);
         var favoritesPath = reader.Get(KEY_FAVORITES_PATH);
 
-        logger.SetContext(ctx.Add(KEY_REPO_PATH, repoPath)
+        logger.SetContext(new Props().Add(KEY_REPO_PATH, repoPath)
             .Add(KEY_FILE_EXTENSIONS, extensions)
             .Add(KEY_LLM_CONFIG_PATH, llmConfigPath)
             .Add(KEY_FAVORITES_PATH, favoritesPath));

@@ -1,7 +1,7 @@
 ﻿namespace VecTool.Handlers.Traversal
 {
     using LogCtxShared;
-    using NLogShared;
+    using Microsoft.Extensions.Logging;
     using System;
     using System.IO;
     using System.Linq;
@@ -16,7 +16,7 @@
     /// </summary>
     public class FileMarkerExtractor : IFileMarkerExtractor
     {
-        private static readonly ILogger logger = new();
+        private static readonly ILogger logger;
         public const string MarkerSigniture = "[VECTOOL:EXCLUDE:";
 
         /// <summary>

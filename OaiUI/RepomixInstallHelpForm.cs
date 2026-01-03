@@ -154,7 +154,7 @@ After installation, restart VecTool and try the export again.
                     $"Failed to open browser:\n{ex.Message}",
                     "LogError",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.LogError);
+                    MessageBoxIcon.Error);
             }
         }
     }

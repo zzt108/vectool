@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using VecTool.Core.AI;
 using VecTool.Core.Models;
 
@@ -22,7 +23,7 @@ public sealed class PromptCategorizer
     /// </summary>
     public async Task<CategorySuggestion?> SuggestCategoryAsync(string content)
     {
-        using var lc = LogCtxShared.logger.SetContext().Add("contentLength", content.Length);
+        using var lc = logger.SetContext(new Props().Add("content", content).Add("contentLength", content.Length));
 
         try
         {
@@ -45,7 +46,7 @@ Example response: work/VecTool/Spaces";
 
             logger.LogInformation("Requesting AI categorization");
             var response = await _llmProvider.RequestAsync(prompt);
-            using var ctx = logger.SetContext().Add("response", response);
+            using var ctx = logger.SetContext(new Props().Add("prompt", prompt).Add("response", response));
             logger.LogInformation("AI response received");
 
             // Parse response: "work/VecTool/Spaces"
@@ -53,7 +54,7 @@ Example response: work/VecTool/Spaces";
 
             if (parts.Length != 3)
             {
-                using var _ = logger.SetContext().Add("response", response);
+                using var _ = logger.SetContext(new Props().Add("prompt", prompt).Add("response", response));
                 logger.LogWarning("Invalid AI response format");
                 return null;
             }

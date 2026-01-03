@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.Extensions.Logging;
+using NUnit.Framework;
 using Shouldly;
 using System;
 using System.IO;
@@ -14,6 +15,7 @@ namespace UnitTests.Handlers
     [TestFixture]
     public class TestRunnerHandlerDependencyTests
     {
+        private readonly ILogger logger;
 
         [Test]
         public void Should_wire_dependencies_via_canonical_DI_constructor()
@@ -22,7 +24,7 @@ namespace UnitTests.Handlers
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recentFiles = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler("Fake.sln", null, processRunner, ui, recentFiles, "main", "S");
+            var handler = new TestRunnerHandler(logger, "Fake.sln", null, processRunner, ui, recentFiles, "main", "S");
 
             handler.ShouldNotBeNull();
         }
@@ -35,14 +37,14 @@ namespace UnitTests.Handlers
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recent = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler("Fake.sln", null,proc, ui, recent, "test-branch", "storeX");
+            var handler = new TestRunnerHandler(logger, "Fake.sln", null, proc, ui, recent, "test-branch", "storeX");
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
 
             try
             {
-                var result = await handler.RunTestsAsync( CancellationToken.None);
+                var result = await handler.RunTestsAsync(CancellationToken.None);
                 result.ShouldBeNull();
             }
             finally
@@ -52,7 +54,6 @@ namespace UnitTests.Handlers
         }
 
         [Test]
-        //[Ignore("TODO")]
         public async Task RunTestsAsync_should_not_write_output_on_success()
         {
             // IGitRunner git = new FakeGitRunner("main");
@@ -60,7 +61,7 @@ namespace UnitTests.Handlers
             IUserInterface ui = new FakeUserInterface();
             IRecentFilesManager recent = new NoopRecentFilesManager();
 
-            var handler = new TestRunnerHandler("Fake.sln",null, proc, ui, recent, "main", "S");
+            var handler = new TestRunnerHandler(logger, "Fake.sln", null, proc, ui, recent, "main", "S");
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);

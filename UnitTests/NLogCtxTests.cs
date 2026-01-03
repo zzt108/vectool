@@ -1,25 +1,36 @@
-﻿using Shouldly;
-using NLogShared;
+﻿using LogCtxShared;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using NUnit.Framework;
+using Shouldly;
+using System;
 
-namespace NLogAdapter.Tests
+namespace UnitTests;
+
+[TestFixture]
+public sealed class NLogCtxTests
 {
-    [TestFixture]
-    public class NLogCtxTests
+    [Test]
+    public void InitShouldCreateLoggerAndLogWithConfig()
     {
-        private const string ConfigPath = "Config/nlog.config"; // Adjust path as necessary
+        var configPath = Path.Combine(AppContext.BaseDirectory, "nlog.config");
+        File.Exists(configPath).ShouldBeTrue($"Missing test NLog config: {configPath}");
 
-        [Test]
-        public void Init_ShouldInitializeLogger_WhenCanLogIsTrue()
+        using var loggerFactory = LoggerFactory.Create(builder =>
         {
-            // Arrange
-            var nLogCtx = new ILogger();
+            builder.ClearProviders();
+            builder.SetMinimumLevel(LogLevel.Trace);
 
-            // Act
-            var result = nLogCtx.ConfigureXml(ConfigPath);
+            // Uses the UnitTests output-copied nlog.config
+            builder.AddNLog(configPath);
+        });
 
-            // Assert
-            result.ShouldBeTrue();
-        }
+        var logger = loggerFactory.CreateLogger<NLogCtxTests>();
+        logger.ShouldNotBeNull();
+
+        using var _ = logger.SetContext(new Props()
+            .Add("test", nameof(InitShouldCreateLoggerAndLogWithConfig)));
+
+        logger.LogInformation("Logger initialization test message.");
     }
 }
