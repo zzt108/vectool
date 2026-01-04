@@ -1,11 +1,8 @@
 ﻿// File: Core/ProcessRunner.cs
 
 using LogCtxShared;
-using NLogShared;
-using System;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using VecTool.Core.Abstractions;
 
 namespace VecTool.Core
@@ -15,6 +12,13 @@ namespace VecTool.Core
     /// </summary>
     public sealed class ProcessRunner : IProcessRunner
     {
+        private readonly ILogger logger;
+
+        public ProcessRunner(ILogger logger)
+        {
+            this.logger = logger;
+        }
+
         public async Task<ProcessResult> RunAsync(string fileName, string arguments, string? workingDirectory, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(fileName))
@@ -41,11 +45,9 @@ namespace VecTool.Core
 
             var startedAt = DateTime.UtcNow;
 
-            var log = new CtxLogger();
-
             try
             {
-                log?.Debug($"Starting process: FileName='{fileName}', Args='{arguments}', WorkDir='{workingDirectory}'");
+                logger?.LogDebug($"Starting process: FileName='{fileName}', Args='{arguments}', WorkDir='{workingDirectory}'");
 
                 try
                 {
@@ -53,7 +55,7 @@ namespace VecTool.Core
                 }
                 catch (System.ComponentModel.Win32Exception ex)
                 {
-                    log?.Error(ex, $"Failed to start process '{fileName}'. Error code: {ex.NativeErrorCode}. " +
+                    logger?.LogError(ex, $"Failed to start process '{fileName}'. LogError code: {ex.NativeErrorCode}. " +
                                    $"Possible causes: (1) File not found in PATH, (2) Invalid executable, (3) Permissions issue.");
                     throw; // Re-throw with logged context
                 }
@@ -77,13 +79,13 @@ namespace VecTool.Core
             }
             catch (Exception ex)
             {
-                using var _ = LogCtx.Set()
+                using var _ = logger.SetContext()
                     .Add("FileName", fileName)
                     .Add("Arguments", arguments)
                     .Add("WorkingDirectory", workingDirectory)
                     //.Add("ExitCode", process.ExitCode)
                     .Add("Duration", (DateTime.UtcNow - startedAt).TotalMilliseconds);
-                log?.Error(ex, $"ProcessRunner.RunAsync failed. Command: '{fileName}', Args: '{arguments}', WorkDir: '{workingDirectory}'");
+                logger?.LogError(ex, $"ProcessRunner.RunAsync failed. Command: '{fileName}', Args: '{arguments}', WorkDir: '{workingDirectory}'");
                 throw; // Re-throw with logged context
             }
             finally

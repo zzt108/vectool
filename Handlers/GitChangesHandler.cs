@@ -1,6 +1,7 @@
 namespace VecTool.Handlers;
 
 using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -21,8 +22,8 @@ public sealed class GitChangesHandler : FileHandlerBase
     private readonly string _aiPrompt;
     private readonly FileSystemTraverser traverser;
 
-    public GitChangesHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager, string? rootPath = null)
-        : base(ui, recentFilesManager)
+    public GitChangesHandler(ILogger logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager, string? rootPath = null)
+        : base(logger, ui, recentFilesManager)
     {
         _aiPrompt = ConfigurationManager.AppSettings["gitAiPrompt"]
             ?? "Analyze the following Git changes and provide a concise, descriptive commit message.";
@@ -43,7 +44,7 @@ public sealed class GitChangesHandler : FileHandlerBase
         try
         {
             Ui?.UpdateStatus("Analyzing Git repositories...");
-            log.Info($"Starting Git changes analysis: {folderPaths.Count} folders");
+            logger.LogInformation($"Starting Git changes analysis: {folderPaths.Count} folders");
 
             var allChanges = new StringBuilder();
             allChanges.AppendLine("# AI Prompt for Commit Message");
@@ -64,7 +65,7 @@ public sealed class GitChangesHandler : FileHandlerBase
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                log.Debug($"Found {allowedFolders.Count} non-excluded folders in {folderPath}");
+                logger.LogDebug($"Found {allowedFolders.Count} non-excluded folders in {folderPath}");
 
                 // Find Git repos ONLY in allowed folders
                 var gitRepos = allowedFolders
@@ -72,8 +73,8 @@ public sealed class GitChangesHandler : FileHandlerBase
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                using var _ = LogCtx.Set().Add("basePath", folderPath);
-                log.Info($"Found {gitRepos.Count} Git repositories to process");
+                using var _ = logger.SetContext().Add("folderCount", allowedFolders.Count).Add("basePath", folderPath);
+                logger.LogInformation($"Found {gitRepos.Count} Git repositories to process");
 
                 foreach (var repoPath in gitRepos)
                 {
@@ -95,13 +96,13 @@ public sealed class GitChangesHandler : FileHandlerBase
             }
 
             Ui?.UpdateStatus($"Git changes saved: {outputPath}");
-            log.Info($"Git changes analysis completed: {outputPath}");
+            logger.LogInformation($"Git changes analysis completed: {outputPath}");
 
             return allChanges.ToString();
         }
         catch (Exception ex)
         {
-            log.Error(ex, $"Failed to analyze Git changes: {outputPath}");
+            logger.LogError(ex, $"Failed to analyze Git changes: {outputPath}");
             throw;
         }
     }
@@ -225,8 +226,8 @@ public sealed class GitChangesHandler : FileHandlerBase
         }
         catch (Exception ex)
         {
-            log.Error(ex, $"Error processing git repository: {repoPath}");
-            mainChanges.AppendLine($"**Error processing repository:** {ex.Message}");
+            logger.LogError(ex, $"LogError processing git repository: {repoPath}");
+            mainChanges.AppendLine($"**LogError processing repository:** {ex.Message}");
         }
 
         mainChanges.AppendLine();

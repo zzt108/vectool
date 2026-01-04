@@ -6,7 +6,7 @@
       <!--<string>Serilog.Sinks.Seq</string>-->
     </Using>
     <MinimumLevel>
-      <Default>Debug</Default>
+      <Default>LogDebug</Default>
     </MinimumLevel>
     <WriteTo>
       <Name>Console</Name>

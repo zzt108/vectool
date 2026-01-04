@@ -1,5 +1,6 @@
 ﻿#nullable enable
-using System;
+
+using VecTool.Configuration.Helpers;
 
 namespace VecTool.Core.Models
 {
@@ -21,12 +22,9 @@ namespace VecTool.Core.Models
         /// </summary>
         public PromptFile(string fullPath, string relativePath, PromptMetadata metadata, string content, DateTime lastModified, bool isFavorite = false)
         {
-            if (string.IsNullOrWhiteSpace(fullPath))
-                throw new ArgumentException("Full path is required", nameof(fullPath));
-
-            FullPath = fullPath;
-            RelativePath = relativePath; 
-            Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata));
+            FullPath = fullPath.ThrowIfNullOrWhiteSpace(nameof(fullPath), null, "Full path is required");
+            RelativePath = relativePath;
+            Metadata = metadata.ThrowIfNull(nameof(metadata));
             Content = content ?? string.Empty;
             LastModified = lastModified;
             IsFavorite = isFavorite;

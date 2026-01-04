@@ -2,13 +2,10 @@
 // Path: OaiUI/RecentFiles/RecentFilesPanel.Core.cs
 #nullable enable
 
-using System;
 using System.Configuration;
-using System.IO;
-using System.Windows.Forms;
+using VecTool.Configuration.Helpers;
 using VecTool.Core.Configuration;
 using VecTool.RecentFiles;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace oaiUI.RecentFiles
 {
@@ -19,6 +16,7 @@ namespace oaiUI.RecentFiles
     {
         // Fields
         private IRecentFilesManager? recentFilesManager;
+
         private System.Windows.Forms.Timer refreshDebounceTimer = null!;
         private FileSystemWatcher? fileWatcher;
         private string? uiStateDirectory;
@@ -31,8 +29,8 @@ namespace oaiUI.RecentFiles
             InitializeComponent(); // Creates all designer controls including lvRecentFiles
         }
 
-        public RecentFilesPanel(IRecentFilesManager manager, string? uiStateDir = null, string? watchDirectory = null) :this()
-        { 
+        public RecentFilesPanel(IRecentFilesManager manager, string? uiStateDir = null, string? watchDirectory = null) : this()
+        {
             Initialize(manager, uiStateDir, watchDirectory);
         }
 
@@ -52,7 +50,7 @@ namespace oaiUI.RecentFiles
         /// </summary>
         public RecentFilesPanel Initialize(IRecentFilesManager manager, string? uiStateDir = null, string? watchDirectory = null)
         {
-            recentFilesManager = manager ?? throw new ArgumentNullException(nameof(manager));
+            recentFilesManager = manager.ThrowIfNull(nameof(manager));
             uiStateDirectory = uiStateDir;
             watchPath = watchDirectory;
             var rowHeightScaleStr = ConfigurationManager.AppSettings["recentFilesRowHeightScale"];
@@ -60,7 +58,6 @@ namespace oaiUI.RecentFiles
             {
                 DefaultRowHeightScale = scale;
                 appliedRowHeightScale = scale; // start with the configured value
-
             }
 
             // Setup ListView columns BEFORE wiring runtime events
@@ -90,7 +87,7 @@ namespace oaiUI.RecentFiles
             // Context menu
             InitializeContextMenu();
 
-             // Call WireDragDrop to centralize AllowDrop and drag-drop event wiring
+            // Call WireDragDrop to centralize AllowDrop and drag-drop event wiring
             WireDragDrop();
 
             // Other runtime handlers

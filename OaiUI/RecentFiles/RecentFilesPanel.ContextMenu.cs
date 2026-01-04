@@ -2,10 +2,7 @@
 // Path: OaiUI/RecentFiles/RecentFilesPanel.ContextMenu.cs
 #nullable enable
 
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Windows.Forms;
 using VecTool.RecentFiles;
 
 namespace oaiUI.RecentFiles
@@ -17,6 +14,7 @@ namespace oaiUI.RecentFiles
     {
         // Context menu controls
         private ContextMenuStrip? contextMenu;
+
         private ToolStripMenuItem? menuOpenFile;
         private ToolStripMenuItem? menuShowInExplorer;
         private ToolStripMenuItem? menuCopyPath;
@@ -121,7 +119,7 @@ namespace oaiUI.RecentFiles
             {
                 MessageBox.Show(
                     $"Failed to open file:\n{ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -157,7 +155,7 @@ namespace oaiUI.RecentFiles
             {
                 MessageBox.Show(
                     $"Failed to show in Explorer:\n{ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -180,7 +178,7 @@ namespace oaiUI.RecentFiles
             {
                 MessageBox.Show(
                     $"Failed to copy path:\n{ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -207,7 +205,7 @@ namespace oaiUI.RecentFiles
             {
                 MessageBox.Show(
                     $"Failed to remove file from list:\n{ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }

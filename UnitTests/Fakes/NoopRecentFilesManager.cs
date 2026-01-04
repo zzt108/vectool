@@ -1,15 +1,15 @@
 ﻿// ✅ FULL FILE VERSION
-using System;
-using System.Collections.Generic;
 using VecTool.RecentFiles;
 
 namespace UnitTests.Fakes
 {
     public sealed class NoopRecentFilesManager : IRecentFilesManager
     {
-        public void Load() { }
+        public void Load()
+        { }
 
-        public void Save() { }
+        public void Save()
+        { }
 
         // 🔄 MODIFY: Return int to match interface; no-op returns 0
         public int CleanupExpiredFiles(DateTime? nowUtc = null) => 0;
@@ -21,17 +21,19 @@ namespace UnitTests.Fakes
         public void RegisterGeneratedFile(
             string filePath,
             RecentFileType fileType,
-            IReadOnlyList<string> sourceFolders,
+            IReadOnlyList<string>? sourceFolders,
             long fileSizeBytes,
             DateTime? generatedAtUtc = null)
         {
             // no-op
         }
 
-        public void Remove(string filePath) { }
+        public void Remove(string filePath)
+        { }
 
-        public void Clear() { }
-        
+        public void Clear()
+        { }
+
         /// <summary>
         /// No-op removal for tests; satisfies the interface without side effects.
         /// </summary>

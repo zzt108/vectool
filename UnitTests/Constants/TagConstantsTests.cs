@@ -1,7 +1,6 @@
 ﻿// Path: UnitTests/Constants/TagConstantsTests.cs
 using NUnit.Framework;
 using Shouldly;
-using System;
 using VecTool.Constants;
 
 namespace UnitTests.Constants

@@ -1,8 +1,6 @@
 ﻿// ✅ FULL FILE VERSION
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Collections.Generic;
 using VecTool.Core.Configuration;
 using VecTool.Core.Models;
 

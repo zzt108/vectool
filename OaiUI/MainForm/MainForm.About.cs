@@ -1,7 +1,4 @@
-﻿using System;
-using System.Windows.Forms;
-
-namespace Vectool.OaiUI
+﻿namespace Vectool.OaiUI
 {
     public partial class MainForm : Form
     {

@@ -1,13 +1,9 @@
 ﻿#nullable enable
 
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using VecTool.Core.AI;
+using UnitTests;
 using VecTool.Core.AI.Providers;
 using ProviderSettings = VecTool.Core.AI.ProviderSettings;
 
@@ -16,6 +12,8 @@ namespace VecTool.UnitTests.AI
     [TestFixture]
     public class PerplexityProviderTests
     {
+        private readonly ILogger logger = TestLogger.For<PerplexityProviderTests>();
+
         [Test]
         public void Constructor_ShouldThrowWhenApiKeyMissing()
         {
@@ -29,7 +27,7 @@ namespace VecTool.UnitTests.AI
             };
 
             // Act & Assert
-            Should.Throw<ArgumentException>(() => new PerplexityProvider(settings))
+            Should.Throw<ArgumentException>(() => new PerplexityProvider(logger, settings))
                 .Message.ShouldContain("API key");
         }
 
@@ -46,7 +44,7 @@ namespace VecTool.UnitTests.AI
             };
 
             // Act & Assert
-            Should.Throw<ArgumentException>(() => new PerplexityProvider(settings))
+            Should.Throw<ArgumentException>(() => new PerplexityProvider(logger, settings))
                 .Message.ShouldContain("model");
         }
 
@@ -55,7 +53,7 @@ namespace VecTool.UnitTests.AI
         {
             // Arrange
             var settings = CreateValidSettings();
-            using var provider = new PerplexityProvider(settings);
+            using var provider = new PerplexityProvider(logger, settings);
 
             // Act
             var name = provider.GetProviderName();
@@ -69,7 +67,7 @@ namespace VecTool.UnitTests.AI
         {
             // Arrange
             var settings = CreateValidSettings();
-            using var provider = new PerplexityProvider(settings);
+            using var provider = new PerplexityProvider(logger, settings);
 
             // Act & Assert
             await Should.ThrowAsync<ArgumentException>(async () =>
@@ -96,7 +94,7 @@ namespace VecTool.UnitTests.AI
                 Timeout = 30
             };
 
-            using var provider = new PerplexityProvider(settings);
+            using var provider = new PerplexityProvider(logger, settings);
 
             // Act
             var response = await provider.RequestAsync("What is 2+2?", CancellationToken.None);
@@ -126,7 +124,7 @@ namespace VecTool.UnitTests.AI
                 Timeout = 30
             };
 
-            using var provider = new PerplexityProvider(settings);
+            using var provider = new PerplexityProvider(logger, settings);
 
             // Act
             var isValid = await provider.ValidateConfigAsync(CancellationToken.None);
@@ -147,7 +145,7 @@ namespace VecTool.UnitTests.AI
                 Timeout = 1
             };
 
-            using var provider = new PerplexityProvider(settings);
+            using var provider = new PerplexityProvider(logger, settings);
 
             // Act & Assert - Expect TaskCanceledException or OperationCanceledException
             await Should.ThrowAsync<Exception>(async () =>

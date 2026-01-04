@@ -24,8 +24,6 @@
 
   <Import Project="..\LogCtx\LogCtxShared\LogCtxShared.projitems" Label="Shared" />
 
-  <Import Project="..\LogCtx\NLogShared\NLogShared.projitems" Label="Shared" />
-
   <ItemGroup>
     <PackageReference Update="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Update="NLog" Version="6.0.6" />

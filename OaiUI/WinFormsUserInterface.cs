@@ -1,9 +1,6 @@
 ﻿// Path: Vectool.UI/OaiUI/WinFormsUserInterface.cs
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Windows.Forms;
+using VecTool.Configuration.Helpers;
 using VecTool.Handlers;
 
 namespace oaiUI
@@ -21,11 +18,11 @@ namespace oaiUI
 
         public WinFormsUserInterface(ToolStripStatusLabel statusLabel, ToolStripProgressBar progressBar)
         {
-            _statusLabel = statusLabel ?? throw new ArgumentNullException(nameof(statusLabel));
-            _progressBar = progressBar ?? throw new ArgumentNullException(nameof(progressBar));
+            _statusLabel = statusLabel.ThrowIfNull(nameof(statusLabel));
+            _progressBar = progressBar.ThrowIfNull(nameof(progressBar));
 
             var owner = (Control?)_statusLabel.Owner ?? (Control?)_progressBar.Owner;
-            _uiControl = owner ?? throw new InvalidOperationException("StatusStrip owner not set. Initialize after InitializeComponent().");
+            _uiControl = owner.ThrowIfNull(nameof(owner), null, "StatusStrip owner not set. Initialize after InitializeComponent().");
 
             // Initialize safe defaults on the UI thread.
             InvokeOnUi(() =>
@@ -67,7 +64,7 @@ namespace oaiUI
         {
             var icon = MessageBoxIcon.Information;
             if (type == MessageType.Warning) icon = MessageBoxIcon.Warning;
-            else if (type == MessageType.Error) icon = MessageBoxIcon.Error;
+            else if (type == MessageType.LogError) icon = MessageBoxIcon.Error;
 
             InvokeOnUi(() =>
             {

@@ -1,18 +1,16 @@
 ﻿using LogCtxShared;
-using NLogShared;
-using System;
-using System.IO;
+using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+using VecTool.Configuration.Helpers;
+using VecTool.Configuration.Logging;
 using VecTool.Core.Abstractions;
 using VecTool.RecentFiles;
 
 namespace VecTool.Handlers
 {
     /// <summary>
-    /// Handler for building and running unit tests, then persisting results 
+    /// Handler for building and running unit tests, then persisting results
     /// to a dated output file with structured markdown formatting.
     /// </summary>
     public sealed class TestRunnerHandler
@@ -25,26 +23,30 @@ namespace VecTool.Handlers
         private readonly string _branchName;
         private readonly string _vectorStoreId;
 
+        private readonly ILogger logger = AppLogger.For<TestRunnerHandler>();
+
         /// <summary>
         /// Canonical DI constructor expected by unit tests.
         /// new TestRunnerHandler(string, string, IProcessRunner, IUserInterface, IRecentFilesManager)
         /// </summary>
         public TestRunnerHandler(
+            ILogger logger,
             string solutionPath,
             string? outputFile,
             IProcessRunner processRunner,
             IUserInterface? ui,
             IRecentFilesManager? recentFiles,
-            string branchName ,
-            string vectorStoreId )
+            string branchName,
+            string vectorStoreId)
         {
+            this.logger = logger.ThrowIfNull(nameof(logger));
             _outputFile = outputFile;
-            _solutionPath = solutionPath ?? throw new ArgumentNullException(nameof(solutionPath));
-            _processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
+            _solutionPath = solutionPath.ThrowIfNull(nameof(solutionPath));
+            _processRunner = processRunner.ThrowIfNull(nameof(processRunner));
             _ui = ui;
             _recentFilesManager = recentFiles;
-            _branchName = branchName ;
-            _vectorStoreId = vectorStoreId ;
+            _branchName = branchName;
+            _vectorStoreId = vectorStoreId;
         }
 
         /// <summary>
@@ -52,8 +54,7 @@ namespace VecTool.Handlers
         /// </summary>
         public async Task<string?> RunTestsAsync(CancellationToken ct)
         {
-            using var log = new CtxLogger();
-            using var _ = LogCtx.Set()
+            using var _ = logger.SetContext()
                 .Add("Operation", "RunTestsAsync")
                 .Add("SolutionPath", _solutionPath);
 
@@ -69,24 +70,26 @@ namespace VecTool.Handlers
 
                 var message = MapExitCodeToMessage(testResult.ExitCode);
 
-                using var ctx = LogCtx.Set(new Props()
+                using var ctx = logger.SetContext()
                     .Add("ExitCode", testResult.ExitCode)
-                    .Add("Message", message));
+                    .Add("Message", message);
 
                 switch (testResult.ExitCode)
                 {
                     case 0:
                         _ui?.ShowMessage(message, "Test Runner - No Fails", MessageType.Information);
-                        log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                        logger.LogWarning($"Tests completed with exit code {testResult.ExitCode}. {message}");
                         break;
+
                     case 1:
                     case 2:
                         _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - With issues", MessageType.Warning);
-                        log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                        logger.LogWarning($"Tests completed with exit code {testResult.ExitCode}. {message}");
                         break;
+
                     default:
-                        _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - Error", MessageType.Error);
-                        log.Warn($"Tests completed with exit code {testResult.ExitCode}. {message}");
+                        _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - LogError", MessageType.LogError);
+                        logger.LogWarning($"Tests completed with exit code {testResult.ExitCode}. {message}");
                         break;
                 }
 
@@ -106,7 +109,7 @@ namespace VecTool.Handlers
                         );
                     }
                 }
-                log.Info("Test run finished successfully.");
+                logger.LogInformation("Test run finished successfully.");
                 _ui?.UpdateStatus("Test run finished successfully.");
                 if (testResult.ExitCode == 0 && _outputFile != null)
                 {
@@ -116,7 +119,7 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Test execution failed");
+                logger.LogError(ex, "Test execution failed");
                 throw;
             }
         }
@@ -133,7 +136,7 @@ namespace VecTool.Handlers
         };
 
         /// <summary>
-        /// Writes test results to file as structured markdown with headers, instructions, 
+        /// Writes test results to file as structured markdown with headers, instructions,
         /// test summary, fenced output block, and recommendations.
         /// </summary>
         private async Task WriteTestResult(ProcessResult testResult, CancellationToken ct)
@@ -141,8 +144,7 @@ namespace VecTool.Handlers
             if (string.IsNullOrWhiteSpace(_outputFile))
                 return;
 
-            using var log = new CtxLogger();
-            using var _ = LogCtx.Set()
+            using var _ = logger.SetContext()
                 .Add("Operation", "WriteTestResult")
                 .Add("OutputFile", _outputFile)
                 .Add("ExitCode", testResult.ExitCode);
@@ -158,22 +160,22 @@ namespace VecTool.Handlers
 
                 // Write to file asynchronously
                 await File.WriteAllTextAsync(_outputFile, markdownContent, ct).ConfigureAwait(false);
-                _.Add("FileSize", markdownContent.Length);
-                log.Info("Test testResult markdown written successfully");
+                logger.SetContext().Add("Operation", "WriteTestResult").Add("FileSize", markdownContent.Length);
+                logger.LogInformation("Test testResult markdown written successfully");
             }
             catch (Exception ex)
             {
-                using var __ = LogCtx.Set()
+                using var __ = logger.SetContext()
                     .Add("Operation", "WriteTestResult")
                     .Add("ErrorType", ex.GetType().Name)
                     .Add("OutputFile", _outputFile);
-                log.Error(ex, "Failed to write test testResult markdown");
+                logger.LogError(ex, "Failed to write test testResult markdown");
                 throw;
             }
         }
 
         /// <summary>
-        /// Constructs a professional markdown report with headers, instructions, 
+        /// Constructs a professional markdown report with headers, instructions,
         /// test summary, fenced code blocks, reference tables, and recommendations.
         /// </summary>
         private string BuildMarkdownReport(TestMetadata metadata, string testOutput, int exitCode)

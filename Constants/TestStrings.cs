@@ -1,6 +1,4 @@
 ﻿// Path: Constants/TestStrings.cs
-using System;
-
 namespace VecTool.Constants
 {
     /// <summary>

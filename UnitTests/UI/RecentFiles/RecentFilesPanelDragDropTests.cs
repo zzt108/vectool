@@ -1,12 +1,11 @@
 ﻿#nullable enable
+
 using NUnit.Framework;
 using oaiUI.RecentFiles;
 using Shouldly;
-using System.ComponentModel;
-using System.IO;
 using System.Windows.Forms;
 using UnitTests.RecentFiles;
-using VecTool.Configuration;
+using VecTool.Configuration.Helpers;
 using VecTool.Core.Configuration;
 using VecTool.RecentFiles;
 
@@ -39,7 +38,7 @@ namespace UnitTests.UI.RecentFiles
             var store = new InMemoryRecentFilesStore();
             manager = new RecentFilesManager(config, store);
 
-             //Initialize RecentFilesPanel with constructor injection
+            //Initialize RecentFilesPanel with constructor injection
             panel = new RecentFilesPanel();
             panel.Initialize(manager, testDirectory);
         }
@@ -143,7 +142,7 @@ namespace UnitTests.UI.RecentFiles
 
             public TestableListView(ListView target)
             {
-                targetListView = target ?? throw new ArgumentNullException(nameof(target));
+                targetListView = target.ThrowIfNull(nameof(target));
             }
 
             /// <summary>

@@ -1,7 +1,4 @@
 ﻿#nullable enable
-using System;
-using System.Windows.Forms;
-
 namespace oaiUI.RecentFiles
 {
     /// <summary>

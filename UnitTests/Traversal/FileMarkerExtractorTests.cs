@@ -3,8 +3,6 @@ using VecTool.Handlers.Traversal;
 namespace UnitTests.Traversal
 {
     using NLog;
-    using NLog.Config;
-    using NLog.Targets;
     using NUnit.Framework;
     using Shouldly;
     using System;
@@ -556,7 +554,7 @@ namespace Test { }";
         }
         #endregion
 
-        #region Error Handling (3 tests)
+        #region LogError Handling (3 tests)
 
         /// <summary>
         /// Test 20: Non-existent file returns null with warning logged (no exception).

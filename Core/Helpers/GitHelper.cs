@@ -1,11 +1,9 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using VecTool.Configuration.Logging;
 
 namespace VecTool.Core.Helpers
 {
@@ -14,7 +12,8 @@ namespace VecTool.Core.Helpers
     /// </summary>
     public static class GitHelper
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger =
+            AppLogger.Create("GitHelper");
 
         /// <summary>
         /// Executes 'git diff' and returns the unstaged changes.
@@ -23,11 +22,11 @@ namespace VecTool.Core.Helpers
         /// <returns>Git diff output or empty string on error.</returns>
         public static string GetUnstagedChanges(string repoPath)
         {
-            using var ctx = LogCtx.Set(new Props().Add("repoPath", repoPath));
+            using var ctx = logger.SetContext().Add("repoPath", repoPath);
 
             if (!IsGitRepository(repoPath))
             {
-                log.Warn($"Path is not a git repository: {repoPath}");
+                logger.LogWarning($"Path is not a git repository: {repoPath}");
                 return string.Empty;
             }
 
@@ -37,7 +36,7 @@ namespace VecTool.Core.Helpers
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to get unstaged changes");
+                logger.LogError(ex, "Failed to get unstaged changes");
                 return string.Empty;
             }
         }
@@ -49,11 +48,11 @@ namespace VecTool.Core.Helpers
         /// <returns>List of changed file paths.</returns>
         public static List<string> GetChangedFiles(string repoPath)
         {
-            using var ctx = LogCtx.Set(new Props().Add("repoPath", repoPath));
+            using var ctx = logger.SetContext().Add("repoPath", repoPath);
 
             if (!IsGitRepository(repoPath))
             {
-                log.Warn($"Path is not a git repository: {repoPath}");
+                logger.LogWarning($"Path is not a git repository: {repoPath}");
                 return new List<string>();
             }
 
@@ -68,7 +67,7 @@ namespace VecTool.Core.Helpers
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to get changed files");
+                logger.LogError(ex, "Failed to get changed files");
                 return new List<string>();
             }
         }
@@ -94,9 +93,9 @@ namespace VecTool.Core.Helpers
         /// </summary>
         private static string ExecuteGitCommand(string workingDirectory, string arguments)
         {
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext()
                 .Add("workingDirectory", workingDirectory)
-                .Add("arguments", arguments));
+                .Add("arguments", arguments);
 
             var startInfo = new ProcessStartInfo
             {
@@ -122,11 +121,11 @@ namespace VecTool.Core.Helpers
 
             if (process.ExitCode != 0)
             {
-                log.Warn($"Git command failed with exit code {process.ExitCode}: {error}");
+                logger.LogWarning($"Git command failed with exit code {process.ExitCode}: {error}");
                 return string.Empty;
             }
 
-            log.Debug($"Git command succeeded: {arguments}");
+            logger.LogDebug($"Git command succeeded: {arguments}");
             return output.Trim();
         }
     }

@@ -1,11 +1,7 @@
-﻿// ✅ FULL FILE VERSION
-using LogCtxShared;
+﻿using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using VecTool.Configuration;
 using VecTool.Handlers;
 using VecTool.Handlers.Traversal;
@@ -26,6 +22,7 @@ namespace UnitTests.Handlers
         private VectorStoreConfig _config = null!;
         private string _testDir = null!;
         private MDHandler _handler = null!;
+        private readonly ILogger logger = TestLogger.For<MarkdownExportHandlerTests>();
 
         [SetUp]
         public void Setup()
@@ -37,8 +34,9 @@ namespace UnitTests.Handlers
             _mockRecentFiles = Substitute.For<IRecentFilesManager>();
             _mockUi = Substitute.For<IUserInterface>();
             _config = new VectorStoreConfig();
+            _config.FolderPaths.Add(_testDir);
 
-            _handler = new MDHandler(_mockUi, _mockRecentFiles, _mockTraverser);
+            _handler = new MDHandler(logger, _mockUi, _mockRecentFiles, _mockTraverser);
         }
 
         [TearDown]
@@ -66,7 +64,7 @@ namespace UnitTests.Handlers
             _mockTraverser.Received(0).EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>());
         }
 
-        #endregion
+        #endregion Dependency Injection Tests
 
         #region ARCH-002: Traverser Exclusivity Tests
 
@@ -126,7 +124,7 @@ namespace UnitTests.Handlers
             methodNames.ShouldNotContain("IsFileExcluded");
         }
 
-        #endregion
+        #endregion ARCH-002: Traverser Exclusivity Tests
 
         #region Output Generation Tests
 
@@ -203,7 +201,7 @@ namespace UnitTests.Handlers
             content.ShouldContain("# Docs");
         }
 
-        #endregion
+        #endregion Output Generation Tests
 
         #region Input Validation Tests
 
@@ -224,13 +222,13 @@ namespace UnitTests.Handlers
             // Act & Assert
             var ex = Should.Throw<ArgumentException>(() =>
                 _handler.ExportSelectedFolders(
-                    // folders!, 
+                    // folders!,
                     outputPath!, _config));
 
             ex.Message.ShouldContain(expectedMessage, Case.Insensitive);
         }
 
-        #endregion
+        #endregion Input Validation Tests
 
         #region UI Integration Tests
 
@@ -255,6 +253,6 @@ namespace UnitTests.Handlers
             _mockUi.Received().WorkFinish();
         }
 
-        #endregion
+        #endregion UI Integration Tests
     }
 }

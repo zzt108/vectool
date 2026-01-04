@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+using VecTool.Configuration.Helpers;
 
 namespace XmlStringDiscovery
 {
@@ -34,10 +31,11 @@ namespace XmlStringDiscovery
 
         public TagCatalog Scan(ScanOptions options)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            options.ThrowIfNull(nameof(options));
 
             var catalog = new TagCatalog();
 
+            // todo: why is c# a special case? hardcoded for now
             IEnumerable<string> files = Directory.EnumerateFiles(options.RootDirectory, "*.cs", SearchOption.AllDirectories);
             if (options.FileFilter != null)
             {
@@ -98,6 +96,7 @@ namespace XmlStringDiscovery
         }
 
         private static string UnescapeNormal(string s) => s.Replace("\\\"", "\"");
+
         private static string UnescapeVerbatim(string s) => s.Replace("\"\"", "\"");
 
         private static bool LooksLikeXmlish(string s)

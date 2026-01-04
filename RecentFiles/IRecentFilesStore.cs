@@ -1,7 +1,5 @@
 ﻿namespace VecTool.RecentFiles
 {
-    using System;
-
     /// <summary>
     /// Pure text persistence interface for recent files data.
     /// </summary>

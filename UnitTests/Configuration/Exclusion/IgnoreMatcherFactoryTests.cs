@@ -1,6 +1,4 @@
-﻿// ✅ FULL FILE VERSION
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
 using VecTool.Configuration.Exclusion;
 

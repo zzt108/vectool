@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using VecTool.Configuration;
+﻿using VecTool.Configuration;
 
 namespace VecTool.Core.Helpers
 {
@@ -73,6 +71,5 @@ namespace VecTool.Core.Helpers
             // Return a stable, sorted list
             return found.OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToArray();
         }
-
     }
 }

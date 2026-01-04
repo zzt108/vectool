@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Logging;
 
 using VecTool.Configuration;
-using VecTool.Constants;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
-using VecTool.Utils;
 
 namespace VecTool.Handlers
 {
@@ -18,12 +12,11 @@ namespace VecTool.Handlers
     /// </summary>
     public class MDHandler : FileHandlerBase
     {
-        public MDHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager):base(ui, recentFilesManager)
+        public MDHandler(ILogger logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager) : base(logger, ui, recentFilesManager)
         {
-            
         }
 
-        public MDHandler(IUserInterface? ui, IRecentFilesManager? recentFilesManager, IFileSystemTraverser traverser) : base(ui, recentFilesManager, traverser)
+        public MDHandler(ILogger logger, IUserInterface? ui, IRecentFilesManager? recentFilesManager, IFileSystemTraverser traverser) : base(logger, ui, recentFilesManager, traverser)
         {
         }
 
@@ -47,7 +40,7 @@ namespace VecTool.Handlers
         public void ExportSelectedFolders(string outputPath, VectorStoreConfig vectorStoreConfig)
         {
             var folderPaths = vectorStoreConfig.FolderPaths;
-            
+
             // Empty check guard - validates business requirement
             if (folderPaths.Count == 0)
                 throw new ArgumentException("Folder list cannot be empty", nameof(folderPaths));
@@ -61,7 +54,7 @@ namespace VecTool.Handlers
                 Ui?.WorkStart("Exporting to MD", folderPaths);
 
                 using StreamWriter writer = new StreamWriter(outputPath);
-              
+
                 AddAIOptimizedContext(
                     vectorStoreConfig,
                     writer,
@@ -82,14 +75,14 @@ namespace VecTool.Handlers
                 {
                     if (string.IsNullOrWhiteSpace(folderPath))
                     {
-                        log.Warn($"Skipping null or empty folder path");
+                        logger.LogWarning($"Skipping null or empty folder path");
                         continue;
                     }
 
                     Ui?.UpdateStatus($"Enumerating files in {folderPath}");
 
                     var files = EnumerateFilesRespectingExclusions(folderPath, vectorStoreConfig).ToList();
-                    log.Info($"Found {files.Count} files to export in {folderPath}");
+                    logger.LogInformation($"Found {files.Count} files to export in {folderPath}");
 
                     // Group files by folder for structured output
                     var filesByFolder = files

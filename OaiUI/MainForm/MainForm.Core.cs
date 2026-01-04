@@ -1,17 +1,14 @@
 ﻿// File: OaiUI/MainForm.Core.cs
 
+using Microsoft.Extensions.Logging;
 using oaiUI;
 using oaiUI.Services;
-using System;
-using System.Linq;
-using System.Windows.Forms;
 using Vectool.UI.Versioning;
 using VecTool.Configuration;
-using VecTool.Core;
+using VecTool.Configuration.Helpers;
 using VecTool.Core.Configuration;
 using VecTool.Core.Helpers;
 using VecTool.Core.Models;
-using VecTool.Core.Services;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
 using VecTool.UI.Panels;
@@ -25,6 +22,7 @@ namespace Vectool.OaiUI
     {
         // ✅ UI services and data
         private WinFormsUserInterface userInterface;
+
         private IRecentFilesManager recentFilesManager;
 
         // ✅ Selected folders bound to the listbox
@@ -35,14 +33,20 @@ namespace Vectool.OaiUI
 
         // ✅ Persist last vector store selection
         private readonly ILastSelectionService lastSelection = new LastSelectionService();
+
         private readonly IVersionProvider versionProvider;
+        private readonly ILoggerFactory loggerFactory;
+        private readonly ILogger<MainForm> logger;
 
         /// <summary>
         /// Constructor: Initializes MainForm with version provider.
         /// </summary>
-        public MainForm(IVersionProvider versionProvider)
+        public MainForm(IVersionProvider versionProvider, ILoggerFactory loggerFactory)
         {
-            this.versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
+            this.versionProvider = versionProvider.ThrowIfNull(nameof(versionProvider));
+
+            this.loggerFactory = loggerFactory.ThrowIfNull(nameof(loggerFactory));
+            this.logger = this.loggerFactory.CreateLogger<MainForm>();
 
             InitializeComponent();
 

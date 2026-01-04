@@ -1,17 +1,14 @@
 ﻿namespace VecTool.Handlers.Traversal
 {
-    using DocumentFormat.OpenXml.Bibliography;
     using LogCtxShared;
-    using MAB.DotIgnore;
-    using NLogShared;
+    using Microsoft.Extensions.Logging;
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using VecTool.Configuration;
     using VecTool.Configuration.Exclusion;
-    using static System.Runtime.InteropServices.JavaScript.JSType;
+    using VecTool.Configuration.Logging;
 
     /// <summary>
     /// Handles folder traversal and file enumeration with exclusion support (Layer 1 + Layer 2).
@@ -19,7 +16,7 @@
     /// </summary>
     public class FileSystemTraverser : IFileSystemTraverser
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger = AppLogger.For<PromptSearchEngine>();
 
         private readonly IUserInterface? ui;
         // private readonly string rootPath;
@@ -58,9 +55,9 @@
             //this.rootPath = rootPath ?? Environment.CurrentDirectory;
             this.markerExtractor = markerExtractor;  // Layer 2 enabled (if provided)
 
-            using var ctx = LogCtx.Set(new Props()
-                .Add("layer_2_enabled", markerExtractor != null ? "yes" : "no"));
-            log.Info("FileSystemTraverser initialized");
+            using var ctx = logger.SetContext()
+                .Add("layer_2_enabled", markerExtractor != null ? "yes" : "no");
+            logger.LogInformation("FileSystemTraverser initialized");
         }
 
         /// <summary>
@@ -82,28 +79,28 @@
                     rootPath
                 );
 
-                using var ctx = LogCtx.Set(new Props()
+                using var ctx = logger.SetContext()
                     .Add("rootpath", rootPath)
-                    .Add("library", "MabDotIgnore"));
-                log.Info("Pattern matcher initialized for root");
+                    .Add("library", "MabDotIgnore");
+                logger.LogInformation("Pattern matcher initialized for root");
 
                 // LAYER 2: FALLBACK - Create fallback matcher for legacy config
                 fallbackMatcher = new LegacyConfigAdapter(config);
 
-                using var ctx2 = LogCtx.Set(new Props()
+                using var ctx2 = logger.SetContext()
                     .Add("primary", primaryMatcher?.GetType().Name ?? "null")
-                    .Add("fallback", fallbackMatcher?.GetType().Name ?? "null"));
-                log.Info("Exclusion matcher chain ready");
+                    .Add("fallback", fallbackMatcher?.GetType().Name ?? "null");
+                logger.LogInformation("Exclusion matcher chain ready");
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Pattern matcher initialization failed, falling back to legacy config only {rootPath}");
+                logger.LogError(ex, $"Pattern matcher initialization failed, falling back to legacy config only {rootPath}");
 
                 // Create fallback matcher that matches nothing - only legacy config filters
                 fallbackMatcher = new LegacyConfigAdapter(config);
                 primaryMatcher = fallbackMatcher;
 
-                log.Info("Exclusion matcher chain ready (Fallback only)");
+                logger.LogInformation("Exclusion matcher chain ready (Fallback only)");
             }
         }
 
@@ -125,12 +122,12 @@
                 if (marker != null)
                 {
                     // File excluded by marker
-                    using var ctx = LogCtx.Set(ExclusionProps.CreateMarkerProps(
+                    using var ctx = logger.SetContext(ExclusionProps.CreateMarkerProps(
                         marker.FilePath,
                         marker.Reason,
                         marker.SpaceReference,
                         marker.LineNumber));
-                    log.Info("File excluded (Layer 2 marker)");
+                    logger.LogInformation("File excluded (Layer 2 marker)");
                     return true;
                 }
 
@@ -138,12 +135,12 @@
             }
             catch (Exception ex)
             {
-                using var ctx = LogCtx.Set(ExclusionProps.CreateMarkerErrorProps(
+                using var ctx = logger.SetContext(ExclusionProps.CreateMarkerErrorProps(
                     filePath,
                     ex.GetType().Name,
                     ex.Message));
-                log.Warn("Marker extraction error (continuing)");
-                return false;  // Error during extraction: don't exclude
+                logger.LogWarning("Marker extraction error (continuing)");
+                return false;  // LogError during extraction: don't exclude
             }
         }
 
@@ -159,14 +156,14 @@
             // LAYER 1: Try primary matcher patterns
             if (primaryMatcher != null && primaryMatcher.IsIgnored(path, isDirectory))
             {
-                log.Trace($"Path excluded by primary matcher: {path}");
+                logger.LogTrace($"Path excluded by primary matcher: {path}");
                 return true;
             }
 
             // LAYER 1: Fallback - Try legacy config
             if (fallbackMatcher != null && fallbackMatcher.IsIgnored(path, isDirectory))
             {
-                log.Trace($"Path excluded by fallback matcher: {path}");
+                logger.LogTrace($"Path excluded by fallback matcher: {path}");
                 return true;
             }
 
@@ -199,12 +196,12 @@
             // Single check for folders
             if (ShouldExcludePath(folderPath, isDirectory: true, vectorStoreConfig))
             {
-                log.Trace($"Skipping excluded folder: {folderPath}");
+                logger.LogTrace($"Skipping excluded folder: {folderPath}");
                 return;
             }
 
             ui?.UpdateStatus($"Processing folder {folderPath}");
-            log.Debug($"Processing folder: {folderPath}");
+            logger.LogDebug($"Processing folder: {folderPath}");
 
             // Process files
             string[] files = Array.Empty<string>();
@@ -214,7 +211,7 @@
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Failed to enumerate files in {folderPath}");
+                logger.LogError(ex, $"Failed to enumerate files in {folderPath}");
             }
 
             foreach (var file in files)
@@ -224,7 +221,7 @@
                     // Single check for files - UNIFIED CODE PATH (Layer 1 + Layer 2)
                     if (ShouldExcludePath(file, isDirectory: false, vectorStoreConfig))
                     {
-                        log.Trace($"Skipping excluded file: {file}");
+                        logger.LogTrace($"Skipping excluded file: {file}");
                         continue;
                     }
 
@@ -232,7 +229,7 @@
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Error processing file {file}");
+                    logger.LogError(ex, $"LogError processing file {file}");
                 }
             }
 
@@ -244,7 +241,7 @@
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Failed to enumerate subdirectories in {folderPath}");
+                logger.LogError(ex, $"Failed to enumerate subdirectories in {folderPath}");
             }
 
             foreach (var subfolder in subfolders)
@@ -285,9 +282,9 @@
                 var current = stack.Pop();
                 var folderName = new DirectoryInfo(current).Name;
 
-                using var ctx = LogCtx.Set(new Props()
+                using var ctx = logger.SetContext()
                     .Add("current", current)
-                    .Add("folderName", folderName));
+                    .Add("folderName", folderName);
 
                 // LAYER 1: Pattern check FOLDER FIRST (requires relative path)
                 if (primaryMatcher != null)
@@ -295,10 +292,10 @@
                     var relativePath = Path.GetRelativePath(root, current);
                     if (primaryMatcher.IsIgnored(relativePath, isDirectory: true))
                     {
-                        using var _ = LogCtx.Set(new Props()
+                        using var _ = logger.SetContext()
                             .Add("excludedDir", relativePath)
-                            .Add("fullPath", current));
-                        log.Trace($"Skipping excluded folder (pattern): {relativePath}");
+                            .Add("fullPath", current);
+                        logger.LogTrace($"Skipping excluded folder (pattern): {relativePath}");
                         continue;
                     }
                 }
@@ -306,7 +303,7 @@
                 // LAYER 1: Legacy config fallback
                 if (FileValidator.IsFolderExcluded(folderName, config))
                 {
-                    log.Trace($"Skipping excluded folder (legacy): {current}");
+                    logger.LogTrace($"Skipping excluded folder (legacy): {current}");
                     continue;
                 }
 
@@ -318,7 +315,7 @@
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Failed to enumerate files in {current}");
+                    logger.LogError(ex, $"Failed to enumerate files in {current}");
                     continue;
                 }
 
@@ -330,7 +327,7 @@
                     if (fileName.Equals(".gitignore", StringComparison.OrdinalIgnoreCase) ||
                         fileName.Equals(".vtignore", StringComparison.OrdinalIgnoreCase))
                     {
-                        log.Trace($"Skipping ignore file: {f}");
+                        logger.LogTrace($"Skipping ignore file: {f}");
                         continue;
                     }
 
@@ -340,10 +337,10 @@
                         var relativePath = Path.GetRelativePath(root, f);
                         if (primaryMatcher.IsIgnored(relativePath, isDirectory: false))
                         {
-                            using var _ = LogCtx.Set(new Props()
+                            using var _ = logger.SetContext()
                                 .Add("excludedFile", relativePath)
-                                .Add("fullPath", f));
-                            log.Trace($"Skipping excluded file (pattern): {relativePath}");
+                                .Add("fullPath", f);
+                            logger.LogTrace($"Skipping excluded file (pattern): {relativePath}");
                             continue;
                         }
                     }
@@ -351,16 +348,16 @@
                     // LAYER 1: Legacy config check
                     if (FileValidator.IsFileExcluded(fileName, config))
                     {
-                        log.Trace($"Skipping excluded file (legacy): {f}");
+                        logger.LogTrace($"Skipping excluded file (legacy): {f}");
                         continue;
                     }
 
                     // File system validity check
                     if (!FileValidator.IsFileValid(f, outputPath: null))
                     {
-                        using var ctxValid = LogCtx.Set(new Props()
-                            .Add("content", f));
-                        log.Trace("Invalid or binary file");
+                        using var ctxValid = logger.SetContext()
+                            .Add("content", f);
+                        logger.LogTrace("Invalid or binary file");
                         continue;
                     }
 
@@ -382,7 +379,7 @@
                 }
                 catch (Exception ex)
                 {
-                    log.Error(ex, $"Failed to enumerate subdirectories in {current}");
+                    logger.LogError(ex, $"Failed to enumerate subdirectories in {current}");
                     continue;
                 }
 
@@ -448,14 +445,14 @@
             }
             catch (UnauthorizedAccessException ex)
             {
-                using var ctx = LogCtx.Set(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
-                log?.Error(ex, "Access denied to directory");
+                using var ctx = logger.SetContext(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
+                logger?.LogError(ex, "Access denied to directory");
                 return Enumerable.Empty<string>();
             }
             catch (Exception ex)
             {
-                using var ctx = LogCtx.Set(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
-                log?.Error(ex, "Error enumerating subdirectories");
+                using var ctx = logger.SetContext(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
+                logger?.LogError(ex, "LogError enumerating subdirectories");
                 return Enumerable.Empty<string>();
             }
         }
@@ -489,6 +486,5 @@
 
             return true;
         }
-
     }
 }

@@ -1,23 +1,29 @@
-using Shouldly;
-using NUnit.Framework;
-using VecTool.Handlers;
-using VecTool.Configuration;
-using System.IO;
-using System.Collections.Generic;
 using DocXHandlerTests;
+using Microsoft.Extensions.Logging;
+using NUnit.Framework;
+using Shouldly;
+using VecTool.Configuration;
+using VecTool.Handlers;
 
 namespace UnitTests.Handlers
 {
     [TestFixture]
     public class ConvertSelectedFoldersToMDTests : DocTestBase
     {
+        private readonly ILogger logger = TestLogger.For<ConvertSelectedFoldersToMDTests>();
 
-        [SetUp]
-        public void Setup()
+        private static VectorStoreConfig GetVectorStoreConfig(List<string> list)
         {
-            testRootPath = Path.Combine(Path.GetTempPath(), "ConvertSelectedFoldersToDocxTests");
-            Directory.CreateDirectory(testRootPath);
-            outputDocxPath = Path.Combine(testRootPath, "output.docx");
+            return new VectorStoreConfig { FolderPaths = list };
+        }
+
+        [TearDown]
+        public void Cleanup()
+        {
+            if (Directory.Exists(testRootPath))
+            {
+                Directory.Delete(testRootPath, true);
+            }
         }
 
         [Test]
@@ -34,11 +40,12 @@ namespace UnitTests.Handlers
             File.WriteAllText(textFilePath2, ContentOfMarkdownFile2);
 
             string outputMarkdownPath = Path.Combine(testRootPath, "output.md");
-            List<string> folderPaths = new List<string> { folder1, folder2 };
 
-            var mdHandler = new MDHandler(null, null);
-            mdHandler.ExportSelectedFolders(outputMarkdownPath, new VectorStoreConfig());
-            
+            var mdHandler = new MDHandler(logger, null, null);
+            mdHandler.ExportSelectedFolders(
+                outputMarkdownPath,
+                GetVectorStoreConfig(new List<string> { folder1, folder2 }));
+
             File.Exists(outputMarkdownPath).ShouldBeTrue();
 
             string markdownContent = File.ReadAllText(outputMarkdownPath);
@@ -47,7 +54,7 @@ namespace UnitTests.Handlers
             markdownContent.ShouldContain(ContentOfMarkdownFile1);
             markdownContent.ShouldContain($"# Folder: {MarkdownFolder2Name}");
             markdownContent.ShouldContain($"## File: {Markdown2FileName}");
-                markdownContent.ShouldContain(ContentOfMarkdownFile2);
+            markdownContent.ShouldContain(ContentOfMarkdownFile2);
         }
 
         [Test]
@@ -64,29 +71,26 @@ namespace UnitTests.Handlers
             File.WriteAllText(subFile, ContentOfSubFile);
 
             string outputMarkdownPath = Path.Combine(testRootPath, "output_recursive.md");
-            List<string> folderPaths = new List<string> { mainFolder };
 
-            var mdHandler = new MDHandler(null, null);
-            mdHandler.ExportSelectedFolders(outputMarkdownPath, new VectorStoreConfig());
-            
+            var mdHandler = new MDHandler(logger, null, null);
+            mdHandler.ExportSelectedFolders(outputMarkdownPath, new VectorStoreConfig() { FolderPaths = new List<string> { mainFolder } });
+
             File.Exists(outputMarkdownPath).ShouldBeTrue();
             string markdownContent = File.ReadAllText(outputMarkdownPath);
             markdownContent.ShouldContain($"# Folder: {MarkdownMainFolderName}");
             markdownContent.ShouldContain($"## File: {MainFileName}");
-                markdownContent.ShouldContain(ContentOfMainFile);
+            markdownContent.ShouldContain(ContentOfMainFile);
             markdownContent.ShouldContain($"# Folder: {MarkdownSubFolderName}");
             markdownContent.ShouldContain($"## File: {SubFileName}");
             markdownContent.ShouldContain(ContentOfSubFile);
         }
 
-        [TearDown]
-        public void Cleanup()
+        [SetUp]
+        public void Setup()
         {
-            if (Directory.Exists(testRootPath))
-            {
-                Directory.Delete(testRootPath, true);
-            }
+            testRootPath = Path.Combine(Path.GetTempPath(), "ConvertSelectedFoldersToDocxTests");
+            Directory.CreateDirectory(testRootPath);
+            outputDocxPath = Path.Combine(testRootPath, "output.docx");
         }
     }
-
 }

@@ -1,10 +1,5 @@
 ﻿// ✅ FULL FILE VERSION
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using VecTool.Core.RecentFiles;
 
 namespace oaiUI.RecentFiles
@@ -178,7 +173,7 @@ namespace oaiUI.RecentFiles
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to open file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Failed to open file: {ex.Message}", "LogError", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -201,7 +196,7 @@ namespace oaiUI.RecentFiles
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to open folder: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Failed to open folder: {ex.Message}", "LogError", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -216,7 +211,7 @@ namespace oaiUI.RecentFiles
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to copy path: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Failed to copy path: {ex.Message}", "LogError", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
+using VecTool.Configuration.Logging;
 
 namespace VecTool.Configuration.Exclusion;
 
@@ -8,7 +9,8 @@ namespace VecTool.Configuration.Exclusion;
 /// </summary>
 public static class IgnoreMatcherFactory
 {
-    private static readonly CtxLogger _log = new();
+    private static readonly ILogger logger =
+        AppLogger.Create("IgnoreMatcherFactory");
 
     /// <summary>
     /// Creates a matcher instance for the specified library type.
@@ -18,15 +20,15 @@ public static class IgnoreMatcherFactory
     /// <returns>Configured matcher instance.</returns>
     public static IIgnorePatternMatcher? Create(IgnoreLibraryType libraryType, string? rootPath = null)
     {
-        using var ctx = LogCtx.Set(new Props()
+        using var ctx = logger.SetContext()
             .Add("LibraryType", libraryType.ToString())
-            .Add("RootPath", rootPath ?? "deferred"));
+            .Add("RootPath", rootPath ?? "deferred");
 
         // Default to MAB.DotIgnore when libraryType is unspecified
         if (libraryType == IgnoreLibraryType.Auto)  // Placeholder for "auto" selection
         {
             libraryType = IgnoreLibraryType.MabDotIgnore;
-            _log.Info("Library type not specified; defaulting to MAB.DotIgnore");
+            logger.LogInformation("Library type not specified; defaulting to MAB.DotIgnore");
         }
 
         IIgnorePatternMatcher matcher = libraryType switch
@@ -35,7 +37,7 @@ public static class IgnoreMatcherFactory
             _ => throw new ArgumentException($"Unknown library type: {libraryType}", nameof(libraryType))
         };
 
-        _log.Debug($"Created matcher: {matcher.GetType().Name}");
+        logger.LogDebug($"Created matcher: {matcher.GetType().Name}");
 
         if (!string.IsNullOrWhiteSpace(rootPath))
         {
@@ -45,7 +47,7 @@ public static class IgnoreMatcherFactory
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Failed to load patterns from {rootPath}; matcher will not be used");
+                logger.LogError(ex, $"Failed to load patterns from {rootPath}; matcher will not be used");
                 throw;
             }
         }

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <Nullable>enable</Nullable>
@@ -9,21 +9,19 @@
     <RootNamespace>UnitTests</RootNamespace>
   </PropertyGroup>
 
-  <Import Project="..\LogCtx\SeriLogShared\SeriLogShared.projitems" Label="Shared" />
-
-  <Import Project="..\LogCtx\NLogShared\NLogShared.projitems" Label="Shared" />
+  
   <ItemGroup>
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="NUnit" Version="4.4.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="5.2.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Existing project references -->
+    <ProjectReference Include="..\Configuration\Configuration.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
-    <ProjectReference Include="..\Log\Log.csproj" />
     <ProjectReference Include="..\Handlers\Handlers.csproj" />
     <ProjectReference Include="..\RecentFiles\RecentFiles.csproj" />
   </ItemGroup>

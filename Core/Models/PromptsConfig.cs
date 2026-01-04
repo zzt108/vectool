@@ -1,9 +1,8 @@
 ﻿#nullable enable
-using System;
-using System.Configuration;
-using System.IO;
+
 using LogCtxShared;
-using NLogShared;
+using Microsoft.Extensions.Logging;
+using VecTool.Configuration.Logging;
 
 namespace VecTool.Core.Models;
 
@@ -13,7 +12,7 @@ namespace VecTool.Core.Models;
 /// </summary>
 public sealed class PromptsConfig : IPromptsConfig
 {
-    private static readonly CtxLogger log = new();
+    private static readonly ILogger logger = AppLogger.For<PromptsConfig>();
 
     private const string KEY_REPO_PATH = "promptsRepositoryPath";
     private const string KEY_FILE_EXTENSIONS = "promptsFileExtensions";
@@ -59,30 +58,30 @@ public sealed class PromptsConfig : IPromptsConfig
     {
         reader ??= new ConfigurationManagerAppSettingsReader();
 
-        using var ctx = LogCtx.Set(new Props().Add("source", "app.config")); //
+        using var ctx = logger.SetContext().Add("source", "app.config"); //
 
         var repoPath = reader.Get(KEY_REPO_PATH);
         var extensions = reader.Get(KEY_FILE_EXTENSIONS) ?? DefaultFileExtensions;
         var llmConfigPath = reader.Get(KEY_LLM_CONFIG_PATH);
         var favoritesPath = reader.Get(KEY_FAVORITES_PATH);
 
-        LogCtx.Set(ctx.Add(KEY_REPO_PATH, repoPath)
+        logger.SetContext().Add(KEY_REPO_PATH, repoPath)
             .Add(KEY_FILE_EXTENSIONS, extensions)
             .Add(KEY_LLM_CONFIG_PATH, llmConfigPath)
-            .Add(KEY_FAVORITES_PATH, favoritesPath));
+            .Add(KEY_FAVORITES_PATH, favoritesPath);
 
         // Validate required settings
         if (string.IsNullOrWhiteSpace(repoPath))
         {
             var ex = new InvalidOperationException($"Missing required app.config key: {KEY_REPO_PATH}");
-            log.Error(ex, "Prompts repository path not configured");
+            logger.LogError(ex, "Prompts repository path not configured");
             return null;
         }
 
         if (string.IsNullOrWhiteSpace(llmConfigPath))
         {
             var ex = new InvalidOperationException($"Missing required app.config key: {KEY_LLM_CONFIG_PATH}");
-            log.Error(ex, "LLM provider config path not configured");
+            logger.LogError(ex, "LLM provider config path not configured");
             return null;
         }
 
@@ -90,17 +89,17 @@ public sealed class PromptsConfig : IPromptsConfig
         if (string.IsNullOrWhiteSpace(favoritesPath))
         {
             favoritesPath = Path.Combine(repoPath, DefaultFavoritesFileName);
-            log.Debug($"Favorites path not configured, using default: {favoritesPath}");
+            logger.LogDebug($"Favorites path not configured, using default: {favoritesPath}");
         }
 
-        // Warn if paths don't exist (non-fatal)
+        // LogWarning if paths don't exist (non-fatal)
         if (!Directory.Exists(repoPath))
-            log.Warn($"Prompts repository path does not exist: {repoPath}");
+            logger.LogWarning($"Prompts repository path does not exist: {repoPath}");
 
         if (!File.Exists(llmConfigPath))
-            log.Warn($"LLM provider config file does not exist: {llmConfigPath}");
+            logger.LogWarning($"LLM provider config file does not exist: {llmConfigPath}");
 
-        log.Info($"Prompts config loaded: repo={repoPath}, extensions={extensions}");
+        logger.LogInformation($"Prompts config loaded: repo={repoPath}, extensions={extensions}");
         return new PromptsConfig(repoPath, extensions, llmConfigPath, favoritesPath);
     }
 }

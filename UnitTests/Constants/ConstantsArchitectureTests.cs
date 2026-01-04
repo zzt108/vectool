@@ -1,8 +1,6 @@
 ﻿// Path: UnitTests/Constants/ConstantsArchitectureTests.cs
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Linq;
 using VecTool.Constants;
 
 namespace UnitTests.Constants

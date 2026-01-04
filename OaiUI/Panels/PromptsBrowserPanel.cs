@@ -1,13 +1,11 @@
 ﻿#nullable enable
+
 using LogCtxShared;
-using NLogShared;
-using System;
-using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using System.Configuration;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
+using VecTool.Configuration.Helpers;
+using VecTool.Configuration.Logging;
 using VecTool.Constants;
 using VecTool.Core.Helpers;
 using VecTool.Core.Models;
@@ -16,12 +14,12 @@ using VecTool.Handlers;
 namespace VecTool.UI.Panels
 {
     /// <summary>
-    /// Main browser panel for AI Prompts Library with tree hierarchy, 
+    /// Main browser panel for AI Prompts Library with tree hierarchy,
     /// search results, and 4 core actions (Copy, Edit, New, Git).
     /// </summary>
     public sealed partial class PromptsBrowserPanel : UserControl
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger = AppLogger.For<PromptsBrowserPanel>();
 
         private PromptSearchEngine searchEngine;
         private FavoritesManager favoritesManager;
@@ -41,6 +39,7 @@ namespace VecTool.UI.Panels
             searchEngine = null!;
             favoritesManager = null!;
         }
+
         private static string[] GetConfiguredPromptTypes()
         {
             var raw = ConfigurationManager.AppSettings["promptsTypes"];
@@ -87,18 +86,18 @@ namespace VecTool.UI.Panels
             FavoritesManager? favoritesManager,
             string? promptsRepositoryPath)
         {
-            using var ctx = LogCtx.Set(new Props()
-                .Add("RepositoryPath", promptsRepositoryPath ?? "null"));
+            using var ctx = logger.SetContext()
+                .Add("RepositoryPath", promptsRepositoryPath ?? "null");
 
-            this.searchEngine = searchEngine ?? throw new ArgumentNullException(nameof(searchEngine));
-            this.favoritesManager = favoritesManager ?? throw new ArgumentNullException(nameof(favoritesManager));
+            this.searchEngine = searchEngine.ThrowIfNull(nameof(searchEngine));
+            this.favoritesManager = favoritesManager.ThrowIfNull(nameof(favoritesManager));
 
             InitializeFilterDropdown();
 
             searchEngine.RebuildIndex(); // Rebuild index on startup (from previous fix)
             InitializeTooltips(); // Setup all tooltips in one place
-        
-            log.Info("PromptsBrowserPanel initialized.");
+
+            logger.LogInformation("PromptsBrowserPanel initialized.");
 
             // Initial load
             RefreshPanel();
@@ -152,14 +151,14 @@ namespace VecTool.UI.Panels
         /// </summary>
         public void RefreshPanel()
         {
-            using var ctx = LogCtx.Set(new Props()
-                .Add("SearchQuery", currentSearchQuery));
+            using var ctx = logger.SetContext()
+                .Add("SearchQuery", currentSearchQuery);
 
             try
             {
                 if (searchEngine == null)
                 {
-                    log.Warn("SearchEngine not initialized, skipping refresh.");
+                    logger.LogWarning("SearchEngine not initialized, skipping refresh.");
                     return;
                 }
 
@@ -180,11 +179,11 @@ namespace VecTool.UI.Panels
                     UpdateStatusLabel();
                 }
 
-                log.Debug($"Refresh complete: {currentResults.Count} results.");
+                logger.LogDebug($"Refresh complete: {currentResults.Count} results.");
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to refresh panel.");
+                logger.LogError(ex, "Failed to refresh panel.");
                 ShowError("Failed to refresh prompts list.");
             }
         }
@@ -312,14 +311,14 @@ namespace VecTool.UI.Panels
 
         private void ShowError(string message)
         {
-            MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, message, "LogError", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         // Action button handlers
 
         private void CopySelectedToClipboard()
         {
-            using var ctx = LogCtx.Set(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -331,19 +330,19 @@ namespace VecTool.UI.Panels
                 }
 
                 Clipboard.SetText(selected.Content);
-                log.Info($"Copied to clipboard: {selected.Metadata.FileName}");
+                logger.LogInformation($"Copied to clipboard: {selected.Metadata.FileName}");
                 MessageBox.Show(this, "Content copied to clipboard!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to copy to clipboard.");
+                logger.LogError(ex, "Failed to copy to clipboard.");
                 ShowError("Failed to copy content.");
             }
         }
 
         private void EditSelectedPrompt()
         {
-            using var ctx = LogCtx.Set(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -361,18 +360,18 @@ namespace VecTool.UI.Panels
                     UseShellExecute = true
                 });
 
-                log.Info($"Opened in editor: {selected.FullPath}");
+                logger.LogInformation($"Opened in editor: {selected.FullPath}");
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to open editor.");
+                logger.LogError(ex, "Failed to open editor.");
                 ShowError("Failed to open file in editor.");
             }
         }
 
         private void CreateNewVersion()
         {
-            using var ctx = LogCtx.Set(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -401,19 +400,19 @@ namespace VecTool.UI.Panels
                 searchEngine.RebuildIndex();
                 RefreshPanel();
 
-                log.Info($"Created new version: {newPath}");
+                logger.LogInformation($"Created new version: {newPath}");
                 MessageBox.Show(this, $"New version created:\n{newName}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to create new version.");
+                logger.LogError(ex, "Failed to create new version.");
                 ShowError("Failed to create new version.");
             }
         }
 
         private void OpenInGit()
         {
-            using var ctx = LogCtx.Set(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -438,7 +437,7 @@ namespace VecTool.UI.Panels
                         Arguments = $"browse \"{promptsRepositoryPath}\"",
                         UseShellExecute = true
                     });
-                    log.Info("Opened GitExtensions.");
+                    logger.LogInformation("Opened GitExtensions.");
                 }
                 catch
                 {
@@ -448,19 +447,19 @@ namespace VecTool.UI.Panels
                         FileName = promptsRepositoryPath,
                         UseShellExecute = true
                     });
-                    log.Warn("GitExtensions not found, opened folder in Explorer.");
+                    logger.LogWarning("GitExtensions not found, opened folder in Explorer.");
                 }
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to open Git.");
+                logger.LogError(ex, "Failed to open Git.");
                 ShowError("Failed to open Git tool.");
             }
         }
 
         private void ToggleFavorite()
         {
-            using var ctx = LogCtx.Set(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -484,14 +483,13 @@ namespace VecTool.UI.Panels
                 favoritesManager.SaveFavorites(GetFavoritesConfigPath(), favorites);
                 RefreshPanel();
 
-                log.Debug($"Toggled favorite: {selected.FullPath}");
+                logger.LogDebug($"Toggled favorite: {selected.FullPath}");
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to toggle favorite.");
+                logger.LogError(ex, "Failed to toggle favorite.");
             }
         }
-
 
         // Helpers
 
@@ -521,7 +519,7 @@ namespace VecTool.UI.Panels
 
         private void OpenRenamePromptDialog()
         {
-            using var ctx = LogCtx.Set(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -537,7 +535,7 @@ namespace VecTool.UI.Panels
 
                 if (dlg.ShowDialog(owner) == DialogResult.OK && dlg.WasRenamed)
                 {
-                    log.Info("Prompt file renamed, rebuilding index.");
+                    logger.LogInformation("Prompt file renamed, rebuilding index.");
 
                     searchEngine.RebuildIndex();
                     RefreshPanel();
@@ -545,10 +543,9 @@ namespace VecTool.UI.Panels
             }
             catch (Exception ex)
             {
-                log.Error(ex, "Failed to rename prompt file from browser panel.");
+                logger.LogError(ex, "Failed to rename prompt file from browser panel.");
                 ShowError("Failed to rename prompt file.");
             }
         }
     }
 }
-

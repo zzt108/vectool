@@ -3,6 +3,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using VecTool.Configuration.Helpers;
 using VecTool.Core.Configuration;
 
 /// <summary>
@@ -21,7 +22,7 @@ public sealed class RecentFilesOutputManager
 
     public RecentFilesOutputManager(RecentFilesConfig config)
     {
-        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _config = config.ThrowIfNull(nameof(config));
     }
 
     /// <summary>
@@ -73,7 +74,6 @@ public sealed class RecentFilesOutputManager
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("fileName is required.", nameof(fileName));
 
-        
         string? datedDir = null;
         if (when.HasValue)
             EnsureDatedDirectory(when.Value);
@@ -84,7 +84,7 @@ public sealed class RecentFilesOutputManager
         var finalName = $"{baseNameWithoutExt}{enumSuffix}";
 
         var safeName = SanitizeFileName(finalName);
-        return Path.Combine(datedDir?? string.Empty, safeName);
+        return Path.Combine(datedDir ?? string.Empty, safeName);
     }
 
     /// <summary>

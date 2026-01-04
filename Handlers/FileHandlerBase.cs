@@ -1,14 +1,14 @@
 namespace VecTool.Handlers;
 
-using DocumentFormat.OpenXml.Bibliography;
 using global::VecTool.Configuration;
 using global::VecTool.Handlers.Analysis;
 using global::VecTool.Handlers.Traversal;
 using global::VecTool.RecentFiles;
+using Microsoft.Extensions.Logging;
 using LogCtxShared;
-using NLogShared;
 using System;
 using VecTool.Constants;
+using VecTool.Configuration.Helpers;
 
 /// <summary>
 /// Base class for all file format handlers (DOCX, MD, PDF, Git).
@@ -16,16 +16,19 @@ using VecTool.Constants;
 /// </summary>
 public abstract class FileHandlerBase
 {
-    protected static readonly CtxLogger log = new(); // renamed from _log to match AI faulti code generation logic
-    
+    protected readonly ILogger logger;
     protected readonly IUserInterface? Ui; // renamed from _ui to match AI faulti code generation logic
     protected readonly IRecentFilesManager? RecentFilesManager; // renamed from RecentFilesManager to match AI faulti code generation logic
     protected readonly AiContextGenerator AiContextGenerator;
     protected readonly IFileSystemTraverser FileSystemTraverser;
 
-    protected FileHandlerBase(IUserInterface? ui, IRecentFilesManager? recentFilesManager,
+    protected FileHandlerBase(
+        ILogger logger,
+        IUserInterface? ui,
+        IRecentFilesManager? recentFilesManager,
         IFileSystemTraverser? traverser = null)
     {
+        this.logger = logger.ThrowIfNull(nameof(logger));
         this.Ui = ui;
         this.RecentFilesManager = recentFilesManager;
 
@@ -40,7 +43,6 @@ public abstract class FileHandlerBase
 
         AiContextGenerator = new AiContextGenerator();
     }
-
 
     // ============================================================================
     // AI Context - Delegated to AiContextGenerator
@@ -94,12 +96,13 @@ public abstract class FileHandlerBase
 
     protected IEnumerable<string> EnumerateFilesRespectingExclusions(string root, VectorStoreConfig config)
     {
-        if (FileSystemTraverser == null)
+        if (FileSystemTraverser is null)
         {
-            using var ctx = LogCtx.Set(new Props()
+            using var _ = logger.SetContext()
                 .Add(nameof(root), root)
-                .Add("reason", "null_traverser"));
-            log.Warn("FileSystemTraverser not initialized");
+                .Add("reason", "nulltraverser");
+
+            logger.LogWarning("FileSystemTraverser not initialized");
             return Enumerable.Empty<string>();
         }
 

@@ -1,8 +1,5 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
-using System.IO;
-using System.Linq;
 using XmlStringDiscovery;
 
 namespace UnitTests.XmlStringDiscovery

@@ -1,7 +1,6 @@
 ﻿// File: Configuration/InMemorySettingsStore.cs
 // Project: VecTool.Configuration
 
-using System;
 using System.Collections.Concurrent;
 
 namespace VecTool.Configuration

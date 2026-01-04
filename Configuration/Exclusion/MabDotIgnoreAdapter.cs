@@ -1,6 +1,7 @@
 ﻿using LogCtxShared;
 using MAB.DotIgnore;
-using NLogShared;
+using Microsoft.Extensions.Logging;
+using VecTool.Configuration.Logging;
 
 namespace VecTool.Configuration.Exclusion;
 
@@ -10,18 +11,19 @@ namespace VecTool.Configuration.Exclusion;
 /// </summary>
 public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
 {
-    private static readonly CtxLogger _log = new();
+    private static readonly ILogger logger = AppLogger.For<MabDotIgnoreAdapter>();
+
     private IgnoreList? _ignoreList;
     private string? _loadedRootPath;
 
     public void LoadFromRoot(string rootPath)
     {
-        using var _ = LogCtx.Set(new Props()
-            .Add("RootPath", rootPath));
+        using var _ = logger.SetContext()
+            .Add("RootPath", rootPath);
 
         if (string.IsNullOrWhiteSpace(rootPath) || !Directory.Exists(rootPath))
         {
-            _log.Warn($"Root path invalid or does not exist: {rootPath}");
+            logger.LogWarning($"Root path invalid or does not exist: {rootPath}");
             return;
         }
 
@@ -39,11 +41,11 @@ public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
             {
                 var lines = File.ReadAllLines(gitignorePath);
                 patternsToLoad.AddRange(lines);
-                _log.Debug($"Loaded {lines.Length} lines from .gitignore");
+                logger.LogDebug($"Loaded {lines.Length} lines from .gitignore");
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Failed to read .gitignore: {ex.Message}");
+                logger.LogError(ex, $"Failed to read .gitignore: {ex.Message}");
             }
         }
 
@@ -54,18 +56,18 @@ public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
             {
                 var lines = File.ReadAllLines(vtignorePath);
                 patternsToLoad.AddRange(lines);
-                _log.Debug($"Loaded {lines.Length} lines from .vtignore");
+                logger.LogDebug($"Loaded {lines.Length} lines from .vtignore");
             }
             catch (Exception ex)
             {
-                _log.Error(ex, $"Failed to read .vtignore: {ex.Message}");
+                logger.LogError(ex, $"Failed to read .vtignore: {ex.Message}");
             }
         }
 
         if (patternsToLoad.Count == 0)
         {
             var ex = new InvalidOperationException("No ignore patterns found in .gitignore or .vtignore");
-            _log.Error(ex, "No ignore patterns found in .gitignore or .vtignore");
+            logger.LogError(ex, "No ignore patterns found in .gitignore or .vtignore");
             _ignoreList = null;
             throw ex;
         }
@@ -74,11 +76,11 @@ public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
         {
             // MAB.DotIgnore supports in-memory pattern loading
             _ignoreList = new IgnoreList(patternsToLoad);
-            _log.Info($"MAB.DotIgnore loaded with {patternsToLoad.Count} patterns");
+            logger.LogInformation($"MAB.DotIgnore loaded with {patternsToLoad.Count} patterns");
         }
         catch (Exception ex)
         {
-            _log.Error(ex, $"Failed to initialize MAB.DotIgnore: {ex.Message}");
+            logger.LogError(ex, $"Failed to initialize MAB.DotIgnore: {ex.Message}");
             _ignoreList = null;
         }
     }
@@ -110,14 +112,14 @@ public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
 
             if (result)
             {
-                _log.Trace($"Ignored by MAB.DotIgnore: {relativePath}");
+                logger.LogTrace($"Ignored by MAB.DotIgnore: {relativePath}");
             }
 
             return result;
         }
         catch (Exception ex)
         {
-            _log.Error(ex, $"Error checking ignore status for {relativePath}: {ex.Message}");
+            logger.LogError(ex, $"LogError checking ignore status for {relativePath}: {ex.Message}");
             return false; // Fail open - don't exclude on error
         }
     }

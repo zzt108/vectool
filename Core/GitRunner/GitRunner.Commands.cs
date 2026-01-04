@@ -1,10 +1,4 @@
 ﻿// ✅ FULL FILE VERSION
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace VecTool.Core
 {
     /// <summary>

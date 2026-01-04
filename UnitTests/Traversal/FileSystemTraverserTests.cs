@@ -1,11 +1,8 @@
 ﻿using LogCtxShared;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using NLogShared;
+
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using VecTool.Configuration;
 using VecTool.Handlers.Traversal;
 
@@ -20,7 +17,7 @@ namespace UnitTests.Traversal
     {
         private string testDir = default!;
         private VectorStoreConfig config = default!;
-        private readonly CtxLogger _log = new();
+        private readonly ILogger logger = TestLogger.For<FileSystemTraverserTests>();
 
         [SetUp]
         public void Setup()
@@ -159,7 +156,7 @@ namespace UnitTests.Traversal
             var traverser = new FileSystemTraverser(ui: null);
 
             // Act
-            using (var ctx = LogCtx.Set(
+            using (var ctx = logger.SetContext(
                 new Props()
                     .Add("test", "exclusion_logging")
                     .Add("testDir", testDir)))

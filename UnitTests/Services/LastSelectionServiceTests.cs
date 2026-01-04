@@ -1,7 +1,5 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
-using System.IO;
 using oaiUI.Services;
 
 namespace UnitTests.Services

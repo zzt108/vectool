@@ -1,9 +1,6 @@
 ﻿// Path: UnitTests/RepoLocatorTests.cs
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using VecTool.Core;
 
 namespace UnitTests

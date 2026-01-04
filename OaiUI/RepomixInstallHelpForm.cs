@@ -1,8 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
-
-namespace Vectool.OaiUI
+﻿namespace Vectool.OaiUI
 {
     /// <summary>
     /// Displays installation instructions for Repomix when it's not found on the system.
@@ -152,7 +148,7 @@ After installation, restart VecTool and try the export again.
             {
                 MessageBox.Show(
                     $"Failed to open browser:\n{ex.Message}",
-                    "Error",
+                    "LogError",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }

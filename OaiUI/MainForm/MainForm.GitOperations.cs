@@ -1,11 +1,6 @@
 ﻿// ✅ FULL FILE VERSION
 // File: OaiUI/MainForm.GitOperations.cs
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using VecTool.Core;
 using VecTool.Core.Helpers;
 using VecTool.Handlers;
@@ -24,8 +19,8 @@ namespace Vectool.OaiUI
         {
             userInterface.WorkStart("Generating Git changes and MD export...", selectedFolders);
 
-            var gitHandler = new GitChangesHandler(userInterface, recentFilesManager);
-            var mdHandler = new MDHandler(userInterface, recentFilesManager);
+            var gitHandler = new GitChangesHandler(logger, userInterface, recentFilesManager);
+            var mdHandler = new MDHandler(logger, userInterface, recentFilesManager);
             var vectorStoreConfig = GetCurrentVectorStoreConfig();
 
             // Execute both operations in parallel

@@ -1,8 +1,5 @@
-﻿// ✅ FULL FILE VERSION
-using System;
-using System.Linq;
+﻿using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
-using NLogShared;
 
 namespace VecTool.Configuration
 {
@@ -39,7 +36,7 @@ namespace VecTool.Configuration
                 {
                     if (!Path.HasExtension(nameOnly))
                     {
-                        log.Trace($"File {nameOnly} excluded by pattern {pattern}");
+                        logger.LogTrace($"File {nameOnly} excluded by pattern {pattern}");
                         return true;
                     }
                     continue;
@@ -48,7 +45,7 @@ namespace VecTool.Configuration
                 string regexPattern = WildcardToRegex(pattern, forFolder: false);
                 if (Regex.IsMatch(nameOnly, regexPattern, RegexOptions.IgnoreCase))
                 {
-                    log.Trace($"File {nameOnly} excluded by pattern {pattern}");
+                    logger.LogTrace($"File {nameOnly} excluded by pattern {pattern}");
                     return true;
                 }
             }
@@ -60,7 +57,7 @@ namespace VecTool.Configuration
         /// </summary>
         public bool IsFolderExcluded(string folderName)
         {
-            var nameOnly =  folderName; // already a folder segment; adjust if full path is passed [attached_file:2]
+            var nameOnly = folderName; // already a folder segment; adjust if full path is passed [attached_file:2]
             foreach (var pattern in ExcludedFolders)
             {
                 var patternNormalized = pattern;
@@ -69,7 +66,7 @@ namespace VecTool.Configuration
                 string regexPattern = WildcardToRegex(patternNormalized, forFolder: true);
                 if (Regex.IsMatch(nameOnly, regexPattern, RegexOptions.IgnoreCase))
                 {
-                    log.Trace($"Folder {nameOnly} excluded by pattern {pattern}");
+                    logger.LogTrace($"Folder {nameOnly} excluded by pattern {pattern}");
                     return true;
                 }
             }

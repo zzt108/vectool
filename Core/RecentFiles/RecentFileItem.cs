@@ -1,4 +1,4 @@
-﻿using System;
+﻿using VecTool.Configuration.Helpers;
 
 namespace VecTool.Core.RecentFiles
 {
@@ -11,7 +11,7 @@ namespace VecTool.Core.RecentFiles
 
         public RecentFileItem(string path, string? vectorStoreId)
         {
-            Path = path ?? throw new ArgumentNullException(nameof(path));
+            Path = path.ThrowIfNull(nameof(path));
             VectorStoreId = vectorStoreId;
         }
     }

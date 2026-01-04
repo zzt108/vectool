@@ -1,4 +1,6 @@
-﻿namespace VecTool.Core
+﻿using VecTool.Configuration.Helpers;
+
+namespace VecTool.Core
 {
     /// <summary>
     /// Pure business logic - sums file sizes safely.
@@ -7,13 +9,13 @@
     {
         public static long ComputeTotalBytes(IEnumerable<long> sizes)
         {
-            if (sizes is null) throw new ArgumentNullException(nameof(sizes));
-            return sizes.Aggregate(0L, (acc, v) => checked(acc + v));
+            return sizes.ThrowIfNull(nameof(sizes)).Aggregate(0L, (acc, v) => checked(acc + v));
         }
 
         public static string ToHumanReadable(long bytes)
         {
             if (bytes < 0) throw new ArgumentOutOfRangeException(nameof(bytes));
+            (bytes >= 0).ThrowIfInvalid("Bytes must be non-negative.");
             string[] units = { "B", "KB", "MB", "GB", "TB" };
             double size = bytes;
             int unitIndex = 0;

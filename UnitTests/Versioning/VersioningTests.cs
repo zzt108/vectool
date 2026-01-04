@@ -1,8 +1,6 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 
 namespace VecTool.Versioning.Tests
@@ -17,7 +15,7 @@ namespace VecTool.Versioning.Tests
 
             // Arrange: locate the app exe next to the test run or via known output path
             var solutionRoot = TestContext.CurrentContext.TestDirectory;
-            var appPath = Path.Combine(solutionRoot, "..", "..", "..", "..", "src", "VecTool.UI", "bin", "Debug", "net8.0-windows", "VecTool.UI.exe");
+            var appPath = Path.Combine(solutionRoot, "..", "..", "..", "..", "src", "VecTool.UI", "bin", "LogDebug", "net8.0-windows", "VecTool.UI.exe");
             appPath = Path.GetFullPath(appPath);
 
             File.Exists(appPath).ShouldBeTrue($"App not found: {appPath}");

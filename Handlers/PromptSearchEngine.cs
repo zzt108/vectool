@@ -1,8 +1,10 @@
 ﻿#nullable enable
+
 using LogCtxShared;
-using NLogShared;
-using VecTool.Core.Models;
+using Microsoft.Extensions.Logging;
 using VecTool.Configuration;
+using VecTool.Configuration.Logging;
+using VecTool.Core.Models;
 using VecTool.Handlers.Traversal;
 
 namespace VecTool.Handlers
@@ -19,7 +21,8 @@ namespace VecTool.Handlers
     /// </summary>
     public sealed class PromptSearchEngine
     {
-        private static readonly CtxLogger log = new();
+        private static readonly ILogger logger = AppLogger.For<PromptSearchEngine>();
+
         private readonly Dictionary<string, PromptFile> index = new(StringComparer.OrdinalIgnoreCase);
         private readonly IPromptsConfig? config;
         private const int ContentSearchLimit = 2000;
@@ -35,15 +38,15 @@ namespace VecTool.Handlers
         /// </summary>
         public void RebuildIndex()
         {
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext()
                 .Add("repositoryPath", config.RepositoryPath)
-                .Add("operation", "RebuildIndex"));
+                .Add("operation", "RebuildIndex");
 
             index.Clear();
 
             if (string.IsNullOrWhiteSpace(config.RepositoryPath) || !Directory.Exists(config.RepositoryPath))
             {
-                log.Warn($"Repository path is invalid or does not exist: {config.RepositoryPath}");
+                logger.LogWarning($"Repository path is invalid or does not exist: {config.RepositoryPath}");
                 return;
             }
 
@@ -65,7 +68,7 @@ namespace VecTool.Handlers
                 //    var ext = Path.GetExtension(filePath);
                 //    if (!extensions.Contains(ext))
                 //    {
-                //        log.Trace($"Skipping file with non-matching extension: {filePath}");
+                //        logger.LogTrace($"Skipping file with non-matching extension: {filePath}");
                 //        continue;
                 //    }
 
@@ -82,7 +85,7 @@ namespace VecTool.Handlers
                 //        var metadata = PromptMetadata.Parse(relativePath, firstLine);
                 //        if (metadata == null)
                 //        {
-                //            log.Debug($"Failed to parse metadata for file: {filePath}");
+                //            logger.LogDebug($"Failed to parse metadata for file: {filePath}");
                 //            continue;
                 //        }
 
@@ -93,11 +96,11 @@ namespace VecTool.Handlers
                 //        index[filePath] = promptFile;
                 //        filesIndexed++;
 
-                //        log.Trace($"Indexed file: {Path.GetFileName(filePath)}");
+                //        logger.LogTrace($"Indexed file: {Path.GetFileName(filePath)}");
                 //    }
                 //    catch (Exception ex)
                 //    {
-                //        log.Error(ex, $"Failed to index file: {filePath}");
+                //        logger.LogError(ex, $"Failed to index file: {filePath}");
                 //    }
                 //}
 
@@ -115,7 +118,7 @@ namespace VecTool.Handlers
                     var ext = Path.GetExtension(filePath);
                     if (!extensions.Contains(ext))
                     {
-                        log.Trace($"Skipping file with non-matching extension: {filePath}");  // unchanged behavior [file:1]
+                        logger.LogTrace($"Skipping file with non-matching extension: {filePath}");  // unchanged behavior [file:1]
                         continue;
                     }
 
@@ -131,7 +134,7 @@ namespace VecTool.Handlers
                         var metadata = PromptMetadata.Parse(relativePath, firstLine);  // unchanged API [file:1]
                         if (metadata == null)
                         {
-                            log.Debug($"Failed to parse metadata for file: {filePath}");  // unchanged [file:1]
+                            logger.LogDebug($"Failed to parse metadata for file: {filePath}");  // unchanged [file:1]
                             continue;
                         }
 
@@ -142,19 +145,19 @@ namespace VecTool.Handlers
                         index[filePath] = promptFile;
                         filesIndexed++;
 
-                        log.Trace($"Indexed file: {Path.GetFileName(filePath)}");  // unchanged [file:1]
+                        logger.LogTrace($"Indexed file: {Path.GetFileName(filePath)}");  // unchanged [file:1]
                     }
                     catch (Exception ex)
                     {
-                        log.Error(ex, $"Failed to index file: {filePath}");  // unchanged [file:1]
+                        logger.LogError(ex, $"Failed to index file: {filePath}");  // unchanged [file:1]
                     }
                 }
 
-                log.Info($"Index rebuilt successfully: {filesIndexed} files indexed out of {filesProcessed} processed");
+                logger.LogInformation($"Index rebuilt successfully: {filesIndexed} files indexed out of {filesProcessed} processed");
             }
             catch (Exception ex)
             {
-                log.Error(ex, $"Error during index rebuild: {ex.Message}");
+                logger.LogError(ex, $"LogError during index rebuild: {ex.Message}");
                 throw;
             }
         }
@@ -166,14 +169,14 @@ namespace VecTool.Handlers
         /// </summary>
         public List<PromptFile> Search(string query)
         {
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext()
                 .Add("query", query)
-                .Add("indexSize", index.Count));
+                .Add("indexSize", index.Count);
 
             if (string.IsNullOrWhiteSpace(query))
             {
                 // Empty search returns all files
-                log.Debug("Empty search query - returning all indexed files");
+                logger.LogDebug("Empty search query - returning all indexed files");
                 return index.Values.ToList();
             }
 
@@ -203,7 +206,7 @@ namespace VecTool.Handlers
                 })
                 .ToList();
 
-            log.Info($"Search completed: {results.Count} results found for query '{query}'");
+            logger.LogInformation($"Search completed: {results.Count} results found for query '{query}'");
             return results;
         }
 
@@ -213,11 +216,11 @@ namespace VecTool.Handlers
         /// </summary>
         public List<PromptFile> GetByHierarchy(string? area, string? project, string? category)
         {
-            using var ctx = LogCtx.Set(new Props()
+            using var ctx = logger.SetContext()
                 .Add("area", area ?? "any")
                 .Add("project", project ?? "any")
                 .Add("category", category ?? "any")
-                .Add("indexSize", index.Count));
+                .Add("indexSize", index.Count);
 
             var results = index.Values
                 .Where(p =>
@@ -235,7 +238,7 @@ namespace VecTool.Handlers
                 })
                 .ToList();
 
-            log.Info($"Hierarchy filter completed: {results.Count} files matched");
+            logger.LogInformation($"Hierarchy filter completed: {results.Count} files matched");
             return results;
         }
 

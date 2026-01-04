@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using VecTool.Configuration.Helpers;
 
 namespace XmlStringDiscovery
 {
@@ -21,7 +20,7 @@ namespace XmlStringDiscovery
 
         public TagInfo(string name, TagContextCategory category)
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Name = name.ThrowIfNull(nameof(name));
             Category = category;
         }
 

@@ -1,10 +1,7 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
-using System.IO;
 using VecTool.Configuration;
 using VecTool.Handlers.Traversal;
-using VecTool.Utils;
 
 namespace UnitTests.Traversal
 {
@@ -197,11 +194,11 @@ namespace UnitTests.Traversal
             // Arrange
             config.ExcludedFiles.Add("*.log");
             config.ExcludedFiles.Add("*.tmp");
-            config.ExcludedFiles.Add("Debug*");
+            config.ExcludedFiles.Add("LogDebug*");
 
             var logFile = CreateTestFile("App.log", "Log content");
             var tmpFile = CreateTestFile("Temp.tmp", "Temp content");
-            var debugFile = CreateTestFile("Debug.cs", "Debug code");
+            var debugFile = CreateTestFile("LogDebug.cs", "LogDebug code");
             var normalFile = CreateTestFile("Program.cs", "Normal code");
 
             // Act & Assert

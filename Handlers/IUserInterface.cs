@@ -4,7 +4,7 @@ public enum MessageType
 {
     Information,
     Warning,
-    Error
+    LogError
 }
 
 public interface IUserInterface

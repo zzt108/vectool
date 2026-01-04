@@ -197,10 +197,10 @@ public class LegacyConfigAdapterTests:IgnoreAdapterTestBase
         _adapter = new LegacyConfigAdapter(_config);
 
         // Act
-        var result = _adapter.IsIgnored("C:\\Project\\bin\\Debug", isDirectory: true);
+        var result = _adapter.IsIgnored("C:\\Project\\bin\\LogDebug", isDirectory: true);
 
         // Assert
-        result.ShouldBeTrue("Should extract 'Debug' from path (last segment)");
+        result.ShouldBeTrue("Should extract 'LogDebug' from path (last segment)");
     }
 
     // ======== Load/Set Semantics Tests ========

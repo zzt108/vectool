@@ -1,4 +1,6 @@
-﻿namespace oaiUI.Progress
+﻿using VecTool.Configuration.Helpers;
+
+namespace oaiUI.Progress
 {
     // Time abstraction for testability
     public interface IClock
@@ -38,7 +40,7 @@
             if (totalUnits < 0) throw new ArgumentOutOfRangeException(nameof(totalUnits));
             if (completedUnits < 0) throw new ArgumentOutOfRangeException(nameof(completedUnits));
             if (completedUnits > totalUnits) throw new ArgumentOutOfRangeException(nameof(completedUnits));
-            _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+            _clock = clock.ThrowIfNull(nameof(clock));
             StartUtc = startUtc;
             TotalUnits = totalUnits;
             CompletedUnits = completedUnits;

@@ -2,7 +2,6 @@
 using Shouldly;
 using VecTool.Core.Services;
 using VecTool.Core.AI;
-using VecTool.Core.Models;
 using NSubstitute;
 
 namespace UnitTests.Core.Services;

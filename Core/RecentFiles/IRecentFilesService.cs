@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace VecTool.Core.RecentFiles
+﻿namespace VecTool.Core.RecentFiles
 {
     public interface IRecentFilesService
     {
