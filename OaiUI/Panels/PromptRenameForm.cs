@@ -4,6 +4,7 @@ using LogCtxShared;
 using Microsoft.Extensions.Logging;
 using System.Configuration;
 using System.Globalization;
+using VecTool.Configuration.Helpers;
 using VecTool.Constants;
 using VecTool.Core.Models;
 
@@ -65,7 +66,7 @@ namespace VecTool.UI.Panels
 
         public PromptRenameForm(PromptFile promptFile)
         {
-            this.promptFile = promptFile ?? throw new ArgumentNullException(nameof(promptFile));
+            this.promptFile = promptFile.ThrowIfNull(nameof(promptFile));
             originalFullPath = promptFile.FullPath;
             originalExtension = Path.GetExtension(promptFile.FullPath) ?? string.Empty;
 

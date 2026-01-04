@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.RegularExpressions;
+using VecTool.Configuration.Helpers;
 using VecTool.Configuration.Logging;
 using VecTool.Core.Abstractions;
 using VecTool.RecentFiles;
@@ -38,10 +39,10 @@ namespace VecTool.Handlers
             string branchName,
             string vectorStoreId)
         {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.logger = logger.ThrowIfNull(nameof(logger));
             _outputFile = outputFile;
-            _solutionPath = solutionPath ?? throw new ArgumentNullException(nameof(solutionPath));
-            _processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
+            _solutionPath = solutionPath.ThrowIfNull(nameof(solutionPath));
+            _processRunner = processRunner.ThrowIfNull(nameof(processRunner));
             _ui = ui;
             _recentFilesManager = recentFiles;
             _branchName = branchName;

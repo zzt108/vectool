@@ -5,6 +5,7 @@ using oaiUI;
 using oaiUI.Services;
 using Vectool.UI.Versioning;
 using VecTool.Configuration;
+using VecTool.Configuration.Helpers;
 using VecTool.Core.Configuration;
 using VecTool.Core.Helpers;
 using VecTool.Core.Models;
@@ -42,9 +43,9 @@ namespace Vectool.OaiUI
         /// </summary>
         public MainForm(IVersionProvider versionProvider, ILoggerFactory loggerFactory)
         {
-            this.versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
+            this.versionProvider = versionProvider.ThrowIfNull(nameof(versionProvider));
 
-            this.loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            this.loggerFactory = loggerFactory.ThrowIfNull(nameof(loggerFactory));
             this.logger = this.loggerFactory.CreateLogger<MainForm>();
 
             InitializeComponent();

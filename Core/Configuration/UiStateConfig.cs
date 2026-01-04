@@ -4,6 +4,7 @@
 using System.Configuration;
 using System.Text.Json;
 using VecTool.Configuration;
+using VecTool.Configuration.Helpers;
 using VecTool.Core.RecentFiles;
 
 namespace VecTool.Core.Configuration
@@ -17,6 +18,7 @@ namespace VecTool.Core.Configuration
     {
         // Legacy per-key settings for Recent Files filter/specific store/last selection.
         private const string KEY_RECENT_FILTER = "ui.recentFiles.filter";
+
         private const string KEY_RECENT_STORE = "ui.recentFiles.storeId";
         private const string KEY_RECENT_LAST = "ui.recentFiles.lastSelection";
 
@@ -27,7 +29,7 @@ namespace VecTool.Core.Configuration
         /// </summary>
         public UiStateConfig(ISettingsStore store)
         {
-            _store = store ?? throw new ArgumentNullException(nameof(store));
+            _store = store.ThrowIfNull(nameof(store), null, "Store is required.");
         }
 
         /// <summary>

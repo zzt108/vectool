@@ -1,5 +1,6 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using VecTool.Configuration.Helpers;
 using VecTool.Configuration.Logging;
 using VecTool.Core.AI;
 using VecTool.Core.Models;
@@ -17,7 +18,7 @@ public sealed class PromptCategorizer
 
     public PromptCategorizer(ILlmProvider llmProvider)
     {
-        _llmProvider = llmProvider ?? throw new ArgumentNullException(nameof(llmProvider));
+        _llmProvider = llmProvider.ThrowIfNull(nameof(llmProvider));
     }
 
     /// <summary>

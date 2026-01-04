@@ -4,6 +4,7 @@ using LogCtxShared;
 using Microsoft.Extensions.Logging;
 using System.Configuration;
 using System.Diagnostics;
+using VecTool.Configuration.Helpers;
 using VecTool.Configuration.Logging;
 using VecTool.Constants;
 using VecTool.Core.Helpers;
@@ -88,8 +89,8 @@ namespace VecTool.UI.Panels
             using var ctx = logger.SetContext(new Props()
                 .Add("RepositoryPath", promptsRepositoryPath ?? "null"));
 
-            this.searchEngine = searchEngine ?? throw new ArgumentNullException(nameof(searchEngine));
-            this.favoritesManager = favoritesManager ?? throw new ArgumentNullException(nameof(favoritesManager));
+            this.searchEngine = searchEngine.ThrowIfNull(nameof(searchEngine));
+            this.favoritesManager = favoritesManager.ThrowIfNull(nameof(favoritesManager));
 
             InitializeFilterDropdown();
 

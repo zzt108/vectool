@@ -1,6 +1,7 @@
 ﻿// File: OaiUI/Config/PerVectorStoreSettings.cs
 
 using VecTool.Configuration;
+using VecTool.Configuration.Helpers;
 
 namespace oaiUI.Config
 {
@@ -75,12 +76,9 @@ namespace oaiUI.Config
 
         public static void Save(Dictionary<string, VectorStoreConfig> all, PerVectorStoreSettings settings, VectorStoreConfig global)
         {
-            if (all is null) throw new ArgumentNullException(nameof(all));
-            if (settings is null) throw new ArgumentNullException(nameof(settings));
-            if (global is null) throw new ArgumentNullException(nameof(global));
-
-            all[settings.Name] = settings.ToEffectiveVectorStoreConfig(
-                global,
+            all.ThrowIfNull(nameof(all))[settings.Name] =
+                settings.ThrowIfNull(nameof(settings)).ToEffectiveVectorStoreConfig(
+                    global.ThrowIfNull(nameof(global)),
                 all.TryGetValue(settings.Name, out var ex) ? ex : null
             );
         }

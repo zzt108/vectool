@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using LogCtxShared;
 using System;
 using VecTool.Constants;
+using VecTool.Configuration.Helpers;
 
 /// <summary>
 /// Base class for all file format handlers (DOCX, MD, PDF, Git).
@@ -27,7 +28,7 @@ public abstract class FileHandlerBase
         IRecentFilesManager? recentFilesManager,
         IFileSystemTraverser? traverser = null)
     {
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.logger = logger.ThrowIfNull(nameof(logger));
         this.Ui = ui;
         this.RecentFilesManager = recentFilesManager;
 

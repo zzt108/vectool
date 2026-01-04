@@ -1,4 +1,5 @@
 ﻿// Path: RecentFiles/FileRecentFilesStore.cs
+using VecTool.Configuration.Helpers;
 using VecTool.Core.Configuration;
 
 namespace VecTool.RecentFiles
@@ -12,7 +13,7 @@ namespace VecTool.RecentFiles
 
         public FileRecentFilesStore(RecentFilesConfig config)
         {
-            _jsonPath = config?.StorageFilePath ?? throw new ArgumentNullException(nameof(config));
+            _jsonPath = config?.StorageFilePath.ThrowIfNull(nameof(config))!;
         }
 
         public string? Read()

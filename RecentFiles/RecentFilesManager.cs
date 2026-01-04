@@ -1,4 +1,5 @@
 ﻿// Path: RecentFiles/RecentFilesManager.cs
+using VecTool.Configuration.Helpers;
 using VecTool.Core.Configuration;
 
 namespace VecTool.RecentFiles
@@ -15,8 +16,8 @@ namespace VecTool.RecentFiles
 
         public RecentFilesManager(RecentFilesConfig config, IRecentFilesStore store)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
-            _store = store ?? throw new ArgumentNullException(nameof(store));
+            _config = config.ThrowIfNull(nameof(config));
+            _store = store.ThrowIfNull(nameof(store));
             Load();
         }
 
@@ -103,6 +104,5 @@ namespace VecTool.RecentFiles
             }
             Save();
         }
-
     }
 }

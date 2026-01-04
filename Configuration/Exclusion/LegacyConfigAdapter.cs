@@ -4,6 +4,7 @@ using LogCtxShared;
 using Microsoft.Extensions.Logging;
 using System;
 using VecTool.Configuration.Logging;
+using VecTool.Configuration.Helpers;
 
 /// <summary>
 /// Adapter wrapping legacy VectorStoreConfig exclusion rules in IIgnorePatternMatcher interface.
@@ -61,7 +62,7 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
     /// </summary>
     private void SetConfig(IVectorStoreConfig config)
     {
-        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _config = config.ThrowIfNull(nameof(config), logger);
         logger.LogDebug($"Legacy config set directly: {_config.ExcludedFiles?.Count ?? 0} file rules, {_config.ExcludedFolders?.Count ?? 0} folder rules");
     }
 

@@ -1,4 +1,6 @@
-﻿namespace VecTool.Core
+﻿using VecTool.Configuration.Helpers;
+
+namespace VecTool.Core
 {
     /// <summary>
     /// Pure logic to enumerate files and summarize sizes; no Windows-specific APIs.
@@ -14,9 +16,8 @@
 
         public long TotalSize(IEnumerable<string> files)
         {
-            if (files is null) throw new ArgumentNullException(nameof(files));
             long total = 0;
-            foreach (var file in files)
+            foreach (var file in files.ThrowIfNull(nameof(files), null, "Files is required."))
             {
                 var length = new FileInfo(file).Length;
                 total = checked(total + length);

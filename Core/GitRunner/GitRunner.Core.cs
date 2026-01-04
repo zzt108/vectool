@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text;
+using VecTool.Configuration.Helpers;
 using VecTool.Configuration.Logging;
 
 namespace VecTool.Core
@@ -16,7 +17,7 @@ namespace VecTool.Core
 
         public GitRunner(string workingDirectory)
         {
-            this.workingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
+            this.workingDirectory = workingDirectory.ThrowIfNull(nameof(workingDirectory));
         }
 
         /// <summary>

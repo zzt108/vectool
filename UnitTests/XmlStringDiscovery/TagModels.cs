@@ -1,4 +1,6 @@
-﻿namespace XmlStringDiscovery
+﻿using VecTool.Configuration.Helpers;
+
+namespace XmlStringDiscovery
 {
     public enum TagContextCategory
     {
@@ -18,7 +20,7 @@
 
         public TagInfo(string name, TagContextCategory category)
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Name = name.ThrowIfNull(nameof(name));
             Category = category;
         }
 

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using VecTool.Configuration.Helpers;
 
 namespace Vectool.UI.Versioning
 {
@@ -8,11 +9,13 @@ namespace Vectool.UI.Versioning
     {
         private readonly Assembly _assembly;
 
-        public AssemblyVersionProvider() : this(typeof(AssemblyVersionProvider).Assembly) { }
+        public AssemblyVersionProvider() : this(typeof(AssemblyVersionProvider).Assembly)
+        {
+        }
 
         public AssemblyVersionProvider(Assembly assembly)
         {
-            _assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
+            _assembly = assembly.ThrowIfNull(nameof(assembly));
         }
 
         public string ApplicationName =>

@@ -1,6 +1,7 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
 using VecTool.Configuration;
+using VecTool.Configuration.Helpers;
 using VecTool.Configuration.Logging;
 using VecTool.Core;
 using VecTool.Core.Abstractions;
@@ -26,8 +27,8 @@ namespace VecTool.Handlers
             IRecentFilesManager recentFilesManager,
             IProcessRunner? processRunner = null)
         {
-            this.userInterface = userInterface ?? throw new ArgumentNullException(nameof(userInterface));
-            this.recentFilesManager = recentFilesManager ?? throw new ArgumentNullException(nameof(recentFilesManager));
+            this.userInterface = userInterface.ThrowIfNull(nameof(userInterface));
+            this.recentFilesManager = recentFilesManager.ThrowIfNull(nameof(recentFilesManager));
             this.processRunner = processRunner ?? new ProcessRunner(logger);
         }
 

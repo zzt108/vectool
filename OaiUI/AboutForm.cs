@@ -1,5 +1,6 @@
 ﻿// Path: OaiUI/AboutForm.cs
 using Vectool.UI.Versioning;
+using VecTool.Configuration.Helpers;
 
 namespace Vectool.OaiUI
 {
@@ -13,7 +14,7 @@ namespace Vectool.OaiUI
 
         public AboutForm(IVersionProvider versions)
         {
-            _versions = versions ?? throw new ArgumentNullException(nameof(versions));
+            _versions = versions.ThrowIfNull(nameof(versions));
             InitializeComponent();
             Populate();
 
@@ -59,6 +60,7 @@ namespace Vectool.OaiUI
                 // Intentionally swallow to keep this a non-breaking enhancement
             }
         }
+
         private void Populate()
         {
             this.lblTitle.Text = _versions.ApplicationName;

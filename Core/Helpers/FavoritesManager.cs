@@ -3,6 +3,7 @@
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using VecTool.Configuration.Helpers;
 using VecTool.Configuration.Logging;
 
 namespace VecTool.Core.Helpers
@@ -76,19 +77,8 @@ namespace VecTool.Core.Helpers
                 .Add("configPath", configPath)
                 .Add("count", favorites?.Count ?? 0));
 
-            if (string.IsNullOrWhiteSpace(configPath))
-            {
-                var ex = new ArgumentException("Config path is required.", nameof(configPath));
-                logger.LogError(ex, "Config path is null or empty");
-                throw ex;
-            }
-
-            if (favorites == null)
-            {
-                var ex = new ArgumentNullException(nameof(favorites));
-                logger.LogError(ex, "Favorites list is null");
-                throw ex;
-            }
+            configPath.ThrowIfNullOrWhiteSpace(nameof(configPath), logger);
+            favorites.ThrowIfNull(nameof(favorites), logger);
 
             try
             {

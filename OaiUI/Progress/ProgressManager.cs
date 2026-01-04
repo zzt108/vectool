@@ -1,12 +1,15 @@
-﻿namespace oaiUI.Progress
+﻿using VecTool.Configuration.Helpers;
+
+namespace oaiUI.Progress
 {
     public sealed class ProgressUpdatedEventArgs : EventArgs
     {
         public ProgressInfo LogInformation { get; }
         public string? CurrentItem { get; }
+
         public ProgressUpdatedEventArgs(ProgressInfo info, string? currentItem)
         {
-            LogInformation = info ?? throw new ArgumentNullException(nameof(info));
+            LogInformation = info.ThrowIfNull(nameof(info));
             CurrentItem = currentItem;
         }
     }
@@ -14,10 +17,15 @@
     public interface IProgressReporter
     {
         event EventHandler<ProgressUpdatedEventArgs>? ProgressChanged;
+
         void Start(int totalUnits);
+
         void Advance(int delta = 1, string? currentItem = null);
+
         void SetCurrentItem(string? currentItem);
+
         void Complete();
+
         ProgressInfo Snapshot();
     }
 

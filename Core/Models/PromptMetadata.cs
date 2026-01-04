@@ -2,6 +2,7 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using VecTool.Configuration.Helpers;
 using VecTool.Configuration.Logging;
 using VecTool.Constants;
 
@@ -204,19 +205,9 @@ namespace VecTool.Core.Models
         /// <returns>Standardized filename.</returns>
         public static string BuildFileName(string type, string version, string name, string extension)
         {
-            if (type is null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
-
-            if (name is null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            type = type.Trim();
+            type = type.ThrowIfNullOrWhiteSpace(nameof(type)).Trim();
             version = version?.Trim() ?? string.Empty;
-            name = name.Trim();
+            name = name.ThrowIfNullOrWhiteSpace(nameof(name)).Trim();
 
             if (type.Length == 0)
             {

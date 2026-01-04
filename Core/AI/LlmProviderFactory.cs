@@ -2,6 +2,7 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using VecTool.Configuration.Helpers;
 using VecTool.Configuration.Logging;
 using VecTool.Core.AI.Providers;
 
@@ -24,12 +25,7 @@ namespace VecTool.Core.AI
         /// <exception cref="InvalidOperationException">If provider is disabled or unknown.</exception>
         public static ILlmProvider Create(LLMProviderConfig config)
         {
-            if (config == null)
-            {
-                var ex = new ArgumentNullException(nameof(config));
-                logger.LogError(ex, "LLM provider config is null");
-                throw ex;
-            }
+            config.ThrowIfNull(nameof(config), logger);
 
             using var ctx = logger.SetContext(new Props()
                 .Add("defaultProvider", config.DefaultProvider));

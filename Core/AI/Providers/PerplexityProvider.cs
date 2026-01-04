@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
+using VecTool.Configuration.Helpers;
 
 namespace VecTool.Core.AI.Providers
 {
@@ -23,19 +24,13 @@ namespace VecTool.Core.AI.Providers
 
         public PerplexityProvider(ILogger logger, ProviderSettings settings)
         {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.logger = logger.ThrowIfNull(nameof(logger), logger);
 
-            if (settings == null)
-                throw new ArgumentNullException(nameof(settings));
+            settings.ThrowIfNull(nameof(settings), logger);
 
-            if (string.IsNullOrWhiteSpace(settings.ApiKey))
-                throw new ArgumentException("Perplexity API key is required", nameof(settings));
+            apiKey = settings.ApiKey.ThrowIfNullOrWhiteSpace(nameof(settings.ApiKey), logger, "Perplexity API key is required");
+            model = settings.Model.ThrowIfNullOrWhiteSpace(nameof(settings.Model), logger, "Perplexity model is required");
 
-            if (string.IsNullOrWhiteSpace(settings.Model))
-                throw new ArgumentException("Perplexity model is required", nameof(settings));
-
-            apiKey = settings.ApiKey;
-            model = settings.Model;
             timeoutSeconds = settings.Timeout > 0 ? settings.Timeout : 30;
 
             httpClient = new HttpClient
