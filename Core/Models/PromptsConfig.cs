@@ -2,10 +2,7 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
-using System;
-using System.Configuration;
-using System.IO;
+using VecTool.Configuration.Logging;
 
 namespace VecTool.Core.Models;
 
@@ -15,8 +12,7 @@ namespace VecTool.Core.Models;
 /// </summary>
 public sealed class PromptsConfig : IPromptsConfig
 {
-    private static readonly ILogger logger =
-        LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptsConfig>();
+    private static readonly ILogger logger = AppLogger.For<PromptsConfig>();
 
     private const string KEY_REPO_PATH = "promptsRepositoryPath";
     private const string KEY_FILE_EXTENSIONS = "promptsFileExtensions";

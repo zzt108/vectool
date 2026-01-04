@@ -2,11 +2,8 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
+using VecTool.Configuration.Logging;
 
 namespace VecTool.Core.Helpers
 {
@@ -15,8 +12,7 @@ namespace VecTool.Core.Helpers
     /// </summary>
     public sealed class FavoritesManager
     {
-        private static readonly ILogger logger =
-            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<FavoritesManager>();
+        private static readonly ILogger logger = AppLogger.For<FavoritesManager>();
 
         /// <summary>
         /// Loads favorites from JSON file.

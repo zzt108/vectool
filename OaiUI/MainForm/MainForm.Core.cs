@@ -3,16 +3,11 @@
 using Microsoft.Extensions.Logging;
 using oaiUI;
 using oaiUI.Services;
-using System;
-using System.Linq;
-using System.Windows.Forms;
 using Vectool.UI.Versioning;
 using VecTool.Configuration;
-using VecTool.Core;
 using VecTool.Core.Configuration;
 using VecTool.Core.Helpers;
 using VecTool.Core.Models;
-using VecTool.Core.Services;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
 using VecTool.UI.Panels;

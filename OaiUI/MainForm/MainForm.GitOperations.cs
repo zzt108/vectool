@@ -1,11 +1,6 @@
 ﻿// ✅ FULL FILE VERSION
 // File: OaiUI/MainForm.GitOperations.cs
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using VecTool.Core;
 using VecTool.Core.Helpers;
 using VecTool.Handlers;

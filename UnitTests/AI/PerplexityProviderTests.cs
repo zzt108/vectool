@@ -3,13 +3,7 @@
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using UnitTests;
-using VecTool.Core.AI;
 using VecTool.Core.AI.Providers;
 using ProviderSettings = VecTool.Core.AI.ProviderSettings;
 

@@ -1,7 +1,5 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Linq;
 using System.Windows.Forms;
 using Vectool.OaiUI;
 using Vectool.UI.Versioning;

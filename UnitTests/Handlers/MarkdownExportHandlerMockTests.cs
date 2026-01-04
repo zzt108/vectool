@@ -1,11 +1,7 @@
-﻿using LogCtxShared;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using VecTool.Configuration;
 using VecTool.Handlers;
 using VecTool.Handlers.Traversal;

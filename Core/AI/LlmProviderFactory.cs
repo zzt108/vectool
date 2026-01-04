@@ -2,7 +2,7 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
+using VecTool.Configuration.Logging;
 using VecTool.Core.AI.Providers;
 
 namespace VecTool.Core.AI
@@ -13,7 +13,7 @@ namespace VecTool.Core.AI
     public static class LlmProviderFactory
     {
         private static readonly ILogger logger =
-            LoggerFactory.Create(b => b.AddNLog()).CreateLogger("LlmProviderFactory");
+            AppLogger.Create("LlmProviderFactory");
 
         /// <summary>
         /// Create an LLM provider instance based on configuration.

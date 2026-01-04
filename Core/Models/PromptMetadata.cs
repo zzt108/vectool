@@ -2,10 +2,7 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
-using System;
-using System.IO;
-using System.Linq;
+using VecTool.Configuration.Logging;
 using VecTool.Constants;
 
 namespace VecTool.Core.Models
@@ -18,8 +15,7 @@ namespace VecTool.Core.Models
     /// </summary>
     public sealed record PromptMetadata
     {
-        private static readonly ILogger logger =
-            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptMetadata>();
+        private static readonly ILogger logger = AppLogger.For<PromptMetadata>();
 
         public string FileName { get; init; } = string.Empty;
         public string Version { get; init; } = string.Empty; // e.g., "1.0", "1.1"

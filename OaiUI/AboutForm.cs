@@ -1,6 +1,4 @@
 ﻿// Path: OaiUI/AboutForm.cs
-using System;
-using System.Windows.Forms;
 using Vectool.UI.Versioning;
 
 namespace Vectool.OaiUI

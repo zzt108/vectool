@@ -1,8 +1,5 @@
 ﻿// ✅ FULL FILE VERSION
 // File: Core/Abstractions/IGitRunner.cs
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace VecTool.Core.Abstractions
 {
     /// <summary>

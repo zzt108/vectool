@@ -1,6 +1,5 @@
 ﻿// UnitTests/AssemblyAttributes.cs
 using NUnit.Framework;
-using System.Threading;
 
 // Ensure every test runs under Single-Threaded Apartment (STA) for WinForms/OLE drag-drop
 [assembly: Apartment(ApartmentState.STA)]

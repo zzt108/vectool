@@ -1,9 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using VecTool.Core.Helpers;
+﻿using VecTool.Core.Helpers;
 using VecTool.Handlers;
 using VecTool.RecentFiles;
 

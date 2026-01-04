@@ -1,6 +1,6 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
+using VecTool.Configuration.Logging;
 using VecTool.Core.AI;
 using VecTool.Core.Models;
 
@@ -13,8 +13,7 @@ public sealed class PromptCategorizer
 {
     private readonly ILlmProvider _llmProvider;
 
-    private static readonly ILogger logger =
-        LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptCategorizer>();
+    private static readonly ILogger logger = AppLogger.For<PromptCategorizer>();
 
     public PromptCategorizer(ILlmProvider llmProvider)
     {

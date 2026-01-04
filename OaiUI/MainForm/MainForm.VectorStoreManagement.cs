@@ -1,9 +1,6 @@
 ﻿// ✅ FULL FILE VERSION
 // File: OaiUI/MainForm.VectorStoreManagement.cs
 
-using System;
-using System.Linq;
-using System.Windows.Forms;
 using VecTool.Configuration;
 using VecTool.Handlers;
 

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 using NUnit.Framework;
 using Shouldly;
-using System;
 
 namespace UnitTests;
 

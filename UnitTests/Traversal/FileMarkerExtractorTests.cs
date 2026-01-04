@@ -3,8 +3,6 @@ using VecTool.Handlers.Traversal;
 namespace UnitTests.Traversal
 {
     using NLog;
-    using NLog.Config;
-    using NLog.Targets;
     using NUnit.Framework;
     using Shouldly;
     using System;

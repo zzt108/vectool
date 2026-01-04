@@ -1,15 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 using VecTool.Configuration;
-using VecTool.Constants;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
-using VecTool.Utils;
 
 namespace VecTool.Handlers
 {

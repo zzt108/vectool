@@ -2,14 +2,9 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
+using VecTool.Configuration.Logging;
 using VecTool.Constants;
 using VecTool.Core.Helpers;
 using VecTool.Core.Models;
@@ -23,8 +18,7 @@ namespace VecTool.UI.Panels
     /// </summary>
     public sealed partial class PromptsBrowserPanel : UserControl
     {
-        private static readonly ILogger logger =
-            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptsBrowserPanel>();
+        private static readonly ILogger logger = AppLogger.For<PromptsBrowserPanel>();
 
         private PromptSearchEngine searchEngine;
         private FavoritesManager favoritesManager;

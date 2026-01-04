@@ -1,6 +1,4 @@
 ﻿// ✅ FULL FILE VERSION
-using System;
-using System.Collections.Generic;
 using VecTool.RecentFiles;
 
 namespace UnitTests.RecentFiles

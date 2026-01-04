@@ -2,12 +2,9 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using VecTool.Configuration.Logging;
 
 namespace VecTool.Core.AI;
 
@@ -17,8 +14,7 @@ namespace VecTool.Core.AI;
 /// </summary>
 public sealed class LLMProviderConfig
 {
-    private static readonly ILogger logger =
-        LoggerFactory.Create(b => b.AddNLog()).CreateLogger<LLMProviderConfig>();
+    private static readonly ILogger logger = AppLogger.For<LLMProviderConfig>();
 
     private static readonly Regex EnvVarPattern = new(@"\$\{([A-Z_][A-Z0-9_]*)\}", RegexOptions.Compiled);
 

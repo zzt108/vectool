@@ -4,8 +4,6 @@ using NSubstitute;
 using NUnit.Framework;
 
 using Shouldly;
-using System;
-using System.Linq;
 using VecTool.Configuration;
 using VecTool.Handlers;
 using VecTool.Handlers.Traversal;

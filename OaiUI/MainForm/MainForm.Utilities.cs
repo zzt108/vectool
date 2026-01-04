@@ -1,11 +1,6 @@
 ﻿// ✅ FULL FILE VERSION
 // File: OaiUI/MainForm.Configuration.cs
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-
 namespace Vectool.OaiUI
 {
     /// <summary>

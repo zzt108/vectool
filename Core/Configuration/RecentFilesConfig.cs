@@ -1,7 +1,4 @@
 ﻿// Path: Configuration/RecentFilesConfig.cs
-using System;
-using System.Configuration;
-using System.IO;
 using VecTool.Core.Models;
 
 namespace VecTool.Core.Configuration

@@ -1,6 +1,4 @@
 ﻿// Path: Constants/Tags.cs
-using System;
-
 namespace VecTool.Constants
 {
     /// <summary>

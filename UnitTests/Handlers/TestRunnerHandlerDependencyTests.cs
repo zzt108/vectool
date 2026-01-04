@@ -1,10 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using UnitTests.Fakes;
 using VecTool.Core.Abstractions;
 using VecTool.Handlers;

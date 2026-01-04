@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using NUnit.Framework;
 using Shouldly;
-using System.IO;
 using VecTool.Core.Helpers;
 
 namespace UnitTests.Core.Helpers

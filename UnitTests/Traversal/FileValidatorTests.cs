@@ -1,10 +1,7 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
-using System.IO;
 using VecTool.Configuration;
 using VecTool.Handlers.Traversal;
-using VecTool.Utils;
 
 namespace UnitTests.Traversal
 {

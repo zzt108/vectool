@@ -1,18 +1,14 @@
 ﻿namespace VecTool.Handlers.Traversal
 {
-    using DocumentFormat.OpenXml.Bibliography;
     using LogCtxShared;
-    using MAB.DotIgnore;
     using Microsoft.Extensions.Logging;
-    using NLog.Extensions.Logging;
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using VecTool.Configuration;
     using VecTool.Configuration.Exclusion;
-    using static System.Runtime.InteropServices.JavaScript.JSType;
+    using VecTool.Configuration.Logging;
 
     /// <summary>
     /// Handles folder traversal and file enumeration with exclusion support (Layer 1 + Layer 2).
@@ -20,8 +16,7 @@
     /// </summary>
     public class FileSystemTraverser : IFileSystemTraverser
     {
-        private static readonly ILogger logger =
-            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptSearchEngine>();
+        private static readonly ILogger logger = AppLogger.For<PromptSearchEngine>();
 
         private readonly IUserInterface? ui;
         // private readonly string rootPath;

@@ -2,9 +2,6 @@
 using NUnit.Framework;
 using oaiUI.RecentFiles;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 using UnitTests.RecentFiles;
 using VecTool.RecentFiles;

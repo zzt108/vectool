@@ -2,9 +2,6 @@
 using NUnit.Framework;
 using oaiUI.Config;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using VecTool.Configuration;
 
 namespace UnitTests.Configuration

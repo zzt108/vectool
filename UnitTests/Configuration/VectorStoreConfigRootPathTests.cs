@@ -1,8 +1,5 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
-using System.IO;
-using System.Collections.Generic;
 using VecTool.Configuration;
 
 namespace UnitTests.Configuration

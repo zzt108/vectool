@@ -2,8 +2,8 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
 using VecTool.Configuration;
+using VecTool.Configuration.Logging;
 using VecTool.Core.Models;
 using VecTool.Handlers.Traversal;
 
@@ -21,8 +21,7 @@ namespace VecTool.Handlers
     /// </summary>
     public sealed class PromptSearchEngine
     {
-        private static readonly ILogger logger =
-            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptSearchEngine>();
+        private static readonly ILogger logger = AppLogger.For<PromptSearchEngine>();
 
         private readonly Dictionary<string, PromptFile> index = new(StringComparer.OrdinalIgnoreCase);
         private readonly IPromptsConfig? config;

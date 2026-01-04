@@ -2,8 +2,8 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
 using System;
+using VecTool.Configuration.Logging;
 
 /// <summary>
 /// Adapter wrapping legacy VectorStoreConfig exclusion rules in IIgnorePatternMatcher interface.
@@ -11,8 +11,7 @@ using System;
 /// </summary>
 public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
 {
-    private static readonly ILogger logger =
-        LoggerFactory.Create(b => b.AddNLog()).CreateLogger<LegacyConfigAdapter>();
+    private static readonly ILogger logger = AppLogger.For<LegacyConfigAdapter>();
 
     private IVectorStoreConfig? _config;
     private string? _loadedRootPath;

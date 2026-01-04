@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using VecTool.Configuration;
+﻿using VecTool.Configuration;
 
 namespace VecTool.Core.Helpers
 {

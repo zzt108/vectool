@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
 using VecTool.Configuration.Exclusion;
 
 namespace VecTool.UnitTests.Configuration.Exclusion

@@ -1,9 +1,5 @@
 ﻿// Path: RecentFiles/RecentFilesManager.cs
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using VecTool.Core.Configuration;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace VecTool.RecentFiles
 {

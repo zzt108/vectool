@@ -1,8 +1,6 @@
 ﻿// Path: Configuration/UiStateConfig.cs
 // NOTE: Consolidated legacy ISettingsStore-backed getters/setters with the JSON-backed UI state.
 // Imports
-using System;
-
 namespace VecTool.Configuration
 {
     /// <summary>

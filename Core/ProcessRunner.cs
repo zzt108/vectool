@@ -2,10 +2,7 @@
 
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using VecTool.Core.Abstractions;
 
 namespace VecTool.Core

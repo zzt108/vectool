@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace VecTool.Core.RecentFiles
+﻿namespace VecTool.Core.RecentFiles
 {
     public sealed class RecentFileItem
     {

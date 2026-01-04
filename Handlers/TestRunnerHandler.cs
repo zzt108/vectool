@@ -1,12 +1,8 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
-using System;
-using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+using VecTool.Configuration.Logging;
 using VecTool.Core.Abstractions;
 using VecTool.RecentFiles;
 
@@ -26,8 +22,7 @@ namespace VecTool.Handlers
         private readonly string _branchName;
         private readonly string _vectorStoreId;
 
-        private readonly ILogger logger =
-            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<TestRunnerHandler>();
+        private readonly ILogger logger = AppLogger.For<TestRunnerHandler>();
 
         /// <summary>
         /// Canonical DI constructor expected by unit tests.

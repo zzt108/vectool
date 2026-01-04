@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace XmlStringDiscovery
+﻿namespace XmlStringDiscovery
 {
     public enum TagContextCategory
     {

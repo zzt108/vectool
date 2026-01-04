@@ -1,7 +1,6 @@
 ﻿// File: Tests/RecentFiles/FileRecentFilesStoreTests.cs
 using NUnit.Framework;
 using Shouldly;
-using VecTool.Configuration;
 using VecTool.Core.Configuration;
 using VecTool.RecentFiles;
 

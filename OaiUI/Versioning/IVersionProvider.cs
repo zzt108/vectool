@@ -1,8 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Reflection;
-
-namespace Vectool.UI.Versioning
+﻿namespace Vectool.UI.Versioning
 {
     public interface IVersionProvider
     {

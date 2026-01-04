@@ -2,11 +2,8 @@
 using NUnit.Framework;
 using oaiUI.RecentFiles;
 using Shouldly;
-using System.ComponentModel;
-using System.IO;
 using System.Windows.Forms;
 using UnitTests.RecentFiles;
-using VecTool.Configuration;
 using VecTool.Core.Configuration;
 using VecTool.RecentFiles;
 

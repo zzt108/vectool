@@ -1,10 +1,7 @@
 ﻿// Path: Configuration/UiStateConfig.cs
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.IO;
 using System.Text.Json;
 using VecTool.Configuration;
 using VecTool.Core.RecentFiles;

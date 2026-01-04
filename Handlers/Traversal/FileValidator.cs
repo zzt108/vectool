@@ -3,9 +3,9 @@
     using global::VecTool.Configuration;
     using global::VecTool.Utils;
     using Microsoft.Extensions.Logging;
-    using NLog.Extensions.Logging;
     using System;
     using System.IO;
+    using VecTool.Configuration.Logging;
 
     /// <summary>
     /// Validates files and folders for processing based on exclusion rules.
@@ -13,7 +13,7 @@
     public static class FileValidator
     {
         private static readonly ILogger logger =
-            LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptSearchEngine>();
+            AppLogger.Create("FileValidator");
 
         /// <summary>
         /// Determines if a folder should be excluded from processing.

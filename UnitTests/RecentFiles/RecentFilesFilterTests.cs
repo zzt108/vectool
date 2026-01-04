@@ -1,6 +1,5 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System.Collections.Generic;
 using VecTool.Core.RecentFiles;
 
 namespace UnitTests.RecentFiles

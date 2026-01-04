@@ -1,6 +1,6 @@
 ﻿using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
+using VecTool.Configuration.Logging;
 
 namespace VecTool.Core.Services;
 
@@ -10,8 +10,7 @@ namespace VecTool.Core.Services;
 /// </summary>
 public sealed class PromptTemplateGenerator
 {
-    private readonly ILogger logger =
-        LoggerFactory.Create(b => b.AddNLog()).CreateLogger<PromptTemplateGenerator>();
+    private readonly ILogger logger = AppLogger.For<PromptTemplateGenerator>();
 
     /// <summary>
     /// Applies variable substitution to template content.

@@ -1,30 +1,33 @@
-﻿// UnitTests/TestInfrastructure/TestLogger.cs
+﻿#nullable enable
+
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
+using VecTool.Configuration.Logging;
 
 namespace UnitTests
 {
     /// <summary>
-    /// Static logger using MS.Extensions.Logging → NLog backend.
-    /// Configured once, reused everywhere. 🔥
+    /// Test logger facade - delegates to production AppLogger.
+    /// Ensures tests use the same logging infrastructure as production code.
     /// </summary>
     public static class TestLogger
     {
-        private static readonly ILoggerFactory _factory;
+        /// <summary>
+        /// Creates a logger for the specified type.
+        /// Delegates to <see cref="AppLogger.For{T}"/>.
+        /// </summary>
+        public static ILogger<T> For<T>() => AppLogger.For<T>();
 
-        static TestLogger()
-        {
-            _factory = LoggerFactory.Create(builder =>
-            {
-                builder.ClearProviders();
-                builder.SetMinimumLevel(LogLevel.Trace);
-                builder.AddNLog(); // ✅ Routes to your existing nlog.config
-            });
-        }
-
-        public static ILogger<T> For<T>() => _factory.CreateLogger<T>();
-
+        /// <summary>
+        /// Creates a logger with the specified category name.
+        /// Delegates to <see cref="AppLogger.Create"/>.
+        /// </summary>
         public static ILogger Create(string categoryName = "not-specified")
-            => _factory.CreateLogger(categoryName);
+            => AppLogger.Create(categoryName);
+
+        /// <summary>
+        /// Expose factory for DI tests (e.g., MainForm constructor).
+        /// Delegates to <see cref="AppLogger.Factory"/>.
+        /// </summary>
+        public static ILoggerFactory Factory => AppLogger.Factory;
     }
 }

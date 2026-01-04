@@ -3,10 +3,6 @@ using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using VecTool.Configuration;
 using VecTool.Handlers.Traversal;
 

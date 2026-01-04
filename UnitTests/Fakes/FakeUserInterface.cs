@@ -1,5 +1,4 @@
 ﻿// ✅ FULL FILE VERSION
-using System.Collections.Generic;
 using VecTool.Handlers;
 
 namespace UnitTests.Fakes

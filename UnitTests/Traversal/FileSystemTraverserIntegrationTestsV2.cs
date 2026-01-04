@@ -6,15 +6,9 @@ using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 using Shouldly;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using VecTool.Configuration;
 using VecTool.Handlers.Traversal;
-using VecTool.Utils;
 
 namespace UnitTests.Traversal
 {

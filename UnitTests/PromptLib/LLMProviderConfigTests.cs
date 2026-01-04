@@ -1,8 +1,5 @@
 ﻿using NUnit.Framework;
 using Shouldly;
-using System;
-using System.IO;
-using VecTool.Configuration;
 using VecTool.Core.AI;
 
 namespace VecTool.UnitTests;

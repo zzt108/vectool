@@ -2,13 +2,9 @@
 // Path: OaiUI/RecentFiles/RecentFilesPanel.Core.cs
 #nullable enable
 
-using System;
 using System.Configuration;
-using System.IO;
-using System.Windows.Forms;
 using VecTool.Core.Configuration;
 using VecTool.RecentFiles;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace oaiUI.RecentFiles
 {

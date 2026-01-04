@@ -1,9 +1,5 @@
 ﻿// Path: Vectool.UI/OaiUI/WinFormsUserInterface.cs
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Windows.Forms;
 using VecTool.Handlers;
 
 namespace oaiUI

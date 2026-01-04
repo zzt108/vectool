@@ -1,10 +1,6 @@
 ﻿// ✅ FULL FILE VERSION
 // Path: OaiUI/MainForm.SettingsTab.cs
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
 using oaiUI.Config;
 using VecTool.Configuration;
 

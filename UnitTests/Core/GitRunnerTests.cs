@@ -1,11 +1,8 @@
 ﻿// UnitTests/Core/GitRunnerTests.cs
 using NUnit.Framework;
 using Shouldly;
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using VecTool.Core;
 
 namespace UnitTests.Core

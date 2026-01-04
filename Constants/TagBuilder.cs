@@ -1,5 +1,4 @@
 ﻿// Path: Constants/TagBuilder.cs
-using System;
 using System.Text;
 
 namespace VecTool.Constants

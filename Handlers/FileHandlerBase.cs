@@ -1,6 +1,5 @@
 namespace VecTool.Handlers;
 
-using DocumentFormat.OpenXml.Bibliography;
 using global::VecTool.Configuration;
 using global::VecTool.Handlers.Analysis;
 using global::VecTool.Handlers.Traversal;

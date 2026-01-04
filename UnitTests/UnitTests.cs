@@ -4,12 +4,8 @@ using LogCtxShared;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using UnitTests.Handlers;
 using VecTool.Configuration;
 using VecTool.Handlers;
-using VecTool.Handlers.Analysis; // For IUserInterface
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles; // For IRecentFilesManager
 using VecTool.Utils;

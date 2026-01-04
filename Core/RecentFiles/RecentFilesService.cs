@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace VecTool.Core.RecentFiles
+﻿namespace VecTool.Core.RecentFiles
 {
     public sealed class RecentFilesService : IRecentFilesService
     {
