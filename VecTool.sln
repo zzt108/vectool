@@ -27,7 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		OaiUI\bin\vectorStoreFolders.json = OaiUI\bin\vectorStoreFolders.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogCtx", "..\LogCtx\LogCtx\LogCtx.csproj", "{FE52C64E-75E6-DE38-75A1-005FA6DC19AA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogCtx", "LogCtx\LogCtx\LogCtx.csproj", "{816F716E-D1A4-20E6-068E-4A1C8F0CE378}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,10 +67,10 @@ Global
 		{65B858B0-FA7C-8D60-ADB1-EB168B88825D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65B858B0-FA7C-8D60-ADB1-EB168B88825D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65B858B0-FA7C-8D60-ADB1-EB168B88825D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FE52C64E-75E6-DE38-75A1-005FA6DC19AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FE52C64E-75E6-DE38-75A1-005FA6DC19AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE52C64E-75E6-DE38-75A1-005FA6DC19AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FE52C64E-75E6-DE38-75A1-005FA6DC19AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{816F716E-D1A4-20E6-068E-4A1C8F0CE378}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{816F716E-D1A4-20E6-068E-4A1C8F0CE378}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{816F716E-D1A4-20E6-068E-4A1C8F0CE378}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{816F716E-D1A4-20E6-068E-4A1C8F0CE378}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,6 +79,6 @@ Global
 		SolutionGuid = {C0C89143-7E2F-41DD-BD67-F5BC7DB6BB4B}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		..\LogCtx\LogCtxShared\LogCtxShared.projitems*{fe52c64e-75e6-de38-75a1-005fa6dc19aa}*SharedItemsImports = 5
+		LogCtx\LogCtxShared\LogCtxShared.projitems*{816f716e-d1a4-20e6-068e-4a1c8f0ce378}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal
