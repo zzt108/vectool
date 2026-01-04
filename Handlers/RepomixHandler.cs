@@ -147,7 +147,7 @@ namespace VecTool.Handlers
         private async Task<(bool isAvailable, string command)> IsRepomixAvailableAsync(
             CancellationToken cancellationToken)
         {
-            using var _ = logger.SetContext(new Props().Add("Method", "IsRepomixAvailableAsync"));
+            using var _ = logger.SetContext().Add("Method", "IsRepomixAvailableAsync");
 
             // ✅ Step 1: Try global repomix install first (more reliable on Windows)
             logger.LogDebug("Checking for global 'repomix' installation...");
@@ -224,7 +224,7 @@ namespace VecTool.Handlers
         /// </remarks>
         private string? DetermineExecutablePath(string executableName)
         {
-            using var _ = logger.SetContext(new Props().Add("Executable", executableName));
+            using var _ = logger.SetContext().Add("Executable", executableName);
 
             try
             {
@@ -297,10 +297,10 @@ namespace VecTool.Handlers
             VectorStoreConfig? config,
             string command)
         {
-            using var _ = logger.SetContext(new Props()
+            using var _ = logger.SetContext()
                 .Add("Command", command)
                 .Add("TargetDirectory", targetDirectory)
-                .Add("OutputPath", outputPath));
+                .Add("OutputPath", outputPath);
 
             // Only include "repomix" subcommand for npx
             var isNpx = command.Contains("npx", StringComparison.OrdinalIgnoreCase);

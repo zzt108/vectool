@@ -33,9 +33,9 @@ namespace VecTool.Core.Models
         /// </summary>
         public static PromptMetadata? Parse(string relativePath, string? firstLineContent = null)
         {
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("relativePath", relativePath)
-                .Add("firstLine", firstLineContent?.Substring(0, Math.Min(50, firstLineContent?.Length ?? 0))));
+                .Add("firstLine", firstLineContent?.Substring(0, Math.Min(50, firstLineContent?.Length ?? 0)));
 
             if (string.IsNullOrWhiteSpace(relativePath))
             {

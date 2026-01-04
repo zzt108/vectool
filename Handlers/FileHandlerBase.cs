@@ -98,9 +98,9 @@ public abstract class FileHandlerBase
     {
         if (FileSystemTraverser is null)
         {
-            using var _ = logger.SetContext(new Props()
+            using var _ = logger.SetContext()
                 .Add(nameof(root), root)
-                .Add("reason", "nulltraverser"));
+                .Add("reason", "nulltraverser");
 
             logger.LogWarning("FileSystemTraverser not initialized");
             return Enumerable.Empty<string>();

@@ -20,8 +20,8 @@ namespace UnitTests
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            using var ctx = logger.SetContext(new Props()
-            .Add("Suite", nameof(MimeTypeProviderTests)));
+            using var ctx = logger.SetContext()
+            .Add("Suite", nameof(MimeTypeProviderTests));
             logger.LogInformation("Test suite starting");
         }
 
@@ -31,12 +31,12 @@ namespace UnitTests
         public void SetUp()
         {
             _corrId = Guid.NewGuid().ToString("N");
-            var props = new LogCtxShared.Props(
-                "Operation", "UnitTest",
-                "Suite", nameof(MimeTypeProviderTests),
-                "Test", TestContext.CurrentContext.Test.Name,
-                "CorrelationId", _corrId);
-            logger.SetContext(props);
+            logger.SetContext()
+                .Add("Operation", "UnitTest")
+                .Add("Suite", nameof(MimeTypeProviderTests))
+                .Add("Test", TestContext.CurrentContext.Test.Name)
+                .Add("CorrelationId", _corrId)
+                ;
             logger.LogInformation("Test start");
         }
 

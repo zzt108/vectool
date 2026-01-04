@@ -20,9 +20,9 @@ public static class IgnoreMatcherFactory
     /// <returns>Configured matcher instance.</returns>
     public static IIgnorePatternMatcher? Create(IgnoreLibraryType libraryType, string? rootPath = null)
     {
-        using var ctx = logger.SetContext(new Props()
+        using var ctx = logger.SetContext()
             .Add("LibraryType", libraryType.ToString())
-            .Add("RootPath", rootPath ?? "deferred"));
+            .Add("RootPath", rootPath ?? "deferred");
 
         // Default to MAB.DotIgnore when libraryType is unspecified
         if (libraryType == IgnoreLibraryType.Auto)  // Placeholder for "auto" selection

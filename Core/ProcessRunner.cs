@@ -79,12 +79,12 @@ namespace VecTool.Core
             }
             catch (Exception ex)
             {
-                using var _ = logger.SetContext(new Props()
+                using var _ = logger.SetContext()
                     .Add("FileName", fileName)
                     .Add("Arguments", arguments)
                     .Add("WorkingDirectory", workingDirectory)
                     //.Add("ExitCode", process.ExitCode)
-                    .Add("Duration", (DateTime.UtcNow - startedAt).TotalMilliseconds));
+                    .Add("Duration", (DateTime.UtcNow - startedAt).TotalMilliseconds);
                 logger?.LogError(ex, $"ProcessRunner.RunAsync failed. Command: '{fileName}', Args: '{arguments}', WorkDir: '{workingDirectory}'");
                 throw; // Re-throw with logged context
             }

@@ -47,10 +47,10 @@ namespace VecTool.Core.AI.Providers
 
         public async Task<string> RequestAsync(string prompt, CancellationToken ct = default)
         {
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("provider", "Perplexity")
                 .Add("model", model)
-                .Add("promptLength", prompt?.Length ?? 0));
+                .Add("promptLength", prompt?.Length ?? 0);
 
             if (string.IsNullOrWhiteSpace(prompt))
             {
@@ -79,9 +79,9 @@ namespace VecTool.Core.AI.Providers
 
                 var responseBody = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
-                using var responseCtx = logger.SetContext(new Props()
+                using var responseCtx = logger.SetContext()
                     .Add("statusCode", (int)response.StatusCode)
-                    .Add("responseLength", responseBody?.Length ?? 0));
+                    .Add("responseLength", responseBody?.Length ?? 0);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -124,9 +124,9 @@ namespace VecTool.Core.AI.Providers
 
         public async Task<bool> ValidateConfigAsync(CancellationToken ct = default)
         {
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("provider", "Perplexity")
-                .Add("operation", "ValidateConfig"));
+                .Add("operation", "ValidateConfig");
 
             try
             {

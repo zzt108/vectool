@@ -86,8 +86,8 @@ namespace VecTool.UI.Panels
             FavoritesManager? favoritesManager,
             string? promptsRepositoryPath)
         {
-            using var ctx = logger.SetContext(new Props()
-                .Add("RepositoryPath", promptsRepositoryPath ?? "null"));
+            using var ctx = logger.SetContext()
+                .Add("RepositoryPath", promptsRepositoryPath ?? "null");
 
             this.searchEngine = searchEngine.ThrowIfNull(nameof(searchEngine));
             this.favoritesManager = favoritesManager.ThrowIfNull(nameof(favoritesManager));
@@ -151,8 +151,8 @@ namespace VecTool.UI.Panels
         /// </summary>
         public void RefreshPanel()
         {
-            using var ctx = logger.SetContext(new Props()
-                .Add("SearchQuery", currentSearchQuery));
+            using var ctx = logger.SetContext()
+                .Add("SearchQuery", currentSearchQuery);
 
             try
             {
@@ -318,7 +318,7 @@ namespace VecTool.UI.Panels
 
         private void CopySelectedToClipboard()
         {
-            using var ctx = logger.SetContext(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -342,7 +342,7 @@ namespace VecTool.UI.Panels
 
         private void EditSelectedPrompt()
         {
-            using var ctx = logger.SetContext(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -371,7 +371,7 @@ namespace VecTool.UI.Panels
 
         private void CreateNewVersion()
         {
-            using var ctx = logger.SetContext(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -412,7 +412,7 @@ namespace VecTool.UI.Panels
 
         private void OpenInGit()
         {
-            using var ctx = logger.SetContext(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -459,7 +459,7 @@ namespace VecTool.UI.Panels
 
         private void ToggleFavorite()
         {
-            using var ctx = logger.SetContext(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {
@@ -519,7 +519,7 @@ namespace VecTool.UI.Panels
 
         private void OpenRenamePromptDialog()
         {
-            using var ctx = logger.SetContext(new Props());
+            using var ctx = logger.SetContext();
 
             try
             {

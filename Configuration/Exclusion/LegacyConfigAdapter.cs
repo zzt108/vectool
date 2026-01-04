@@ -27,10 +27,9 @@ public sealed class LegacyConfigAdapter : IIgnorePatternMatcher
     /// </summary>
     public void LoadFromRoot(string rootPath)
     {
-        using var ctx = logger.SetContext(new Props()
+        using var ctx = logger.SetContext()
             .Add("rootPath", rootPath)
-            .Add("adapterType", "LegacyConfig")
-        );
+            .Add("adapterType", "LegacyConfig");
 
         if (string.IsNullOrWhiteSpace(rootPath) || !Directory.Exists(rootPath))
         {

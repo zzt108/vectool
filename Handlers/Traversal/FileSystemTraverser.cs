@@ -55,8 +55,8 @@
             //this.rootPath = rootPath ?? Environment.CurrentDirectory;
             this.markerExtractor = markerExtractor;  // Layer 2 enabled (if provided)
 
-            using var ctx = logger.SetContext(new Props()
-                .Add("layer_2_enabled", markerExtractor != null ? "yes" : "no"));
+            using var ctx = logger.SetContext()
+                .Add("layer_2_enabled", markerExtractor != null ? "yes" : "no");
             logger.LogInformation("FileSystemTraverser initialized");
         }
 
@@ -79,17 +79,17 @@
                     rootPath
                 );
 
-                using var ctx = logger.SetContext(new Props()
+                using var ctx = logger.SetContext()
                     .Add("rootpath", rootPath)
-                    .Add("library", "MabDotIgnore"));
+                    .Add("library", "MabDotIgnore");
                 logger.LogInformation("Pattern matcher initialized for root");
 
                 // LAYER 2: FALLBACK - Create fallback matcher for legacy config
                 fallbackMatcher = new LegacyConfigAdapter(config);
 
-                using var ctx2 = logger.SetContext(new Props()
+                using var ctx2 = logger.SetContext()
                     .Add("primary", primaryMatcher?.GetType().Name ?? "null")
-                    .Add("fallback", fallbackMatcher?.GetType().Name ?? "null"));
+                    .Add("fallback", fallbackMatcher?.GetType().Name ?? "null");
                 logger.LogInformation("Exclusion matcher chain ready");
             }
             catch (Exception ex)
@@ -282,9 +282,9 @@
                 var current = stack.Pop();
                 var folderName = new DirectoryInfo(current).Name;
 
-                using var ctx = logger.SetContext(new Props()
+                using var ctx = logger.SetContext()
                     .Add("current", current)
-                    .Add("folderName", folderName));
+                    .Add("folderName", folderName);
 
                 // LAYER 1: Pattern check FOLDER FIRST (requires relative path)
                 if (primaryMatcher != null)
@@ -292,9 +292,9 @@
                     var relativePath = Path.GetRelativePath(root, current);
                     if (primaryMatcher.IsIgnored(relativePath, isDirectory: true))
                     {
-                        using var _ = logger.SetContext(new Props()
+                        using var _ = logger.SetContext()
                             .Add("excludedDir", relativePath)
-                            .Add("fullPath", current));
+                            .Add("fullPath", current);
                         logger.LogTrace($"Skipping excluded folder (pattern): {relativePath}");
                         continue;
                     }
@@ -337,9 +337,9 @@
                         var relativePath = Path.GetRelativePath(root, f);
                         if (primaryMatcher.IsIgnored(relativePath, isDirectory: false))
                         {
-                            using var _ = logger.SetContext(new Props()
+                            using var _ = logger.SetContext()
                                 .Add("excludedFile", relativePath)
-                                .Add("fullPath", f));
+                                .Add("fullPath", f);
                             logger.LogTrace($"Skipping excluded file (pattern): {relativePath}");
                             continue;
                         }
@@ -355,8 +355,8 @@
                     // File system validity check
                     if (!FileValidator.IsFileValid(f, outputPath: null))
                     {
-                        using var ctxValid = logger.SetContext(new Props()
-                            .Add("content", f));
+                        using var ctxValid = logger.SetContext()
+                            .Add("content", f);
                         logger.LogTrace("Invalid or binary file");
                         continue;
                     }

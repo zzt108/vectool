@@ -77,9 +77,9 @@ namespace VecTool.UI.Panels
             MinimizeBox = false;
             ClientSize = new Size(640, 280);
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("FullPath", originalFullPath)
-                .Add("FileName", promptFile.Metadata.FileName));
+                .Add("FileName", promptFile.Metadata.FileName);
 
             var table = new TableLayoutPanel
             {
@@ -310,8 +310,8 @@ namespace VecTool.UI.Panels
 
         private void BtnRenameClick(object? sender, EventArgs e)
         {
-            using var ctx = logger.SetContext(new Props()
-                .Add("OriginalPath", originalFullPath));
+            using var ctx = logger.SetContext()
+                .Add("OriginalPath", originalFullPath);
 
             try
             {
@@ -364,9 +364,9 @@ namespace VecTool.UI.Panels
 
                 File.Move(originalFullPath, newFullPath);
 
-                using var _ = logger.SetContext(new Props()
+                using var _ = logger.SetContext()
                     .Add("From", originalFullPath)
-                    .Add("To", newFullPath));
+                    .Add("To", newFullPath);
                 logger.LogInformation("Renamed prompt file.");
 
                 WasRenamed = true;

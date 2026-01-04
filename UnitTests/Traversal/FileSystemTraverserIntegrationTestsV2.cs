@@ -82,10 +82,10 @@ namespace UnitTests.Traversal
             files.ShouldNotContain(f => f.EndsWith("temp.tmp"));
 
             // Verify marker extractor was called only for non-excluded files (mocking would show this)
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "pattern_only")
                 .Add("filesChecked", files.Count)
-                .Add("pattern", ".gitignore"));
+                .Add("pattern", ".gitignore");
             logger.LogInformation("Pattern-only exclusion verified");
         }
 
@@ -118,9 +118,9 @@ public class Generated
             files.ShouldContain(f => f.EndsWith("main.cs"));
             files.ShouldNotContain(f => f.EndsWith("generated.cs"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "marker_only")
-                .Add("filesIncluded", files.Count));
+                .Add("filesIncluded", files.Count);
             logger.LogInformation("Marker-only exclusion verified");
         }
 
@@ -155,11 +155,11 @@ public class ConfigGenerated { }";
             files.ShouldNotContain(f => f.EndsWith("ignored.log"));
             files.ShouldNotContain(f => f.EndsWith("config.g.cs"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "both_layers")
                 .Add("patternExcluded", 1)
                 .Add("markerExcluded", 1)
-                .Add("included", 1));
+                .Add("included", 1);
             logger.LogInformation("Both layers combined verified");
         }
 
@@ -186,9 +186,9 @@ public class MarkedClass { }";
             // Assert - Marked file should be included (Layer 2 disabled)
             files.ShouldContain(f => f.EndsWith("marked.cs"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "marker_null")
-                .Add("layer2Enabled", false));
+                .Add("layer2Enabled", false);
             logger.LogInformation("Backward compatibility verified");
         }
 
@@ -234,10 +234,10 @@ public class MarkedClass { }";
             files.ShouldNotContain(f => f.Contains("bin"));
             files.ShouldNotContain(f => f.Contains("obj"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "directory_exclusion")
                 .Add("filesIncluded", files.Count)
-                .Add("directoriesExcluded", 2));
+                .Add("directoriesExcluded", 2);
             logger.LogInformation("Directory exclusion verified");
         }
 
@@ -265,9 +265,9 @@ public class MarkedClass { }";
             files.Count.ShouldBeGreaterThan(0);
             files.ShouldContain(f => f.EndsWith("config.cs"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "markers_not_for_dirs")
-                .Add("directoriesProcessed", true));
+                .Add("directoriesProcessed", true);
             logger.LogInformation("Marker non-application to directories verified");
         }
 
@@ -305,9 +305,9 @@ public class MarkedClass { }";
             files.ShouldContain(f => f.EndsWith("main.cs"));
             files.ShouldNotContain(f => f.Contains("node_modules"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "files_in_excluded_dirs")
-                .Add("nestedFilesExcluded", true));
+                .Add("nestedFilesExcluded", true);
             logger.LogInformation("Nested exclusion verified");
         }
 
@@ -338,9 +338,9 @@ public class MarkedClass { }";
                 files.Count.ShouldBe(2); // Both files enumerated despite extractor throwing
             });
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "marker_extractor_throws")
-                .Add("filesProcessed", 2));
+                .Add("filesProcessed", 2);
             logger.LogInformation("Graceful failure verified");
         }
 
@@ -369,9 +369,9 @@ public class Generated { }";
             // Assert - Some files still processed
             files.Count.ShouldBeGreaterThan(0);
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "partial_failure")
-                .Add("filesProcessed", files.Count));
+                .Add("filesProcessed", files.Count);
             logger.LogInformation("Partial failure isolation verified");
         }
 
@@ -396,8 +396,8 @@ public class Generated { }";
                 files.Count.ShouldBeGreaterThanOrEqualTo(0);
             });
 
-            using var ctx = logger.SetContext(new Props()
-                .Add("test", "failure_logging"));
+            using var ctx = logger.SetContext()
+                .Add("test", "failure_logging");
             logger.LogInformation("Failure logging verified - no rethrow");
         }
 
@@ -440,9 +440,9 @@ public class Person { }";
             processedFiles.ShouldContain(f => f.EndsWith("program.cs"));
             processedFiles.ShouldNotContain(f => f.EndsWith("person.g.cs"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "processFolder_respect_markers")
-                .Add("filesProcessed", processedFiles.Count));
+                .Add("filesProcessed", processedFiles.Count);
             logger.LogInformation("ProcessFolder marker respect verified");
         }
 
@@ -470,9 +470,9 @@ public class ExternalLib { }";
             files.Count.ShouldBe(1);
             files[0].ShouldEndWith("main.cs");
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "enumerate_files_markers")
-                .Add("filesReturned", files.Count));
+                .Add("filesReturned", files.Count);
             logger.LogInformation("EnumerateFilesRespectingExclusions marker respect verified");
         }
 
@@ -504,9 +504,9 @@ public class Lower { }";
             files.Count.ShouldBe(1);
             files.ShouldContain(f => f.EndsWith("main.cs"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "case_insensitive_reason")
-                .Add("casesHandled", 2));
+                .Add("casesHandled", 2);
             logger.LogInformation("Case-insensitive reason matching verified");
         }
 
@@ -537,9 +537,9 @@ public class Lower { }";
                 files1[i].ShouldBe(files2[i]);
             }
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "deterministic_order")
-                .Add("filesEnumerated", files1.Count));
+                .Add("filesEnumerated", files1.Count);
             logger.LogInformation("Deterministic file order verified");
         }
 
@@ -585,11 +585,11 @@ namespace Generated.Schema
             files.ShouldNotContain(f => f.EndsWith("schema.xsd"));
             files.ShouldNotContain(f => f.EndsWith("Person.g.cs"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "xsd_file_markers")
                 .Add("xsdFilesExcluded", 1)
                 .Add("generatedCsExcluded", 1)
-                .Add("normalCsIncluded", 1));
+                .Add("normalCsIncluded", 1);
             logger.LogInformation("XSD file marker handling verified");
         }
 
@@ -626,10 +626,10 @@ namespace Generated.Schema
             files.ShouldContain(f => f.EndsWith("program.cs"));
             files.ShouldNotContain(f => f.EndsWith("config.g.json"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "json_file_markers")
                 .Add("markedJsonExcluded", 1)
-                .Add("unmarkedJsonIncluded", 1));
+                .Add("unmarkedJsonIncluded", 1);
             logger.LogInformation("JSON file marker handling verified");
         }
 
@@ -665,10 +665,10 @@ namespace Generated.Schema
             files.ShouldContain(f => f.EndsWith("Program.cs"));
             files.ShouldContain(f => f.EndsWith("appsettings.json"));
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "mixed_formats")
                 .Add("filesIncluded", files.Count)
-                .Add("filesExcluded", 3));
+                .Add("filesExcluded", 3);
             logger.LogInformation("Mixed format marker handling verified");
         }
 
@@ -712,11 +712,11 @@ namespace Generated.Schema
             enumStopwatch.ElapsedMilliseconds.ShouldBeLessThan(1200,
                 $"Large project enumeration took {enumStopwatch.ElapsedMilliseconds}ms");
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "large_project_performance")
                 .Add("filesEnumerated", files.Count)
                 .Add("setupMs", setupStopwatch.ElapsedMilliseconds)
-                .Add("enumerateMs", enumStopwatch.ElapsedMilliseconds));
+                .Add("enumerateMs", enumStopwatch.ElapsedMilliseconds);
             logger.LogInformation("Large project performance verified");
         }
 
@@ -758,10 +758,10 @@ namespace Generated.Schema
             // Assert - All threads got same result
             results.ShouldAllBe(x => x == 50);
 
-            using var ctx = logger.SetContext(new Props()
+            using var ctx = logger.SetContext()
                 .Add("test", "concurrent_enumeration")
                 .Add("threadsRun", 5)
-                .Add("filesPerThread", 50));
+                .Add("filesPerThread", 50);
             logger.LogInformation("Concurrent enumeration safety verified");
         }
 

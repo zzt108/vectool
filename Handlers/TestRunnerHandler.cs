@@ -54,9 +54,9 @@ namespace VecTool.Handlers
         /// </summary>
         public async Task<string?> RunTestsAsync(CancellationToken ct)
         {
-            using var _ = logger.SetContext(new Props()
+            using var _ = logger.SetContext()
                 .Add("Operation", "RunTestsAsync")
-                .Add("SolutionPath", _solutionPath));
+                .Add("SolutionPath", _solutionPath);
 
             try
             {
@@ -70,9 +70,9 @@ namespace VecTool.Handlers
 
                 var message = MapExitCodeToMessage(testResult.ExitCode);
 
-                using var ctx = logger.SetContext(new Props()
+                using var ctx = logger.SetContext()
                     .Add("ExitCode", testResult.ExitCode)
-                    .Add("Message", message));
+                    .Add("Message", message);
 
                 switch (testResult.ExitCode)
                 {
@@ -144,10 +144,10 @@ namespace VecTool.Handlers
             if (string.IsNullOrWhiteSpace(_outputFile))
                 return;
 
-            using var _ = logger.SetContext(new Props()
+            using var _ = logger.SetContext()
                 .Add("Operation", "WriteTestResult")
                 .Add("OutputFile", _outputFile)
-                .Add("ExitCode", testResult.ExitCode));
+                .Add("ExitCode", testResult.ExitCode);
 
             try
             {
@@ -160,15 +160,15 @@ namespace VecTool.Handlers
 
                 // Write to file asynchronously
                 await File.WriteAllTextAsync(_outputFile, markdownContent, ct).ConfigureAwait(false);
-                logger.SetContext(new Props().Add("Operation", "WriteTestResult").Add("FileSize", markdownContent.Length));
+                logger.SetContext().Add("Operation", "WriteTestResult").Add("FileSize", markdownContent.Length);
                 logger.LogInformation("Test testResult markdown written successfully");
             }
             catch (Exception ex)
             {
-                using var __ = logger.SetContext(new Props()
+                using var __ = logger.SetContext()
                     .Add("Operation", "WriteTestResult")
                     .Add("ErrorType", ex.GetType().Name)
-                    .Add("OutputFile", _outputFile));
+                    .Add("OutputFile", _outputFile);
                 logger.LogError(ex, "Failed to write test testResult markdown");
                 throw;
             }

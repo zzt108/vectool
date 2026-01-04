@@ -72,9 +72,9 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                using (var ctx = logger.SetContext(new Props()
+                using (var ctx = logger.SetContext()
                     .Add("outputPath", outputPath)
-                    .Add("folderCount", folderPaths.Count)))
+                    .Add("folderCount", folderPaths.Count))
                 {
                     logger.LogError(ex, "LogError generating file size summary");
                 }
@@ -122,9 +122,9 @@ namespace VecTool.Handlers
             // ✅ Validate folder
             if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
             {
-                using (var ctx = logger.SetContext(new Props()
+                using (var ctx = logger.SetContext()
                     .Add("folderPath", folderPath)
-                    .Add("exists", Directory.Exists(folderPath))))
+                    .Add("exists", Directory.Exists(folderPath)))
                 {
                     logger.LogDebug($"Skipping invalid folder path");
                 }
@@ -139,10 +139,10 @@ namespace VecTool.Handlers
                     .EnumerateFilesRespectingExclusions(folderPath, config)
                     .ToList();
 
-                using (var ctx = logger.SetContext(new Props()
+                using (var ctx = logger.SetContext()
                     .Add("folderPath", folderPath)
                     .Add("fileCount", files.Count)
-                    .Add("source", "traverser")))
+                    .Add("source", "traverser"))
                 {
                     logger.LogInformation($"Enumerating {files.Count} files for size summary");
                 }
@@ -167,18 +167,18 @@ namespace VecTool.Handlers
                         fileSizesByType[extension] += fileInfo.Length;
                         fileCountByType[extension]++;
 
-                        using (var ctx = logger.SetContext(new Props()
+                        using (var ctx = logger.SetContext()
                             .Add("file", Path.GetFileName(file))
                             .Add("size", fileInfo.Length)
-                            .Add("extension", extension)))
+                            .Add("extension", extension))
                         {
                             logger.LogDebug($"Added to summary: {Path.GetFileName(file)} ({fileInfo.Length:N0} bytes)");
                         }
                     }
                     catch (Exception ex)
                     {
-                        using (var ctx = logger.SetContext(new Props()
-                            .Add("file", file)))
+                        using (var ctx = logger.SetContext()
+                            .Add("file", file))
                         {
                             logger.LogError(ex, "LogError processing file for summary");
                         }
@@ -188,8 +188,8 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                using (var ctx = logger.SetContext(new Props()
-                    .Add("folderPath", folderPath)))
+                using (var ctx = logger.SetContext()
+                    .Add("folderPath", folderPath))
                 {
                     logger.LogError(ex, "LogError calculating folder sizes");
                 }
@@ -248,18 +248,18 @@ namespace VecTool.Handlers
                 writer.WriteLine();
                 writer.WriteLine($"*Summary includes {totalCount:N0} files across {fileSizesByType.Count} file types.*");
 
-                using (var ctx = logger.SetContext(new Props()
+                using (var ctx = logger.SetContext()
                     .Add("outputPath", outputPath)
                     .Add("fileCount", totalCount)
-                    .Add("totalSize", totalSize)))
+                    .Add("totalSize", totalSize))
                 {
                     logger.LogInformation($"File size summary written: {outputPath}");
                 }
             }
             catch (Exception ex)
             {
-                using (var ctx = logger.SetContext(new Props()
-                    .Add("outputPath", outputPath)))
+                using (var ctx = logger.SetContext()
+                    .Add("outputPath", outputPath))
                 {
                     logger.LogError(ex, "LogError writing file size summary report");
                 }

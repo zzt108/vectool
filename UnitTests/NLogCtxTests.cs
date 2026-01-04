@@ -27,8 +27,8 @@ public sealed class NLogCtxTests
         var logger = loggerFactory.CreateLogger<NLogCtxTests>();
         logger.ShouldNotBeNull();
 
-        using var _ = logger.SetContext(new Props()
-            .Add("test", nameof(InitShouldCreateLoggerAndLogWithConfig)));
+        using var _ = logger.SetContext()
+            .Add("test", nameof(InitShouldCreateLoggerAndLogWithConfig));
 
         logger.LogInformation("Logger initialization test message.");
     }

@@ -18,8 +18,8 @@ public sealed class MabDotIgnoreAdapter : IIgnorePatternMatcher
 
     public void LoadFromRoot(string rootPath)
     {
-        using var _ = logger.SetContext(new Props()
-            .Add("RootPath", rootPath));
+        using var _ = logger.SetContext()
+            .Add("RootPath", rootPath);
 
         if (string.IsNullOrWhiteSpace(rootPath) || !Directory.Exists(rootPath))
         {

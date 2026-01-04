@@ -27,8 +27,8 @@ namespace VecTool.Core.AI
         {
             config.ThrowIfNull(nameof(config), logger);
 
-            using var ctx = logger.SetContext(new Props()
-                .Add("defaultProvider", config.DefaultProvider));
+            using var ctx = logger.SetContext()
+                .Add("defaultProvider", config.DefaultProvider);
 
             var providerKey = config.DefaultProvider?.ToLowerInvariant() ?? string.Empty;
 

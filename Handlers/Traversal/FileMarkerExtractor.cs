@@ -44,8 +44,8 @@
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 using var ctx = logger.SetContext(
-                    new Props().Add("error", "empty_file_path")
-                );
+                    ).Add("error", "empty_file_path")
+                ;
                 logger.LogWarning("ExtractMarker called with null/empty filePath");
                 return null;
             }
@@ -70,9 +70,9 @@
             }
             catch (RegexMatchTimeoutException ex)
             {
-                using var ctx = logger.SetContext(new Props()
+                using var ctx = logger.SetContext()
                     .Add("file_path", filePath)
-                    .Add("error_type", "RegexMatchTimeoutException")
+                    .Add("error_type", "RegexMatchTimeoutException"
                 );
                 logger.LogWarning($"Regex timeout analyzing file: {ex.Message}");
                 return null;
@@ -84,9 +84,9 @@
                 if (isVectoolExcude)
                 {
                     var markedLines = lines.Where(l => l.Contains(MarkerSigniture));
-                    using var ctx = logger.SetContext(new Props()
+                    using var ctx = logger.SetContext()
                         .Add("file_path", filePath)
-                        .AddJson("lines", markedLines));
+                        .AddJson("lines", markedLines);
                     logger.LogWarning($"Found:{lines.FirstOrDefault()}, but no match found in marker pattern");
                 }
                 return null;
@@ -108,12 +108,12 @@
             };
 
             // 8. Log successful extraction to SEQ
-            using (var ctx = logger.SetContext(new Props()
+            using (var ctx = logger.SetContext()
                 .Add("file_path", filePath)
                 .Add("reason", reason)
                 .Add("space_reference", spaceReference ?? Const.NA)
                 .Add("line_number", lineNumber)
-                .Add("marker_status", "extracted")))
+                .Add("marker_status", "extracted"))
             {
                 logger.LogInformation("File marker extracted successfully");
             }
@@ -133,9 +133,9 @@
                 // Validate file exists before opening stream
                 if (!File.Exists(filePath))
                 {
-                    using var ctx = logger.SetContext(new Props()
+                    using var ctx = logger.SetContext()
                         .Add("file_path", filePath)
-                        .Add("error_type", "FileNotFoundException"));
+                        .Add("error_type", "FileNotFoundException");
                     logger.LogDebug("File does not exist");
                     return null;
                 }
@@ -163,29 +163,29 @@
             }
             catch (UnauthorizedAccessException ex)
             {
-                using var ctx = logger.SetContext(new Props()
+                using var ctx = logger.SetContext()
                     .Add("file_path", filePath)
                     .Add("error_type", "UnauthorizedAccessException")
-                    .Add("message", ex.Message));
+                    .Add("message", ex.Message);
                 logger.LogWarning("Permission denied reading file header");
                 return null;
             }
             catch (IOException ex)
             {
-                using var ctx = logger.SetContext(new Props()
+                using var ctx = logger.SetContext()
                     .Add("file_path", filePath)
                     .Add("error_type", "IOException")
-                    .Add("message", ex.Message));
+                    .Add("message", ex.Message);
                 logger.LogWarning($"I/O error reading file header: {ex.Message}");
                 return null;
             }
             catch (Exception ex)
             {
-                using var ctx = logger.SetContext(new Props()
+                using var ctx = logger.SetContext()
                     .Add("file_path", filePath)
                     .Add("error_type", ex.GetType().Name)
                     .Add("message", ex.Message)
-                    .Add("stack_trace", ex.StackTrace ?? "no_trace"));
+                    .Add("stack_trace", ex.StackTrace ?? "no_trace");
                 logger.LogError(ex, $"Unexpected error reading file header: {ex.Message}");
                 return null;
             }

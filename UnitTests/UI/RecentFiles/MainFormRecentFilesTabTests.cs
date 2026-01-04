@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using Vectool.OaiUI;
 using Vectool.UI.Versioning;
 
-namespace UnitTests.UI
+namespace UnitTests.UI.RecentFiles
 {
     [TestFixture]
     public class MainFormRecentFilesTabTests
