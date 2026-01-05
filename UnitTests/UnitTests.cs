@@ -1,5 +1,6 @@
 ﻿// File: UnitTests/MimeTypeProviderTests.cs
 
+using DocumentFormat.OpenXml.CustomProperties;
 using LogCtxShared;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -44,8 +45,7 @@ namespace UnitTests
         public void TearDown()
         {
             var outcome = TestContext.CurrentContext.Result.Outcome.Status.ToString();
-            var props = new LogCtxShared.Props("Status", outcome);
-            logger.SetContext(props);
+            logger.SetContext().Add("Status", outcome);
             logger.LogInformation("Test end");
         }
 
@@ -57,13 +57,13 @@ namespace UnitTests
         [TestCase(null, null)]
         public void GetMdTagValidAndInvalidExtensionsReturnsCorrectMdTag(string extension, string expectedMdTag)
         {
-            logger.SetContext(new LogCtxShared.Props("Extension", extension ?? "(null)", "Expected", expectedMdTag));
+            logger.SetContext().Add("Extension", extension ?? "(null)").Add("Expected", expectedMdTag);
             logger.LogDebug($"Arrange: setting up test for extension {extension}");
             logger.LogDebug($"Arrange: setting up test for extension {extension}");
 
             var result = MimeTypeProvider.GetMdTag(extension);
 
-            logger.SetContext(new LogCtxShared.Props("Actual", result ?? "(null)"));
+            logger.SetContext().Add("Actual", result ?? "(null)");
             logger.LogInformation($"Assert: comparing expected vs actual for {extension}");
             result.ShouldBe(expectedMdTag);
         }
@@ -74,13 +74,13 @@ namespace UnitTests
         [TestCase(".json", "application/json")]
         public void GetMimeTypeInvalidOrEdgeCasesReturnsCorrectMimeType(string? extension, string expectedMimeType)
         {
-            logger.SetContext(new LogCtxShared.Props("Extension", extension ?? "(null)", "Expected", expectedMimeType));
+            logger.SetContext().Add("Extension", extension ?? "(null)").Add("Expected", expectedMimeType);
             logger.LogDebug($"Arrange: setting up test for extension {extension}");
             logger.LogDebug($"Arrange: setting up test for extension {extension}");
 
             var result = MimeTypeProvider.GetMimeType(extension);
 
-            logger.SetContext(new LogCtxShared.Props("Actual", result ?? "(null)"));
+            logger.SetContext().Add("Actual", result ?? "(null)");
             logger.LogInformation($"Assert: comparing expected vs actual for {extension}");
             result.ShouldBe(expectedMimeType);
         }
@@ -90,13 +90,13 @@ namespace UnitTests
         [TestCase(".dll", true)]
         public void IsBinaryExtensionForVariousExtensionsReturnsCorrectResult(string extension, bool expected)
         {
-            logger.SetContext(new LogCtxShared.Props("Extension", extension, "IsBinaryExpected", expected));
+            logger.SetContext().Add("Extension", extension).Add("IsBinaryExpected", expected);
             logger.LogDebug($"Arrange: setting up test for extension {extension}");
             logger.LogDebug($"Arrange: setting up test for extension {extension}");
 
             var result = FileValidator.IsBinary(extension, null);
 
-            logger.SetContext(new LogCtxShared.Props("Actual", result));
+            logger.SetContext().Add("Actual", result);
             logger.LogInformation($"Assert: comparing expected vs actual for {extension}");
             result.ShouldBe(expected);
         }

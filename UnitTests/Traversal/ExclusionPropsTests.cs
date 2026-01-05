@@ -15,7 +15,7 @@ namespace UnitTests.Traversal
 
         #region Assertion Helpers
 
-        private static void AssertCommonKeys(Props props, params string[] expectedKeys)
+        private static void AssertCommonKeys(IDictionary<string, object> props, params string[] expectedKeys)
         {
             props.ShouldNotBeNull();
             foreach (var key in expectedKeys)

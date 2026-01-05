@@ -122,7 +122,7 @@
                 if (marker != null)
                 {
                     // File excluded by marker
-                    using var ctx = logger.SetContext(ExclusionProps.CreateMarkerProps(
+                    using var ctx = logger.SetContext().Add(ExclusionProps.CreateMarkerProps(
                         marker.FilePath,
                         marker.Reason,
                         marker.SpaceReference,
@@ -135,7 +135,7 @@
             }
             catch (Exception ex)
             {
-                using var ctx = logger.SetContext(ExclusionProps.CreateMarkerErrorProps(
+                using var ctx = logger.SetContext().Add(ExclusionProps.CreateMarkerErrorProps(
                     filePath,
                     ex.GetType().Name,
                     ex.Message));
@@ -445,13 +445,13 @@
             }
             catch (UnauthorizedAccessException ex)
             {
-                using var ctx = logger.SetContext(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
+                using var ctx = logger.SetContext().Add("path", currentDir).Add("error", ex.GetType().Name);
                 logger?.LogError(ex, "Access denied to directory");
                 return Enumerable.Empty<string>();
             }
             catch (Exception ex)
             {
-                using var ctx = logger.SetContext(new Props { { "path", currentDir }, { "error", ex.GetType().Name } });
+                using var ctx = logger.SetContext().Add("path", currentDir).Add("error", ex.GetType().Name);
                 logger?.LogError(ex, "LogError enumerating subdirectories");
                 return Enumerable.Empty<string>();
             }

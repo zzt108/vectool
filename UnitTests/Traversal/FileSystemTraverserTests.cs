@@ -157,9 +157,9 @@ namespace UnitTests.Traversal
 
             // Act
             using (var ctx = logger.SetContext(
-                new Props()
+                )
                     .Add("test", "exclusion_logging")
-                    .Add("testDir", testDir)))
+                    .Add("testDir", testDir))
             {
                 var files = traverser.EnumerateFilesRespectingExclusions(testDir, config).ToList();
 
