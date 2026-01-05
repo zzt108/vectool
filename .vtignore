@@ -3,18 +3,15 @@ OaiUI/
 ;!OaiUI/panels/
 
 # Tests
-;unittests/
+; unittests/
 
 # LogCtx
 logctx/
 
 # VecTool Ignore - Exclude export features from codebase exports
-; Export.Docx/**
-; Export.Docx.Tests/**
-; Export.Pdf/**
-; Export.Pdf.Tests/**
-; VectorStore.OpenAI/**
-; VectorStore.OpenAI.Tests/**
+Export.Docx/**
+Export.Pdf/**
+VectorStore.OpenAI/**
 
 # Documentations
 .documentation/
