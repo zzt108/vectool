@@ -18,7 +18,8 @@ public enum RecentFileType
     Repomix_Xml = 7,
     Plan,
     Guide,
-    Docx
+    Docx,
+    Pdf
 }
 
 /// <summary>
