@@ -45,6 +45,7 @@ public class IgnoreMatcherFactoryTests
                 testRepoPath);
 
             // Assert
+            matcher.ShouldNotBeNull();
             matcher.IsIgnored("test.dll", false).ShouldBeTrue();
         }
         finally

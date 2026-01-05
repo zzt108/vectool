@@ -19,7 +19,6 @@ namespace UnitTests.UI.RecentFiles
         {
             mockManager = new MockRecentFilesManager();
             panel = new RecentFilesPanel().Initialize(mockManager, null);
-
         }
 
         [TearDown]
@@ -131,7 +130,8 @@ namespace UnitTests.UI.RecentFiles
             listView.Items.Count.ShouldBe(1);
             listView.Items[0].Tag.ShouldNotBeNull();
             listView.Items[0].Tag.ShouldBeAssignableTo<RecentFileInfo>();
-            var fileInfo = (RecentFileInfo)listView.Items[0].Tag;
+            var fileInfo = (RecentFileInfo?)listView.Items[0].Tag;
+            fileInfo.ShouldNotBeNull();
             fileInfo.FileName.ShouldBe("report.docx");
             fileInfo.FileType.ShouldBe(RecentFileType.Codebase_Docx);
             fileInfo.FileSizeBytes.ShouldBe(100);

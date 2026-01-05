@@ -9,8 +9,8 @@ namespace UnitTests.Core.Services;
 [TestFixture]
 public sealed class PromptCategorizerTests
 {
-    private ILlmProvider _mockProvider;
-    private PromptCategorizer _categorizer;
+    private ILlmProvider _mockProvider = null!;
+    private PromptCategorizer _categorizer = null!;
 
     [SetUp]
     public void Setup()

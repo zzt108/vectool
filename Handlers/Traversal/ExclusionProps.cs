@@ -84,7 +84,7 @@
         /// </summary>
         /// <param name="filePath">Full path to file where extraction was attempted</param>
         /// <param name="errorType">Exception type name (e.g., "UnauthorizedAccessException")</param>
-        /// <param name="errorMessage">LogError message for debugging</param>
+        /// <param name="errorMessage">Error message for debugging</param>
         /// <returns>Properties object with error context</returns>
         /// <example>
         /// using (var ctx = logger.Ctx.Set(ExclusionProps.CreateMarkerErrorProps(

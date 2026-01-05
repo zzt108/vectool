@@ -39,14 +39,14 @@ namespace VecTool.Handlers
         public void RebuildIndex()
         {
             using var ctx = logger.SetContext()
-                .Add("repositoryPath", config.RepositoryPath)
+                .Add("repositoryPath", config?.RepositoryPath)
                 .Add("operation", "RebuildIndex");
 
             index.Clear();
 
-            if (string.IsNullOrWhiteSpace(config.RepositoryPath) || !Directory.Exists(config.RepositoryPath))
+            if (string.IsNullOrWhiteSpace(config?.RepositoryPath) || !Directory.Exists(config.RepositoryPath))
             {
-                logger.LogWarning($"Repository path is invalid or does not exist: {config.RepositoryPath}");
+                logger.LogWarning($"Repository path is invalid or does not exist: {config?.RepositoryPath}");
                 return;
             }
 
@@ -100,7 +100,7 @@ namespace VecTool.Handlers
                 //    }
                 //    catch (Exception ex)
                 //    {
-                //        logger.LogError(ex, $"Failed to index file: {filePath}");
+                //        logger.Error(ex, $"Failed to index file: {filePath}");
                 //    }
                 //}
 
@@ -157,7 +157,7 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"LogError during index rebuild: {ex.Message}");
+                logger.LogError(ex, $"Error during index rebuild: {ex.Message}");
                 throw;
             }
         }

@@ -7,7 +7,7 @@ namespace UnitTests.Core.Services;
 [TestFixture]
 public sealed class PromptTemplateGeneratorTests
 {
-    private PromptTemplateGenerator _generator;
+    private PromptTemplateGenerator _generator = null!;
 
     [SetUp]
     public void Setup()

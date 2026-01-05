@@ -14,7 +14,7 @@ namespace Vectool.OaiUI
         /// <param name="input">Input string to sanitize.</param>
         /// <param name="replacement">Replacement character (default: '_').</param>
         /// <returns>Sanitized filename, or default if input is invalid.</returns>
-        private static string SanitizeFileName(string input, string replacement = "_")
+        private static string? SanitizeFileName(string input, string replacement = "_")
         {
             // ✅ Guard: ensure a non-empty replacement character
             var replChar = string.IsNullOrEmpty(replacement) ? '_' : replacement[0];

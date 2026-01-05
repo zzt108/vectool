@@ -76,7 +76,7 @@ namespace VecTool.Handlers
                     .Add("outputPath", outputPath)
                     .Add("folderCount", folderPaths.Count))
                 {
-                    logger.LogError(ex, "LogError generating file size summary");
+                    logger.LogError(ex, "Error generating file size summary");
                 }
                 throw;
             }
@@ -180,7 +180,7 @@ namespace VecTool.Handlers
                         using (var ctx = logger.SetContext()
                             .Add("file", file))
                         {
-                            logger.LogError(ex, "LogError processing file for summary");
+                            logger.LogError(ex, "Error processing file for summary");
                         }
                         // Continue processing other files
                     }
@@ -191,7 +191,7 @@ namespace VecTool.Handlers
                 using (var ctx = logger.SetContext()
                     .Add("folderPath", folderPath))
                 {
-                    logger.LogError(ex, "LogError calculating folder sizes");
+                    logger.LogError(ex, "Error calculating folder sizes");
                 }
                 // Continue with other folders
             }
@@ -261,7 +261,7 @@ namespace VecTool.Handlers
                 using (var ctx = logger.SetContext()
                     .Add("outputPath", outputPath))
                 {
-                    logger.LogError(ex, "LogError writing file size summary report");
+                    logger.LogError(ex, "Error writing file size summary report");
                 }
                 throw;
             }
