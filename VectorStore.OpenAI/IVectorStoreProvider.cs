@@ -20,5 +20,11 @@
         /// <param name="filePath">Local file path to upload.</param>
         /// <returns>True if upload succeeded, false otherwise.</returns>
         Task<bool> UploadFileAsync(string vectorStoreId, string filePath);
+
+        /// <summary>
+        /// Lists all vector stores available in the account.
+        /// </summary>
+        /// <returns>List of vector store metadata.</returns>
+        Task<List<VectorStoreInfo>> ListVectorStoresAsync();
     }
 }

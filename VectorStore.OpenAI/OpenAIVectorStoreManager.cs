@@ -18,13 +18,16 @@ namespace VecTool.VectorStore.OpenAI
         private readonly OpenAIClient client;
         private bool disposed;
 
-        public OpenAIVectorStoreManager(string apiKey, string? orgId = null)
+        public OpenAIVectorStoreManager(string apiKey)
         {
             apiKey.ThrowIfNullOrWhiteSpace(nameof(apiKey), log, "OpenAI API key is required.");
 
-            using var ctx = log.SetContext().Add("orgId", string.IsNullOrWhiteSpace(orgId) ? "default" : "custom");
+            using var ctx = log.SetContext().Add("hasApiKey", !string.IsNullOrWhiteSpace(apiKey));
 
-            client = new OpenAIClient(apiKey, orgId);
+            // OpenAI-DotNet 8.4.1: new OpenAIClient(OpenAIAuthentication)
+            var auth = new OpenAIAuthentication(apiKey);
+            client = new OpenAIClient(auth);
+
             log.LogInformation("OpenAI Vector Store Manager initialized");
         }
 
@@ -48,7 +51,7 @@ namespace VecTool.VectorStore.OpenAI
                     throw ex;
                 }
 
-                log.LogInformation("Vector store created with ID {response.id}", response.Id);
+                log.LogInformation("Vector store created with ID {VectorStoreId}", response.Id);
                 return response.Id;
             }
             catch (Exception ex)
@@ -79,11 +82,10 @@ namespace VecTool.VectorStore.OpenAI
                 log.LogInformation("Uploading file to vector store");
 
                 // Step 1: Upload file to OpenAI Files API
-                var fileData = await File.ReadAllBytesAsync(filePath).ConfigureAwait(false);
-                var fileName = Path.GetFileName(filePath);
-
-                var fileRequest = new FileUploadRequest(fileData, fileName, "assistants");
-                var fileResponse = await client.FilesEndpoint.UploadFileAsync(fileRequest).ConfigureAwait(false);
+                // OpenAI-DotNet 8.4.1: UploadFileAsync(string filePath, string purpose, CancellationToken)
+                var fileResponse = await client.FilesEndpoint
+                    .UploadFileAsync(filePath, "assistants")
+                    .ConfigureAwait(false);
 
                 if (fileResponse == null || string.IsNullOrWhiteSpace(fileResponse.Id))
                 {
@@ -92,12 +94,12 @@ namespace VecTool.VectorStore.OpenAI
                     throw ex;
                 }
 
-                log.LogInformation("File uploaded to OpenAI {fileResponse.id}", fileResponse.Id);
+                log.LogInformation("File uploaded to OpenAI with ID {FileId}", fileResponse.Id);
 
                 // Step 2: Attach file to vector store
-                var attachRequest = new CreateVectorStoreFileRequest(fileResponse.Id);
+                // OpenAI-DotNet 8.4.1: CreateVectorStoreFileAsync(vectorStoreId, fileId)
                 var attachResponse = await client.VectorStoresEndpoint
-                    .CreateVectorStoreFileAsync(vectorStoreId, attachRequest)
+                    .CreateVectorStoreFileAsync(vectorStoreId, fileResponse.Id)
                     .ConfigureAwait(false);
 
                 if (attachResponse == null)
@@ -106,7 +108,8 @@ namespace VecTool.VectorStore.OpenAI
                     return false;
                 }
 
-                log.LogInformation("File attached to vector store {fileResponse.id} with status {attachResponse.status}", fileResponse.Id, attachResponse.Status);
+                log.LogInformation("File {FileId} attached to vector store with status {Status}",
+                    fileResponse.Id, attachResponse.Status);
 
                 return true;
             }
@@ -143,7 +146,7 @@ namespace VecTool.VectorStore.OpenAI
                     })
                     .ToList();
 
-                log.LogInformation($"Retrieved {stores.Count} vector stores");
+                log.LogInformation("Retrieved {StoreCount} vector stores", stores.Count);
                 return stores;
             }
             catch (Exception ex)
