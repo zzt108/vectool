@@ -140,7 +140,7 @@
                     ex.GetType().Name,
                     ex.Message));
                 logger.LogWarning("Marker extraction error (continuing)");
-                return false;  // LogError during extraction: don't exclude
+                return false;  // Error during extraction: don't exclude
             }
         }
 
@@ -229,7 +229,7 @@
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, $"LogError processing file {file}");
+                    logger.LogError(ex, $"Error processing file {file}");
                 }
             }
 
@@ -257,7 +257,10 @@
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
-        public IEnumerable<string> EnumerateFilesRespectingExclusions(IVectorStoreConfig config) => EnumerateFilesRespectingExclusions(config.GetRootPath(), config);
+        public IEnumerable<string> EnumerateFilesRespectingExclusions(IVectorStoreConfig config)
+        {
+            return EnumerateFilesRespectingExclusions(config.GetRootPath(), config);
+        }
 
         /// <summary>
         /// Enumerates all files in a folder tree respecting exclusions (Layer 1 + Layer 2).
@@ -265,7 +268,7 @@
         /// THREAD-SAFE: Each call creates its own result collection.
         /// </summary>
         public IEnumerable<string> EnumerateFilesRespectingExclusions(
-            string root,
+            string? root,
             IVectorStoreConfig config)
         {
             if (string.IsNullOrWhiteSpace(root))
@@ -452,7 +455,7 @@
             catch (Exception ex)
             {
                 using var ctx = logger.SetContext().Add("path", currentDir).Add("error", ex.GetType().Name);
-                logger?.LogError(ex, "LogError enumerating subdirectories");
+                logger?.LogError(ex, "Error enumerating subdirectories");
                 return Enumerable.Empty<string>();
             }
         }

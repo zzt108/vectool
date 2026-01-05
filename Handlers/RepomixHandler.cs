@@ -54,7 +54,7 @@ namespace VecTool.Handlers
                 userInterface.ShowMessage(
                     $"Target directory not found:\n{targetDirectory}",
                     "Directory Not Found",
-                    MessageType.LogError);
+                    MessageType.Error);
                 return null;
             }
 
@@ -89,8 +89,8 @@ namespace VecTool.Handlers
                     logger.LogWarning($"Repomix failed with exit code {result.ExitCode}:\n{result.StandardError}");
                     userInterface.ShowMessage(
                         $"Repomix execution failed:\n{result.StandardError}",
-                        "Repomix LogError",
-                        MessageType.LogError);
+                        "Repomix Error",
+                        MessageType.Error);
                     return null;
                 }
 
@@ -101,7 +101,7 @@ namespace VecTool.Handlers
                     userInterface.ShowMessage(
                         $"Output file was not created:\n{outputPath}",
                         "Output Missing",
-                        MessageType.LogError);
+                        MessageType.Error);
                     return null;
                 }
 
@@ -125,8 +125,8 @@ namespace VecTool.Handlers
                 logger.LogError(ex, "Repomix execution failed");
                 userInterface.ShowMessage(
                     $"An error occurred:\n{ex.Message}",
-                    "LogError",
-                    MessageType.LogError);
+                    "Error",
+                    MessageType.Error);
                 return null;
             }
             finally
@@ -278,7 +278,7 @@ namespace VecTool.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"LogError resolving executable path for '{executableName}'");
+                logger.LogError(ex, $"Error resolving executable path for '{executableName}'");
                 return null;
             }
         }

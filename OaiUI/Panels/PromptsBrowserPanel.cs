@@ -23,7 +23,9 @@ namespace VecTool.UI.Panels
 
         private PromptSearchEngine searchEngine;
         private FavoritesManager favoritesManager;
-        private string? promptsRepositoryPath;
+
+        // TODO: promptsRepositoryPath is never assigned , what is it used for?
+        private readonly string? promptsRepositoryPath;
 
         private List<PromptFile> currentResults = new();
         private string currentSearchQuery = string.Empty;
@@ -94,7 +96,7 @@ namespace VecTool.UI.Panels
 
             InitializeFilterDropdown();
 
-            searchEngine.RebuildIndex(); // Rebuild index on startup (from previous fix)
+            searchEngine?.RebuildIndex(); // Rebuild index on startup (from previous fix)
             InitializeTooltips(); // Setup all tooltips in one place
 
             logger.LogInformation("PromptsBrowserPanel initialized.");
@@ -311,7 +313,7 @@ namespace VecTool.UI.Panels
 
         private void ShowError(string message)
         {
-            MessageBox.Show(this, message, "LogError", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         // Action button handlers

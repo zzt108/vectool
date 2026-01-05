@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System.Configuration;
 using System.Globalization;
 using VecTool.Configuration.Helpers;
+using VecTool.Configuration.Logging;
 using VecTool.Constants;
 using VecTool.Core.Models;
 
@@ -16,7 +17,7 @@ namespace VecTool.UI.Panels
     /// </summary>
     public sealed class PromptRenameForm : Form
     {
-        private static readonly ILogger logger;
+        private readonly ILogger logger = AppLogger.For<PromptRenameForm>();
 
         private readonly PromptFile promptFile;
         private readonly string originalFullPath;
@@ -381,7 +382,7 @@ namespace VecTool.UI.Panels
 
                 MessageBox.Show(this,
                     $"Failed to rename file: {ex.Message}",
-                    "LogError",
+                    "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }

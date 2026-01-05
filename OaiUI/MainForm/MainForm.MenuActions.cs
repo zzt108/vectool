@@ -49,7 +49,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "LogError", MessageType.LogError);
+                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
@@ -111,7 +111,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "LogError", MessageType.LogError);
+                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
@@ -162,7 +162,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                userInterface.ShowMessage($"An error occurred: {ex.Message}", "LogError", MessageType.LogError);
+                userInterface.ShowMessage($"An error occurred: {ex.Message}", "Error", MessageType.Error);
             }
             finally
             {
@@ -253,7 +253,7 @@ namespace Vectool.OaiUI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Test execution failed: {ex.Message}", "Test LogError", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Test execution failed: {ex.Message}", "Test Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -330,8 +330,8 @@ namespace Vectool.OaiUI
             {
                 userInterface.ShowMessage(
                     $"An error occurred: {ex.Message}",
-                    "LogError",
-                    MessageType.LogError);
+                    "Error",
+                    MessageType.Error);
             }
         }
     }

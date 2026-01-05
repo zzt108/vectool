@@ -20,8 +20,8 @@ namespace VecTool.Handlers
         private readonly IProcessRunner _processRunner;
         private readonly IUserInterface? _ui;
         private readonly IRecentFilesManager? _recentFilesManager;
-        private readonly string _branchName;
-        private readonly string _vectorStoreId;
+        private readonly string? _branchName;
+        private readonly string? _vectorStoreId;
 
         private readonly ILogger logger = AppLogger.For<TestRunnerHandler>();
 
@@ -36,8 +36,8 @@ namespace VecTool.Handlers
             IProcessRunner processRunner,
             IUserInterface? ui,
             IRecentFilesManager? recentFiles,
-            string branchName,
-            string vectorStoreId)
+            string? branchName,
+            string? vectorStoreId)
         {
             this.logger = logger.ThrowIfNull(nameof(logger));
             _outputFile = outputFile;
@@ -88,7 +88,7 @@ namespace VecTool.Handlers
                         break;
 
                     default:
-                        _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - LogError", MessageType.LogError);
+                        _ui?.ShowMessage($"Tests completed with exit code {testResult.ExitCode}. {message}", "Test Runner - Error", MessageType.Error);
                         logger.LogWarning($"Tests completed with exit code {testResult.ExitCode}. {message}");
                         break;
                 }

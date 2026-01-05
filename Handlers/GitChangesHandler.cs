@@ -226,8 +226,8 @@ public sealed class GitChangesHandler : FileHandlerBase
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"LogError processing git repository: {repoPath}");
-            mainChanges.AppendLine($"**LogError processing repository:** {ex.Message}");
+            logger.LogError(ex, $"Error processing git repository: {repoPath}");
+            mainChanges.AppendLine($"**Error processing repository:** {ex.Message}");
         }
 
         mainChanges.AppendLine();

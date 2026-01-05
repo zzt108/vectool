@@ -105,6 +105,7 @@ public class PromptsConfigTests
         var config = PromptsConfig.FromAppConfig(reader);
 
         // Assert
+        config.ShouldNotBeNull();
         config.RepositoryPath.ShouldBe("C:\\prompts");
         config.FileExtensions.ShouldBe(".md,.yaml");
         config.LLMConfigPath.ShouldBe("C:\\prompts\\config.json");

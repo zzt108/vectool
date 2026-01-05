@@ -11,8 +11,8 @@ namespace UnitTests.Core.Services;
 [TestFixture]
 public sealed class GitCommitMessageGeneratorTests
 {
-    private ILlmProvider _mockProvider;
-    private GitCommitMessageGenerator _generator;
+    private ILlmProvider _mockProvider = null!;
+    private GitCommitMessageGenerator _generator = null!;
 
     [SetUp]
     public void Setup()
