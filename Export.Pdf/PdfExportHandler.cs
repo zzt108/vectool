@@ -110,7 +110,7 @@ public sealed class PdfExportHandler : FileHandlerBase, IPdfExporter
                 var fi = new FileInfo(outputPath);
                 RecentFilesManager.RegisterGeneratedFile(
                     outputPath,
-                    RecentFileType.Pdf,
+                    RecentFileType.Codebase_Pdf,
                     folderPaths,
                     fi.Exists ? fi.Length : 0
                 );
