@@ -178,8 +178,9 @@ namespace UnitTests.Handlers
         public void ExportSelectedFolders_MultipleFolders_IncludesAllFiles()
         {
             // Arrange
+            _config.FolderPaths = new List<string> { Path.Combine(_testDir, "folder1"), Path.Combine(_testDir, "folder2") };
             var file1 = CreateTestFile("folder1/code.cs", "class A { }");
-            var file2 = CreateTestFile("folder2/readme.md", "# Docs");
+            var file2 = CreateTestFile("folder2/readme.txt", "# Docs");
 
             _mockTraverser
                 .EnumerateFilesRespectingExclusions(Arg.Any<string>(), Arg.Any<VectorStoreConfig>())
@@ -189,14 +190,13 @@ namespace UnitTests.Handlers
 
             // Act
             _handler.ExportSelectedFolders(
-                // new List<string> { Path.Combine(_testDir, "folder1"), Path.Combine(_testDir, "folder2") },
                 outputPath,
                 _config);
 
             // Assert
             var content = File.ReadAllText(outputPath);
             content.ShouldContain("code.cs");
-            content.ShouldContain("readme.md");
+            content.ShouldContain("readme.txt");
             content.ShouldContain("class A");
             content.ShouldContain("# Docs");
         }
@@ -205,10 +205,10 @@ namespace UnitTests.Handlers
 
         #region Input Validation Tests
 
-        [TestCase(null, "output.md", "Folder list cannot be null")]
+        [TestCase(null, "output.md", "Folder list cannot be empty (Parameter 'folderPaths')")]
         [TestCase("[]", "output.md", "Folder list cannot be empty")]
         [TestCase("[\"folder\"]", null, "Output path cannot be null")]
-        [TestCase("[\"folder\"]", "", "Output path cannot be null")]
+        [TestCase("[\"folder\"]", "", "Output path cannot be null or empty (Parameter 'outputPath')")]
         public void ExportSelectedFolders_InvalidInput_ThrowsArgumentException(
             string? foldersJson,
             string? outputPath,
@@ -218,6 +218,8 @@ namespace UnitTests.Handlers
             var folders = foldersJson == null ? null :
                           foldersJson == "[]" ? new List<string>() :
                           new List<string> { "folder" };
+
+            _config.FolderPaths = folders ?? new List<string>();
 
             // Act & Assert
             var ex = Should.Throw<ArgumentException>(() =>
