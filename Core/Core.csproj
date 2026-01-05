@@ -16,4 +16,8 @@
     <ProjectReference Include="..\Constants\Constants.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Export\" />
+  </ItemGroup>
+
 </Project>
