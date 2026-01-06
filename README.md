@@ -1,150 +1,215 @@
-# VecTool: AI-Ready Code Export & Development Workflow Manager
+# VecTool
 
-**Version**: 4.5.25.1101  
-**Framework**: .NET 8.0 Windows (WinForms)  
-**License**: Apache 2.0  
-**Status**: Production-Ready with Active Development
+**AI-Ready Code Export & Development Workflow Manager**
+
+| Property | Value |
+|----------|-------|
+| **Current Version** | 4.80.p2 |
+| **Framework** | .NET 8.0 |
+| **Platform** | Windows Forms (WinForms) |
+| **License** | Apache 2.0 |
+| **Status** | Production-Ready with Active Development |
+| **Last Updated** | 2026-01-06 |
 
 ---
 
-## 🎯 Overview
+## Overview
 
-VecTool is a modular C# WinForms desktop application designed to export code projects in AI-digestible formats and manage Git-based development workflows. It bridges the gap between local development environments and large language models (LLMs), enabling efficient AI-assisted development practices.
+VecTool is a modular C# Windows Forms desktop application designed to export code projects in
+AI-digestible formats and manage Git-based development workflows. It bridges the gap between
+local development environments and large language models (LLMs), enabling efficient AI-assisted
+development practices.
 
 ### Primary Use Cases
 
-- **📄 Single-File Export**: Export entire project hierarchies to unified Markdown files optimized for LLM consumption
-- **🔄 Git Integration**: Generate AI-ready summaries of code changes and Git diffs
-- **🧪 Test Automation**: Execute unit tests with progress tracking and EMA-based time estimation
-- **📂 Recent Files Management**: Organize and track generated artifacts with drag-drop support
-- **🔍 Smart Filtering**: Respect .gitignore, .vtignore, and project-specific exclusion rules
+- **Single-File Export** - Export entire project hierarchies to unified Markdown files optimized
+  for LLM consumption
+- **Git Integration** - Generate AI-ready summaries of code changes and Git diffs
+- **Test Automation** - Execute unit tests with progress tracking and EMA-based time estimation
+- **Recent Files Management** - Organize and track generated artifacts with drag-drop support
+- **Smart Filtering** - Respect .gitignore, .vtignore, and project-specific exclusion rules
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 1. Single-File Export ⭐
-Export project hierarchies to optimized Markdown files with:
+### 1. Single-File Export
+
+Export project hierarchies to optimized **XML-wrapped Markdown** files with:
+
 - Code-aware syntax highlighting tags (C#, JavaScript, Python, XML, etc.)
 - Hierarchical folder structure preservation
-- File metadata (LOC, complexity metrics)
+- File metadata (LOC, language, modification dates)
 - AI-ready formatting with cross-references
 - Support for multiple source folders per vector store
 
+**Export Format:**
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<codebase version="4.80.2005.2330" 
+          totalFiles="203" 
+          totalLoc="17590" 
+          exportDate="2026-01-06T00:31:03">
+  <file path="Configuration/IIgnorePatternMatcher.cs" 
+        lines="1-28" 
+        loc="28" 
+        language="csharp" 
+        modified="2026-01-03T16:03:16">
+    <content><![CDATA[
+```csharp
+namespace VecTool.Configuration.Exclusion;
+public interface IIgnorePatternMatcher : IDisposable { }
+```
+]]></content>
+  </file>
+</codebase>
+```
+
+**File Metadata Attributes:**
+- `path` - Relative file path from repository root
+- `lines` - Line range (e.g., "1-337" or "50-120" for partial exports)
+- `loc` - Total lines of code
+- `language` - Detected programming language
+- `modified` - Last modification timestamp (ISO 8601)
+
+**Document Metadata:**
+- `version` - VecTool version (e.g., "4.80.2005.2330")
+- `totalFiles` - Total files in export
+- `totalLoc` - Total lines of code across all files
+- `exportDate` - Generation timestamp
+
 ### 2. Git Integration
-- **Get Git Changes**: Retrieve diffs and status from repositories
-- **Git Changes to MD**: Generate formatted Markdown with embedded AI prompts
-- Configurable AI prompts for automatic commit message generation
-- Branch and repository context preservation
-- Intelligent repository root detection
+
+- **Get Git Changes** - Retrieve diffs and status from repositories
+- **Git Changes to Markdown** - Generate formatted output with embedded AI prompts
+- **Configurable AI Prompts** - Automatic commit message generation
+- **Branch Context Preservation** - Include branch and repository info
+- **Intelligent Repository Root Detection** - Automatic repo discovery
 
 ### 3. Unit Test Runner
-- **Shortcut**: Ctrl+T (or menu-based execution)
-- **Execution**: Runs `dotnet test` programmatically
-- **Progress Tracking**: Real-time progress bar with EMA-based time-remaining calculation
-- **Output**: Saves dated results to configurable directory
-- **Recent Files Integration**: Automatic artifact tracking
+
+- **Keyboard Shortcut** - Ctrl+T for immediate execution
+- **Menu Integration** - File > Run Tests option
+- **Progress Tracking** - Real-time progress bar with visual feedback
+- **EMA Time Estimation** - Exponential Moving Average calculates accurate time-remaining
+- **Output Persistence** - Results saved to dated files in Generated directory
+- **Recent Files Integration** - Test results automatically added to Recent Files panel
 
 ### 4. Recent Files System
-- **Auto-Tracking**: Captures all generated outputs (Markdown, Git changes, test results)
-- **Drag-Drop Support**: External tool integration
-- **Advanced Filtering**: Filter by file type, vector store association
-- **Automatic Cleanup**: 30-day retention policy (configurable)
-- **Persistent Layout**: Column widths and preferences saved
 
-### 5. Smart File Filtering & Exclusion
-- **Legacy Pattern Matching**: Wildcard-based filtering
-- **.gitignore Support**: Full Git specification compliance via GitignoreParserNet
-- **.vtignore Override**: VecTool-specific patterns override Git rules
-- **Dual-Path Testing**: Directory vs. file name matching
-- **Pluggable Architecture**: Swappable adapter implementations
+- **Auto-Registration** - All generated outputs automatically tracked
+- **Drag-and-Drop Support** - Drag recent files to external applications
+- **Advanced Filtering** - Filter by file type (Markdown, Git changes, tests)
+- **Vector Store Linking** - Filter by vector store association
+- **Automatic Cleanup** - 30-day retention policy removes old files
+- **Configurable Retention** - Adjust MaxCount and RetentionDays via app.config
+
+### 5. Smart File Filtering
+
+**Exclusion Methods:**
+
+- **Legacy Pattern Matching** - Wildcard-based filtering from app.config
+- **.gitignore Support** - Full Git specification compliance via GitignoreParserNet
+- **.vtignore Override** - VecTool-specific patterns override Git rules
+- **Dual-Path Testing** - Directory vs. file name matching
+- **Pluggable Architecture** - Swappable adapter implementations
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Project Structure
 
 ```
 VecTool/
 ├── OaiUI/                    # Main WinForms application
-│   ├── MainForm.cs
-│   ├── Progress/             # ProgressManager, ProgressPanel
-│   └── AboutForm.cs
-├── Configuration/            # Settings & persistence
-│   ├── ISettingsStore        # Key-value abstraction
-│   ├── UiStateConfig         # UI layout persistence
-│   ├── RecentFilesConfig     # Recent files settings
-│   ├── VectorStoreConfig/    # Multi-part vector store config
-│   └── Exclusion/            # Pattern matching adapters
-├── Constants/                # Centralized strings & tags
-├── Core/                     # Business logic
-│   ├── GitRunner             # Git command execution
-│   ├── RepoLocator           # Git root detection
-│   ├── FileSystemTraverser   # Recursive file traversal
-│   └── AiContextGenerator    # Metadata extraction
-├── Handlers/                 # Feature implementations
-│   ├── FileHandlerBase       # Base handler (delegation)
-│   ├── MarkdownExportHandler
-│   ├── GitChangesHandler
-│   ├── FileSizeSummaryHandler
-│   └── TestRunnerHandler
-├── RecentFiles/              # Recent files management
-│   ├── IRecentFilesManager
-│   ├── RecentFilesManager
-│   ├── RecentFilesPanel      # WinForms UserControl
-│   └── DatedFileWriter
-├── Utils/                    # Utilities
-│   ├── VersionInfo           # Assembly metadata
-│   ├── MimeTypeMapper
-│   └── FileHelper
-├── Log/                      # Logging infrastructure
-├── UnitTests/                # NUnit test suite
-└── LogCtx/                   # Submodule (logging wrapper)
+├── Configuration/            # Settings and configuration abstractions
+├── Constants/               # Centralized strings and tags
+├── Core/                    # Business logic and metadata
+│   ├── Metadata/           # FileMetadata, ExportMetadata, MetadataCollector
+│   ├── Models/             # Data classes and records
+│   ├── Helpers/            # GitRunner, RepoLocator, etc.
+│   └── Abstractions/       # Interfaces and contracts
+├── Handlers/               # Feature implementations
+│   ├── Export/            # XmlMarkdownWriter, export handlers
+│   ├── Traversal/         # FileSystemTraverser, path helpers
+│   └── Validators/        # Content validators
+├── RecentFiles/           # Recent files management
+├── Utils/                 # Utility classes (MimeTypeProvider, etc.)
+├── Log/                   # Logging infrastructure (NLog, LogCtx)
+└── UnitTests/            # Comprehensive test suite
 ```
 
 ### Design Principles
 
-The architecture strictly adheres to **SOLID principles**:
+VecTool strictly adheres to **SOLID principles**:
 
-- **Single Responsibility**: Each class has one reason to change
-- **Open/Closed**: New exclusion adapters without modifying core logic
-- **Liskov Substitution**: Consistent adapter contracts
-- **Interface Segregation**: Minimal, focused interfaces
-- **Dependency Inversion**: Abstract dependencies throughout
+- **Single Responsibility** - Each class has one reason to change
+- **Open/Closed** - New exclusion adapters without modifying core logic
+- **Liskov Substitution** - Consistent adapter contracts
+- **Interface Segregation** - Minimal, focused interfaces
+- **Dependency Inversion** - Abstract dependencies throughout
 
-### Technology Stack
+### Key Abstractions
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| Framework | .NET 8.0 | Latest runtime |
-| UI | Windows Forms | Desktop application |
-| Testing | NUnit + Shouldly | Test framework & assertions |
-| Logging | NLog + LogCtx | Structured logging |
-| Git Operations | Git CLI + GitRunner | Process-based Git integration |
-| Ignore Patterns | GitignoreParserNet, MAB.DotIgnore | Pattern matching |
-| Configuration | System.Configuration | App.config support |
-| Serialization | System.Text.Json | JSON persistence |
+**Configuration:**
+- `ISettingsStore` - Key-value storage abstraction
+- `InMemorySettingsStore` - For testability
+- `ConfigurationManagerAppSettingsReader` - For app.config integration
+
+**File Handling:**
+- `IFileSystemTraverser` - Recursive file enumeration with exclusions
+- `IIgnorePatternMatcher` - Pluggable pattern matching adapters
+- `IFileMarkerExtractor` - File-level exclusion markers
+
+**Export:**
+- `IMetadataWriter` - Format-agnostic metadata writing interface
+- `XmlMarkdownWriter` - Hybrid XML-Markdown implementation
+- `FileHandlerBase` - Abstract base for all export handlers
+
+**Recent Files:**
+- `IRecentFilesManager` - Recent files tracking interface
+- `IRecentFilesStore` - Persistence abstraction
 
 ---
 
-## 🚀 Getting Started
+## Technology Stack
+
+| Component | Technology | Version | Purpose |
+|-----------|-----------|---------|---------|
+| **Framework** | .NET | 8.0+ | Latest runtime |
+| **UI** | Windows Forms | Net8.0 | Desktop application |
+| **Testing** | NUnit + Shouldly | 4.x | Test framework and assertions |
+| **Logging** | LogCtx + NLog | main branch | Structured logging |
+| **Git Integration** | GitignoreParserNet | 0.2.0+ | .gitignore compliance |
+| **Pattern Matching** | MAB.DotIgnore | 3.0.2+ | Alternative .ignore patterns |
+| **DOCX Export** | DocumentFormat.OpenXml | 3.3.0+ | Office document generation |
+| **PDF Export** | QuestPDF | 2025.12.1+ | PDF document generation |
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- **Windows OS** (XP SP3 or later for WinForms)
-- **.NET 8.0 Runtime** or SDK
-- **Git** (for repository operations)
-- **Visual Studio 2022** (for development)
+- **OS** - Windows 7 SP1 or later (Windows 10/11 recommended)
+- **.NET Runtime** - .NET 10.0 or later
+- **Git** - Version 2.0+ for repository operations
+- **IDE** - Visual Studio 2026 (optional, for development)
 
 ### Installation
 
 #### Option 1: Download Pre-Built Executable
-```
-VecTool/bin/Release/net8.0-windows/win-x64/publish/oaiUI.exe
+
+```bash
+# Download latest release from GitHub
+# Extract to desired location
+# Run: oaiUI.exe
 ```
 
 #### Option 2: Build from Source
+
 ```bash
 # Clone repository
 git clone https://github.com/your-repo/VecTool.git
@@ -153,44 +218,100 @@ cd VecTool
 # Restore dependencies
 dotnet restore
 
-# Build
+# Build solution
 dotnet build -c Release
 
 # Publish self-contained executable
-dotnet publish OaiUI/oaiUI.csproj -r win-x64 -c Release /p:PublishSingleFile=true --self-contained true
+dotnet publish OaiUI/oaiUI.csproj \
+  -r win-x64 \
+  -c Release \
+  -p:PublishSingleFile=true \
+  --self-contained true
+
+# Output: OaiUI/bin/Release/net8.0-windows/win-x64/publish/oaiUI.exe
 ```
 
 ### First Run
 
-1. **Launch Application**: Double-click `oaiUI.exe`
-2. **Create Vector Store**: Enter name and click "Create Vector Store"
-3. **Select Folders**: Click "Select Folders" to choose source directories
-4. **Export**: Press Ctrl+M to export to Markdown
-
-### Configuration
-
-Configuration is stored in three locations:
-
-#### `app.config` (Application Settings)
-```xml
-<appSettings>
-    <add key="recentFilesMaxCount" value="200" />
-    <add key="recentFilesRetentionDays" value="30" />
-    <add key="recentFilesOutputPath" value="Generated" />
-    <add key="excludedFiles" value="*.log,*.tmp,*.bak" />
-    <add key="excludedFolders" value="bin,obj,.git,.vs" />
-</appSettings>
-```
-
-#### `uiState.json` (UI Preferences)
-Automatically saved on application close. Stores column widths, row heights, and font sizes for Recent Files panel.
-
-#### `vectorStoreFolders.json` (Vector Store Associations)
-Tracks folder-to-vector-store associations and custom exclusion rules per store.
+1. **Launch Application** - Double-click `oaiUI.exe`
+2. **Create Vector Store** - Enter name and click "Create Vector Store"
+3. **Select Folders** - Click "Select Folders" to choose source directories
+4. **Export** - Press Ctrl+M to export to Markdown
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## Configuration
+
+### app.config
+
+Application settings are stored in `app.config`:
+
+```xml
+<configuration>
+  <appSettings>
+    <!-- Recent Files Settings -->
+    <add key="recentFilesMaxCount" value="200" />
+    <add key="recentFilesRetentionDays" value="30" />
+    <add key="recentFilesOutputPath" value="Generated" />
+    
+    <!-- Exclusion Settings -->
+    <add key="excludedFiles" value=".log,.tmp,.bak" />
+    <add key="excludedFolders" value="bin,obj,.git,.vs" />
+    
+    <!-- Git Settings -->
+    <add key="gitAiPrompt" value="Analyze the following Git changes..." />
+  </appSettings>
+</configuration>
+```
+
+### uiState.json
+
+UI preferences are automatically saved to `uiState.json`:
+
+```json
+{
+  "recentFilesPanel": {
+    "columnWidths": [300, 50, 120, 100],
+    "rowHeight": 24,
+    "fontSize": 10
+  }
+}
+```
+
+### vectorStoreFolders.json
+
+Vector store associations and custom exclusion rules:
+
+```json
+{
+  "stores": [
+    {
+      "name": "VecTool",
+      "folderPaths": ["C:\\Git\\vectoolDevMaster"],
+      "customExclusions": [".vtignore"]
+    }
+  ]
+}
+```
+
+### .vtignore
+
+VecTool-specific exclusion patterns (overrides .gitignore):
+
+```
+# Override Git rules
+!important.log
+
+# VecTool-specific patterns
+*.temp
+build/artifacts/
+```
+
+---
+
+## Usage Guide
+
+### Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
@@ -201,24 +322,22 @@ Tracks folder-to-vector-store associations and custom exclusion rules per store.
 | **Ctrl+R** | Export to Repomix (future) |
 | **Alt+F4** | Exit Application |
 
----
+### Menu Reference
 
-## 📋 Menu Reference
+**File Menu**
+- Convert to Markdown - Export selected folders to single MD file
+- Get Git Changes - Retrieve Git diff/status as formatted MD
+- File Size Summary - Generate file size analysis report
+- Run Tests - Execute dotnet test with progress
+- Export to Repomix - Future integration
+- Exit - Close application
 
-### File Menu
-- **Convert to Markdown** - Export selected folders to single MD file
-- **Get Git Changes** - Retrieve Git diff/status as formatted MD
-- **File Size Summary** - Generate file size analysis report
-- **Run Tests** - Execute `dotnet test` with progress
-- **Export to Repomix** - Future integration
-- **Exit** - Close application
-
-### Help Menu
-- **About** - Display version information and credits
+**Help Menu**
+- About - Display version information and credits
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
 
@@ -227,7 +346,8 @@ Tracks folder-to-vector-store associations and custom exclusion rules per store.
 dotnet test UnitTests/UnitTests.csproj
 
 # Run specific test class
-dotnet test UnitTests/UnitTests.csproj --filter "FullyQualifiedName~FileSizeSummaryHandlerTests"
+dotnet test UnitTests/UnitTests.csproj \
+  --filter FullyQualifiedName~FileSizeSummaryHandlerTests
 
 # Run with verbose output
 dotnet test UnitTests/UnitTests.csproj --verbosity detailed
@@ -235,12 +355,12 @@ dotnet test UnitTests/UnitTests.csproj --verbosity detailed
 
 ### Test Infrastructure
 
-- **Framework**: NUnit with Shouldly fluent assertions
-- **Apartment**: Single-Threaded (STA) for WinForms compatibility
-- **Parallelism**: Single worker to prevent UI resource conflicts
-- **Coverage**: Configuration, handlers, UI components, architecture validation
+- **Framework** - NUnit with Shouldly fluent assertions
+- **Apartment** - Single-Threaded (STA) for WinForms compatibility
+- **Parallelism** - Single worker to prevent UI resource conflicts
+- **Coverage** - Configuration, handlers, UI components, architecture validation
 
-### Test Examples
+### Test Example
 
 ```csharp
 [TestFixture]
@@ -257,250 +377,214 @@ public class RecentFilesConfigTests
 
 ---
 
-## 📦 Version Schema
+## Version Schema
 
-VecTool uses a hierarchical versioning scheme:
+VecTool uses a **hierarchical versioning scheme** to track product maturity and development phase.
 
-```
-AssemblyVersion: {Major}.0.0.0
-FileVersion: {Major}.{PlanId}.{BuildPart}.{HHmm}
-  where BuildPart = (PlanPhase * 1000) + DayOfYear
-ApplicationDisplayVersion: {Major}.{PlanId}.p{PlanPhase}
-```
+### Format
 
-**Current**: v1.25.1005  
-- Major = 1
-- PlanId = 25  
-- BuildPart = 1005 (phase 1, day 5 of year)
+`Major.PlanId.BuildPart` where `BuildPart = (PlanPhase × 1000) + DayOfYear`
 
----
+### Examples
 
-## 🔄 Recent Changes (v1.25.1005 - October 5, 2025)
+- `4.80.2005` - Major 4, Plan 80, Phase 2, Day 5
+- `4.80.2102` - Major 4, Plan 80, Phase 2, Day 102
+- `4.81.3256` - Major 4, Plan 81, Phase 3, Day 256
 
-### Breaking Changes ❌
-- ❌ **Removed DOCX Export**: All DocX-related handlers eliminated
-- ❌ **Removed PDF Export**: QuestPDF integration removed
-- ❌ **Removed OpenAI Vector Store Management**: Direct OAI vector store features deprecated
+### Release Stability
 
-### New Features ✅
-- ✅ **Run Unit Tests**: Ctrl+T executes `dotnet test` with progress tracking
-- ✅ **Recent Files System**: Drag-drop, type filtering, 30-day cleanup
-- ✅ **Progress Manager**: EMA-based time-remaining estimation
-- ✅ **Constants Library**: Project-wide centralized strings
-- ✅ **UI State Persistence**: JSON-backed layout preferences
-
-### Improvements 🏗️
-- 🏗️ Modular refactor across 8+ projects
-- 🏗️ Configuration abstraction for testability
-- 🏗️ Git timeout handling with cancellation tokens
-- 🏗️ Swappable exclusion pattern adapters
-- 🏗️ Structured logging via LogCtx
+| Version Range | Status | Support |
+|---|---|---|
+| 4.80.xxxx | Production | Full support |
+| 4.71.xxxx | Legacy | Bug fixes only |
+| 4.70.xxxx | EOL | No support |
 
 ---
 
-## 📅 Roadmap
+## Roadmap
 
-### Planned Features (Next Phases)
+### Phase 4.80 - Enhanced Metadata for All Export Formats
 
-- **Settings UI**: Configuration review/editing interface
-- **Per-Store Customization**: Custom file & exclusion rules per vector store
-- **Perplexity API Integration**: AI-assisted commit messages
-- **Drag-to-Recent**: Drag files from file system into recent files
-- **Console Execution**: Command execution with file redirection
-- **Branch Awareness**: Vector store linking to Git branches
-- **Error UI System**: Centralized error notification
-- **VS Code Theming**: Dark/light theme support
-- **Last Upload Tracking**: Per-store upload date storage
+- **Phase 2** ✅ XML-Markdown hybrid format (completed)
+- **Phase 3** 🔄 DOCX metadata writer with custom properties and tables
+- **Phase 4** 🔄 PDF metadata writer with document properties and styling
+- **Phase 5** 📋 Comprehensive test suite for metadata validation
 
-### Future Integrations
+### Future Phases
 
-- [ ] Perplexity API for commit message generation
-- [ ] Claude API integration
-- [ ] GitHub/GitLab API integration
-- [ ] Vector store auto-synchronization
-- [ ] Batch export operations
-- [ ] CI/CD pipeline integration
+- **4.81** - Perplexity API integration for AI-assisted commit messages
+- **4.82** - Settings UI for configuration review and editing
+- **4.83** - Advanced filtering with regex pattern support
+- **4.84** - GitHub API integration for pull requests
+- **4.85** - Jira issue linking and Slack notifications
+- **4.86** - Performance optimization and caching
+- **4.87** - SEQ centralized logging integration
 
 ---
 
-## 🐛 Known Limitations
+## Export Formats
 
-- **Windows Only**: WinForms is Windows-specific; macOS/Linux not supported
-- **Single Thread UI**: Async operations may block UI briefly during heavy file traversal
-- **Git Dependency**: Some features require Git CLI installed
-- **Performance**: Large codebases (>100k files) may require optimization
-- **Pattern Matching**: Complex regex patterns not currently supported
+### Markdown (XML-Wrapped)
+
+VecTool exports projects as **hybrid XML-Markdown** files optimized for AI consumption.
+
+**Benefits:**
+- **Structured Metadata** - `loc`, `language`, `modified` attributes per file
+- **AI-Optimized** - XPath/LINQ parsing for LLM context management
+- **Human-Readable** - Syntax highlighting in CDATA blocks
+- **Scalable** - Support for partial exports and line ranges
+
+### DOCX Export (Phase 4.80.p3)
+
+Future release will include DOCX export with:
+
+- Custom document properties (TotalFiles, TotalLOC, ExportDate)
+- Metadata tables before each code block
+- Formatted headers and styling for professional documents
+- Integration with Microsoft Office suite
+
+### PDF Export (Phase 4.80.p3)
+
+Future release will include PDF export with:
+
+- PDF document metadata (Title, Author, Subject, CreationDate)
+- Summary tables with file statistics
+- Professional formatting with syntax highlighting
+- Print-ready output
 
 ---
 
-## 🛠️ Development
+## Compatibility
 
-### Project Structure for Development
+### Supported Platforms
 
-```
-VecTool/
-├── OaiUI/                    # Modify MainForm, add UI features here
-├── Handlers/                 # Add new feature handlers (inherit FileHandlerBase)
-├── Configuration/            # Extend settings management
-├── Core/                     # Core business logic (Git, traversal, etc.)
-├── UnitTests/                # Add tests for any changes
-└── LogCtx/                   # Git submodule - do not modify here
-```
+- **Windows 7 SP1+** - WinForms support
+- **Windows 10/11** - Recommended
+- **.NET 8.0 runtime** or later
 
-### Adding a New Feature
+### Supported .gitignore Features
 
-1. **Create Handler** (`Handlers/MyNewHandler.cs`)
-   ```csharp
-   public class MyNewHandler : FileHandlerBase
-   {
-       protected override void Execute(List<string> folders, VectorStoreConfig config)
-       {
-           // Implementation
-       }
-   }
-   ```
+- Basic glob patterns (`.log`, `temp/`)
+- Negation patterns (`!important.log`)
+- Directory matching (`bin/`, `obj/`)
+- Comments (lines starting with `#`)
+- Escaped special characters (`file.txt`)
 
-2. **Add UI Menu Item** (`OaiUI/MainForm.Designer.cs`)
-   ```csharp
-   myNewToolStripMenuItem.Click += (s, e) => new MyNewHandler(...).Execute(...);
-   ```
+### Git Operations
 
-3. **Write Tests** (`UnitTests/MyNewHandlerTests.cs`)
-   ```csharp
-   [TestFixture]
-   public class MyNewHandlerTests
-   {
-       [Test]
-       public void ShouldProduceCorrectOutput() { }
-   }
-   ```
+- **Git 2.0+** - Minimum version
+- **SSH and HTTPS** - Both protocols supported
+- **SSH Agent** - SSH key support
 
-4. **Update Configuration** if needed
-5. **Run full test suite**: `dotnet test`
+---
 
-### Coding Standards
+## How to Report Issues
 
-- **Language**: English only (code, comments, UI)
-- **Naming**: PascalCase for classes/methods, camelCase for locals/parameters
-- **Underscores/Slashes**: Preserve exactly as used in Git/file paths
-- **Logging**: Use LogCtx structured context for all operations
-- **Null Safety**: `#nullable enable` required in all files
-- **SOLID**: Adhere to Single Responsibility, Open/Closed, Liskov, Interface Segregation, Dependency Inversion
+When reporting bugs or requesting features, please include:
 
-### Building & Publishing
+1. **Version** - Show from Help > About (e.g., 4.80.2005)
+2. **OS** - Windows version and architecture (e.g., Windows 11 x64)
+3. **Steps** - Exact steps to reproduce
+4. **Expected** - What should happen
+5. **Actual** - What actually happens
+6. **Logs** - Recent entries from ConfigLogConfig.xml
+7. **Attachments** - Screenshots or anonymized project structures
+
+---
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+### Setup
 
 ```bash
-# Build
-dotnet build -c Release
+# Fork and clone the repository
+git clone https://github.com/your-fork/VecTool.git
+cd VecTool
 
-# Run tests
-dotnet test -c Release
+# Create feature branch
+git checkout -b feat/your-feature
 
-# Publish self-contained executable
-dotnet publish OaiUI/oaiUI.csproj -r win-x64 -c Release \
-  /p:PublishSingleFile=true \
-  --self-contained true
+# Make changes and test
+dotnet build
+dotnet test
+
+# Commit with conventional message
+git commit -m "feat(scope): description"
+
+# Push and open PR
+git push origin feat/your-feature
 ```
 
----
+### Commit Message Format
 
-## 📚 Documentation
+```
+type(scope): subject
 
-Full codebase documentation is split into focused documents:
+- TL;DR: Overall purpose summary
+- Specific change with context
+- Another change with details
+```
 
-1. **VecTool-SUMMARY.md** (~8KB) - Architecture overview & design patterns
-2. **VecTool-BI.md** (~25KB) - Business logic, handlers, configuration
-3. **VecTool-UI.md** (~20KB) - WinForms UI, components, progress system
-4. **VecTool-TESTS.md** (~18KB) - Testing framework, fixtures, patterns
-5. **VecTool-GUIDE.md** (~13KB) - Document usage guide with examples
+### Commit Types
 
-See **VecTool-GUIDE.md** for detailed navigation and recommended learning paths.
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation
+- `refactor` - Code refactoring
+- `test` - Testing improvements
+- `chore` - Build/tooling changes
+- `perf` - Performance improvements
 
----
+### Code Style
 
-## 🔗 Dependencies
-
-### NuGet Packages
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| GitignoreParserNet | 0.2.0.14 | Full .gitignore compliance |
-| MAB.DotIgnore | 3.0.2 | Alternative pattern matcher |
-| System.Configuration.ConfigurationManager | 9.0.10 | app.config support |
-| NUnit | Latest | Test framework |
-| Shouldly | Latest | Fluent assertions |
-| NLog | Latest | Structured logging |
-
-### Git Submodules
-
-- **LogCtx** (https://github.com/zzt108/LogCtx.git) - Custom logging wrapper for NLog+SEQ
+- Follow [C# Coding Conventions](https://docs.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)
+- Use file-scoped namespaces (`namespace VecTool.Core;`)
+- Enable nullable reference types (`nullable enable`)
+- Add XML documentation for public members
+- Keep methods focused and testable
 
 ---
 
-## 💬 Contributing
+## Deprecation Policy
 
-### Bug Reports
-
-Report bugs via GitHub Issues with:
-- VecTool version (see Help → About)
-- Windows version
-- Steps to reproduce
-- Expected vs. actual behavior
-- Screenshots (if applicable)
-
-### Pull Requests
-
-1. Fork repository
-2. Create feature branch (`git checkout -b feature/YourFeature`)
-3. Make changes with tests
-4. Update documentation
-5. Submit PR with description
-
-### Code Review Checklist
-
-- [ ] Follows SOLID principles
-- [ ] Unit tests included and passing
-- [ ] LogCtx structured logging used
-- [ ] `#nullable enable` in new files
-- [ ] Underscores/slashes preserved
-- [ ] English-only code/comments
-- [ ] No breaking changes without justification
+- **Announce** - Major version bump with clear communication
+- **Support** - Maintain support for 2 major version cycles
+- **Migrate** - Provide migration guide and tools
+- **Remove** - Remove after 1 year notice period
 
 ---
 
-## 📝 License
+## License
 
-VecTool is licensed under the **Apache 2.0 License**. See LICENSE file for details.
-
----
-
-## 🤝 Support
-
-- **Issues**: GitHub Issues for bug reports and feature requests
-- **Discussions**: GitHub Discussions for questions and ideas
-- **Documentation**: See embedded markdown documents
-- **Examples**: Test suite contains comprehensive examples
+VecTool is licensed under the **Apache License 2.0**. See LICENSE file for details.
 
 ---
 
-## 👨‍💼 About
+## Support & Community
 
-VecTool was created to streamline the workflow of exporting code projects for AI consumption and managing development workflows across local environments and LLM services.
-
-**Maintained by**: Development Team  
-**Last Updated**: November 2025  
-**Status**: Production-Ready with Active Development
-
----
-
-## 📞 Quick Links
-
-- 📖 [Full Documentation](VecTool-GUIDE.md)
-- 🏗️ [Architecture](VecTool-SUMMARY.md)
-- 💼 [Business Logic](VecTool-BI.md)
-- 🖥️ [User Interface](VecTool-UI.md)
-- 🧪 [Testing Guide](VecTool-TESTS.md)
+- **Issues** - Report bugs on GitHub Issues
+- **Discussions** - Feature requests and discussions on GitHub Discussions
+- **Wiki** - Extended documentation and tutorials
+- **Releases** - Download latest releases from Releases page
 
 ---
 
-**Version**: 1.25.1005 | **Last Updated**: November 1, 2025
+## Acknowledgments
+
+- **GitignoreParserNet** - Provides full .gitignore specification compliance
+- **MAB.DotIgnore** - Alternative .ignore pattern matching
+- **LogCtx** - Structured logging abstraction
+- **NLog** - Logging framework
+- **NUnit** - Testing framework
+- **Shouldly** - Fluent assertion library
+
+---
+
+**Latest Version**: 4.80.p2  
+**Last Updated**: 2026-01-06  
+**Status**: Active Development  
+**Maintainer**: [Your Name/Organization]
+
+For more information, visit the [GitHub Repository](https://github.com/zzt108/VecTool).

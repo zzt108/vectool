@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 
 using VecTool.Configuration;
+using VecTool.Constants;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
 
@@ -29,23 +30,20 @@ namespace VecTool.Handlers
         }
 
         /// <summary>
-        /// Export selected folders to a single markdown file with exclusions respected.
-        /// Added validation guards to throw ArgumentException for invalid inputs
+        /// Export selected folders to a single markdown file with XML metadata wrapper and exclusions respected.
+        /// Added validation guards to throw ArgumentException for invalid inputs.
         /// </summary>
-        /// <param name="folderPaths">List of root folder paths to export (cannot be null or empty)</param>
         /// <param name="outputPath">Destination file path for markdown output (cannot be null/empty)</param>
         /// <param name="vectorStoreConfig">Configuration for file exclusion rules</param>
-        /// <exception cref="ArgumentException">Thrown if folderPaths is null, empty, or outputPath is invalid</exception>
+        /// <exception cref="ArgumentException">Thrown if outputPath is invalid or vectorStoreConfig is null</exception>
         /// <exception cref="IOException">Thrown if output file cannot be created or written</exception>
         public void ExportSelectedFolders(string outputPath, VectorStoreConfig vectorStoreConfig)
         {
             var folderPaths = vectorStoreConfig.FolderPaths;
 
-            // Empty check guard - validates business requirement
-            if (folderPaths.Count == 0)
-                throw new ArgumentException("Folder list cannot be empty", nameof(folderPaths));
-
-            // Output path validation - defensive programming
+            // Validation guards
+            if (folderPaths == null || folderPaths.Count == 0)
+                throw new ArgumentException("Folder list cannot be null or empty", nameof(folderPaths));
             if (string.IsNullOrWhiteSpace(outputPath))
                 throw new ArgumentException("Output path cannot be null or empty", nameof(outputPath));
 
@@ -53,54 +51,54 @@ namespace VecTool.Handlers
             {
                 Ui?.WorkStart("Exporting to MD", folderPaths);
 
-                using StreamWriter writer = new StreamWriter(outputPath);
+                // 1. Collect all files and metadata first to calculate document totals
+                var collectedFiles = new List<(Core.Metadata.FileMetadata metadata, string content)>();
+                var metadataCollector = new Core.Metadata.MetadataCollector(logger);
 
-                AddAIOptimizedContext(
-                    vectorStoreConfig,
-                    writer,
-                    (w, content) =>
-                    {
-                        w.WriteLine(content);
-                        w.WriteLine();
-                    }
-                );
-
-                writer.WriteLine($"# Codebase for folder(s):");
-                foreach (string folderPath in folderPaths)
-                    writer.WriteLine($"- {folderPath}");
-                writer.WriteLine();
-
-                // ✅ Use FileSystemTraverser for exclusion-aware enumeration (ARCH-002 compliance)
                 foreach (string folderPath in folderPaths)
                 {
                     if (string.IsNullOrWhiteSpace(folderPath))
                     {
-                        logger.LogWarning($"Skipping null or empty folder path");
+                        logger.LogWarning("Skipping null or empty folder path");
                         continue;
                     }
 
-                    Ui?.UpdateStatus($"Enumerating files in {folderPath}");
+                    // Use existing exclusion-aware enumeration from FileHandlerBase
+                    var files = EnumerateFilesRespectingExclusions(folderPath, vectorStoreConfig);
 
-                    var files = EnumerateFilesRespectingExclusions(folderPath, vectorStoreConfig).ToList();
-                    logger.LogInformation($"Found {files.Count} files to export in {folderPath}");
-
-                    // Group files by folder for structured output
-                    var filesByFolder = files
-                        .GroupBy(f => Path.GetDirectoryName(f) ?? string.Empty)
-                        .OrderBy(g => g.Key);
-
-                    foreach (var folderGroup in filesByFolder)
+                    foreach (var file in files)
                     {
-                        WriteFolderName(writer, new DirectoryInfo(folderGroup.Key).Name);
-
-                        foreach (var file in folderGroup.OrderBy(f => Path.GetFileName(f)))
-                        {
-                            ProcessFile(file, writer, vectorStoreConfig);
-                        }
+                        var content = GetFileContent(file);
+                        var meta = metadataCollector.CollectFileMetadata(file, content);
+                        collectedFiles.Add((meta, content));
                     }
                 }
 
-                // Register successful export in recent files
+                // 2. Prepare writer
+                using var streamWriter = new StreamWriter(outputPath);
+                var metadataWriter = new Handlers.Export.XmlMarkdownWriter(streamWriter);
+
+                // 3. Write Document Metadata (Header)
+                var exportMetadata = new Core.Metadata.ExportMetadata
+                {
+                    TotalFiles = collectedFiles.Count,
+                    TotalLoc = collectedFiles.Sum(x => x.metadata.LinesOfCode),
+                    Version = VersionInfo.DisplayVersion,
+                    ExportDate = DateTime.Now
+                };
+
+                metadataWriter.WriteDocumentMetadata(exportMetadata);
+
+                // 4. Write each file with XML wrapper
+                foreach (var (metadata, content) in collectedFiles)
+                {
+                    metadataWriter.WriteFileMetadata(metadata, content);
+                }
+
+                // 5. Close XML structure
+                metadataWriter.WriteDocumentFooter();
+
+                // 6. Register successful export
                 if (RecentFilesManager != null && File.Exists(outputPath))
                 {
                     var fileInfo = new FileInfo(outputPath);
@@ -108,14 +106,35 @@ namespace VecTool.Handlers
                         outputPath,
                         RecentFileType.Codebase_Md,
                         folderPaths,
-                        fileInfo.Length
-                    );
+                        fileInfo.Length);
                 }
+
+                logger.LogInformation("Markdown export completed. {Count} files, {Loc} LOC.", exportMetadata.TotalFiles, exportMetadata.TotalLoc);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to export markdown to {Path}", outputPath);
+                throw;
             }
             finally
             {
                 Ui?.WorkFinish();
             }
+        }
+
+        /// <summary>
+        /// Counts total lines in text content.
+        /// </summary>
+        private static int CountLines(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return 0;
+
+            var lines = 1;
+            for (int i = 0; i < content.Length; i++)
+            {
+                if (content[i] == '\n') lines++;
+            }
+            return lines;
         }
 
         /// <summary>

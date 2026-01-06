@@ -17,9 +17,7 @@ public enum RecentFileType
     Summary_Md = 6,
     Repomix_Xml = 7,
     Plan,
-    Guide,
-    Docx,
-    Pdf
+    Guide
 }
 
 /// <summary>

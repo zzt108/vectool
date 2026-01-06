@@ -68,7 +68,7 @@ public sealed class DocxExportHandler : FileHandlerBase, IDocxExporter
                 var fi = new FileInfo(outputPath);
                 RecentFilesManager.RegisterGeneratedFile(
                     outputPath,
-                    RecentFileType.Docx,
+                    RecentFileType.Codebase_Docx,
                     folderPaths,
                     fi.Exists ? fi.Length : 0
                 );
