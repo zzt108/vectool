@@ -1,5 +1,5 @@
 # UI-specific files
-OaiUI/
+;OaiUI/
 ;!OaiUI/panels/
 
 # Tests
@@ -9,12 +9,15 @@ unittests/
 logctx/
 
 # VecTool Ignore - Exclude export features from codebase exports
-;Export.Docx/**
-;Export.Pdf/**
+Export.Docx/**
+Export.Pdf/**
 VectorStore.OpenAI/**
+Export.Docx.Tests/**
+Export.Pdf.Tests/**
+VectorStore.OpenAI.Tests/**
 
 # Documentations
-.documentation/
+.documentation/**
 readme.md
 changelog.md
 LICENSE-2.0.txt
@@ -27,12 +30,11 @@ logctx/LICENSE-2.0.txt
 .gitattributes
 *.clinerules
 
-media/
-logctx/
-log/
-.cr/
-.vs/
-.vscode/
+media/**
+log/**
+.cr/**
+.vs/**
+.vscode/**
 
 # 🎯 Build Artifacts (often 100+ MB)
 bin/
