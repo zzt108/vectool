@@ -19,6 +19,7 @@ public class AvaloniaUserInterface : IUserInterface
     public AvaloniaUserInterface(ILogger<AvaloniaUserInterface> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger.LogTrace("AvaloniaUserInterface created - ready for UI updates");
     }
 
     /// <summary>

@@ -6,38 +6,42 @@ using VecTool.Studio.Versioning;
 
 namespace VecTool.Studio.Services;
 
-/// <summary>
-/// Avalonia variant of ServiceProviderFactory (DI bootstrap).
-/// Follows the proven pattern from VecTool.UI/OaiUI/ServiceProviderFactory.cs
-/// </summary>
 public static class ServiceProviderFactory
 {
-    /// <summary>
-    /// Creates and configures the DI container for Avalonia application.
-    /// </summary>
     public static IServiceProvider CreateServiceProvider()
     {
+        // ✅ NEW: Early console logging before DI
+        Console.WriteLine("[ServiceProviderFactory] Starting DI configuration...");
+
         var services = new ServiceCollection();
 
         // 1. Configure NLog
         ConfigureLogging(services);
+        Console.WriteLine("[ServiceProviderFactory] NLog configured"); // ✅ NEW
 
-        // 2. Register core services (copy from WinForms variant)
+        // 2. Register core services
         RegisterCoreServices(services);
+        Console.WriteLine("[ServiceProviderFactory] Core services registered"); // ✅ NEW
 
         // 3. Register Avalonia-specific UI service
         services.AddSingleton<IUserInterface, AvaloniaUserInterface>();
+        Console.WriteLine("[ServiceProviderFactory] AvaloniaUserInterface registered"); // ✅ NEW
 
-        return services.BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
+        Console.WriteLine("[ServiceProviderFactory] ServiceProvider built successfully"); // ✅ NEW
+
+        // ✅ NEW: Test logging immediately after provider is built
+        var logger = provider.GetRequiredService<ILogger<App>>();
+        logger.LogInformation("ServiceProvider initialized with {ServiceCount} registrations",
+            services.Count);
+
+        return provider;
     }
 
-    /// <summary>
-    /// Configures NLog logging provider.
-    /// Pattern copied from WinForms variant.
-    /// </summary>
     private static void ConfigureLogging(IServiceCollection services)
     {
         var configPath = Path.Combine(AppContext.BaseDirectory, "nlog.config");
+        Console.WriteLine($"[ServiceProviderFactory] Looking for NLog config at: {configPath}"); // ✅ NEW
 
         if (!File.Exists(configPath))
         {
@@ -50,23 +54,16 @@ public static class ServiceProviderFactory
             builder.SetMinimumLevel(LogLevel.Trace);
             builder.AddNLog(configPath);
         });
+
+        Console.WriteLine("[ServiceProviderFactory] NLog provider added to IServiceCollection"); // ✅ NEW
     }
 
-    /// <summary>
-    /// Registers core application services (shared between WinForms and Avalonia).
-    /// Copied from VecTool.UI/OaiUI/ServiceProviderFactory.cs
-    /// </summary>
     private static void RegisterCoreServices(IServiceCollection services)
     {
         // ✅ Core services (proven from WinForms)
         services.AddSingleton<IVersionProvider, AssemblyVersionProvider>();
-
-        // ❌ No MainForm registration (Avalonia creates MainWindow differently in App.axaml.cs)
-        // ❌ No WinFormsUserInterface registration (replaced by AvaloniaUserInterface above)
+        Console.WriteLine("[ServiceProviderFactory] IVersionProvider registered"); // ✅ NEW
 
         // TODO: Add handler registrations when Phase 02-04 migration happens
-        // Example placeholders (commented until handlers are migrated):
-        // services.AddSingleton<IExportHandler, XmlMarkdownExportHandler>();
-        // services.AddSingleton<IFileSystemTraverser, FileSystemTraverser>();
     }
 }
