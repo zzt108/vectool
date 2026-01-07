@@ -1,113 +1,104 @@
-﻿using Avalonia.Threading;
-using LogCtxShared;
+﻿using System;
+using Avalonia.Threading;
+using LogCtxShared; // ✅ NEW
 using Microsoft.Extensions.Logging;
+using VecTool.Configuration.Logging; // ✅ NEW
 using VecTool.Handlers;
 
-namespace VecTool.Studio.Services;
-
-/// <summary>
-/// Avalonia-specific IUserInterface implementation.
-/// Maps core library UI calls → Dispatcher.UIThread for thread-safe updates.
-/// (Analogous to WinFormsUserInterface but using Avalonia threading)
-/// </summary>
-public class AvaloniaUserInterface : IUserInterface
+namespace VecTool.Studio.Services
 {
-    private readonly ILogger _logger;
-
-    public int TotalWork { get; set; }
-
-    public AvaloniaUserInterface(ILogger<AvaloniaUserInterface> logger)
+    public class AvaloniaUserInterface : IUserInterface
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _logger.LogTrace("AvaloniaUserInterface created - ready for UI updates");
-    }
+        // ✅ MODIFIED: Static logger via AppLogger (no DI injection)
+        private static readonly ILogger logger = AppLogger.For<AvaloniaUserInterface>();
 
-    /// <summary>
-    /// Starts work tracking and updates status.
-    /// </summary>
-    public void WorkStart(string workText, IEnumerable<string> selectedFolders)
-    {
-        Dispatcher.UIThread.Post(() =>
+        public int TotalWork { get; set; }
+
+        // ✅ REMOVED: No logger parameter in constructor
+        public AvaloniaUserInterface()
         {
-            using var ctx = _logger.SetContext()
-                .Add("workText", workText)
-                .Add("folderCount", selectedFolders?.Count() ?? 0);
-
-            _logger.LogInformation("Work started: {workText}", workText);
-
-            // TODO: Bind to MainWindow status bar
-            // StatusText = workText;
-        });
-    }
-
-    /// <summary>
-    /// Finishes work tracking and clears status.
-    /// </summary>
-    public void WorkFinish()
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            _logger.LogInformation("Work finished");
-
-            // TODO: Reset MainWindow progress bar
-            // ProgressValue = 0;
-            // StatusText = "Ready";
-        });
-    }
-
-    /// <summary>
-    /// Updates status text (thread-safe via Dispatcher).
-    /// </summary>
-    public void UpdateStatus(string statusText)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            _logger.LogDebug("Status: {statusText}", statusText);
-
-            // TODO: Bind to MainWindow status bar
-            // StatusText = statusText;
-        });
-    }
-
-    /// <summary>
-    /// Updates progress bar (thread-safe via Dispatcher).
-    /// </summary>
-    public void UpdateProgress(int current)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            var percentage = TotalWork > 0 ? (current * 100) / TotalWork : 0;
-            _logger.LogTrace("Progress: {current}/{TotalWork} ({percentage}%)", current, TotalWork, percentage);
-
-            // TODO: Bind to MainWindow progress bar
-            // ProgressValue = current;
-            // ProgressMaximum = TotalWork;
-        });
-    }
-
-    /// <summary>
-    /// Shows message dialog (thread-safe via Dispatcher).
-    /// </summary>
-    public void ShowMessage(string message, string title, MessageType type)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            var level = type switch
+            // ✅ NEW: Log instantiation with LogCtx
+            using (Props p = logger.SetContext()
+                .Add("Operation", "AvaloniaUserInterface.Construct"))
             {
-                MessageType.Information => LogLevel.Information,
-                MessageType.Warning => LogLevel.Warning,
-                MessageType.Error => LogLevel.Error,
-                _ => LogLevel.Information,
-            };
+                logger.LogInformation("AvaloniaUserInterface instance created");
+            }
+        }
 
-            using var ctx = _logger.SetContext()
-                .Add("title", title)
-                .Add("messageType", type.ToString());
+        public void WorkStart(string workText, IEnumerable<string> selectedFolders)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                // ✅ MODIFIED: Use LogCtx for structured logging
+                using (Props p = logger.SetContext()
+                    .Add("WorkText", workText)
+                    .Add("FolderCount", selectedFolders?.Count() ?? 0))
+                {
+                    logger.LogInformation("Work started");
+                }
+                // TODO: Bind to MainWindow status bar
+            });
+        }
 
-            _logger.Log(level, "{title}: {message}", title, message);
+        public void WorkFinish()
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                logger.LogInformation("Work finished");
+                // TODO: Reset MainWindow progress bar
+            });
+        }
 
-            // TODO: Show Avalonia MessageBox or ContentDialog
-            // await MessageBoxManager.GetMessageBoxStandard(title, message).ShowAsync();
-        });
+        public void UpdateStatus(string statusText)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                using (Props p = logger.SetContext()
+                    .Add("StatusText", statusText))
+                {
+                    logger.LogDebug("Status updated");
+                }
+                // TODO: Bind to MainWindow status bar
+            });
+        }
+
+        public void UpdateProgress(int current)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var percentage = (TotalWork > 0) ? (current * 100) / TotalWork : 0;
+
+                using (Props p = logger.SetContext()
+                    .Add("Current", current)
+                    .Add("Total", TotalWork)
+                    .Add("Percentage", percentage))
+                {
+                    logger.LogTrace("Progress updated");
+                }
+                // TODO: Bind to MainWindow progress bar
+            });
+        }
+
+        public void ShowMessage(string message, string title, MessageType type)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var level = type switch
+                {
+                    MessageType.Information => LogLevel.Information,
+                    MessageType.Warning => LogLevel.Warning,
+                    MessageType.Error => LogLevel.Error,
+                    _ => LogLevel.Information,
+                };
+
+                using (Props p = logger.SetContext()
+                    .Add("Title", title)
+                    .Add("MessageType", type.ToString()))
+                {
+                    logger.Log(level, message);
+                }
+                // TODO: Show Avalonia MessageBox or ContentDialog
+            });
+        }
     }
 }
