@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.1.11312.151 d18.0
+VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vectool.UI", "OaiUI\Vectool.UI.csproj", "{AB47A1CC-420B-431A-B6AB-A156D39DA7CA}"
 EndProject
@@ -46,6 +46,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VecTool.VectorStore.OpenAI.Tests", "VectorStore.OpenAI.Test\VecTool.VectorStore.OpenAI.Tests.csproj", "{80BB8B4D-12D4-09F7-E8D1-D22EE514024F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VecTool.Export.Pdf.Tests", "Export.Pdf.Test\VecTool.Export.Pdf.Tests.csproj", "{A3F2CEE0-75A9-B6D1-47DC-487E9484BE1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VecTool.Studio", "VecTool.Studio\VecTool.Studio.csproj", "{942F0BAA-3E39-349A-1342-60673A170E18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -237,6 +239,18 @@ Global
 		{A3F2CEE0-75A9-B6D1-47DC-487E9484BE1D}.Release|x64.Build.0 = Release|Any CPU
 		{A3F2CEE0-75A9-B6D1-47DC-487E9484BE1D}.Release|x86.ActiveCfg = Release|Any CPU
 		{A3F2CEE0-75A9-B6D1-47DC-487E9484BE1D}.Release|x86.Build.0 = Release|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Debug|x64.Build.0 = Debug|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Debug|x86.Build.0 = Debug|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Release|x64.ActiveCfg = Release|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Release|x64.Build.0 = Release|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Release|x86.ActiveCfg = Release|Any CPU
+		{942F0BAA-3E39-349A-1342-60673A170E18}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
