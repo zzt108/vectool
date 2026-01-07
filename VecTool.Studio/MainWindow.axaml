@@ -2,8 +2,42 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d"
+        d:DesignWidth="800" d:DesignHeight="450"
         x:Class="VecTool.Studio.MainWindow"
+        x:CompileBindings="False"
         Title="VecTool.Studio">
-    Welcome to Avalonia!
+
+  <DockPanel>
+    <!-- Status Bar (bottom) -->
+    <Border DockPanel.Dock="Bottom"
+            Background="#1f2121"
+            Padding="8">
+      <Grid RowDefinitions="Auto"
+            ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0"
+                   Text="{Binding StatusText, FallbackValue='Ready'}"
+                   VerticalAlignment="Center"
+                   Foreground="#f5f5f5" />
+        <ProgressBar Grid.Column="1"
+                     Width="200"
+                     Height="20"
+                     Margin="8,0,0,0"
+                     Minimum="0"
+                     Maximum="{Binding ProgressMaximum, FallbackValue=100}"
+                     Value="{Binding ProgressValue, FallbackValue=0}" />
+      </Grid>
+    </Border>
+
+    <!-- Main Content -->
+    <StackPanel DockPanel.Dock="Top" Margin="16">
+      <TextBlock Text="VecTool.Studio"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Margin="0,0,0,16" />
+      <Button Content="Test Status Update"
+              Click="OnTestButtonClick"
+              Padding="8" />
+    </StackPanel>
+  </DockPanel>
 </Window>
