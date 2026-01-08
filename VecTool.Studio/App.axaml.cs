@@ -1,87 +1,75 @@
-﻿using Avalonia;
+﻿using System;
+using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
+using LogCtxShared;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging; // ✅ KEEP for ILogger interface
-using LogCtxShared; // ✅ NEW - LogCtx wrapper
-using VecTool.Configuration.Logging; // ✅ NEW - AppLogger
+using Microsoft.Extensions.Logging;
+using VecTool.Configuration.Logging;
 using VecTool.Handlers;
 using VecTool.Studio.Services;
 
-namespace VecTool.Studio
+namespace VecTool.Studio;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    private static readonly ILogger logger = AppLogger.For<App>();
+    // TODO: Move to App;
+
+    public IServiceProvider ServiceProvider { get; private set; } = null!;
+
+    public override void Initialize()
     {
-        // ✅ NEW: Static logger via AppLogger (not DI)
-        private static readonly ILogger logger = AppLogger.For<App>();
+        AvaloniaXamlLoader.Load(this);
+    }
 
-        public IServiceProvider ServiceProvider { get; private set; } = null!;
+    public override void OnFrameworkInitializationCompleted()
+    {
+        Console.WriteLine("VecTool.Studio STARTING");
+        System.Diagnostics.Trace.WriteLine("VecTool.Studio STARTING (Trace)");
 
-        public override void Initialize()
+        using (Props p = logger.SetContext()
+            .Add("Operation", "AppStartup")
+            .Add("Framework", "Avalonia"))
         {
-            AvaloniaXamlLoader.Load(this);
+            logger.LogInformation("VecTool.Studio initialization started");
         }
 
-        public override void OnFrameworkInitializationCompleted()
+        ServiceProvider = ServiceProviderFactory.CreateServiceProvider();
+
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
-            // Console test BEFORE DI
-            Console.WriteLine("=== VecTool.Studio STARTING ===");
-            System.Diagnostics.Trace.WriteLine("=== VecTool.Studio STARTING (Trace) ===");
+            var ex = e.ExceptionObject as Exception;
 
-            // ✅ NEW: Log with LogCtx context
             using (Props p = logger.SetContext()
-                .Add("Operation", "AppStartup")
-                .Add("Framework", "Avalonia"))
+                .Add("ExceptionType", ex?.GetType().Name ?? "Unknown")
+                .Add("Message", ex?.Message ?? "No message"))
             {
-                logger.LogInformation("VecTool.Studio initialization started");
+                logger.LogCritical(ex, "Unhandled exception occurred");
             }
+        };
 
-            // 1. Create DI container
-            ServiceProvider = ServiceProviderFactory.CreateServiceProvider();
+        RequestedThemeVariant = ThemeVariant.Dark;
 
-            // ✅ MODIFIED: Use AppLogger + LogCtx
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var serviceProvider = ServiceProvider;
+
+            var ui = serviceProvider.GetRequiredService<IUserInterface>();
+            var mainWindowLogger = serviceProvider.GetRequiredService<ILogger<MainWindow>>();
+
             using (Props p = logger.SetContext()
-                .Add("ServiceCount", ServiceProvider.GetType().GetProperty("Count")?.GetValue(ServiceProvider) ?? "unknown"))
+                .Add("InterfaceType", ui.GetType().Name))
             {
-                logger.LogInformation("DI container created successfully");
+                logger.LogDebug("IUserInterface resolved successfully");
             }
 
-            // 2. Register global exception handler
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-            {
-                var ex = e.ExceptionObject as Exception;
-                System.Diagnostics.Trace.WriteLine($"UNHANDLED: {ex}");
+            desktop.MainWindow = new MainWindow(ui, serviceProvider, mainWindowLogger);
 
-                // ✅ NEW: Log unhandled exceptions with LogCtx
-                using (Props p = logger.SetContext()
-                    .Add("ExceptionType", ex?.GetType().Name ?? "Unknown")
-                    .Add("Message", ex?.Message ?? "No message"))
-                {
-                    logger.LogCritical(ex, "Unhandled exception occurred");
-                }
-            };
-
-            // 3. Set dark theme
-            RequestedThemeVariant = ThemeVariant.Dark;
-            logger.LogDebug("Dark theme applied");
-
-            // 4. Create main window with DI
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                var ui = ServiceProvider.GetRequiredService<IUserInterface>();
-
-                using (Props p = logger.SetContext()
-                    .Add("InterfaceType", ui.GetType().Name))
-                {
-                    logger.LogDebug("IUserInterface resolved successfully");
-                }
-
-                desktop.MainWindow = new MainWindow(ui);
-                logger.LogInformation("MainWindow created and assigned");
-            }
-
-            base.OnFrameworkInitializationCompleted();
+            logger.LogInformation("MainWindow created and assigned");
         }
+
+        base.OnFrameworkInitializationCompleted();
     }
 }
