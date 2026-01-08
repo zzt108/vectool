@@ -1,23 +1,31 @@
-﻿using System;
-using Avalonia.Threading;
-using LogCtxShared; // ✅ NEW
+﻿using Avalonia.Threading;
+using LogCtxShared;
 using Microsoft.Extensions.Logging;
-using VecTool.Configuration.Logging; // ✅ NEW
+using System;
+using VecTool.Configuration.Logging;
 using VecTool.Handlers;
 
 namespace VecTool.Studio.Services
 {
+    /// <summary>
+    /// Avalonia implementation of IUserInterface.
+    /// Phase 2: Now event-driven (StatusChanged, ProgressChanged, MessageShown events).
+    /// </summary>
     public class AvaloniaUserInterface : IUserInterface
     {
-        // ✅ MODIFIED: Static logger via AppLogger (no DI injection)
         private static readonly ILogger logger = AppLogger.For<AvaloniaUserInterface>();
 
         public int TotalWork { get; set; }
 
-        // ✅ REMOVED: No logger parameter in constructor
+        // ✅ NEW: Event definitions (Phase 2 Step 3) - renamed to avoid namespace conflicts
+        public event EventHandler<UIStatusChangedEventArgs>? StatusChanged;
+
+        public event EventHandler<UIProgressChangedEventArgs>? ProgressChanged;
+
+        public event EventHandler<UIMessageShownEventArgs>? MessageShown;
+
         public AvaloniaUserInterface()
         {
-            // ✅ NEW: Log instantiation with LogCtx
             using (Props p = logger.SetContext()
                 .Add("Operation", "AvaloniaUserInterface.Construct"))
             {
@@ -25,18 +33,16 @@ namespace VecTool.Studio.Services
             }
         }
 
-        public void WorkStart(string workText, IEnumerable<string> selectedFolders)
+        public void WorkStart(string workText, IEnumerable<string>? selectedFolders)
         {
             Dispatcher.UIThread.Post(() =>
             {
-                // ✅ MODIFIED: Use LogCtx for structured logging
                 using (Props p = logger.SetContext()
                     .Add("WorkText", workText)
                     .Add("FolderCount", selectedFolders?.Count() ?? 0))
                 {
                     logger.LogInformation("Work started");
                 }
-                // TODO: Bind to MainWindow status bar
             });
         }
 
@@ -45,7 +51,6 @@ namespace VecTool.Studio.Services
             Dispatcher.UIThread.Post(() =>
             {
                 logger.LogInformation("Work finished");
-                // TODO: Reset MainWindow progress bar
             });
         }
 
@@ -57,25 +62,34 @@ namespace VecTool.Studio.Services
                     .Add("StatusText", statusText))
                 {
                     logger.LogDebug("Status updated");
+                    // ✅ NEW: Raise event instead of direct UI manipulation
+                    StatusChanged?.Invoke(this, new UIStatusChangedEventArgs(statusText));
                 }
-                // TODO: Bind to MainWindow status bar
             });
         }
 
+        /// <summary>
+        /// Updates progress with current value. Maximum is derived from TotalWork property.
+        /// IUserInterface signature: void UpdateProgress(int current) - 1 parameter only!
+        /// </summary>
         public void UpdateProgress(int current)
         {
             Dispatcher.UIThread.Post(() =>
             {
-                var percentage = (TotalWork > 0) ? (current * 100) / TotalWork : 0;
+                var maximum = TotalWork > 0 ? TotalWork : 100;
+                var percentage = maximum > 0
+                    ? (current * 100) / maximum
+                    : 0;
 
                 using (Props p = logger.SetContext()
                     .Add("Current", current)
-                    .Add("Total", TotalWork)
+                    .Add("Maximum", maximum)
                     .Add("Percentage", percentage))
                 {
                     logger.LogTrace("Progress updated");
+                    // ✅ NEW: Raise event with current and calculated maximum
+                    ProgressChanged?.Invoke(this, new UIProgressChangedEventArgs(current, maximum));
                 }
-                // TODO: Bind to MainWindow progress bar
             });
         }
 
@@ -96,8 +110,9 @@ namespace VecTool.Studio.Services
                     .Add("MessageType", type.ToString()))
                 {
                     logger.Log(level, message);
+                    // ✅ NEW: Raise event for message dialog (Phase 2 Step 6 will show dialog)
+                    MessageShown?.Invoke(this, new UIMessageShownEventArgs(title, message, type));
                 }
-                // TODO: Show Avalonia MessageBox or ContentDialog
             });
         }
     }
