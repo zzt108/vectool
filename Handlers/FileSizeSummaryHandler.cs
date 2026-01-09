@@ -50,56 +50,60 @@ namespace VecTool.Handlers
             if (string.IsNullOrWhiteSpace(outputPath))
                 throw new ArgumentException("Output path cannot be null or empty", nameof(outputPath));
 
-            try
+            using (Props p = ((ILogger)logger).SetContext()
+                .Add("Operation", "FileSizeSummaryHandler.GenerateFileSizeSummary")
+                .Add("OutputPath", outputPath)
+                .Add("FolderCount", folderPaths.Count))
             {
-                Ui?.WorkStart("Generating file size report...", folderPaths);
-
-                var fileSizesByType = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
-                var fileCountByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                int progress = 0;
-
-                foreach (var folderPath in folderPaths)
+                try
                 {
-                    Ui?.UpdateProgress(progress++);
-                    Ui?.UpdateStatus($"Analyzing folder {folderPath}");
+                    Ui?.WorkStart("Generating file size report...", folderPaths);
 
-                    // ✅ Delegates to method that uses traverser
-                    CalculateFolderSizes(folderPath, config, fileSizesByType, fileCountByType);
-                }
+                    var fileSizesByType = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+                    var fileCountByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                    int progress = 0;
 
-                WriteReportToFile(outputPath, folderPaths, fileSizesByType, fileCountByType);
-                Ui?.UpdateStatus("File size summary generated successfully.");
-            }
-            catch (Exception ex)
-            {
-                using (var ctx = logger.SetContext()
-                    .Add("outputPath", outputPath)
-                    .Add("folderCount", folderPaths.Count))
-                {
-                    logger.LogError(ex, "Error generating file size summary");
-                }
-                throw;
-            }
-            finally
-            {
-                Ui?.WorkFinish();
-
-                // ✅ Register output with recent files manager if available
-                if (RecentFilesManager != null && File.Exists(outputPath))
-                {
-                    try
+                    foreach (var folderPath in folderPaths)
                     {
-                        var fileInfo = new FileInfo(outputPath);
-                        RecentFilesManager.RegisterGeneratedFile(
-                            outputPath,
-                            RecentFileType.Summary_Md,
-                            folderPaths,
-                            fileInfo.Length);
+                        Ui?.UpdateProgress(progress++);
+                        Ui?.UpdateStatus($"Analyzing folder {folderPath}");
+
+                        // ✅ Delegates to method that uses traverser
+                        CalculateFolderSizes(folderPath, config, fileSizesByType, fileCountByType);
                     }
-                    catch (Exception ex)
+
+                    WriteReportToFile(outputPath, folderPaths, fileSizesByType, fileCountByType);
+                    Ui?.UpdateStatus("File size summary generated successfully.");
+                }
+                catch (Exception ex)
+                {
+                    // Context is already set by outer block, but we can add specific failure details if needed.
+                    // The original catch block added context manually, which is good for local details,
+                    // but the outer block ensures all logs in the path have the operation context.
+                    logger.LogError(ex, "Error generating file size summary");
+                    throw;
+                }
+                finally
+                {
+                    Ui?.WorkFinish();
+
+                    // ✅ Register output with recent files manager if available
+                    if (RecentFilesManager != null && File.Exists(outputPath))
                     {
-                        logger.LogError(ex, "Failed to register generated file in recent files");
-                        // Don't throw—report generation succeeded
+                        try
+                        {
+                            var fileInfo = new FileInfo(outputPath);
+                            RecentFilesManager.RegisterGeneratedFile(
+                                outputPath,
+                                RecentFileType.Summary_Md,
+                                folderPaths,
+                                fileInfo.Length);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "Failed to register generated file in recent files");
+                            // Don't throw—report generation succeeded
+                        }
                     }
                 }
             }

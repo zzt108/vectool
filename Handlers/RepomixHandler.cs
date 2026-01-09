@@ -46,7 +46,10 @@ namespace VecTool.Handlers
             VectorStoreConfig? vectorStoreConfig = null,
             CancellationToken cancellationToken = default)
         {
-            using var _ = logger.SetContext();
+            using var _ = logger.SetContext()
+                .Add("Operation", "RepomixHandler.RunRepomix")
+                .Add("TargetDir", targetDirectory)
+                .Add("OutputPath", outputPath);
 
             if (!Directory.Exists(targetDirectory))
             {

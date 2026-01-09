@@ -41,69 +41,80 @@ public sealed class GitChangesHandler : FileHandlerBase
         if (string.IsNullOrWhiteSpace(outputPath))
             throw new ArgumentException("Output path required", nameof(outputPath));
 
-        try
+        using (Props p = ((ILogger)logger).SetContext()
+            .Add("Operation", "GitChangesHandler.GetGitChangesAsync")
+            .Add("OutputPath", outputPath)
+            .Add("FolderCount", folderPaths.Count))
         {
-            Ui?.UpdateStatus("Analyzing Git repositories...");
-            logger.LogInformation($"Starting Git changes analysis: {folderPaths.Count} folders");
-
-            var allChanges = new StringBuilder();
-            allChanges.AppendLine("# AI Prompt for Commit Message");
-            allChanges.AppendLine();
-            allChanges.AppendLine(_aiPrompt);
-            allChanges.AppendLine();
-            allChanges.AppendLine("---");
-            allChanges.AppendLine();
-
-            var processedRepos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var folderPath in folderPaths)
+            try
             {
-                // Use traverser to get only non-excluded folders
-                // This ensures folders containing only .git (no exportable files) are detected
-                var allowedFolders = traverser
-                    .EnumerateFoldersRespectingExclusions(folderPath, config)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                Ui?.UpdateStatus("Analyzing Git repositories...");
+                logger.LogInformation($"Starting Git changes analysis: {folderPaths.Count} folders");
 
-                logger.LogDebug($"Found {allowedFolders.Count} non-excluded folders in {folderPath}");
+                var allChanges = new StringBuilder();
+                allChanges.AppendLine("# AI Prompt for Commit Message");
+                allChanges.AppendLine();
+                allChanges.AppendLine(_aiPrompt);
+                allChanges.AppendLine();
+                allChanges.AppendLine("---");
+                allChanges.AppendLine();
 
-                // Find Git repos ONLY in allowed folders
-                var gitRepos = allowedFolders
-                    .Where(dir => GitRunner.IsGitRepository(dir))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                var processedRepos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                using var _ = logger.SetContext().Add("folderCount", allowedFolders.Count).Add("basePath", folderPath);
-                logger.LogInformation($"Found {gitRepos.Count} Git repositories to process");
-
-                foreach (var repoPath in gitRepos)
+                foreach (var folderPath in folderPaths)
                 {
-                    await ProcessGitRepositoryAsync(repoPath, outputPath, allChanges, processedRepos);
+                    // Use traverser to get only non-excluded folders
+                    // This ensures folders containing only .git (no exportable files) are detected
+                    var allowedFolders = traverser
+                        .EnumerateFoldersRespectingExclusions(folderPath, config)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    logger.LogDebug($"Found {allowedFolders.Count} non-excluded folders in {folderPath}");
+
+                    // Find Git repos ONLY in allowed folders
+                    var gitRepos = allowedFolders
+                        .Where(dir => GitRunner.IsGitRepository(dir))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    // Nested context for loop details
+                    using var _ = logger.SetContext()
+                        .Add("subOperation", "ProcessFolder")
+                        .Add("basePath", folderPath)
+                        .Add("repoCount", gitRepos.Count);
+                    
+                    logger.LogInformation($"Found {gitRepos.Count} Git repositories to process in {folderPath}");
+
+                    foreach (var repoPath in gitRepos)
+                    {
+                        await ProcessGitRepositoryAsync(repoPath, outputPath, allChanges, processedRepos);
+                    }
                 }
-            }
 
-            await File.WriteAllTextAsync(outputPath, allChanges.ToString());
+                await File.WriteAllTextAsync(outputPath, allChanges.ToString());
 
-            // Register generated file
-            if (RecentFilesManager != null)
-            {
-                var fi = new FileInfo(outputPath);
-                RecentFilesManager.RegisterGeneratedFile(
-                    outputPath,
-                    RecentFileType.Git_Md,
-                    folderPaths,
-                    fi.Exists ? fi.Length : 0);
-            }
+                // Register generated file
+                if (RecentFilesManager != null)
+                {
+                    var fi = new FileInfo(outputPath);
+                    RecentFilesManager.RegisterGeneratedFile(
+                        outputPath,
+                        RecentFileType.Git_Md,
+                        folderPaths,
+                        fi.Exists ? fi.Length : 0);
+                }
 
-            Ui?.UpdateStatus($"Git changes saved: {outputPath}");
+                Ui?.UpdateStatus($"Git changes saved: {outputPath}");
             logger.LogInformation($"Git changes analysis completed: {outputPath}");
 
-            return allChanges.ToString();
-        }
-        catch (Exception ex)
-        {
+                return allChanges.ToString();
+            }
+            catch (Exception ex)
+            {
             logger.LogError(ex, $"Failed to analyze Git changes: {outputPath}");
-            throw;
+                throw;
+            }
         }
     }
 

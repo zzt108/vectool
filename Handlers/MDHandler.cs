@@ -4,6 +4,7 @@ using VecTool.Configuration;
 using VecTool.Constants;
 using VecTool.Handlers.Traversal;
 using VecTool.RecentFiles;
+using LogCtxShared;
 
 namespace VecTool.Handlers
 {
@@ -47,78 +48,84 @@ namespace VecTool.Handlers
             if (string.IsNullOrWhiteSpace(outputPath))
                 throw new ArgumentException("Output path cannot be null or empty", nameof(outputPath));
 
-            try
+            using (Props p = ((ILogger)logger).SetContext()
+                .Add("Operation", "MDHandler.ExportSelectedFolders")
+                .Add("OutputPath", outputPath)
+                .Add("FolderCount", folderPaths.Count))
             {
-                Ui?.WorkStart("Exporting to MD", folderPaths);
-
-                // 1. Collect all files and metadata first to calculate document totals
-                var collectedFiles = new List<(Core.Metadata.FileMetadata metadata, string content)>();
-                var metadataCollector = new Core.Metadata.MetadataCollector(logger);
-
-                foreach (string folderPath in folderPaths)
+                try
                 {
-                    if (string.IsNullOrWhiteSpace(folderPath))
+                    Ui?.WorkStart("Exporting to MD", folderPaths);
+
+                    // 1. Collect all files and metadata first to calculate document totals
+                    var collectedFiles = new List<(Core.Metadata.FileMetadata metadata, string content)>();
+                    var metadataCollector = new Core.Metadata.MetadataCollector(logger);
+
+                    foreach (string folderPath in folderPaths)
                     {
-                        logger.LogWarning("Skipping null or empty folder path");
-                        continue;
+                        if (string.IsNullOrWhiteSpace(folderPath))
+                        {
+                            logger.LogWarning("Skipping null or empty folder path");
+                            continue;
+                        }
+
+                        // Use existing exclusion-aware enumeration from FileHandlerBase
+                        var files = EnumerateFilesRespectingExclusions(folderPath, vectorStoreConfig);
+
+                        foreach (var file in files)
+                        {
+                            var content = GetFileContent(file);
+                            var meta = metadataCollector.CollectFileMetadata(file, content);
+                            collectedFiles.Add((meta, content));
+                        }
                     }
 
-                    // Use existing exclusion-aware enumeration from FileHandlerBase
-                    var files = EnumerateFilesRespectingExclusions(folderPath, vectorStoreConfig);
+                    // 2. Prepare writer
+                    using var streamWriter = new StreamWriter(outputPath);
+                    var metadataWriter = new Handlers.Export.XmlMarkdownWriter(streamWriter);
 
-                    foreach (var file in files)
+                    // 3. Write Document Metadata (Header)
+                    var exportMetadata = new Core.Metadata.ExportMetadata
                     {
-                        var content = GetFileContent(file);
-                        var meta = metadataCollector.CollectFileMetadata(file, content);
-                        collectedFiles.Add((meta, content));
+                        TotalFiles = collectedFiles.Count,
+                        TotalLoc = collectedFiles.Sum(x => x.metadata.LinesOfCode),
+                        Version = VersionInfo.DisplayVersion,
+                        ExportDate = DateTime.Now
+                    };
+
+                    metadataWriter.WriteDocumentMetadata(exportMetadata);
+
+                    // 4. Write each file with XML wrapper
+                    foreach (var (metadata, content) in collectedFiles)
+                    {
+                        metadataWriter.WriteFileMetadata(metadata, content);
                     }
+
+                    // 5. Close XML structure
+                    metadataWriter.WriteDocumentFooter();
+
+                    // 6. Register successful export
+                    if (RecentFilesManager != null && File.Exists(outputPath))
+                    {
+                        var fileInfo = new FileInfo(outputPath);
+                        RecentFilesManager.RegisterGeneratedFile(
+                            outputPath,
+                            RecentFileType.Codebase_Md,
+                            folderPaths,
+                            fileInfo.Length);
+                    }
+
+                    logger.LogInformation("Markdown export completed. {Count} files, {Loc} LOC.", exportMetadata.TotalFiles, exportMetadata.TotalLoc);
                 }
-
-                // 2. Prepare writer
-                using var streamWriter = new StreamWriter(outputPath);
-                var metadataWriter = new Handlers.Export.XmlMarkdownWriter(streamWriter);
-
-                // 3. Write Document Metadata (Header)
-                var exportMetadata = new Core.Metadata.ExportMetadata
+                catch (Exception ex)
                 {
-                    TotalFiles = collectedFiles.Count,
-                    TotalLoc = collectedFiles.Sum(x => x.metadata.LinesOfCode),
-                    Version = VersionInfo.DisplayVersion,
-                    ExportDate = DateTime.Now
-                };
-
-                metadataWriter.WriteDocumentMetadata(exportMetadata);
-
-                // 4. Write each file with XML wrapper
-                foreach (var (metadata, content) in collectedFiles)
-                {
-                    metadataWriter.WriteFileMetadata(metadata, content);
+                    logger.LogError(ex, "Failed to export markdown to {Path}", outputPath);
+                    throw;
                 }
-
-                // 5. Close XML structure
-                metadataWriter.WriteDocumentFooter();
-
-                // 6. Register successful export
-                if (RecentFilesManager != null && File.Exists(outputPath))
+                finally
                 {
-                    var fileInfo = new FileInfo(outputPath);
-                    RecentFilesManager.RegisterGeneratedFile(
-                        outputPath,
-                        RecentFileType.Codebase_Md,
-                        folderPaths,
-                        fileInfo.Length);
+                    Ui?.WorkFinish();
                 }
-
-                logger.LogInformation("Markdown export completed. {Count} files, {Loc} LOC.", exportMetadata.TotalFiles, exportMetadata.TotalLoc);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to export markdown to {Path}", outputPath);
-                throw;
-            }
-            finally
-            {
-                Ui?.WorkFinish();
             }
         }
 
