@@ -82,7 +82,10 @@ namespace VecTool.Studio
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = this;
+
+            // ❌ REMOVE: DataContext = this;
+            // Setting it here binds to empty/stub commands initially.
+            // If we change them later in the DI ctor without INPC notification, the UI won't know.
 
             // Safe defaults for designer/early runtime
             ExitCommand = new SimpleCommand(() => { });
@@ -124,6 +127,10 @@ namespace VecTool.Studio
                 {
                     logger?.LogDebug("IUserInterface events subscribed");
                 }
+
+                // ✅ NEW: Set DataContext LAST, ensuring UI binds to the real commands
+                DataContext = this;
+                logger?.LogDebug("DataContext set");
             }
         }
 
