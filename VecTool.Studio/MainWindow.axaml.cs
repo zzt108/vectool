@@ -1,14 +1,15 @@
-﻿using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using LogCtxShared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
+using VecTool.Configuration;
 using VecTool.Handlers;
 using VecTool.Studio.Commands;
 using VecTool.Studio.Services;
@@ -20,12 +21,13 @@ namespace VecTool.Studio
     {
         private readonly IUserInterface? _ui;
         private readonly IServiceProvider? _serviceProvider;
-        private readonly ILogger<MainWindow>? _logger;
+        private readonly ILogger<MainWindow> _logger;
         private string _statusText = "Ready";
         private int _progressValue;
         private int _progressMaximum = 100;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        // todo: why is it new?
+        public new event PropertyChangedEventHandler? PropertyChanged;
 
         public string StatusText
         {
@@ -94,12 +96,12 @@ namespace VecTool.Studio
         /// DI-enabled constructor - called from App.OnFrameworkInitializationCompleted.
         /// Phase 2 Step 3: Subscribe to IUserInterface events here.
         /// </summary>
-        public MainWindow(IUserInterface ui, IServiceProvider serviceProvider, ILogger<MainWindow> logger)
+        public MainWindow(IUserInterface _ui, IServiceProvider serviceProvider, ILogger<MainWindow> logger)
             : this()
         {
-            _ui = ui ?? throw new ArgumentNullException(nameof(ui));
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._ui = _ui ?? throw new ArgumentNullException(nameof(_ui));
+            this._serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             // ✅ Initialize menu commands (Phase 2 Step 2)
             ExitCommand = new SimpleCommand(OnExit);
@@ -108,7 +110,7 @@ namespace VecTool.Studio
             FileSizeSummaryCommand = new SimpleCommand(OnFileSizesSummary);
             AboutCommand = new SimpleCommand(OnAbout);
 
-            // ✅ NEW: Subscribe to IUserInterface events (Phase 2 Step 3)
+            // Subscribe to IUserInterface events (Phase 2 Step 3)
             // This is the key to event-driven UI updates!
             if (_ui is AvaloniaUserInterface avaloniaUi)
             {
@@ -116,17 +118,17 @@ namespace VecTool.Studio
                 avaloniaUi.ProgressChanged += OnProgressChanged;
                 avaloniaUi.MessageShown += OnMessageShown;
 
-                using (Props p = _logger?.SetContext()
+                using (Props p = logger?.SetContext()
                     .Add("Operation", "MainWindow.Constructor")
                     .Add("EventsSubscribed", "StatusChanged|ProgressChanged|MessageShown"))
                 {
-                    _logger?.LogDebug("IUserInterface events subscribed");
+                    logger?.LogDebug("IUserInterface events subscribed");
                 }
             }
         }
 
         // ====================================
-        // ✅ NEW: Event Handlers (Phase 2 Step 3)
+        // Event Handlers (Phase 2 Step 3)
         // ====================================
 
         /// <summary>
@@ -205,19 +207,63 @@ namespace VecTool.Studio
             }
         }
 
-        private void OnConvertToMarkdown()
+        private async void OnConvertToMarkdown()
         {
             using (Props p = _logger?.SetContext()
                 .Add("CommandName", "ConvertToMarkdown")
                 .Add("Action", "MenuClick"))
             {
-                _logger?.LogInformation("Convert to Markdown command invoked (stub)");
+                _logger?.LogInformation("Convert to Markdown command invoked - real handler");
 
-                _ui?.ShowMessage(
-                    message: "Feature integration comes in Step 4. This is just command plumbing.",
-                    title: "Convert to Markdown",
-                    type: MessageType.Information
-                );
+                try
+                {
+                    var handler = _serviceProvider?.GetService<MDHandler>();
+                    if (handler is null)
+                    {
+                        _logger?.LogError("MDHandler not registered in DI container");
+                        _ui?.ShowMessage(
+                            message: "Handler not available. Check DI registration.",
+                            title: "Error",
+                            type: MessageType.Error);
+                        return;
+                    }
+
+                    // Phase 2 Step 4: parameter stub (folder selection UI comes later)
+                    // Keep it deterministic and not gigantic, unless you enjoy watching progress bars all day.
+                    var selectedFolders = new List<string> { Environment.CurrentDirectory };
+
+                    var outputPath = Path.Combine(
+                        Path.GetTempPath(),
+                        $"vectool_export_{DateTime.Now:yyyyMMdd_HHmmss}.md");
+
+                    var cfg = new VectorStoreConfig
+                    {
+                        FolderPaths = selectedFolders
+                    };
+
+                    using (Props ctx = _logger?.SetContext()
+                        .Add("FolderCount", selectedFolders.Count)
+                        .Add("OutputPath", outputPath))
+                    {
+                        _logger?.LogInformation("Starting MD export");
+                    }
+
+                    await handler.ExportSelectedFoldersAsync(outputPath, cfg);
+
+                    _ui?.ShowMessage(
+                        message: $"Markdown export completed:\n{outputPath}",
+                        title: "Convert to Markdown",
+                        type: MessageType.Information);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Convert to Markdown failed");
+
+                    _ui?.ShowMessage(
+                        message: $"Export failed: {ex.Message}",
+                        title: "Error",
+                        type: MessageType.Error);
+                }
             }
         }
 

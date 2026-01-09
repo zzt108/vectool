@@ -17,7 +17,7 @@ namespace VecTool.Studio.Services
 
         public int TotalWork { get; set; }
 
-        // ✅ NEW: Event definitions (Phase 2 Step 3) - renamed to avoid namespace conflicts
+        // Event definitions (Phase 2 Step 3) - renamed to avoid namespace conflicts
         public event EventHandler<UIStatusChangedEventArgs>? StatusChanged;
 
         public event EventHandler<UIProgressChangedEventArgs>? ProgressChanged;
@@ -62,7 +62,7 @@ namespace VecTool.Studio.Services
                     .Add("StatusText", statusText))
                 {
                     logger.LogDebug("Status updated");
-                    // ✅ NEW: Raise event instead of direct UI manipulation
+                    // Raise event instead of direct UI manipulation
                     StatusChanged?.Invoke(this, new UIStatusChangedEventArgs(statusText));
                 }
             });
@@ -87,7 +87,7 @@ namespace VecTool.Studio.Services
                     .Add("Percentage", percentage))
                 {
                     logger.LogTrace("Progress updated");
-                    // ✅ NEW: Raise event with current and calculated maximum
+                    // Raise event with current and calculated maximum
                     ProgressChanged?.Invoke(this, new UIProgressChangedEventArgs(current, maximum));
                 }
             });
@@ -110,7 +110,7 @@ namespace VecTool.Studio.Services
                     .Add("MessageType", type.ToString()))
                 {
                     logger.Log(level, message);
-                    // ✅ NEW: Raise event for message dialog (Phase 2 Step 6 will show dialog)
+                    // Raise event for message dialog (Phase 2 Step 6 will show dialog)
                     MessageShown?.Invoke(this, new UIMessageShownEventArgs(title, message, type));
                 }
             });

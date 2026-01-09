@@ -1,4 +1,7 @@
-﻿using System;
+﻿// ✅ FULL FILE VERSION
+// File: VecTool.Studio/App.axaml.cs
+
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -14,8 +17,8 @@ namespace VecTool.Studio;
 
 public partial class App : Application
 {
-    private static readonly ILogger logger = AppLogger.For<App>();
-    // TODO: Move to App;
+    // ❌ REMOVED static AppLogger - was bypassing DI/BufferingWrapper
+    // private static readonly ILogger logger = AppLogger.For<App>();
 
     public IServiceProvider ServiceProvider { get; private set; } = null!;
 
@@ -26,8 +29,14 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        Console.WriteLine("VecTool.Studio STARTING");
-        System.Diagnostics.Trace.WriteLine("VecTool.Studio STARTING (Trace)");
+        // ✅ NEW - Console for bootstrap logging (before DI configured)
+        Console.WriteLine("[App] VecTool.Studio STARTING");
+        System.Diagnostics.Trace.WriteLine("[App] VecTool.Studio STARTING (Trace)");
+
+        ServiceProvider = ServiceProviderFactory.CreateServiceProvider();
+
+        // ✅ NEW - Get logger AFTER DI is configured (now goes through BufferingWrapper)
+        var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
 
         using (Props p = logger.SetContext()
             .Add("Operation", "AppStartup")
@@ -36,8 +45,7 @@ public partial class App : Application
             logger.LogInformation("VecTool.Studio initialization started");
         }
 
-        ServiceProvider = ServiceProviderFactory.CreateServiceProvider();
-
+        // ✅ NEW - UnhandledException handler now uses DI logger
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             var ex = e.ExceptionObject as Exception;
@@ -54,10 +62,8 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var serviceProvider = ServiceProvider;
-
-            var ui = serviceProvider.GetRequiredService<IUserInterface>();
-            var mainWindowLogger = serviceProvider.GetRequiredService<ILogger<MainWindow>>();
+            var ui = ServiceProvider.GetRequiredService<IUserInterface>();
+            var mainWindowLogger = ServiceProvider.GetRequiredService<ILogger<MainWindow>>();
 
             using (Props p = logger.SetContext()
                 .Add("InterfaceType", ui.GetType().Name))
@@ -65,11 +71,27 @@ public partial class App : Application
                 logger.LogDebug("IUserInterface resolved successfully");
             }
 
-            desktop.MainWindow = new MainWindow(ui, serviceProvider, mainWindowLogger);
+            desktop.MainWindow = new MainWindow(ui, ServiceProvider, mainWindowLogger);
 
             logger.LogInformation("MainWindow created and assigned");
+
+            // ✅ KEEP - Exit handler for proper disposal
+            desktop.Exit += (_, __) =>
+            {
+                using var ctx = logger.SetContext()
+                    .Add("Event", "desktop.Exit")
+                    .Add("Action", "DisposeServiceProvider");
+
+                logger.LogInformation("Desktop lifetime exit detected; disposing ServiceProvider");
+
+                if (ServiceProvider is IDisposable d)
+                {
+                    d.Dispose();
+                }
+            };
         }
 
+        // 🔄 FIX - Was called twice! Only call once at the end
         base.OnFrameworkInitializationCompleted();
     }
 }

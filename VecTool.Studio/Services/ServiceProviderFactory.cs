@@ -1,23 +1,25 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using LogCtxShared;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
-using LogCtxShared; // ✅ NEW
-using VecTool.Configuration.Logging; // ✅ NEW
+using VecTool.Configuration.Logging;
 using VecTool.Handlers;
+using VecTool.Handlers.Traversal;
+using VecTool.RecentFiles;
 using VecTool.Studio.Versioning;
 
 namespace VecTool.Studio.Services;
 
 public static class ServiceProviderFactory
 {
-    // ✅ NEW: Static logger via AppLogger
+    //  Static logger via AppLogger
     private static readonly ILogger logger = AppLogger.Create("VecTool.Studio.Services.ServiceProviderFactory");
 
     public static IServiceProvider CreateServiceProvider()
     {
         Console.WriteLine("[ServiceProviderFactory] Starting DI configuration...");
 
-        // ✅ NEW: Log with LogCtx
+        // Log with LogCtx
         using (Props p = logger.SetContext()
             .Add("Operation", "CreateServiceProvider")
             .Add("Framework", "Avalonia"))
@@ -57,7 +59,7 @@ public static class ServiceProviderFactory
         var configPath = Path.Combine(AppContext.BaseDirectory, "nlog.config");
         Console.WriteLine($"[ServiceProviderFactory] Looking for NLog config at: {configPath}");
 
-        // ✅ NEW: Log with LogCtx
+        // Log with LogCtx
         using (Props p = logger.SetContext()
             .Add("ConfigPath", configPath)
             .Add("FileExists", File.Exists(configPath)))
@@ -83,18 +85,26 @@ public static class ServiceProviderFactory
 
     private static void RegisterCoreServices(IServiceCollection services)
     {
-        // Core services (proven from WinForms)
         services.AddSingleton<IVersionProvider, AssemblyVersionProvider>();
-        Console.WriteLine("[ServiceProviderFactory] IVersionProvider registered");
 
-        // ✅ NEW: Log service registration
+        // ✅ NEW: Traversal
+        services.AddSingleton<IFileMarkerExtractor, FileMarkerExtractor>();
+        services.AddSingleton<IFileSystemTraverser>(sp =>
+            new FileSystemTraverser(
+                ui: sp.GetRequiredService<IUserInterface>(),
+                markerExtractor: sp.GetRequiredService<IFileMarkerExtractor>()));
+
+        // ✅ NEW: No-op recent files manager (Phase 4 MVP)
+        services.AddSingleton<IRecentFilesManager, NoopRecentFilesManager>();
+
+        // ✅ NEW: Handler itself
+        services.AddTransient<MDHandler>();
+
         using (Props p = logger.SetContext()
-            .Add("ServiceType", "IVersionProvider")
-            .Add("Implementation", "AssemblyVersionProvider"))
+            .Add("ServiceType", "MDHandler")
+            .Add("Dependencies", "IFileSystemTraverser|IRecentFilesManager(noop)"))
         {
-            logger.LogDebug("Core service registered");
+            logger.LogDebug("Handler services registered for Phase 2 Step 4");
         }
-
-        // TODO: Add handler registrations when Phase 02-04 migration happens
     }
 }
